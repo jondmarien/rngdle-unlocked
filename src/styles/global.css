@@ -1,0 +1,101 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --bg: #f6f4ef;
+  --surface: #ffffff;
+  --surface-raised: #efece4;
+  --prose: #14120f;
+  --prose-2: #3d3a34;
+  --prose-3: #6e6a62;
+  --outline: #cfc8ba;
+  --accent: #1a5cff;
+  --trash: #6e6a62;
+  --common: #3d7a4a;
+  --uncommon: #2a7a8c;
+  --rare: #3b5bdb;
+  --epic: #7c3aed;
+  --anomaly: #c026d3;
+  --mythic: #d97706;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color: var(--prose);
+  background: var(--bg);
+}
+
+.dark {
+  --bg: #0e0d0b;
+  --surface: #171512;
+  --surface-raised: #221f1a;
+  --prose: #f3efe6;
+  --prose-2: #c8c2b4;
+  --prose-3: #8a8478;
+  --outline: #3a352c;
+  --accent: #6b9bff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--prose);
+}
+
+.mono-number {
+  font-family: 'Cascadia Mono', 'Consolas', 'SF Mono', ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.rarity-trash {
+  color: var(--trash);
+}
+.rarity-common {
+  color: var(--common);
+}
+.rarity-uncommon {
+  color: var(--uncommon);
+}
+.rarity-rare {
+  color: var(--rare);
+}
+.rarity-epic {
+  color: var(--epic);
+}
+.rarity-anomaly {
+  color: var(--anomaly);
+}
+.rarity-mythic {
+  color: var(--mythic);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@keyframes number-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.number-reveal {
+  animation: number-pop 0.35s ease-out;
+}

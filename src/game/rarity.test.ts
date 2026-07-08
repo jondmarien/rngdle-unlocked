@@ -1,0 +1,37 @@
+import { describe, expect, it } from 'vite-plus/test';
+import { rarityFromEP } from './rarity';
+import { percentileFromEP } from './percentile';
+import { sumEP } from './score';
+
+describe('rarityFromEP', () => {
+  it('maps boundaries', () => {
+    expect(rarityFromEP(0)).toBe('trash');
+    expect(rarityFromEP(49)).toBe('trash');
+    expect(rarityFromEP(50)).toBe('common');
+    expect(rarityFromEP(400)).toBe('uncommon');
+    expect(rarityFromEP(1500)).toBe('rare');
+    expect(rarityFromEP(5000)).toBe('epic');
+    expect(rarityFromEP(15000)).toBe('anomaly');
+    expect(rarityFromEP(50000)).toBe('mythic');
+  });
+});
+
+describe('percentileFromEP', () => {
+  it('is monotonic non-decreasing', () => {
+    let prev = -1;
+    for (const ep of [0, 1, 10, 50, 100, 500, 2000, 10000, 100000]) {
+      const p = percentileFromEP(ep);
+      expect(p).toBeGreaterThanOrEqual(prev);
+      expect(p).toBeGreaterThanOrEqual(0);
+      expect(p).toBeLessThanOrEqual(100);
+      prev = p;
+    }
+  });
+});
+
+describe('sumEP', () => {
+  it('sums badge EP', () => {
+    expect(sumEP([{ ep: 10 }, { ep: 20 }])).toBe(30);
+    expect(sumEP([])).toBe(0);
+  });
+});

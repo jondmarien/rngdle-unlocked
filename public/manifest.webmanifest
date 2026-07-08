@@ -1,0 +1,17 @@
+{
+  "name": "RNGdle Unlocked",
+  "short_name": "RNGdle Unlocked",
+  "description": "Unlimited random number game — roll anytime, collect badges, score EP.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f4ef",
+  "theme_color": "#14120f",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

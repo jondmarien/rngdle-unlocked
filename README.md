@@ -1,32 +1,50 @@
-# React + TypeScript + Vite
+# RNGdle Unlocked
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Solo unlimited-roll number game inspired by the RNGdle genre — **no 24-hour lock**.
 
-Currently, two official plugins are available:
+Roll 0–1,000,000 with a fortified browser CSPRNG, collect badges, score EP, track journey milestones, and share rolls. Data stays in your browser (localStorage).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+**Not affiliated with [rngdle.com](https://www.rngdle.com/).** Badge names and scoring are original.
 
-## React Compiler
+Social features (accounts, leaderboards) are deferred to **MVP part 2**.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Stack
 
-## Expanding the Oxlint configuration
+- [Vite+](https://viteplus.dev/) (`vp` CLI) + React + TypeScript
+- Tailwind CSS v4
+- Vitest via `vite-plus/test`
+- Deploy: static on Vercel
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## Setup
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+### Install Vite+ (once)
+
+Windows (PowerShell):
+
+```powershell
+$env:CI = "true"; $env:VP_NODE_MANAGER = "yes"; irm https://vite.plus/ps1 | iex
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Then open a **new** terminal.
+
+### Project
+
+```bash
+vp install
+vp dev
+```
+
+## Commands
+
+| Command | Purpose |
+|---------|---------|
+| `vp dev` | Dev server |
+| `vp test` | Unit tests |
+| `vp check` | Format + lint + types |
+| `vp build` | Production build → `dist/` |
+| `vp preview` | Preview production build |
+
+## Design docs
+
+- Spec: `docs/superpowers/specs/2026-07-08-rngdle-unlocked-design.md`
+- Plan: `docs/superpowers/plans/2026-07-08-rngdle-unlocked.md`
