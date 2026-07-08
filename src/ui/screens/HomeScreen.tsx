@@ -23,7 +23,20 @@ export function HomeScreen() {
     settings,
   } = useGame();
   const [shareOpen, setShareOpen] = useState(false);
-  const [pop, setPop] = useState(false);
+  /** Value fed to the slot display — updated only with revealKey to avoid snap race. */
+  const [slotValue, setSlotValue] = useState<number | null>(
+    () => lastRoll?.number ?? null,
+  );
+  const [revealKey, setRevealKey] = useState(0);
+  const [revealDone, setRevealDone] = useState(() => lastRoll != null);
+
+  // Keep slot in sync for non-animated loads (refresh with history)
+  useEffect(() => {
+    if (revealKey === 0 && lastRoll != null && slotValue == null) {
+      setSlotValue(lastRoll.number);
+      setRevealDone(true);
+    }
+  }, [lastRoll, revealKey, slotValue]);
 
   useEffect(() => {
     const onMove = (e: PointerEvent) => {
@@ -41,12 +54,18 @@ export function HomeScreen() {
   }, []);
 
   const handleRoll = async () => {
+    setRevealDone(false);
     const outcome = await roll();
-    if (outcome) {
-      setPop(true);
-      window.setTimeout(() => setPop(false), 400);
+    if (!outcome) {
+      setRevealDone(true);
+      return;
     }
+    // Batch value + reveal key so digits never snap before spinning
+    setSlotValue(outcome.roll.number);
+    setRevealKey((k) => k + 1);
   };
+
+  const busy = rolling || (revealKey > 0 && !revealDone);
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
@@ -55,13 +74,14 @@ export function HomeScreen() {
       </p>
 
       <NumberDisplay
-        value={lastRoll?.number ?? null}
-        rarity={lastRoll?.rarity}
-        animate={pop}
+        value={slotValue}
+        rarity={revealDone ? lastRoll?.rarity : undefined}
+        revealKey={revealKey}
+        onRevealComplete={() => setRevealDone(true)}
       />
 
-      {lastRoll && (
-        <div className="flex flex-col items-center gap-2">
+      {lastRoll && revealDone && (
+        <div className="number-fade-in flex flex-col items-center gap-2">
           <RarityBadge rarity={lastRoll.rarity} />
           <div className="flex flex-wrap items-center justify-center gap-2">
             <EPPill ep={lastRoll.totalEP} />
@@ -79,8 +99,14 @@ export function HomeScreen() {
         </div>
       )}
 
-      {lastJourneyUnlocks.length > 0 && (
-        <div className="rounded border border-[var(--accent)] bg-[var(--surface-raised)] px-3 py-2 text-sm">
+      {lastRoll && !revealDone && (
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--prose-3)]">
+          Rolling…
+        </p>
+      )}
+
+      {revealDone && lastJourneyUnlocks.length > 0 && (
+        <div className="number-fade-in rounded border border-[var(--accent)] bg-[var(--surface-raised)] px-3 py-2 text-sm">
           Journey unlocked:{' '}
           {lastJourneyUnlocks.map((j) => j.name).join(', ')} (+
           {lastJourneyUnlocks.reduce((a, b) => a + b.ep, 0).toLocaleString()}{' '}
@@ -90,11 +116,11 @@ export function HomeScreen() {
 
       <GenerateButton
         hasRolled={!!lastRoll}
-        busy={rolling}
+        busy={busy}
         onClick={handleRoll}
       />
 
-      {lastRoll && (
+      {lastRoll && revealDone && (
         <button
           type="button"
           className="text-xs font-bold uppercase tracking-wider text-[var(--prose-2)] underline-offset-2 hover:underline"

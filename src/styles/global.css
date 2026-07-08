@@ -85,17 +85,46 @@ body {
   }
 }
 
-@keyframes number-pop {
-  from {
-    opacity: 0;
-    transform: scale(0.92);
+@keyframes digit-spin {
+  0%,
+  100% {
+    opacity: 0.55;
   }
-  to {
+  50% {
     opacity: 1;
-    transform: scale(1);
   }
 }
 
-.number-reveal {
-  animation: number-pop 0.35s ease-out;
+@keyframes digit-settle {
+  0% {
+    transform: scale(1.45);
+    text-shadow: 0 0 12px currentColor;
+  }
+  100% {
+    transform: scale(1);
+    text-shadow: none;
+  }
+}
+
+.digit-spin {
+  animation: digit-spin 0.12s ease-in-out infinite;
+}
+
+.digit-settle {
+  animation: digit-settle 0.35s ease-out;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.number-fade-in {
+  animation: fade-in-up 0.35s ease-out;
 }
