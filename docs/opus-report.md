@@ -1,27 +1,5 @@
 > **Status (July 2026):** §§A–G below are the **historical pre-refactor audit**. The prioritized work **landed** on `main` (`aa8e91e`…`fc4fa65`). Treat **§H** and [`HANDOFF.md`](../HANDOFF.md) §1b / [`refactor-notes-2026-07.md`](./refactor-notes-2026-07.md) as current truth — do not quote §§D–G as a pending to-do list.
 
-I'll start by mapping the full tree with sizes to plan ingestion, then read everything.
-
-22,175 lines across 127 files. I'll ingest the whole tree: dispatching parallel readers for the bulk areas while I read the architectural spine myself, then synthesize cross-cutting findings.
-
-While those run, I'll read the architectural spine and configs myself for cross-cutting analysis.
-
-Now the configs, persistence layer, and lib boundary files.
-
-Good spine coverage. Let me run targeted cross-cutting greps while the readers finish.
-
-I have thorough spine coverage. Now waiting on the three parallel readers (UI, api/server, game/lib/state) to return their detailed findings before I synthesize. Let me verify a couple of duplication signals while they finish.
-
-I've ingested the architectural spine (GameProvider, storage, types, routing, lib boundaries, all configs) and run cross-cutting greps. Three parallel readers are still finishing full ingestion of the UI, api/server, and game/lib/state trees. I'll synthesize the complete report once they return — waiting on them now.
-
-api/server reader is done with strong findings. Waiting on the UI and game/lib/state readers to complete before synthesizing.
-
-Two of three readers are back with detailed findings. Waiting on the UI screens/components reader to complete, then I'll synthesize the full report.
-
-All three readers are back. Combined with my own reading of the spine (GameProvider, storage, types, routing, all tsconfigs, vite/package config) and cross-cutting greps, I have full coverage of the 127-file / 22K-line tree. Here is the audit.
-
----
-
 # RNGdle Unlocked — Architecture Audit
 
 **Scope:** every file in `src/`, `api/`, `server/` (127 files, ~22.2K LOC) read in full, plus `AGENTS.md`, `README.md`, `HANDOFF.md`, and all build config. Read-only — no changes made.
@@ -32,7 +10,7 @@ The bones are good and the docs are largely honest. The three hardest things to 
 
 The debt is almost entirely **inconsistent adherence to patterns that already exist**: a `lib/*-api.ts` network layer that half the screens bypass with raw `fetch()`; a `badge-theme.ts` rarity-style module that three components ignore; a `HISTORY_CAP`/`ROLL_RANGE` constant re-hardcoded a few files over; and two god-files (`GameProvider.tsx`, `AccountScreen.tsx`) that accreted responsibilities. No true Blocker (nothing is actively producing wrong output today), but there is one latent-Blocker-class tooling gap that has _already_ caused repeated production incidents and will again (§G1).
 
-### Doc-vs-code discrepancies (you asked me to flag these)
+### Doc-vs-code discrepancies
 
 | Doc claim                                                           | Reality                                                                                                                                                                                                                                                                                                                                   | Where |
 | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
