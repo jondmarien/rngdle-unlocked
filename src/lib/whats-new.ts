@@ -12,6 +12,16 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '0.5.1',
+    date: '2026-07-09',
+    title: 'Richer link previews & What’s new',
+    highlights: [
+      'Sharing links like /leaderboard or /about now shows a proper preview card in Discord and other apps.',
+      'About has a What’s new section with player-friendly release highlights.',
+      'Browser tab titles update as you move between pages.',
+    ],
+  },
+  {
     version: '0.5.0',
     date: '2026-07-09',
     title: 'Under the hood',

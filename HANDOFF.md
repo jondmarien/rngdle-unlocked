@@ -7,8 +7,8 @@
 | **Repo**                   | `jondmarien/rngdle-unlocked`                                                                           |
 | **Live**                   | https://rngdle-unlocked.chron0.tech                                                                    |
 | **Branch**                 | `main` (auto-deploys Vercel)                                                                           |
-| **Version**                | `0.5.0` (`package.json`; Settings uses `VITE_APP_VERSION`) |
-| **Latest release**         | [v0.5.0](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.5.0) |
+| **Version**                | `0.5.1` (`package.json`; Settings uses `VITE_APP_VERSION`) |
+| **Latest release**         | [v0.5.1](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.5.1) |
 | **Handoff commit context** | Opus audit refactor (`aa8e91e`…`fc4fa65` on `main`) + prior P0/P1 wave |
 
 ---

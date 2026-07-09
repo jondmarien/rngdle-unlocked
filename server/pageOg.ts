@@ -84,7 +84,8 @@ export const PAGE_OG: Record<PageOgSlug, PageOgMeta> = {
     slug: 'terms',
     path: '/terms',
     title: 'Terms of Service · RNGdle Unlocked',
-    description: 'Terms of Service for RNGdle Unlocked accounts and cloud features.',
+    description:
+      'Terms of Service for RNGdle Unlocked accounts and cloud features.',
     cardHeadline: 'Terms of Service',
     cardLabel: 'Accounts · cloud · play fair',
   },
@@ -114,7 +115,9 @@ const PATH_TO_SLUG: Record<string, PageOgSlug> = {
   privacy: 'privacy',
 };
 
-export function resolvePageOgSlug(raw: string | null | undefined): PageOgSlug | null {
+export function resolvePageOgSlug(
+  raw: string | null | undefined,
+): PageOgSlug | null {
   if (raw == null) return null;
   const key = decodeURIComponent(raw).trim().toLowerCase().replace(/^\//, '');
   return PATH_TO_SLUG[key] ?? null;

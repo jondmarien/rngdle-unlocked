@@ -7,10 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-07-09
+
 ### Added
 
 - About → **What’s new** — player-facing release highlights (`src/lib/whats-new.ts`), separate from this developer changelog.
 - **Open Graph for public SPA routes** — bot rewrites for `/`, `/leaderboard`, `/about`, `/collection`, `/showcase`, `/stats`, `/terms`, `/privacy` (+ aliases); shared brand card via `/api/og?type=page`; baseline `og:*` / `twitter:*` in `index.html`; legacy `/r/:id` bot rewrite; browser `document.title` per route.
+- System inbox broadcast for v0.5.1 pointing players to About → What’s new.
+
+### Fixed
+
+- README “How it works” Mermaid edge-label overlap.
+- Stripped agent process narration from `docs/opus-report.md` (kept the audit body).
 
 ## [0.5.0] - 2026-07-09
 
@@ -113,6 +121,7 @@ First **social multiplayer** release on top of the unlimited solo playground.
 - Public rolls + Discord OG via share APIs.
 - SPA path-based routes; Vercel Node adapter for serverless APIs.
 
+[0.5.1]: https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.5.1
 [0.5.0]: https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.5.0
 [0.4.0]: https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.4.0
 [0.3.0]: https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.3.0

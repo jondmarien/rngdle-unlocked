@@ -27,7 +27,9 @@ export default defineHandler(async (request) => {
     const rawSlug =
       url.searchParams.get('page') ||
       url.searchParams.get('slug') ||
-      (pageIdx >= 0 ? (parts[pageIdx + 1] ?? '') : (parts[parts.length - 1] ?? ''));
+      (pageIdx >= 0
+        ? (parts[pageIdx + 1] ?? '')
+        : (parts[parts.length - 1] ?? ''));
 
     const slug = resolvePageOgSlug(rawSlug) ?? resolvePageOgSlug('home');
     if (!slug) {
