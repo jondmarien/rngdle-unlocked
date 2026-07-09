@@ -23,17 +23,16 @@ import {
   type ChallengeKind,
   type CollectionEntry,
   type PlayStats,
+  type RarityTier,
   type RollResult,
   type ThemeMode,
 } from '../game';
 import { applyStreaks, recomputeBestConsecutive } from '../game/stats';
 import { useSession } from '../lib/auth-client';
 import { createLogger } from '../lib/logger';
-import {
-  fetchCloudSave,
-  pushCloudSave,
-  type CloudSavePayload,
-} from '../lib/sync-api';
+import { requestAttestation, requestRankedRoll } from '../lib/roll-api';
+import { STORAGE_KEYS } from '../lib/storage-keys';
+import { settingsReducer, type SettingsAction } from './settings';
 import {
   buildExportPayload,
   clearState,
@@ -46,22 +45,12 @@ import {
   saveState,
   type PersistedState,
 } from './storage';
+import { toCloudPayload, useSync, type SyncControls } from './useSync';
 
 /** free = local CSPRNG · ranked = server free play · daily/weekly = challenges */
 export type RollMode = 'free' | 'ranked' | ChallengeKind;
 
 const log = createLogger('game');
-
-function toCloudPayload(s: PersistedState): CloudSavePayload {
-  return {
-    lifetimeEP: s.lifetimeEP,
-    lifetimeRollCount: s.lifetimeRollCount,
-    journeyEP: s.journeyEP,
-    collection: s.collection,
-    stats: s.stats,
-    history: s.history,
-  };
-}
 
 export type RollOutcome = {
   roll: RollResult;
@@ -71,6 +60,7 @@ export type RollOutcome = {
   secretsEPGained: number;
 };
 
+/** Roll orchestration, progress, celebration FX. */
 type GameContextValue = {
   lastRoll: RollResult | null;
   history: RollResult[];
@@ -78,7 +68,6 @@ type GameContextValue = {
   lifetimeEP: number;
   lifetimeRollCount: number;
   journeyEP: number;
-  settings: AppSettings;
   stats: PlayStats;
   rolling: boolean;
   saveError: string | null;
@@ -88,7 +77,7 @@ type GameContextValue = {
   lastNewBadgeIds: string[];
   confettiToken: number;
   /** Rarity for the active celebration burst (tiered FX). */
-  celebrateRarity: import('../game/types').RarityTier | null;
+  celebrateRarity: RarityTier | null;
   /** free = local CSPRNG; ranked = server free play; daily/weekly = challenges */
   rollMode: RollMode;
   setRollMode: (m: RollMode) => void;
@@ -96,6 +85,15 @@ type GameContextValue = {
   /** Optional server seal for competitive bragging (feature 4). */
   attestRoll: (roll: RollResult) => Promise<{ seal: string } | null>;
   clearAll: () => void;
+  selectRoll: (roll: RollResult | null) => void;
+  exportSave: () => void;
+  importSave: (file: File) => Promise<void>;
+  fireCelebration: (rarity?: RarityTier) => void;
+};
+
+/** Settings + the 7 setters (reducer-backed). */
+type GameSettingsValue = {
+  settings: AppSettings;
   setTheme: (theme: ThemeMode) => void;
   setShareShowRollCount: (v: boolean) => void;
   setSoundEnabled: (v: boolean) => void;
@@ -103,22 +101,11 @@ type GameContextValue = {
   setAutoScrollBadges: (v: boolean) => void;
   setAutoShareHighRarity: (v: boolean) => void;
   setShowLatestRuns: (v: boolean) => void;
-  selectRoll: (roll: RollResult | null) => void;
-  exportSave: () => void;
-  importSave: (file: File) => Promise<void>;
-  fireCelebration: (rarity?: import('../game/types').RarityTier) => void;
-  syncToCloud: () => Promise<void>;
-  pullFromCloud: () => Promise<void>;
-  syncing: boolean;
-  lastSyncAt: string | null;
-  syncError: string | null;
-  /** Wait until roll is visible via public API (or fail). Logged-out → 'logged-out'. */
-  waitForCloudPublish: (
-    roll: RollResult,
-  ) => Promise<'ok' | 'error' | 'logged-out'>;
 };
 
 const GameContext = createContext<GameContextValue | null>(null);
+const GameSettingsContext = createContext<GameSettingsValue | null>(null);
+const CloudSyncContext = createContext<SyncControls | null>(null);
 
 function applyTheme(theme: ThemeMode): void {
   const root = document.documentElement;
@@ -142,17 +129,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [lastSecretUnlocks, setLastSecretUnlocks] = useState<BadgeHit[]>([]);
   const [lastNewBadgeIds, setLastNewBadgeIds] = useState<string[]>([]);
   const [confettiToken, setConfettiToken] = useState(0);
-  const [celebrateRarity, setCelebrateRarity] = useState<
-    import('../game/types').RarityTier | null
-  >(null);
-  const [syncing, setSyncing] = useState(false);
-  const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
-  const [syncError, setSyncError] = useState<string | null>(null);
+  const [celebrateRarity, setCelebrateRarity] = useState<RarityTier | null>(
+    null,
+  );
   const [rollMode, setRollModeState] = useState<RollMode>('free');
 
-  /** Coalesce rapid auto-syncs so spam-rolling doesn't race the server. */
-  const autoSyncChain = useRef(Promise.resolve());
-  const latestAutoPayload = useRef<CloudSavePayload | null>(null);
   /** Always the latest persisted state (avoids stale force-push on share). */
   const stateRef = useRef(state);
   stateRef.current = state;
@@ -177,84 +158,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const applyCloudPayload = useCallback(
-    (cloud: {
-      lifetimeEP: number;
-      lifetimeRollCount: number;
-      journeyEP: number;
-      collection: CollectionEntry[];
-      stats: PlayStats;
-      history: RollResult[];
-    }) => {
-      const secretMerge = mergeSecretUnlocks(
-        cloud.collection,
-        new Date().toISOString(),
-      );
-      setState((prev) => {
-        const history = cloud.history;
-        const collection = backfillCollectionTimestamps(
-          secretMerge.collection,
-          history,
-        );
-        const next: PersistedState = {
-          ...prev,
-          lifetimeEP: cloud.lifetimeEP + secretMerge.ep,
-          lifetimeRollCount: cloud.lifetimeRollCount,
-          journeyEP: cloud.journeyEP + secretMerge.ep,
-          collection,
-          stats: cloud.stats,
-          history,
-        };
-        persist(next);
-        return next;
-      });
-      if (secretMerge.unlocked.length > 0) {
-        setLastSecretUnlocks(secretHits(secretMerge.unlocked));
-      }
-      // Do not restore lastRoll from cloud — home stays a fresh slot until the
-      // player rolls this session (history/stats still update).
-      setLastSyncAt(new Date().toISOString());
-    },
-    [persist],
-  );
-
-  /** Background push after rolls when signed in (does not block the roll UI). */
-  const enqueueAutoSync = useCallback(
-    (payload: CloudSavePayload) => {
-      if (!loggedInRef.current) return;
-      latestAutoPayload.current = payload;
-      autoSyncChain.current = autoSyncChain.current
-        .then(async () => {
-          if (!loggedInRef.current) return;
-          const p = latestAutoPayload.current;
-          if (!p) return;
-          log.info('autoSync:start', {
-            rolls: p.lifetimeRollCount,
-            ep: p.lifetimeEP,
-          });
-          setSyncing(true);
-          try {
-            const merged = await pushCloudSave(p);
-            // Only apply if this is still the latest enqueue (avoid clobbering newer local rolls)
-            if (latestAutoPayload.current === p) {
-              applyCloudPayload(merged);
-              setSyncError(null);
-            }
-            log.info('autoSync:ok', { rolls: merged.lifetimeRollCount });
-          } catch (e) {
-            const message = e instanceof Error ? e.message : 'Auto-sync failed';
-            log.error('autoSync:fail', { message });
-            setSyncError(message);
-          } finally {
-            setSyncing(false);
-          }
-        })
-        .catch(() => {
-          /* chain must not break */
-        });
-    },
-    [applyCloudPayload],
-  );
+  const sync = useSync({
+    loggedInRef,
+    stateRef,
+    setState,
+    persist,
+    onSecretUnlocks: setLastSecretUnlocks,
+  });
+  const { enqueueAutoSync } = sync;
 
   // Backfill secret masteries if collection already qualifies; push to cloud for profile
   useEffect(() => {
@@ -318,34 +229,26 @@ export function GameProvider({ children }: { children: ReactNode }) {
           setSaveError('Sign in to play Ranked free play.');
           return null;
         }
-        const res = await fetch('/api/ranked-roll', {
-          method: 'POST',
-          credentials: 'include',
-        });
-        const body = (await res.json().catch(() => ({}))) as {
-          roll?: RollResult;
-          error?: string;
-          code?: string;
-        };
-        if (!res.ok || !body.roll) {
+        const ranked = await requestRankedRoll();
+        if (!ranked.ok) {
           const msg =
-            body.error ||
-            (res.status === 401
+            ranked.error ||
+            (ranked.status === 401
               ? 'Sign in to play Ranked free play.'
-              : res.status === 429
+              : ranked.status === 429
                 ? 'Ranked rate limit — try again later.'
-                : res.status === 500
+                : ranked.status === 500
                   ? 'Ranked roll server error — try again in a moment.'
                   : 'Ranked roll failed.');
           setSaveError(msg);
           log.warn('ranked-roll:fail', {
-            status: res.status,
+            status: ranked.status,
             msg,
-            body,
+            body: ranked.body,
           });
           return null;
         }
-        result = { ...body.roll, source: 'ranked' };
+        result = { ...ranked.roll, source: 'ranked' };
         setSaveError(null);
       } else {
         // Optional challenge: personal number from shared period seed + subject
@@ -353,7 +256,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         const userId = session?.user?.id;
         let subject = userId ?? 'guest:anon';
         if (!userId && typeof localStorage !== 'undefined') {
-          const key = 'rngdle-unlocked:v1:guest';
+          const key = STORAGE_KEYS.guest;
           let g = localStorage.getItem(key);
           if (!g) {
             g = crypto.randomUUID();
@@ -470,27 +373,21 @@ export function GameProvider({ children }: { children: ReactNode }) {
     async (rollResult: RollResult): Promise<{ seal: string } | null> => {
       if (!loggedInRef.current) return null;
       try {
-        const res = await fetch('/api/attest', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: rollResult.id,
-            number: rollResult.number,
-            totalEP: rollResult.totalEP,
-            rolledAt: rollResult.rolledAt,
-            shortCode: rollResult.shortCode,
-          }),
+        const attested = await requestAttestation({
+          id: rollResult.id,
+          number: rollResult.number,
+          totalEP: rollResult.totalEP,
+          rolledAt: rollResult.rolledAt,
+          shortCode: rollResult.shortCode,
         });
-        const data = (await res.json()) as {
-          error?: string;
-          seal?: string;
-        };
-        if (!res.ok || !data.seal) {
-          log.warn('attest:fail', { error: data.error, status: res.status });
+        if (!attested.ok) {
+          log.warn('attest:fail', {
+            error: attested.error,
+            status: attested.status,
+          });
           return null;
         }
-        const sealed = { ...rollResult, attestationSeal: data.seal };
+        const sealed = { ...rollResult, attestationSeal: attested.seal };
         setLastRoll((prev) => (prev?.id === rollResult.id ? sealed : prev));
         setState((prev) => {
           const history = prev.history.map((r) =>
@@ -501,7 +398,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
           return next;
         });
         log.info('attest:ok', { id: rollResult.id });
-        return { seal: data.seal };
+        return { seal: attested.seal };
       } catch (e) {
         log.error('attest:error', {
           err: e instanceof Error ? e.message : String(e),
@@ -522,47 +419,18 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setSaveError(null);
   }, []);
 
-  const patchSettings = useCallback(
-    (partial: Partial<AppSettings>) => {
+  const dispatchSettings = useCallback(
+    (action: SettingsAction) => {
       setState((prev) => {
         const next = {
           ...prev,
-          settings: { ...prev.settings, ...partial },
+          settings: settingsReducer(prev.settings, action),
         };
         persist(next);
         return next;
       });
     },
     [persist],
-  );
-
-  const setTheme = useCallback(
-    (theme: ThemeMode) => patchSettings({ theme }),
-    [patchSettings],
-  );
-  const setShareShowRollCount = useCallback(
-    (shareShowRollCount: boolean) => patchSettings({ shareShowRollCount }),
-    [patchSettings],
-  );
-  const setSoundEnabled = useCallback(
-    (soundEnabled: boolean) => patchSettings({ soundEnabled }),
-    [patchSettings],
-  );
-  const setConfettiEnabled = useCallback(
-    (confettiEnabled: boolean) => patchSettings({ confettiEnabled }),
-    [patchSettings],
-  );
-  const setAutoScrollBadges = useCallback(
-    (autoScrollBadges: boolean) => patchSettings({ autoScrollBadges }),
-    [patchSettings],
-  );
-  const setAutoShareHighRarity = useCallback(
-    (autoShareHighRarity: boolean) => patchSettings({ autoShareHighRarity }),
-    [patchSettings],
-  );
-  const setShowLatestRuns = useCallback(
-    (showLatestRuns: boolean) => patchSettings({ showLatestRuns }),
-    [patchSettings],
   );
 
   const selectRoll = useCallback((rollResult: RollResult | null) => {
@@ -622,116 +490,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
     [persist],
   );
 
-  const fireCelebration = useCallback(
-    (rarity?: import('../game/types').RarityTier) => {
-      setCelebrateRarity(rarity ?? 'rare');
-      setConfettiToken((t) => t + 1);
-    },
-    [],
-  );
+  const fireCelebration = useCallback((rarity?: RarityTier) => {
+    setCelebrateRarity(rarity ?? 'rare');
+    setConfettiToken((t) => t + 1);
+  }, []);
 
-  const syncToCloud = useCallback(async () => {
-    setSyncing(true);
-    setSyncError(null);
-    log.info('syncToCloud:start', {
-      rolls: state.lifetimeRollCount,
-      ep: state.lifetimeEP,
-    });
-    try {
-      const merged = await pushCloudSave(toCloudPayload(state));
-      applyCloudPayload(merged);
-      log.info('syncToCloud:ok', { rolls: merged.lifetimeRollCount });
-    } catch (e) {
-      const message = e instanceof Error ? e.message : 'Sync failed';
-      log.error('syncToCloud:fail', { message });
-      setSyncError(message);
-    } finally {
-      setSyncing(false);
-    }
-  }, [applyCloudPayload, state]);
-
-  const pullFromCloud = useCallback(async () => {
-    setSyncing(true);
-    setSyncError(null);
-    log.info('pullFromCloud:start');
-    try {
-      const cloud = await fetchCloudSave();
-      if (!cloud) {
-        log.warn('pullFromCloud:empty');
-        setSyncError('Nothing in the cloud yet — push first.');
-        return;
-      }
-      // Merge pull with local then save
-      const merged = await pushCloudSave(toCloudPayload(state));
-      applyCloudPayload(merged);
-      log.info('pullFromCloud:ok', { rolls: merged.lifetimeRollCount });
-    } catch (e) {
-      const message = e instanceof Error ? e.message : 'Pull failed';
-      log.error('pullFromCloud:fail', { message });
-      setSyncError(message);
-    } finally {
-      setSyncing(false);
-    }
-  }, [applyCloudPayload, state]);
-
-  const waitForCloudPublish = useCallback(
-    async (roll: RollResult): Promise<'ok' | 'error' | 'logged-out'> => {
-      if (!loggedInRef.current) return 'logged-out';
-      // Drain auto-sync queue first
-      await autoSyncChain.current.catch(() => {});
-      const key = roll.shortCode || roll.id;
-
-      const ensurePayloadHasRoll = (): CloudSavePayload => {
-        const base = toCloudPayload(stateRef.current);
-        if (base.history.some((r) => r.id === roll.id)) return base;
-        return {
-          ...base,
-          history: [roll, ...base.history].slice(0, 500),
-        };
-      };
-
-      // Immediate force-push so the roll is not waiting on a failed auto-sync
-      try {
-        setSyncing(true);
-        const merged = await pushCloudSave(ensurePayloadHasRoll());
-        applyCloudPayload(merged);
-      } catch (e) {
-        log.error('waitForCloudPublish:push fail', {
-          err: e instanceof Error ? e.message : String(e),
-        });
-      } finally {
-        setSyncing(false);
-      }
-
-      for (let attempt = 0; attempt < 8; attempt++) {
-        try {
-          const res = await fetch(`/api/rolls/${encodeURIComponent(key)}`, {
-            credentials: 'include',
-          });
-          if (res.ok) {
-            log.info('waitForCloudPublish:ok', { key, attempt });
-            return 'ok';
-          }
-        } catch {
-          /* retry */
-        }
-        // Re-push mid-loop if still missing (handles transient 500s)
-        if (attempt === 2 || attempt === 5) {
-          try {
-            await pushCloudSave(ensurePayloadHasRoll());
-          } catch {
-            /* continue polling */
-          }
-        }
-        await new Promise((r) => setTimeout(r, 400 + attempt * 150));
-      }
-      log.error('waitForCloudPublish:exhausted', { key });
-      return 'error';
-    },
-    [applyCloudPayload],
-  );
-
-  const value = useMemo<GameContextValue>(
+  const gameValue = useMemo<GameContextValue>(
     () => ({
       lastRoll,
       history: state.history,
@@ -739,7 +503,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
       lifetimeEP: state.lifetimeEP,
       lifetimeRollCount: state.lifetimeRollCount,
       journeyEP: state.journeyEP,
-      settings: state.settings,
       stats: state.stats,
       rolling,
       saveError,
@@ -753,23 +516,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
       roll,
       attestRoll,
       clearAll,
-      setTheme,
-      setShareShowRollCount,
-      setSoundEnabled,
-      setConfettiEnabled,
-      setAutoScrollBadges,
-      setAutoShareHighRarity,
-      setShowLatestRuns,
       selectRoll,
       exportSave,
       importSave,
       fireCelebration,
-      syncToCloud,
-      pullFromCloud,
-      syncing,
-      lastSyncAt,
-      syncError,
-      waitForCloudPublish,
     }),
     [
       lastRoll,
@@ -786,31 +536,79 @@ export function GameProvider({ children }: { children: ReactNode }) {
       roll,
       attestRoll,
       clearAll,
-      setTheme,
-      setShareShowRollCount,
-      setSoundEnabled,
-      setConfettiEnabled,
-      setAutoScrollBadges,
-      setAutoShareHighRarity,
-      setShowLatestRuns,
       selectRoll,
       exportSave,
       importSave,
       fireCelebration,
-      syncToCloud,
-      pullFromCloud,
-      syncing,
-      lastSyncAt,
-      syncError,
-      waitForCloudPublish,
     ],
   );
 
-  return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
+  const settingsValue = useMemo<GameSettingsValue>(
+    () => ({
+      settings: state.settings,
+      setTheme: (value) => dispatchSettings({ type: 'setTheme', value }),
+      setShareShowRollCount: (value) =>
+        dispatchSettings({ type: 'setShareShowRollCount', value }),
+      setSoundEnabled: (value) =>
+        dispatchSettings({ type: 'setSoundEnabled', value }),
+      setConfettiEnabled: (value) =>
+        dispatchSettings({ type: 'setConfettiEnabled', value }),
+      setAutoScrollBadges: (value) =>
+        dispatchSettings({ type: 'setAutoScrollBadges', value }),
+      setAutoShareHighRarity: (value) =>
+        dispatchSettings({ type: 'setAutoShareHighRarity', value }),
+      setShowLatestRuns: (value) =>
+        dispatchSettings({ type: 'setShowLatestRuns', value }),
+    }),
+    [state.settings, dispatchSettings],
+  );
+
+  const syncValue = useMemo<SyncControls>(
+    () => ({
+      syncing: sync.syncing,
+      lastSyncAt: sync.lastSyncAt,
+      syncError: sync.syncError,
+      syncToCloud: sync.syncToCloud,
+      pullFromCloud: sync.pullFromCloud,
+      waitForCloudPublish: sync.waitForCloudPublish,
+    }),
+    [
+      sync.syncing,
+      sync.lastSyncAt,
+      sync.syncError,
+      sync.syncToCloud,
+      sync.pullFromCloud,
+      sync.waitForCloudPublish,
+    ],
+  );
+
+  return (
+    <GameSettingsContext.Provider value={settingsValue}>
+      <CloudSyncContext.Provider value={syncValue}>
+        <GameContext.Provider value={gameValue}>
+          {children}
+        </GameContext.Provider>
+      </CloudSyncContext.Provider>
+    </GameSettingsContext.Provider>
+  );
 }
 
 export function useGame(): GameContextValue {
   const ctx = useContext(GameContext);
   if (!ctx) throw new Error('useGame must be used within GameProvider');
+  return ctx;
+}
+
+export function useGameSettings(): GameSettingsValue {
+  const ctx = useContext(GameSettingsContext);
+  if (!ctx) {
+    throw new Error('useGameSettings must be used within GameProvider');
+  }
+  return ctx;
+}
+
+export function useCloudSync(): SyncControls {
+  const ctx = useContext(CloudSyncContext);
+  if (!ctx) throw new Error('useCloudSync must be used within GameProvider');
   return ctx;
 }

@@ -1,0 +1,37 @@
+import type { AppSettings, ThemeMode } from '../game/types';
+
+export type SettingsAction =
+  | { type: 'setTheme'; value: ThemeMode }
+  | { type: 'setShareShowRollCount'; value: boolean }
+  | { type: 'setSoundEnabled'; value: boolean }
+  | { type: 'setConfettiEnabled'; value: boolean }
+  | { type: 'setAutoScrollBadges'; value: boolean }
+  | { type: 'setAutoShareHighRarity'; value: boolean }
+  | { type: 'setShowLatestRuns'; value: boolean };
+
+/** Pure reducer behind the 7 near-identical settings setters. */
+export function settingsReducer(
+  settings: AppSettings,
+  action: SettingsAction,
+): AppSettings {
+  switch (action.type) {
+    case 'setTheme':
+      return { ...settings, theme: action.value };
+    case 'setShareShowRollCount':
+      return { ...settings, shareShowRollCount: action.value };
+    case 'setSoundEnabled':
+      return { ...settings, soundEnabled: action.value };
+    case 'setConfettiEnabled':
+      return { ...settings, confettiEnabled: action.value };
+    case 'setAutoScrollBadges':
+      return { ...settings, autoScrollBadges: action.value };
+    case 'setAutoShareHighRarity':
+      return { ...settings, autoShareHighRarity: action.value };
+    case 'setShowLatestRuns':
+      return { ...settings, showLatestRuns: action.value };
+    default: {
+      const exhaustive: never = action;
+      return exhaustive;
+    }
+  }
+}
