@@ -41,6 +41,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   shareShowRollCount: false,
   soundEnabled: false,
   confettiEnabled: true,
+  /** Default on; users can turn off under Settings (localStorage). */
+  autoScrollBadges: true,
 };
 
 export function defaultState(): PersistedState {

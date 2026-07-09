@@ -204,11 +204,14 @@ export function BadgeBreakdown({
   newBadgeIds,
   /** Cascade cards in (EP total is animated separately from 0 → roll.totalEP) */
   animateCascade = false,
+  /** Follow each cascading card with viewport scroll (Settings → localStorage). */
+  autoScroll = true,
 }: {
   badges: BadgeHit[];
   number: number;
   newBadgeIds?: ReadonlySet<string> | readonly string[];
   animateCascade?: boolean;
+  autoScroll?: boolean;
 }) {
   const sorted = [...badges].sort((a, b) => b.ep - a.ep || a.name.localeCompare(b.name));
   const newSet =
@@ -245,8 +248,9 @@ export function BadgeBreakdown({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animateCascade, badgeSig]);
 
-  // Follow-scroll in lockstep with cascade: one ease per badge, same duration
+  // Follow-scroll in lockstep with cascade (optional; Settings → autoScrollBadges)
   useEffect(() => {
+    if (!autoScroll) return;
     if (!animateCascade || visibleCount < 1) return;
     if (prefersReducedMotion()) return;
 
@@ -267,7 +271,7 @@ export function BadgeBreakdown({
       window.clearTimeout(delay);
       cancelScroll?.();
     };
-  }, [visibleCount, animateCascade]);
+  }, [visibleCount, animateCascade, autoScroll]);
 
   if (badges.length === 0) {
     return (

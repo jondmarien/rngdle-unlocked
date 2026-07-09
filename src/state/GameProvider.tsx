@@ -97,6 +97,7 @@ type GameContextValue = {
   setShareShowRollCount: (v: boolean) => void;
   setSoundEnabled: (v: boolean) => void;
   setConfettiEnabled: (v: boolean) => void;
+  setAutoScrollBadges: (v: boolean) => void;
   selectRoll: (roll: RollResult | null) => void;
   exportSave: () => void;
   importSave: (file: File) => Promise<void>;
@@ -477,6 +478,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
     (confettiEnabled: boolean) => patchSettings({ confettiEnabled }),
     [patchSettings],
   );
+  const setAutoScrollBadges = useCallback(
+    (autoScrollBadges: boolean) => patchSettings({ autoScrollBadges }),
+    [patchSettings],
+  );
 
   const selectRoll = useCallback((rollResult: RollResult | null) => {
     setLastRoll(rollResult);
@@ -666,6 +671,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setShareShowRollCount,
       setSoundEnabled,
       setConfettiEnabled,
+      setAutoScrollBadges,
       selectRoll,
       exportSave,
       importSave,
@@ -694,6 +700,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setShareShowRollCount,
       setSoundEnabled,
       setConfettiEnabled,
+      setAutoScrollBadges,
       selectRoll,
       exportSave,
       importSave,

@@ -312,6 +312,7 @@ export function HomeScreen({
             number={lastRoll.number}
             newBadgeIds={lastNewBadgeIds}
             animateCascade
+            autoScroll={settings.autoScrollBadges !== false}
           />
         </div>
       )}

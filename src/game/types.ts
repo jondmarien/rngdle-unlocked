@@ -67,6 +67,11 @@ export type AppSettings = {
   soundEnabled: boolean;
   /** Optional confetti on rare+ settles. Default on. */
   confettiEnabled: boolean;
+  /**
+   * Follow cascading badge cards with auto-scroll after a roll.
+   * Stored in localStorage with other settings (not Neon-only).
+   */
+  autoScrollBadges: boolean;
 };
 
 export type CollectionEntry = {

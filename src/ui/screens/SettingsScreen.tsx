@@ -9,6 +9,7 @@ export function SettingsScreen() {
     setShareShowRollCount,
     setSoundEnabled,
     setConfettiEnabled,
+    setAutoScrollBadges,
     clearAll,
     exportSave,
     importSave,
@@ -62,6 +63,18 @@ export function SettingsScreen() {
           />
           Soft sound on roll settle
         </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={settings.autoScrollBadges !== false}
+            onChange={(e) => setAutoScrollBadges(e.target.checked)}
+          />
+          Auto-scroll as badge breakdown unlocks
+        </label>
+        <p className="text-xs text-[var(--prose-3)]">
+          When on, the page gently follows each cascading badge after a roll.
+          Saved on this device (localStorage) — not a cloud preference.
+        </p>
       </section>
 
       <section className="space-y-2">
@@ -100,6 +113,10 @@ export function SettingsScreen() {
           <li>
             Community “today / week best” cards appear on Roll only when you
             are not mid-session on a roll.
+          </li>
+          <li>
+            Badge auto-scroll is under Effects above — turn it off if you prefer
+            to scroll the breakdown yourself.
           </li>
         </ul>
       </section>
