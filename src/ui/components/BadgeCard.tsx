@@ -141,15 +141,13 @@ export function BadgeBreakdown({
   badges,
   number,
   newBadgeIds,
-  /** Cascade cards in + report cumulative EP as each appears */
+  /** Cascade cards in (EP total is animated separately from 0 → roll.totalEP) */
   animateCascade = false,
-  onCascadeEp,
 }: {
   badges: BadgeHit[];
   number: number;
   newBadgeIds?: ReadonlySet<string> | readonly string[];
   animateCascade?: boolean;
-  onCascadeEp?: (ep: number) => void;
 }) {
   const sorted = [...badges].sort((a, b) => b.ep - a.ep || a.name.localeCompare(b.name));
   const newSet =
@@ -165,27 +163,22 @@ export function BadgeBreakdown({
   useEffect(() => {
     if (!animateCascade || prefersReducedMotion()) {
       setVisibleCount(sorted.length);
-      onCascadeEp?.(sorted.reduce((s, b) => s + b.ep, 0));
       return;
     }
 
     setVisibleCount(0);
-    onCascadeEp?.(0);
     const timers: number[] = [];
-    let cum = 0;
-    sorted.forEach((b, i) => {
+    sorted.forEach((_, i) => {
       timers.push(
         window.setTimeout(() => {
-          cum += b.ep;
           setVisibleCount(i + 1);
-          onCascadeEp?.(cum);
         }, i * CASCADE_MS),
       );
     });
     return () => {
       for (const t of timers) window.clearTimeout(t);
     };
-    // badgeSig identifies this roll's badge set; sorted is derived from badges
+    // badgeSig identifies this roll's badge set
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animateCascade, badgeSig]);
 

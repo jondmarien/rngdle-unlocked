@@ -5,60 +5,80 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-/** Animated EP total — counts up as badges cascade in. */
+/**
+ * Single climb from 0 → target EP.
+ * Does not re-target mid-animation when props thrash — only starts a new climb
+ * when `runKey` or `pending` transitions to a fresh settled total.
+ */
 export function CountUpEP({
   value,
-  /** When true show ??? during spin */
   pending = false,
+  /** Bump with revealKey so each roll climbs 0 → total once */
+  runKey = 0,
+  /** Optional fixed duration (ms); default scales with value size */
+  durationMs,
   className = '',
 }: {
   value: number;
   pending?: boolean;
+  runKey?: number;
+  durationMs?: number;
   className?: string;
 }) {
   const [shown, setShown] = useState(0);
-  const fromRef = useRef(0);
   const rafRef = useRef(0);
+  const lastRunRef = useRef<{ key: number; value: number } | null>(null);
 
   useEffect(() => {
+    cancelAnimationFrame(rafRef.current);
+
     if (pending) {
       setShown(0);
-      fromRef.current = 0;
+      lastRunRef.current = null;
+      return;
+    }
+
+    const target = Math.max(0, Math.round(value));
+
+    // Same run already finished at this total — don't restart
+    if (
+      lastRunRef.current &&
+      lastRunRef.current.key === runKey &&
+      lastRunRef.current.value === target
+    ) {
+      setShown(target);
       return;
     }
 
     if (prefersReducedMotion()) {
-      setShown(value);
-      fromRef.current = value;
+      setShown(target);
+      lastRunRef.current = { key: runKey, value: target };
       return;
     }
 
-    const from = fromRef.current;
-    const to = value;
-    if (from === to) {
-      setShown(to);
-      return;
-    }
-
-    const duration = Math.min(900, 280 + Math.abs(to - from) * 0.04);
+    // Always climb from 0 for a clean, non-fighting counter
+    setShown(0);
+    const duration =
+      durationMs ??
+      Math.min(1600, Math.max(550, 400 + Math.sqrt(target) * 12));
     const start = performance.now();
-    cancelAnimationFrame(rafRef.current);
 
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / duration);
-      // ease-out cubic
+      // ease-out cubic — smooth climb, no overshoot
       const e = 1 - (1 - t) ** 3;
-      const next = Math.round(from + (to - from) * e);
-      setShown(next);
+      setShown(Math.round(target * e));
       if (t < 1) {
         rafRef.current = requestAnimationFrame(tick);
       } else {
-        fromRef.current = to;
+        setShown(target);
+        lastRunRef.current = { key: runKey, value: target };
       }
     };
     rafRef.current = requestAnimationFrame(tick);
+
     return () => cancelAnimationFrame(rafRef.current);
-  }, [value, pending]);
+  }, [pending, value, runKey, durationMs]);
 
   if (pending) {
     return (

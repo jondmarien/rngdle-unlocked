@@ -47,7 +47,6 @@ export function HomeScreen({
   const [slotValue, setSlotValue] = useState<number | null>(null);
   const [revealKey, setRevealKey] = useState(0);
   const [revealDone, setRevealDone] = useState(false);
-  const [cascadeEp, setCascadeEp] = useState(0);
   const [cascadeKey, setCascadeKey] = useState(0);
   /** True from Generate until roll() returns a number (pre-reel scramble). */
   const [awaitingResult, setAwaitingResult] = useState(false);
@@ -74,7 +73,6 @@ export function HomeScreen({
 
   const handleRoll = async () => {
     setRevealDone(false);
-    setCascadeEp(0);
     setAwaitingResult(true);
     pendingFx.current = true;
     setAttestMsg(null);
@@ -165,7 +163,14 @@ export function HomeScreen({
                   Top {topPercentFromPercentile(lastRoll.percentile)}%
                 </span>
               </div>
-              <CountUpEP value={cascadeEp || lastRoll.totalEP} />
+              <CountUpEP
+                value={lastRoll.totalEP}
+                runKey={revealKey}
+                durationMs={Math.min(
+                  1800,
+                  600 + lastRoll.badges.length * 100,
+                )}
+              />
             </div>
           )}
           {!lastRoll && !busy && (
@@ -310,7 +315,6 @@ export function HomeScreen({
             number={lastRoll.number}
             newBadgeIds={lastNewBadgeIds}
             animateCascade
-            onCascadeEp={setCascadeEp}
           />
         </div>
       )}
