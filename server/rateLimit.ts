@@ -80,9 +80,9 @@ export function clientIp(request: { headers: { get(name: string): string | null 
   );
 }
 
-/** Soft fairness: max rolls that may be uploaded per hour per user. */
+/** Soft API burst guards — not gameplay roll locks (free play is unlimited). */
 export const LIMITS = {
-  /** Burst guard on /api/sync only — not a gameplay / roll-count lock. */
+  /** Burst guard on /api/sync only — not a per-roll-hour cap. */
   syncPerMinute: 60,
   /** Server-issued ranked free-play rolls per user per hour. */
   rankedRollsPerHour: 90,

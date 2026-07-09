@@ -245,8 +245,8 @@ export function AboutScreen() {
         </h2>
         <ul className="list-disc space-y-1.5 pl-5">
           <li>
-            No daily lock; soft rate limits protect cloud APIs (including Ranked
-            rolls per hour).
+            No daily lock and no free-play roll-upload cap. Soft rate limits only
+            protect cloud APIs from spam bursts (and Ranked rolls per hour).
           </li>
           <li>
             <strong className="text-[var(--prose)]">Ranked board</strong> —
