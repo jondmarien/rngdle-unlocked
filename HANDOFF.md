@@ -7,8 +7,8 @@
 | **Repo**                   | `jondmarien/rngdle-unlocked`                                                                           |
 | **Live**                   | https://rngdle-unlocked.chron0.tech                                                                    |
 | **Branch**                 | `main` (auto-deploys Vercel)                                                                           |
-| **Version**                | `0.4.1` in `package.json` (Settings uses `VITE_APP_VERSION`); **0.5.0 release pending** docs sync |
-| **Latest release**         | [v0.4.0](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.4.0) (no GitHub `v0.4.1` tag; next cut is **v0.5.0**) |
+| **Version**                | `0.5.0` (`package.json`; Settings uses `VITE_APP_VERSION`) |
+| **Latest release**         | [v0.5.0](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.5.0) |
 | **Handoff commit context** | Opus audit refactor (`aa8e91e`…`fc4fa65` on `main`) + prior P0/P1 wave |
 
 ---
@@ -226,13 +226,13 @@ node scripts/add-roll-source.mjs   # if source column missing
 - [x] Role-gated `/admin` + reports + audit; `ADMIN_SECRET` bootstrap only
 - [x] Discord + GitHub OAuth wiring + [`docs/oauth-setup.md`](./docs/oauth-setup.md)
 - [x] Commit diagnostic scripts; bump `0.4.1`
+- [x] Cut annotated **`v0.5.0`** (architecture refactor docs + version)
 
 ### Still open for you / ops
 
 - [ ] Create Discord Application + GitHub OAuth App using `docs/oauth-setup.md` + `public/brand/oauth-icon-512.png`; paste Client ID/Secret into Vercel
 - [ ] Promote your account: `CONFIRM_PROMOTE=yes node scripts/promote-admin.mjs --email you@…` (needs `ADMIN_SECRET` + `DATABASE_URL`)
 - [ ] Smoke prod: Free/Ranked/mode-switch; epic+ confetti center; Latest runs animation; `/admin`; OAuth buttons after env
-- [ ] Cut annotated **`v0.5.0`** release after docs sync (architecture refactor; skip backfilling `v0.4.1` unless desired)
 
 ### P2 competitive / social
 
@@ -274,7 +274,7 @@ Keep language consistent everywhere (About, RollModePicker, Leaderboard, README)
 
 1. Confirm user finished OAuth portal setup + `promote-admin.mjs`.
 2. Hard-refresh prod smoke checklist §8 + `/admin` + Discord/GitHub Account buttons.
-3. After docs review approval: bump to **0.5.0**, tag, and `gh release create` (architecture refactor notes).
+3. Optional: surface a player-facing What’s new on About (keep `CHANGELOG.md` developer-oriented).
 
 ---
 
