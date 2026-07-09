@@ -118,6 +118,7 @@ export function AccountScreen() {
             type="password"
             required
             minLength={8}
+            autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
             className="w-full border border-[var(--outline)] bg-[var(--surface)] px-3 py-2 text-sm"
             placeholder="Password (8+)"
             value={password}

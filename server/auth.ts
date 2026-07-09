@@ -6,14 +6,25 @@ function getDb() {
   return createDb(process.env.DATABASE_URL);
 }
 
+/** Production base URL for cookies + CSRF. Prefer explicit env, then Vercel. */
+function resolveBaseURL(): string {
+  if (process.env.BETTER_AUTH_URL) return process.env.BETTER_AUTH_URL;
+  if (process.env.VITE_APP_URL) return process.env.VITE_APP_URL;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return 'http://localhost:5173';
+}
+
 export function createAuth() {
+  const secret = process.env.BETTER_AUTH_SECRET;
+  if (!secret) {
+    throw new Error('BETTER_AUTH_SECRET is not set');
+  }
+
   const db = getDb();
-  const baseURL =
-    process.env.BETTER_AUTH_URL ||
-    process.env.VITE_APP_URL ||
-    'http://localhost:5173';
+  const baseURL = resolveBaseURL();
 
   return betterAuth({
+    secret,
     baseURL,
     basePath: '/api/auth',
     database: drizzleAdapter(db, {
@@ -41,6 +52,7 @@ export function createAuth() {
     trustedOrigins: [
       baseURL,
       process.env.VITE_APP_URL,
+      process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined,
       'http://localhost:5173',
       'http://localhost:3000',
       'http://127.0.0.1:5173',
