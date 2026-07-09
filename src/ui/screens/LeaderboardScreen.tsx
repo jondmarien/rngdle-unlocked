@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useSession } from '../../lib/auth-client';
 import { createLogger, withTimeout } from '../../lib/logger';
+import {
+  fetchFollowingUsernames,
+  followUser,
+  unfollowUser,
+} from '../../lib/notifications-api';
+import { FindPlayers } from '../components/FindPlayers';
 
 const log = createLogger('leaderboard');
 
@@ -25,7 +31,7 @@ type FeedItem = {
   attested?: boolean;
 };
 
-type BoardView = 'board' | 'feed';
+type BoardView = 'board' | 'feed' | 'find';
 
 export function LeaderboardScreen({
   onOpenProfile,
@@ -47,6 +53,16 @@ export function LeaderboardScreen({
   const [feed, setFeed] = useState<FeedItem[]>([]);
   const [feedError, setFeedError] = useState<string | null>(null);
   const [feedLoading, setFeedLoading] = useState(false);
+  const [following, setFollowing] = useState<Set<string>>(new Set());
+  const [followBusy, setFollowBusy] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!session?.user) {
+      setFollowing(new Set());
+      return;
+    }
+    void fetchFollowingUsernames().then(setFollowing);
+  }, [session?.user]);
 
   useEffect(() => {
     if (view !== 'board') return;
@@ -69,11 +85,6 @@ export function LeaderboardScreen({
           entries?: Entry[];
           me?: Entry | null;
         };
-        log.info('fetch:response', {
-          status: r.status,
-          count: data.entries?.length ?? 0,
-          meRank: data.me?.rank,
-        });
         if (!r.ok) throw new Error(data.error ?? 'Failed to load');
         if (!cancelled) {
           setEntries(data.entries ?? []);
@@ -84,9 +95,6 @@ export function LeaderboardScreen({
         if (cancelled || (e instanceof DOMException && e.name === 'AbortError')) {
           return;
         }
-        log.error('fetch:fail', {
-          err: e instanceof Error ? e.message : String(e),
-        });
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed');
       })
       .finally(() => {
@@ -137,6 +145,29 @@ export function LeaderboardScreen({
     };
   }, [view, session?.user]);
 
+  const toggleFollow = async (username: string) => {
+    if (!session?.user) return;
+    const key = username.toLowerCase();
+    setFollowBusy(key);
+    try {
+      if (following.has(key)) {
+        await unfollowUser(username);
+        const next = new Set(following);
+        next.delete(key);
+        setFollowing(next);
+      } else {
+        await followUser(username);
+        const next = new Set(following);
+        next.add(key);
+        setFollowing(next);
+      }
+    } catch {
+      /* keep previous following set */
+    } finally {
+      setFollowBusy(null);
+    }
+  };
+
   const meOnPage =
     me &&
     entries.some(
@@ -149,15 +180,14 @@ export function LeaderboardScreen({
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-bold uppercase tracking-wider">
-          Leaderboard
-        </h1>
-        <p className="text-xs text-[var(--prose-3)]">
-          Players with a public username who synced to the cloud.
+        <h1 className="text-xl font-bold tracking-tight">Leaderboard</h1>
+        <p className="text-sm text-[var(--prose-2)]">
+          Ranked players, friends feed, and username search. Follow from the
+          board with + or open a profile.
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-2 text-xs font-bold uppercase">
+      <div className="flex flex-wrap gap-2">
         <Toggle
           active={view === 'board'}
           onClick={() => setView('board')}
@@ -168,22 +198,36 @@ export function LeaderboardScreen({
           onClick={() => setView('feed')}
           label="Feed"
         />
+        <Toggle
+          active={view === 'find'}
+          onClick={() => setView('find')}
+          label="Find"
+        />
       </div>
+
+      {view === 'find' && (
+        <FindPlayers
+          following={following}
+          onFollowingChange={setFollowing}
+          onOpenProfile={onOpenProfile}
+        />
+      )}
 
       {view === 'feed' && (
         <div className="space-y-3">
-          <p className="text-xs text-[var(--prose-3)]">
-            Rare+ public rolls from people you follow (last 14 days).
+          <p className="text-sm text-[var(--prose-2)]">
+            Rare+ public rolls from people you follow (last 14 days). Use Find
+            or + on the board to follow.
           </p>
           {feedLoading && (
-            <p className="text-sm text-[var(--prose-3)]">Loading feed…</p>
+            <p className="text-sm text-[var(--prose-2)]">Loading feed…</p>
           )}
           {feedError && (
-            <p className="text-sm text-[var(--prose-3)]">{feedError}</p>
+            <p className="text-sm text-[var(--prose-2)]">{feedError}</p>
           )}
           {!feedLoading && !feedError && feed.length === 0 && (
-            <p className="text-sm text-[var(--prose-3)]">
-              No rare rolls yet — follow players from their profile.
+            <p className="text-sm text-[var(--prose-2)]">
+              No rare rolls yet. Follow players from Board or Find.
             </p>
           )}
           <ul className="divide-y divide-[var(--outline)] border border-[var(--outline)]">
@@ -206,13 +250,13 @@ export function LeaderboardScreen({
                     {item.number.toLocaleString()}
                   </div>
                 </div>
-                <div className="text-xs text-[var(--prose-3)]">
-                  <span className="font-semibold uppercase text-amber-600 dark:text-amber-400">
+                <div className="text-sm text-[var(--prose-2)]">
+                  <span className="font-semibold capitalize text-amber-600 dark:text-amber-400">
                     {item.rarity}
                   </span>
                   {' · '}
                   {item.totalEP.toLocaleString()} EP
-                  {item.attested ? ' · ✓ sealed' : ''}
+                  {item.attested ? ' · sealed' : ''}
                 </div>
               </li>
             ))}
@@ -222,7 +266,7 @@ export function LeaderboardScreen({
 
       {view === 'board' && (
         <>
-          <div className="flex flex-wrap gap-2 text-xs font-bold uppercase">
+          <div className="flex flex-wrap gap-2">
             <Toggle
               active={period === 'all'}
               onClick={() => setPeriod('all')}
@@ -254,7 +298,6 @@ export function LeaderboardScreen({
             )}
           </div>
 
-          {/* Feature 1 — you on the board */}
           {me && (
             <div
               className={`rounded-lg border-2 px-3 py-2 text-sm ${
@@ -263,46 +306,35 @@ export function LeaderboardScreen({
                   : 'border-[var(--outline)] bg-[var(--surface)]'
               }`}
             >
-              <span className="text-xs font-bold uppercase tracking-wider text-[var(--prose-3)]">
+              <span className="text-sm font-semibold text-[var(--prose-2)]">
                 You on the board
               </span>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="font-bold">
                   #{me.rank}{' '}
                   {me.username ? `@${me.username}` : me.name}
-                  <span className="ml-2 rounded bg-[var(--prose)] px-1.5 py-0.5 text-[10px] uppercase text-[var(--bg)]">
+                  <span className="ml-2 rounded bg-[var(--prose)] px-1.5 py-0.5 text-xs text-[var(--bg)]">
                     you
                   </span>
                 </span>
-                <span className="text-xs text-[var(--prose-3)]">
+                <span className="text-sm text-[var(--prose-2)]">
                   {me.lifetimeEP.toLocaleString()} EP ·{' '}
                   {me.lifetimeRollCount.toLocaleString()} rolls
                 </span>
               </div>
-              {!meOnPage && (
-                <p className="mt-1 text-[10px] text-[var(--prose-3)]">
-                  Outside the top {entries.length} — keep rolling.
-                </p>
-              )}
             </div>
           )}
           {session?.user && !me && !loading && (
-            <p className="text-xs text-[var(--prose-3)]">
+            <p className="text-sm text-[var(--prose-2)]">
               Set a public @username and push to cloud to appear on the board.
             </p>
           )}
 
           {loading && (
-            <p className="text-sm text-[var(--prose-3)]">Loading…</p>
+            <p className="text-sm text-[var(--prose-2)]">Loading…</p>
           )}
           {error && (
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-          )}
-
-          {!loading && !error && entries.length === 0 && (
-            <p className="text-sm text-[var(--prose-3)]">
-              No ranked players yet — set a username and push to cloud.
-            </p>
+            <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
           )}
 
           <ol className="divide-y divide-[var(--outline)] border border-[var(--outline)]">
@@ -314,6 +346,8 @@ export function LeaderboardScreen({
                 (me?.username &&
                   e.username &&
                   e.username.toLowerCase() === me.username.toLowerCase());
+              const uname = e.username?.toLowerCase() ?? '';
+              const isFollowing = uname ? following.has(uname) : false;
               return (
                 <li
                   key={`${e.rank}-${e.username}`}
@@ -323,31 +357,47 @@ export function LeaderboardScreen({
                       : ''
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="mono-number w-8 text-[var(--prose-3)]">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="mono-number w-8 text-[var(--prose-2)]">
                       #{e.rank}
                     </span>
                     <button
                       type="button"
-                      className="text-left font-bold hover:underline"
+                      className="truncate text-left font-bold hover:underline"
                       onClick={() => e.username && onOpenProfile(e.username)}
                       disabled={!e.username}
                     >
                       {e.username ? `@${e.username}` : e.name}
                       {isMe && (
-                        <span className="ml-2 text-[10px] font-bold uppercase text-[var(--accent)]">
+                        <span className="ml-2 text-xs font-bold text-[var(--accent)]">
                           you
                         </span>
                       )}
                     </button>
                   </div>
-                  <div className="text-xs text-[var(--prose-3)]">
-                    <span className="font-semibold text-amber-600 dark:text-amber-400">
-                      {e.lifetimeEP.toLocaleString()} EP
-                    </span>
-                    {' · '}
-                    {e.lifetimeRollCount.toLocaleString()} rolls
-                    {e.badgeCount != null && ` · ${e.badgeCount} badges`}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="text-sm text-[var(--prose-2)]">
+                      <span className="font-semibold text-amber-700 dark:text-amber-400">
+                        {e.lifetimeEP.toLocaleString()} EP
+                      </span>
+                      {' · '}
+                      {e.lifetimeRollCount.toLocaleString()} rolls
+                    </div>
+                    {session?.user && e.username && !isMe && (
+                      <button
+                        type="button"
+                        title={isFollowing ? 'Unfollow' : 'Follow'}
+                        disabled={followBusy === uname}
+                        onClick={() => void toggleFollow(e.username!)}
+                        className={`flex h-8 w-8 items-center justify-center rounded-md border text-lg font-bold leading-none ${
+                          isFollowing
+                            ? 'border-[var(--outline)] text-[var(--prose-2)]'
+                            : 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
+                        }`}
+                      >
+                        {isFollowing ? '✓' : '+'}
+                      </button>
+                    )}
                   </div>
                 </li>
               );

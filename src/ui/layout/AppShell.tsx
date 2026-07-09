@@ -1,4 +1,10 @@
-import type { ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useSession } from '../../lib/auth-client';
+import {
+  fetchNotifications,
+  loadWebNotifyPref,
+  showBrowserNotification,
+} from '../../lib/notifications-api';
 import { tabPath, type TabId } from '../../lib/routes';
 import { useGame } from '../../state/GameProvider';
 import { ThemeToggle } from './ThemeToggle';
@@ -12,6 +18,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'showcase', label: 'Showcase' },
   { id: 'stats', label: 'Stats' },
   { id: 'leaderboard', label: 'Board' },
+  { id: 'notifications', label: 'Alerts' },
   { id: 'account', label: 'Account' },
   { id: 'about', label: 'About' },
   { id: 'settings', label: 'Settings' },
@@ -26,7 +33,50 @@ export function AppShell({
   onTab: (t: TabId) => void;
   children: ReactNode;
 }) {
-  const { settings, setTheme, lifetimeEP, lifetimeRollCount, stats } = useGame();
+  const { settings, setTheme, lifetimeEP, lifetimeRollCount, stats } =
+    useGame();
+  const { data: session } = useSession();
+  const [unread, setUnread] = useState(0);
+  const lastUnread = useRef(0);
+
+  useEffect(() => {
+    if (!session?.user) {
+      setUnread(0);
+      lastUnread.current = 0;
+      return;
+    }
+    let cancelled = false;
+    const poll = async () => {
+      try {
+        const data = await fetchNotifications();
+        if (cancelled) return;
+        const total = data.unread.total;
+        if (
+          total > lastUnread.current &&
+          lastUnread.current >= 0 &&
+          loadWebNotifyPref()
+        ) {
+          const newest =
+            [...data.activity, ...data.system]
+              .filter((i) => !i.read)
+              .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))[0] ?? null;
+          if (newest) {
+            showBrowserNotification(newest.title, newest.body);
+          }
+        }
+        lastUnread.current = total;
+        setUnread(total);
+      } catch {
+        /* ignore */
+      }
+    };
+    void poll();
+    const id = window.setInterval(() => void poll(), 45_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, [session?.user, tab]);
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-[var(--bg)] text-[var(--prose)]">
@@ -52,6 +102,21 @@ export function AppShell({
           </span>
         </div>
         <div className="flex items-center gap-2">
+          {session?.user && (
+            <button
+              type="button"
+              title="Notifications"
+              onClick={() => onTab('notifications')}
+              className="relative rounded-md border border-[var(--outline)] px-2.5 py-1.5 text-sm font-semibold"
+            >
+              Alerts
+              {unread > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--accent)] px-1 text-[11px] font-bold text-white">
+                  {unread > 99 ? '99+' : unread}
+                </span>
+              )}
+            </button>
+          )}
           <ThemeToggle value={settings.theme} onChange={setTheme} />
         </div>
       </header>
@@ -75,6 +140,7 @@ export function AppShell({
             }`}
           >
             {t.label}
+            {t.id === 'notifications' && unread > 0 ? ` (${unread})` : ''}
           </a>
         ))}
       </nav>

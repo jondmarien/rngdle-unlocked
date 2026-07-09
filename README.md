@@ -154,7 +154,9 @@ Switch modes anytime. Badges, EP, history, sync, and share work the same after y
 - **Auto cloud sync** on every roll when signed in (merge-safe)
 - **You on the board** — your rank highlighted + sticky card if outside top list
 - **Leaderboard** — all-time / week; sort by EP / rolls / badges
-- **Follows + Feed** — follow `@user`; rare+ public rolls in Board → Feed
+- **Follows + Feed** — follow `@user` from Board (+), Find search, or profile; rare+ public rolls in Board → Feed
+- **In-app notifications** — Alerts tab (Activity + System messages); optional browser notifications
+- **System messages** — developer broadcasts (`POST /api/system-messages` with `ADMIN_SECRET`)
 - **Profiles** — `/u/:username` with Follow button
 - **Vanity share URLs** — `/s/:username/:shortCode` (no `/api` in the human path)
 - **Share gates** — no public link until cloud confirms; logged-out = account CTA + text only
@@ -225,7 +227,8 @@ rngdle-unlocked/
 | `/collection` | Badge **codex** (encyclopedia) |
 | `/showcase` | Best rolls & streaks |
 | `/stats` | Rarity histogram, EP/hour, calendar |
-| `/leaderboard` | Board + friends **Feed** |
+| `/leaderboard` | Board + Feed + **Find** (username search) |
+| `/notifications` | Alerts (Activity + System messages) |
 | `/account` | Auth + username + push/pull |
 | `/about` | About |
 | `/settings` | Theme, effects, export/import |
@@ -234,7 +237,7 @@ rngdle-unlocked/
 | `/r/:id` | Legacy public roll path |
 
 **API (serverless):**  
-`/api/auth/*`, `/api/me`, `/api/sync`, `/api/leaderboard`, `/api/follow`, `/api/feed`, `/api/challenge`, `/api/attest`, `/api/og`, `/api/profile/:user`, `/api/rolls/:id`, `/api/share/:id`, `/api/health`.
+`/api/auth/*`, `/api/me`, `/api/sync`, `/api/leaderboard`, `/api/follow`, `/api/feed`, `/api/users/search`, `/api/notifications`, `/api/system-messages`, `/api/challenge`, `/api/attest`, `/api/og`, `/api/profile/:user`, `/api/rolls/:id`, `/api/share/:id`, `/api/health`.
 
 Bot user-agents hitting `/s/:user/:code` are rewritten to `/api/share/:code` for OG HTML + image.
 
@@ -315,6 +318,7 @@ See [`.env.example`](./.env.example). Never commit `.env` / `.env.local`.
 | `BETTER_AUTH_URL` | Auth cookies / CSRF | Production site origin |
 | `VITE_APP_URL` | Trusted origins | Usually same as `BETTER_AUTH_URL` |
 | `LOG_LEVEL` | Server logs | Optional (`debug` / `info`) |
+| `ADMIN_SECRET` | System message broadcasts | Optional; required for `POST /api/system-messages` |
 
 ## 🏗️ Architecture notes
 

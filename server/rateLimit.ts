@@ -91,4 +91,7 @@ export const LIMITS = {
   attestPerMinute: 20,
   challengePerMinute: 60,
   ogPerMinute: 120,
+  notificationsPerMinute: 60,
+  usersSearchPerMinute: 40,
+  systemMessagePostPerMinute: 10,
 } as const;

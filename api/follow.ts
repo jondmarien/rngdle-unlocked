@@ -4,6 +4,7 @@ import { createDb } from '../server/db/index.js';
 import { follows, user } from '../server/db/schema.js';
 import { requestUrl } from '../server/http.js';
 import { createLogger } from '../server/logger.js';
+import { notifyFollow } from '../server/notifications.js';
 import {
   checkRateLimit,
   isRateLimited,
@@ -82,16 +83,42 @@ export default defineHandler(async (request) => {
     if (target.id === session.user.id) {
       return Response.json({ error: 'Cannot follow yourself' }, { status: 400 });
     }
+
+    const actorUsername =
+      (session.user as { username?: string | null }).username ?? null;
+
+    let created = false;
     try {
       await db.insert(follows).values({
         followerId: session.user.id,
         followingId: target.id,
       });
+      created = true;
     } catch {
       // already following
     }
-    log.info('follow', { from: session.user.id, to: target.id, username });
-    return Response.json({ ok: true, following: username });
+
+    if (created) {
+      try {
+        await notifyFollow(db, {
+          targetUserId: target.id,
+          actorUserId: session.user.id,
+          actorUsername,
+        });
+      } catch (e) {
+        log.warn('notify follow failed', {
+          err: e instanceof Error ? e.message : String(e),
+        });
+      }
+    }
+
+    log.info('follow', {
+      from: session.user.id,
+      to: target.id,
+      username,
+      created,
+    });
+    return Response.json({ ok: true, following: username, created });
   }
 
   if (request.method === 'DELETE') {

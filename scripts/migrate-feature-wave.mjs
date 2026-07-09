@@ -22,6 +22,31 @@ const stmts = [
     created_at timestamp NOT NULL DEFAULT now(),
     PRIMARY KEY (follower_id, following_id)
   )`,
+  `CREATE TABLE IF NOT EXISTS notifications (
+    id text PRIMARY KEY,
+    user_id text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+    kind text NOT NULL,
+    title text NOT NULL,
+    body text NOT NULL DEFAULT '',
+    href text,
+    actor_username text,
+    read_at timestamp,
+    created_at timestamp NOT NULL DEFAULT now()
+  )`,
+  `CREATE INDEX IF NOT EXISTS notifications_user_created_idx
+    ON notifications (user_id, created_at DESC)`,
+  `CREATE TABLE IF NOT EXISTS system_messages (
+    id text PRIMARY KEY,
+    title text NOT NULL,
+    body text NOT NULL,
+    created_at timestamp NOT NULL DEFAULT now()
+  )`,
+  `CREATE TABLE IF NOT EXISTS system_message_reads (
+    user_id text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+    message_id text NOT NULL REFERENCES system_messages(id) ON DELETE CASCADE,
+    read_at timestamp NOT NULL DEFAULT now(),
+    PRIMARY KEY (user_id, message_id)
+  )`,
 ];
 
 for (const s of stmts) {

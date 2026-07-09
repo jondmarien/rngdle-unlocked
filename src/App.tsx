@@ -16,6 +16,7 @@ import { PublicRollScreen } from './ui/screens/PublicRollScreen';
 import { SettingsScreen } from './ui/screens/SettingsScreen';
 import { ShowcaseScreen } from './ui/screens/ShowcaseScreen';
 import { StatsScreen } from './ui/screens/StatsScreen';
+import { NotificationsScreen } from './ui/screens/NotificationsScreen';
 
 const log = createLogger('router');
 
@@ -48,6 +49,14 @@ function AppRoutes() {
   const goTab = useCallback(
     (tab: TabId) => {
       navigate(tabPath(tab), { kind: 'tab', tab });
+    },
+    [navigate],
+  );
+
+  const goPath = useCallback(
+    (path: string) => {
+      const next = parsePath(path);
+      navigate(path, next);
     },
     [navigate],
   );
@@ -107,6 +116,12 @@ function AppRoutes() {
       {route.kind === 'tab' && tab === 'stats' && <StatsScreen />}
       {route.kind === 'tab' && tab === 'leaderboard' && (
         <LeaderboardScreen onOpenProfile={goProfile} />
+      )}
+      {route.kind === 'tab' && tab === 'notifications' && (
+        <NotificationsScreen
+          onOpenHref={goPath}
+          onGoAccount={() => goTab('account')}
+        />
       )}
       {route.kind === 'tab' && tab === 'account' && <AccountScreen />}
       {route.kind === 'tab' && tab === 'about' && <AboutScreen />}

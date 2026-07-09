@@ -113,7 +113,15 @@ export function AboutScreen() {
           </li>
           <li>
             <strong className="text-[var(--prose)]">Follow friends</strong> —
-            follow from their profile; rare+ rolls show up under Board → Feed.
+            Board → Find (username search), + on a leaderboard row, or Follow on
+            a profile. Rare rolls show under Board → Feed. They get an in-app
+            alert (Alerts tab) when you follow them; optional browser
+            notifications can be enabled there.
+          </li>
+          <li>
+            <strong className="text-[var(--prose)]">Alerts</strong> — personal
+            Activity (follows, etc.) and System messages (developer broadcasts
+            to everyone).
           </li>
           <li>
             Optional{' '}

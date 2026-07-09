@@ -114,6 +114,48 @@ export const follows = pgTable(
   (t) => [primaryKey({ columns: [t.followerId, t.followingId] })],
 );
 
+/**
+ * Per-user inbox (activity: follows, future board events, etc.).
+ * System broadcasts live in `system_messages` and are merged client-side by tab.
+ */
+export const notifications = pgTable('notifications', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  /** follow | system_copy | other */
+  kind: text('kind').notNull(),
+  title: text('title').notNull(),
+  body: text('body').notNull().default(''),
+  href: text('href'),
+  actorUsername: text('actor_username'),
+  readAt: timestamp('read_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+/** Developer / ops broadcasts shown in every account under System Messages. */
+export const systemMessages = pgTable('system_messages', {
+  id: text('id').primaryKey(),
+  title: text('title').notNull(),
+  body: text('body').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+/** Per-user read receipts for system broadcasts */
+export const systemMessageReads = pgTable(
+  'system_message_reads',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    messageId: text('message_id')
+      .notNull()
+      .references(() => systemMessages.id, { onDelete: 'cascade' }),
+    readAt: timestamp('read_at').notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.messageId] })],
+);
+
 /** Fixed-window rate limit counters (serverless-safe). */
 export const rateLimits = pgTable('rate_limits', {
   key: text('key').primaryKey(),
