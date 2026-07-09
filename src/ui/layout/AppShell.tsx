@@ -2,12 +2,19 @@ import type { ReactNode } from 'react';
 import { useGame } from '../../state/GameProvider';
 import { ThemeToggle } from './ThemeToggle';
 
-export type TabId = 'home' | 'history' | 'collection' | 'about' | 'settings';
+export type TabId =
+  | 'home'
+  | 'history'
+  | 'collection'
+  | 'showcase'
+  | 'about'
+  | 'settings';
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'home', label: 'Roll' },
   { id: 'history', label: 'History' },
   { id: 'collection', label: 'Collection' },
+  { id: 'showcase', label: 'Showcase' },
   { id: 'about', label: 'About' },
   { id: 'settings', label: 'Settings' },
 ];
@@ -21,7 +28,7 @@ export function AppShell({
   onTab: (t: TabId) => void;
   children: ReactNode;
 }) {
-  const { settings, setTheme, lifetimeEP, lifetimeRollCount } = useGame();
+  const { settings, setTheme, lifetimeEP, lifetimeRollCount, stats } = useGame();
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-[var(--bg)] text-[var(--prose)]">
@@ -36,7 +43,9 @@ export function AppShell({
           </button>
           <span className="hidden text-xs text-[var(--prose-3)] sm:inline">
             {lifetimeRollCount.toLocaleString()} rolls ·{' '}
-            {lifetimeEP.toLocaleString()} life EP
+            {lifetimeEP.toLocaleString()} EP
+            {stats.dayStreak > 0 ? ` · 🔥${stats.dayStreak}d` : ''}
+            {stats.qualityStreak > 0 ? ` · ⚡${stats.qualityStreak}` : ''}
           </span>
         </div>
         <div className="flex items-center gap-2">

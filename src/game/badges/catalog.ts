@@ -269,7 +269,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     id: 'prime',
     name: 'Prime',
     description: 'A prime number — only divisible by 1 and itself.',
-    ep: 1_100,
+    ep: 1_400,
     family: 'math',
     emoji: '🔷',
     matches: isPrime,
@@ -278,7 +278,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     id: 'palindrome',
     name: 'Mirror',
     description: 'Reads the same forwards and backwards.',
-    ep: 2_200,
+    ep: 2_600,
     family: 'math',
     emoji: '🪞',
     matches: isPalindrome,
@@ -359,7 +359,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     id: 'even',
     name: 'Even Keel',
     description: 'An even number.',
-    ep: 12,
+    ep: 8,
     family: 'math',
     emoji: '⚖️',
     matches: isEven,
@@ -369,7 +369,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     id: 'odd',
     name: 'Odd One',
     description: 'An odd number.',
-    ep: 12,
+    ep: 8,
     family: 'math',
     emoji: '🎲',
     matches: isOdd,
@@ -825,7 +825,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     id: 'void',
     name: 'Void',
     description: 'Contains at least one zero.',
-    ep: 40,
+    ep: 28,
     family: 'void',
     emoji: '⚫',
     matches: (n) => zeroCount(n) >= 1,
@@ -945,7 +945,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     id: 'pair',
     name: 'Pair',
     description: 'Exactly one pair of matching digits.',
-    ep: 70,
+    ep: 55,
     family: 'poker',
     emoji: '🃏',
     matches: (n) => pokerHand(n) === 'pair',
@@ -1128,6 +1128,110 @@ export const NUMBER_BADGES: BadgeDef[] = [
 
   // elements (20 badges: one + swarm × 10)
   ...elementBadges,
+
+  // ========== special / ultra-rare flavor ==========
+  {
+    id: 'royal-flush-digits',
+    name: 'Royal Digits',
+    description: 'Contains 10, J-ish 11 run feel — has both 10 and 11 as substrings.',
+    ep: 3_200,
+    family: 'cultural',
+    emoji: '🃏',
+    matches: (n) => contains(n, '10') && contains(n, '11'),
+  },
+  {
+    id: 'chaos-theory',
+    name: 'Chaos Theory',
+    description: 'Six digits, all unique, neither sorted up nor down.',
+    ep: 2_800,
+    family: 'pattern',
+    emoji: '🌪️',
+    matches: (n) =>
+      digitLength(n) === 6 &&
+      uniqueDigitCount(n) === 6 &&
+      !isNonDecreasing(n) &&
+      !isNonIncreasing(n),
+  },
+  {
+    id: 'symmetric-sum',
+    name: 'Symmetric Sum',
+    description: 'Palindrome whose digits also sum to a perfect square.',
+    ep: 4_500,
+    family: 'math',
+    emoji: '🔮',
+    matches: (n) => {
+      if (!isPalindrome(n)) return false;
+      const s = digitSum(n);
+      const r = Math.round(Math.sqrt(s));
+      return r * r === s;
+    },
+  },
+  {
+    id: 'twin-prime-adjacent',
+    name: 'Twin Gate Prime',
+    description: 'Prime number that also has matching bookend digits.',
+    ep: 3_800,
+    family: 'math',
+    emoji: '🚪',
+    matches: (n) => isPrime(n) && hasBookends(n),
+  },
+  {
+    id: 'lucky-streak-num',
+    name: 'Lucky Streak Number',
+    description: 'Contains three 7s (not necessarily adjacent).',
+    ep: 2_400,
+    family: 'cultural',
+    emoji: '🎰',
+    matches: (n) => countDigit(n, 7) >= 3,
+    highlight: (n) => maskDigit(n, 7),
+  },
+  {
+    id: 'void-walker',
+    name: 'Void Walker',
+    description: 'Ends with 0 and contains at least two zeros.',
+    ep: 1_100,
+    family: 'void',
+    emoji: '🌑',
+    matches: (n) => n >= 10 && endsWith(n, '0') && zeroCount(n) >= 2,
+    highlight: (n) => maskDigit(n, 0),
+  },
+  {
+    id: 'midpoint-king',
+    name: 'Midpoint King',
+    description: 'Number is within 1% of 500,000 (495000–505000).',
+    ep: 2_000,
+    family: 'magnitude',
+    emoji: '👑',
+    matches: (n) => n >= 495_000 && n <= 505_000,
+  },
+  {
+    id: 'almost-ceiling',
+    name: 'Almost Ceiling',
+    description: 'At least 990,000 but not 1,000,000.',
+    ep: 1_800,
+    family: 'magnitude',
+    emoji: '🪜',
+    matches: (n) => n >= 990_000 && n < 1_000_000,
+  },
+  {
+    id: 'binary-palindrome',
+    name: 'Bit Mirror',
+    description: 'Only 0/1 digits and a palindrome (length ≥ 3).',
+    ep: 5_500,
+    family: 'pattern',
+    emoji: '🪞',
+    matches: (n) =>
+      /^[01]+$/.test(digitsOf(n)) && digitsOf(n).length >= 3 && isPalindrome(n),
+  },
+  {
+    id: 'year-of-roll',
+    name: 'Timestamp Soul',
+    description: 'Exactly the current calendar year.',
+    ep: 3_500,
+    family: 'cultural',
+    emoji: '📅',
+    matches: (n) => n === new Date().getFullYear(),
+  },
 ];
 
 export function badgeById(id: string): BadgeDef | undefined {

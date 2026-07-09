@@ -4,10 +4,14 @@ export type {
   BadgeFamily,
   BadgeHit,
   CollectionEntry,
+  ConsecutiveHighlight,
+  PlayStats,
   RarityTier,
+  RollHighlight,
   RollResult,
   ThemeMode,
 } from './types';
+export { rollToHighlight } from './types';
 
 export { ROLL_MAX, ROLL_RANGE, rollNumber, assertValidRollNumber } from './rng';
 export { DISPLAY_WIDTH, formatRollDigits, naturalDigits } from './digits';
@@ -35,3 +39,11 @@ export {
   journeyHits,
   sumJourneyEP,
 } from './journey';
+export {
+  applyStreaks,
+  recomputeBestConsecutive,
+  defaultPlayStats,
+  isQualityRarity,
+  localDateKey,
+} from './stats';
+export { playRollSound, shouldCelebrate } from './fx';

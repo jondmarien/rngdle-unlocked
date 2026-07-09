@@ -3,6 +3,7 @@ import type { BadgeDef, BadgeHit } from './types';
 
 export const JOURNEY_THRESHOLDS = [
   5, 10, 15, 20, 50, 100, 250, 500, 1000, 1500, 2000, 3000, 4000, 5000, 10_000,
+  15_000, 20_000, 25_000, 35_000, 50_000, 75_000, 100_000,
 ] as const;
 
 export type JourneyThreshold = (typeof JOURNEY_THRESHOLDS)[number];
@@ -23,6 +24,13 @@ const EP_BY_THRESHOLD: Record<JourneyThreshold, number> = {
   4000: 12_000,
   5000: 16_000,
   10000: 30_000,
+  15000: 40_000,
+  20000: 55_000,
+  25000: 70_000,
+  35000: 95_000,
+  50000: 130_000,
+  75000: 180_000,
+  100000: 250_000,
 };
 
 const NAMES: Record<JourneyThreshold, string> = {
@@ -41,6 +49,13 @@ const NAMES: Record<JourneyThreshold, string> = {
   4000: 'Four K Club',
   5000: 'Dedicated',
   10000: 'Legend',
+  15000: 'Mythic Grinder',
+  20000: 'Twenty K',
+  25000: 'Quarter Lakh',
+  35000: 'Entropy Monk',
+  50000: 'Half Hundred K',
+  75000: 'Three-Quarter Path',
+  100000: 'Centurion',
 };
 
 const EMOJI: Record<JourneyThreshold, string> = {
@@ -59,6 +74,13 @@ const EMOJI: Record<JourneyThreshold, string> = {
   4000: '👑',
   5000: '💎',
   10000: '🏆',
+  15000: '⚔️',
+  20000: '🌌',
+  25000: '🛸',
+  35000: '🧙',
+  50000: '🏛️',
+  75000: '☄️',
+  100000: '♾️',
 };
 
 function journeyBadge(threshold: JourneyThreshold): BadgeDef {

@@ -18,4 +18,14 @@ describe('journey milestones', () => {
     expect(journeyBadgesForCount(50).map((b) => b.id)).toContain('rolls-5');
     expect(journeyBadgesForCount(4)).toEqual([]);
   });
+
+  it('extends to 100000', () => {
+    const ids = journeyBadgesForCount(100_000).map((b) => b.id);
+    expect(ids).toContain('rolls-10000');
+    expect(ids).toContain('rolls-50000');
+    expect(ids).toContain('rolls-100000');
+    expect(newlyUnlockedJourney(99999, 100000).map((b) => b.id)).toEqual([
+      'rolls-100000',
+    ]);
+  });
 });

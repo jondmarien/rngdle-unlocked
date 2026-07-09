@@ -15,14 +15,18 @@ import {
   type AppSettings,
   type BadgeHit,
   type CollectionEntry,
+  type PlayStats,
   type RollResult,
   type ThemeMode,
 } from '../game';
+import { applyStreaks, recomputeBestConsecutive } from '../game/stats';
 import {
+  buildExportPayload,
   clearState,
   defaultState,
   loadState,
   mergeCollection,
+  parseImportPayload,
   prependHistory,
   saveState,
   type PersistedState,
@@ -42,14 +46,21 @@ type GameContextValue = {
   lifetimeRollCount: number;
   journeyEP: number;
   settings: AppSettings;
+  stats: PlayStats;
   rolling: boolean;
   saveError: string | null;
   lastJourneyUnlocks: BadgeHit[];
+  confettiToken: number;
   roll: () => Promise<RollOutcome | null>;
   clearAll: () => void;
   setTheme: (theme: ThemeMode) => void;
   setShareShowRollCount: (v: boolean) => void;
+  setSoundEnabled: (v: boolean) => void;
+  setConfettiEnabled: (v: boolean) => void;
   selectRoll: (roll: RollResult | null) => void;
+  exportSave: () => void;
+  importSave: (file: File) => Promise<void>;
+  fireCelebration: () => void;
 };
 
 const GameContext = createContext<GameContextValue | null>(null);
@@ -70,6 +81,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [rolling, setRolling] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [lastJourneyUnlocks, setLastJourneyUnlocks] = useState<BadgeHit[]>([]);
+  const [confettiToken, setConfettiToken] = useState(0);
 
   useEffect(() => {
     applyTheme(state.settings.theme);
@@ -102,13 +114,23 @@ export function GameProvider({ children }: { children: ReactNode }) {
       ];
 
       setState((prev) => {
+        const history = prependHistory(prev.history, result);
+        let stats = applyStreaks(prev.stats, result);
+        stats = {
+          ...stats,
+          bestConsecutive: recomputeBestConsecutive(
+            history,
+            stats.bestConsecutive,
+          ),
+        };
         const next: PersistedState = {
           ...prev,
-          history: prependHistory(prev.history, result),
+          history,
           lifetimeRollCount: nextCount,
           lifetimeEP: prev.lifetimeEP + result.totalEP + journeyEPGained,
           journeyEP: prev.journeyEP + journeyEPGained,
           collection: mergeCollection(prev.collection, collectionAdds, at),
+          stats,
         };
         persist(next);
         return next;
@@ -123,19 +145,18 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const clearAll = useCallback(() => {
     clearState();
-    const empty = defaultState();
-    setState(empty);
+    setState(defaultState());
     setLastRoll(null);
     setLastJourneyUnlocks([]);
     setSaveError(null);
   }, []);
 
-  const setTheme = useCallback(
-    (theme: ThemeMode) => {
+  const patchSettings = useCallback(
+    (partial: Partial<AppSettings>) => {
       setState((prev) => {
         const next = {
           ...prev,
-          settings: { ...prev.settings, theme },
+          settings: { ...prev.settings, ...partial },
         };
         persist(next);
         return next;
@@ -144,22 +165,67 @@ export function GameProvider({ children }: { children: ReactNode }) {
     [persist],
   );
 
+  const setTheme = useCallback(
+    (theme: ThemeMode) => patchSettings({ theme }),
+    [patchSettings],
+  );
   const setShareShowRollCount = useCallback(
-    (shareShowRollCount: boolean) => {
-      setState((prev) => {
-        const next = {
-          ...prev,
-          settings: { ...prev.settings, shareShowRollCount },
-        };
-        persist(next);
-        return next;
-      });
-    },
-    [persist],
+    (shareShowRollCount: boolean) => patchSettings({ shareShowRollCount }),
+    [patchSettings],
+  );
+  const setSoundEnabled = useCallback(
+    (soundEnabled: boolean) => patchSettings({ soundEnabled }),
+    [patchSettings],
+  );
+  const setConfettiEnabled = useCallback(
+    (confettiEnabled: boolean) => patchSettings({ confettiEnabled }),
+    [patchSettings],
   );
 
   const selectRoll = useCallback((rollResult: RollResult | null) => {
     setLastRoll(rollResult);
+  }, []);
+
+  const exportSave = useCallback(() => {
+    const payload = buildExportPayload(state);
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `rngdle-unlocked-save-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [state]);
+
+  const importSave = useCallback(
+    async (file: File) => {
+      const text = await file.text();
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        throw new Error('File is not valid JSON');
+      }
+      const next = parseImportPayload(parsed);
+      next.stats = {
+        ...next.stats,
+        bestConsecutive: recomputeBestConsecutive(
+          next.history,
+          next.stats.bestConsecutive,
+        ),
+      };
+      persist(next);
+      setState(next);
+      setLastRoll(next.history[0] ?? null);
+      setLastJourneyUnlocks([]);
+    },
+    [persist],
+  );
+
+  const fireCelebration = useCallback(() => {
+    setConfettiToken((t) => t + 1);
   }, []);
 
   const value = useMemo<GameContextValue>(
@@ -171,14 +237,21 @@ export function GameProvider({ children }: { children: ReactNode }) {
       lifetimeRollCount: state.lifetimeRollCount,
       journeyEP: state.journeyEP,
       settings: state.settings,
+      stats: state.stats,
       rolling,
       saveError,
       lastJourneyUnlocks,
+      confettiToken,
       roll,
       clearAll,
       setTheme,
       setShareShowRollCount,
+      setSoundEnabled,
+      setConfettiEnabled,
       selectRoll,
+      exportSave,
+      importSave,
+      fireCelebration,
     }),
     [
       lastRoll,
@@ -186,11 +259,17 @@ export function GameProvider({ children }: { children: ReactNode }) {
       rolling,
       saveError,
       lastJourneyUnlocks,
+      confettiToken,
       roll,
       clearAll,
       setTheme,
       setShareShowRollCount,
+      setSoundEnabled,
+      setConfettiEnabled,
       selectRoll,
+      exportSave,
+      importSave,
+      fireCelebration,
     ],
   );
 

@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   contributeKeyEntropy,
   contributePointerEntropy,
   topPercentFromPercentile,
 } from '../../game';
+import { playRollSound, shouldCelebrate } from '../../game/fx';
 import { useGame } from '../../state/GameProvider';
 import { BadgeBreakdown } from '../components/BadgeCard';
 import { EPPill } from '../components/EPPill';
@@ -21,6 +22,8 @@ export function HomeScreen() {
     lastJourneyUnlocks,
     lifetimeRollCount,
     settings,
+    stats,
+    fireCelebration,
   } = useGame();
   const [shareOpen, setShareOpen] = useState(false);
   const [slotValue, setSlotValue] = useState<number | null>(
@@ -28,6 +31,7 @@ export function HomeScreen() {
   );
   const [revealKey, setRevealKey] = useState(0);
   const [revealDone, setRevealDone] = useState(() => lastRoll != null);
+  const pendingFx = useRef(false);
 
   useEffect(() => {
     if (revealKey === 0 && lastRoll != null && slotValue == null) {
@@ -53,13 +57,26 @@ export function HomeScreen() {
 
   const handleRoll = async () => {
     setRevealDone(false);
+    pendingFx.current = true;
     const outcome = await roll();
     if (!outcome) {
       setRevealDone(true);
+      pendingFx.current = false;
       return;
     }
     setSlotValue(outcome.roll.number);
     setRevealKey((k) => k + 1);
+  };
+
+  const onRevealComplete = () => {
+    setRevealDone(true);
+    if (pendingFx.current && lastRoll) {
+      playRollSound(lastRoll.rarity, settings.soundEnabled);
+      if (settings.confettiEnabled && shouldCelebrate(lastRoll.rarity)) {
+        fireCelebration();
+      }
+      pendingFx.current = false;
+    }
   };
 
   const busy = rolling || (revealKey > 0 && !revealDone);
@@ -72,11 +89,25 @@ export function HomeScreen() {
           Unlimited rolls. No daily lock. Fortified browser CSPRNG.
         </p>
 
+        {(stats.dayStreak > 0 || stats.qualityStreak > 0 || stats.bestRoll) && (
+          <div className="flex flex-wrap justify-center gap-2 text-[10px] font-bold uppercase tracking-wider text-[var(--prose-3)]">
+            {stats.dayStreak > 0 && <span>🔥 {stats.dayStreak}d streak</span>}
+            {stats.qualityStreak > 0 && (
+              <span>⚡ {stats.qualityStreak} quality</span>
+            )}
+            {stats.bestRoll && (
+              <span>
+                🏆 best {stats.bestRoll.totalEP.toLocaleString()} EP
+              </span>
+            )}
+          </div>
+        )}
+
         <NumberDisplay
           value={slotValue}
           rarity={revealDone ? lastRoll?.rarity : undefined}
           revealKey={revealKey}
-          onRevealComplete={() => setRevealDone(true)}
+          onRevealComplete={onRevealComplete}
         />
 
         {/* Reserved score strip so layout stays stable during reveal */}

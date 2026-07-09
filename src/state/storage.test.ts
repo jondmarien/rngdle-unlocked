@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it } from 'vite-plus/test';
 import {
   HISTORY_CAP,
+  buildExportPayload,
   clearState,
   defaultState,
   loadState,
   mergeCollection,
+  parseImportPayload,
   prependHistory,
   saveState,
 } from './storage';
@@ -50,16 +52,18 @@ describe('storage', () => {
     clearState();
   });
 
-  it('round-trips state', () => {
+  it('round-trips state including stats', () => {
     const state = defaultState();
     state.lifetimeEP = 100;
     state.lifetimeRollCount = 5;
     state.history = [fakeRoll('a')];
+    state.stats.dayStreak = 3;
     expect(saveState(state)).toBe(true);
     const loaded = loadState();
     expect(loaded.lifetimeEP).toBe(100);
     expect(loaded.lifetimeRollCount).toBe(5);
     expect(loaded.history[0]?.id).toBe('a');
+    expect(loaded.stats.dayStreak).toBe(3);
   });
 
   it('caps history without shrinking lifetime counters', () => {
@@ -68,7 +72,6 @@ describe('storage', () => {
       history = prependHistory(history, fakeRoll(String(i)));
     }
     expect(history.length).toBe(HISTORY_CAP);
-    // lifetime counters are independent
     const state = defaultState();
     state.history = history;
     state.lifetimeRollCount = HISTORY_CAP + 10;
@@ -91,5 +94,16 @@ describe('storage', () => {
     localStorage.setItem('rngdle-unlocked:v1:history', '{not json');
     const loaded = loadState();
     expect(loaded.history).toEqual([]);
+  });
+
+  it('export/import payload round-trip', () => {
+    const state = defaultState();
+    state.lifetimeRollCount = 42;
+    state.settings.soundEnabled = true;
+    const payload = buildExportPayload(state);
+    expect(payload.app).toBe('rngdle-unlocked');
+    const restored = parseImportPayload(payload);
+    expect(restored.lifetimeRollCount).toBe(42);
+    expect(restored.settings.soundEnabled).toBe(true);
   });
 });

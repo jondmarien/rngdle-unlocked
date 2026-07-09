@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useGame } from '../../state/GameProvider';
 import { ThemeToggle } from '../layout/ThemeToggle';
 
@@ -7,12 +7,29 @@ export function SettingsScreen() {
     settings,
     setTheme,
     setShareShowRollCount,
+    setSoundEnabled,
+    setConfettiEnabled,
     clearAll,
+    exportSave,
+    importSave,
     lifetimeEP,
     lifetimeRollCount,
     journeyEP,
+    stats,
   } = useGame();
   const [confirm, setConfirm] = useState(false);
+  const [importMsg, setImportMsg] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const onImport = async (file: File | undefined) => {
+    if (!file) return;
+    try {
+      await importSave(file);
+      setImportMsg('Save imported successfully.');
+    } catch (e) {
+      setImportMsg(e instanceof Error ? e.message : 'Import failed');
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -23,6 +40,28 @@ export function SettingsScreen() {
           Theme
         </h2>
         <ThemeToggle value={settings.theme} onChange={setTheme} />
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--prose-3)]">
+          Effects (optional)
+        </h2>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={settings.confettiEnabled}
+            onChange={(e) => setConfettiEnabled(e.target.checked)}
+          />
+          Confetti on rare+ rolls
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={settings.soundEnabled}
+            onChange={(e) => setSoundEnabled(e.target.checked)}
+          />
+          Soft sound on roll settle
+        </label>
       </section>
 
       <section className="space-y-2">
@@ -45,7 +84,49 @@ export function SettingsScreen() {
         </h2>
         <p>Lifetime rolls: {lifetimeRollCount.toLocaleString()}</p>
         <p>Lifetime EP: {lifetimeEP.toLocaleString()}</p>
-        <p>Journey EP (subset): {journeyEP.toLocaleString()}</p>
+        <p>Journey EP: {journeyEP.toLocaleString()}</p>
+        <p>
+          Day streak: {stats.dayStreak} (best {stats.bestDayStreak})
+        </p>
+        <p>
+          Quality streak: {stats.qualityStreak} (best {stats.bestQualityStreak})
+        </p>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--prose-3)]">
+          Export / import
+        </h2>
+        <p className="text-xs text-[var(--prose-3)]">
+          Download a JSON save of history, collection, stats, and settings — or
+          restore from a previous export.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="border border-[var(--prose)] px-3 py-2 text-xs font-bold uppercase"
+            onClick={exportSave}
+          >
+            Export JSON
+          </button>
+          <button
+            type="button"
+            className="border border-[var(--prose)] px-3 py-2 text-xs font-bold uppercase"
+            onClick={() => fileRef.current?.click()}
+          >
+            Import JSON
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            onChange={(e) => void onImport(e.target.files?.[0])}
+          />
+        </div>
+        {importMsg && (
+          <p className="text-xs text-[var(--prose-2)]">{importMsg}</p>
+        )}
       </section>
 
       <section className="space-y-2">
@@ -83,7 +164,7 @@ export function SettingsScreen() {
         )}
       </section>
 
-      <p className="text-xs text-[var(--prose-3)]">RNGdle Unlocked v0.1.0</p>
+      <p className="text-xs text-[var(--prose-3)]">RNGdle Unlocked v0.2.0</p>
     </div>
   );
 }
