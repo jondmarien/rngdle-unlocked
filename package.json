@@ -38,7 +38,7 @@
     "@vitejs/plugin-react": "^4.5.2",
     "dotenv": "^17.4.2",
     "drizzle-kit": "^0.31.10",
-    "esbuild": "^0.28.1",
+    "esbuild": "^0.25.12",
     "tailwindcss": "^4.3.2",
     "tsx": "^4.23.0",
     "typescript": "7.0.2",
@@ -48,6 +48,9 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild"
-    ]
+    ],
+    "overrides": {
+      "esbuild": "^0.25.0"
+    }
   }
 }
