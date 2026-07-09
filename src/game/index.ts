@@ -30,6 +30,9 @@ export {
 export {
   rarityFromEP,
   badgeRarityFromEP,
+  coerceRarity,
+  rarityRank,
+  RARITY_ORDER,
   RARITY_THRESHOLDS,
   RARITY_LABELS,
 } from './rarity.js';

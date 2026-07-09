@@ -1,4 +1,8 @@
-import { mapBytesToInclusiveRange, REJECT_THRESHOLD } from './rng.js';
+import {
+  mapBytesToInclusiveRange,
+  REJECT_THRESHOLD,
+  ROLL_RANGE,
+} from './rng.js';
 
 export type ChallengeKind = 'daily' | 'weekly';
 
@@ -117,5 +121,5 @@ export async function challengeNumber(
     digest.byteOffset,
     digest.byteLength,
   );
-  return view.getUint32(0, false) % 1_000_001;
+  return view.getUint32(0, false) % ROLL_RANGE;
 }

@@ -1,4 +1,6 @@
-const KEY = 'rngdle-unlocked:v1:onboarding';
+import { STORAGE_KEYS } from './storage-keys';
+
+const KEY = STORAGE_KEYS.onboarding;
 
 export type OnboardingState = {
   /** User dismissed the post-first-roll account tip. */

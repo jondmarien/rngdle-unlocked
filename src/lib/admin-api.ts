@@ -58,6 +58,21 @@ export type AdminReportRow = {
   target: { id: string; username: string | null; email: string };
 };
 
+/**
+ * Admin probe — GET /api/admin/broadcast passes the role gate for admins
+ * (a 405 means "authorized but wrong method", which still proves admin).
+ */
+export async function checkIsAdmin(): Promise<boolean> {
+  try {
+    const res = await fetch('/api/admin/broadcast', {
+      credentials: 'include',
+    });
+    return res.ok || res.status === 405;
+  } catch {
+    return false;
+  }
+}
+
 export function searchAdminUsers(q: string) {
   return adminFetch<{ users: AdminUserRow[] }>(
     `/api/admin/users?q=${encodeURIComponent(q)}`,

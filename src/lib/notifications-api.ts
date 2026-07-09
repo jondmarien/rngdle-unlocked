@@ -1,3 +1,5 @@
+import { STORAGE_KEYS } from './storage-keys';
+
 export type InboxItem = {
   id: string;
   tab: 'activity' | 'system';
@@ -95,7 +97,7 @@ export async function fetchFollowingUsernames(): Promise<Set<string>> {
   );
 }
 
-const WEB_NOTIFY_KEY = 'rngdle-unlocked:v1:webNotifications';
+const WEB_NOTIFY_KEY = STORAGE_KEYS.webNotifications;
 
 export function loadWebNotifyPref(): boolean {
   try {
