@@ -51,6 +51,8 @@ export default defineHandler(async (request) => {
     }
 
     if (request.method === 'POST') {
+      // Soft burst guard only (per minute). No hourly roll-upload cap —
+      // free play is unlimited and auto-sync should keep up.
       const rl = await checkRateLimit(
         db,
         `user:${userId}:sync-post`,
@@ -61,19 +63,6 @@ export default defineHandler(async (request) => {
         return rateLimitedResponse(
           rl,
           `Slow down — try again in ${rl.retryAfterSec}s`,
-        );
-      }
-
-      const hourRl = await checkRateLimit(
-        db,
-        `user:${userId}:rolls-hour`,
-        LIMITS.rollsUploadPerHour,
-        3_600_000,
-      );
-      if (isRateLimited(hourRl)) {
-        return rateLimitedResponse(
-          hourRl,
-          'Roll upload limit reached for this hour. Play locally and sync later — no 24h lock, just soft fairness.',
         );
       }
 

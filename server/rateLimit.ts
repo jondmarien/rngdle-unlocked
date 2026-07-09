@@ -82,8 +82,8 @@ export function clientIp(request: { headers: { get(name: string): string | null 
 
 /** Soft fairness: max rolls that may be uploaded per hour per user. */
 export const LIMITS = {
-  syncPerMinute: 30,
-  rollsUploadPerHour: 120,
+  /** Burst guard on /api/sync only — not a gameplay / roll-count lock. */
+  syncPerMinute: 60,
   /** Server-issued ranked free-play rolls per user per hour. */
   rankedRollsPerHour: 90,
   leaderboardPerMinute: 60,
