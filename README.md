@@ -77,7 +77,7 @@ flowchart TB
 
 **Roll path (free play):** fortified browser CSPRNG → badge evaluation → EP / rarity / percentile → history + collection → localStorage → auto-sync when signed in.
 
-**Challenge path (optional):** shared daily/weekly period seed + your user id → deterministic personal number → same badge/EP pipeline; free unlimited CSPRNG stays available anytime.
+**Challenge path (optional):** on the Roll tab, pick **Daily** or **Weekly**. A shared UTC period seed + your account id yields a **personal, deterministic** number for that period (same inputs always match). Free play stays unlimited CSPRNG whenever you switch back.
 
 **Social path (optional):** Better Auth session → merge-safe sync → public username on leaderboards → follow graph → vanity share links only after cloud confirm → Discord OG HTML + `/api/og` image.
 
@@ -127,6 +127,7 @@ Or `pnpm dev` for the SPA only and point APIs at a deployed preview.
 ### Solo playground
 - **Unlimited rolls** 0–1,000,000 (no daily lock)
 - **Fortified CSPRNG** — `crypto.getRandomValues`, entropy mixing, reject sampling (not `Math.random`)
+- **Roll mode picker** — Free play vs Daily vs Weekly with plain-language explanations on the Roll tab
 - **140+ badges** across math, patterns, culture, sequences, and more
 - **Badge codex** — locked vs unlocked with **spoiler-safe** family hints
 - **EP + rarity ladder** (trash → mythic) and percentile framing
@@ -135,6 +136,17 @@ Or `pnpm dev` for the SPA only and point APIs at a deployed preview.
 - **Streaks**, optional confetti / SFX
 - **Export / import** save files; theme light / dark / system
 - **Discord-style share text** + PNG card
+- **Readable UI** — larger body/nav type, higher-contrast muted text (light + dark)
+
+### Roll modes (Free / Daily / Weekly)
+
+| Mode | Number source | Notes |
+| --- | --- | --- |
+| **Free play** | Browser CSPRNG each Generate | Main game; unlimited |
+| **Daily** | `hash(daySeed + yourId)` | One personal number per UTC day; re-Generate repeats it |
+| **Weekly** | `hash(weekSeed + yourId)` | Same idea for the ISO week |
+
+Switch modes anytime. Badges, EP, history, sync, and share work the same after you have a number.
 
 ### Social & competitive
 - **Email + password** auth (Better Auth)
@@ -147,8 +159,7 @@ Or `pnpm dev` for the SPA only and point APIs at a deployed preview.
 - **Vanity share URLs** — `/s/:username/:shortCode` (no `/api` in the human path)
 - **Share gates** — no public link until cloud confirms; logged-out = account CTA + text only
 - **Mythic / anomaly** auto-open share after reveal
-- **Daily / weekly challenge** seeds (optional mode on Roll tab)
-- **Prove this roll** — optional server HMAC seal (`/api/attest`)
+- **Prove this roll** — optional server HMAC seal (`/api/attest`). Stamps the claim; does **not** mean free-play RNG was server-side
 - **Dynamic OG image** — `/api/og` SVG card for Discord / social crawlers
 - **Soft rate limits** on sync and public APIs (fairness, not a 24h lock)
 
@@ -352,6 +363,7 @@ The Account screen times out after a few seconds and shows the sign-in form. Che
 | Badge codex + stats page + onboarding tip | ✅ Shipped |
 | Daily/weekly challenge + roll attestation | ✅ Shipped |
 | Dynamic OG image | ✅ Shipped |
+| Readable roll-mode UI + type scale | ✅ Shipped (v0.3) |
 | OAuth (Discord/GitHub) | 🔮 Later |
 | Notifications / Turnstile / EP velocity / admin | 🔮 Later |
 | Server-authoritative free-play rolls | 🔮 Future |

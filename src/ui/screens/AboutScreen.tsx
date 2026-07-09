@@ -26,11 +26,20 @@ export function AboutScreen() {
         </h2>
         <ol className="list-decimal space-y-2 pl-5">
           <li>
-            <strong className="text-[var(--prose)]">Roll</strong> — hit Generate
-            on the home tab. Digits spin, then settle on a CSPRNG result
-            (Free play). Or switch to{' '}
-            <strong className="text-[var(--prose)]">Daily / Weekly</strong>{' '}
-            challenge mode for a personal number from a shared period seed.
+            <strong className="text-[var(--prose)]">Roll</strong> — pick a mode
+            at the top of the Roll tab, then Generate. Digits spin, then settle.
+            <ul className="mt-1.5 list-disc space-y-1 pl-5">
+              <li>
+                <strong className="text-[var(--prose)]">Free play</strong> —
+                unlimited browser CSPRNG (new number every Generate).
+              </li>
+              <li>
+                <strong className="text-[var(--prose)]">Daily / Weekly</strong> —
+                optional challenge: shared UTC seed + your account → one personal
+                number for that period (same inputs always match). Free play
+                stays available anytime.
+              </li>
+            </ul>
           </li>
           <li>
             <strong className="text-[var(--prose)]">Badges</strong> — number
@@ -111,8 +120,8 @@ export function AboutScreen() {
             <strong className="text-[var(--prose)]">daily / weekly challenge</strong>{' '}
             seeds (personal number from shared seed + your account) and{' '}
             <strong className="text-[var(--prose)]">Prove this roll</strong>{' '}
-            server seals for competitive bragging. RNG in free play is still
-            client-side.
+            (server HMAC seal). A seal means the server stamped that claim; free
+            play is still client-side RNG.
           </li>
           <li>
             Share links look like{' '}
