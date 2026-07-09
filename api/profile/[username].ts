@@ -100,6 +100,28 @@ export default defineHandler(async (request) => {
       collectionRaw = [];
     }
 
+    // Public codex: only ids + meta already stored (no full catalog import on API)
+    const collection = collectionRaw
+      .map((e) => {
+        if (!e || typeof e !== 'object') return null;
+        const row = e as {
+          badgeId?: string;
+          family?: string;
+          firstEarnedAt?: string;
+        };
+        const badgeId = typeof row.badgeId === 'string' ? row.badgeId : '';
+        if (!badgeId) return null;
+        return {
+          badgeId,
+          family: typeof row.family === 'string' ? row.family : 'math',
+          firstEarnedAt:
+            typeof row.firstEarnedAt === 'string' ? row.firstEarnedAt : '',
+        };
+      })
+      .filter((e): e is { badgeId: string; family: string; firstEarnedAt: string } =>
+        Boolean(e),
+      );
+
     let stats: Record<string, unknown> = {};
     try {
       stats = progress ? JSON.parse(progress.statsJson || '{}') : {};
@@ -134,6 +156,8 @@ export default defineHandler(async (request) => {
         lifetimeRollCount: progress?.lifetimeRollCount ?? 0,
         journeyEP: progress?.journeyEp ?? 0,
         badgeCount: unlockedIds.size,
+        /** Unlocked codex entries (public). Client enriches names from catalog. */
+        collection,
         secrets,
         stats,
         recentRolls: recent.map((r) => {

@@ -1,10 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
+  badgeRarityFromEP,
+  JOURNEY_BADGES,
+  NUMBER_BADGES,
   OMEGA_SECRET,
   topPercentFromPercentile,
+  type BadgeFamily,
   type RarityTier,
 } from '../../game';
 import { useSession } from '../../lib/auth-client';
+import { FAMILY_PILL } from '../../lib/badge-theme';
 import { profileAvatarSrc } from '../../lib/profile-avatars';
 import {
   accentStyles,
@@ -13,6 +18,12 @@ import {
 } from '../../lib/profile-theme';
 import { RarityBadge } from '../components/RarityBadge';
 import { EPPill } from '../components/EPPill';
+
+type CollectionEntryDto = {
+  badgeId: string;
+  family: string;
+  firstEarnedAt: string;
+};
 
 type Profile = {
   username: string;
@@ -27,6 +38,7 @@ type Profile = {
   lifetimeRollCount: number;
   journeyEP: number;
   badgeCount: number;
+  collection?: CollectionEntryDto[];
   secrets?: {
     id: string;
     name: string;
@@ -65,6 +77,54 @@ type Profile = {
   }[];
 };
 
+const BADGE_CATALOG = (() => {
+  const m = new Map<
+    string,
+    {
+      id: string;
+      name: string;
+      emoji: string;
+      family: BadgeFamily;
+      ep: number;
+      description: string;
+    }
+  >();
+  for (const b of NUMBER_BADGES) {
+    m.set(b.id, {
+      id: b.id,
+      name: b.name,
+      emoji: b.emoji,
+      family: b.family,
+      ep: b.ep,
+      description: b.description,
+    });
+  }
+  for (const b of JOURNEY_BADGES) {
+    m.set(b.id, {
+      id: b.id,
+      name: b.name,
+      emoji: b.emoji,
+      family: b.family,
+      ep: b.ep,
+      description: b.description,
+    });
+  }
+  return m;
+})();
+
+const CODEX_FAMILY_FILTERS: { id: BadgeFamily | 'all'; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'math', label: 'Math' },
+  { id: 'pattern', label: 'Pattern' },
+  { id: 'void', label: 'Void' },
+  { id: 'cultural', label: 'Culture' },
+  { id: 'magnitude', label: 'Size' },
+  { id: 'sequence', label: 'Seq' },
+  { id: 'poker', label: 'Poker' },
+  { id: 'element', label: 'Element' },
+  { id: 'journey', label: 'Journey' },
+];
+
 function fmtDate(iso: string): string {
   try {
     return new Date(iso).toLocaleString();
@@ -100,6 +160,7 @@ export function ProfileScreen({
     (session?.user as { username?: string | null } | undefined)?.username ??
     null;
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [codexFilter, setCodexFilter] = useState<BadgeFamily | 'all'>('all');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [following, setFollowing] = useState(false);
@@ -157,6 +218,45 @@ export function ProfileScreen({
 
   const isSelf =
     myUsername && myUsername.toLowerCase() === username.toLowerCase();
+
+  /** Public codex: number + journey unlocks (secrets have their own section). */
+  const codexUnlocks = useMemo(() => {
+    const rows = profile?.collection ?? [];
+    return rows
+      .filter(
+        (e) =>
+          e.family !== 'secret' &&
+          !e.badgeId.startsWith('secret-') &&
+          BADGE_CATALOG.has(e.badgeId),
+      )
+      .map((e) => {
+        const def = BADGE_CATALOG.get(e.badgeId)!;
+        return {
+          ...def,
+          firstEarnedAt: e.firstEarnedAt,
+          rarity: badgeRarityFromEP(def.ep),
+        };
+      })
+      .sort((a, b) => {
+        const ta = a.firstEarnedAt || '';
+        const tb = b.firstEarnedAt || '';
+        if (ta !== tb) return tb.localeCompare(ta);
+        return a.name.localeCompare(b.name);
+      });
+  }, [profile?.collection]);
+
+  const codexFiltered = useMemo(() => {
+    if (codexFilter === 'all') return codexUnlocks;
+    return codexUnlocks.filter((b) => b.family === codexFilter);
+  }, [codexUnlocks, codexFilter]);
+
+  const codexFamilyCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const b of codexUnlocks) {
+      m.set(b.family, (m.get(b.family) ?? 0) + 1);
+    }
+    return m;
+  }, [codexUnlocks]);
 
   const toggleFollow = async () => {
     if (!session?.user) {
@@ -401,6 +501,128 @@ export function ProfileScreen({
           )}
         </section>
       )}
+
+      {/* Codex unlocks — public collection (no spoilers; unlocked only) */}
+      <section className="space-y-3">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-base font-bold text-[var(--prose)]">
+            Codex unlocks
+          </h2>
+          <span className="text-sm text-[var(--prose-2)]">
+            {codexUnlocks.length} badge
+            {codexUnlocks.length === 1 ? '' : 's'}
+            {NUMBER_BADGES.length + JOURNEY_BADGES.length > 0
+              ? ` · ${codexUnlocks.length}/${NUMBER_BADGES.length + JOURNEY_BADGES.length}`
+              : ''}
+          </span>
+        </div>
+        <p className="text-sm text-[var(--prose-2)]">
+          Badges @{profile.username} has unlocked. Locked codex entries stay
+          private.
+        </p>
+
+        {codexUnlocks.length === 0 ? (
+          <p className="rounded-lg border border-dashed border-[var(--outline)] px-3 py-4 text-sm text-[var(--prose-3)]">
+            No codex badges synced yet.
+          </p>
+        ) : (
+          <>
+            <div className="flex flex-wrap gap-1.5">
+              {CODEX_FAMILY_FILTERS.filter(
+                (f) =>
+                  f.id === 'all' || (codexFamilyCounts.get(f.id) ?? 0) > 0,
+              ).map((f) => {
+                const selected = codexFilter === f.id;
+                const n =
+                  f.id === 'all'
+                    ? codexUnlocks.length
+                    : (codexFamilyCounts.get(f.id) ?? 0);
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => setCodexFilter(f.id)}
+                    className={`rounded-md border px-2.5 py-1 text-xs font-semibold sm:text-sm ${
+                      selected
+                        ? 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
+                        : 'border-[var(--outline)] text-[var(--prose-2)] hover:bg-[var(--surface-raised)]'
+                    }`}
+                  >
+                    {f.label}
+                    <span className="ml-1 opacity-70">{n}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {codexFiltered.map((b) => {
+                const fam = (
+                  b.family in FAMILY_PILL
+                    ? FAMILY_PILL[b.family as BadgeFamily]
+                    : null
+                );
+                let when: string | null = null;
+                try {
+                  if (b.firstEarnedAt) {
+                    when = new Date(b.firstEarnedAt).toLocaleString(undefined, {
+                      dateStyle: 'medium',
+                      timeStyle: 'short',
+                    });
+                  }
+                } catch {
+                  when = null;
+                }
+                return (
+                  <li
+                    key={b.id}
+                    className="rounded-lg border border-[var(--outline)] bg-[var(--surface)] p-3 text-left text-sm"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 font-bold tracking-tight">
+                        <span className="mr-1" aria-hidden>
+                          {b.emoji}
+                        </span>
+                        {b.name}
+                      </div>
+                      <span className="mono-number shrink-0 text-xs font-bold text-amber-700 dark:text-amber-400">
+                        +{b.ep.toLocaleString()}
+                      </span>
+                    </div>
+                    <p className="mt-1 line-clamp-2 text-xs text-[var(--prose-2)]">
+                      {b.description}
+                    </p>
+                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                      <RarityBadge rarity={b.rarity} />
+                      {fam && (
+                        <span
+                          className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold capitalize ${fam.chip}`}
+                        >
+                          {fam.label}
+                        </span>
+                      )}
+                      {when && (
+                        <time
+                          dateTime={b.firstEarnedAt}
+                          className="text-[10px] text-[var(--prose-3)]"
+                          title="First unlocked"
+                        >
+                          {when}
+                        </time>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+            {codexFiltered.length === 0 && (
+              <p className="text-sm text-[var(--prose-3)]">
+                Nothing in this family yet.
+              </p>
+            )}
+          </>
+        )}
+      </section>
 
       {/* Best roll — showcase style */}
       {best && (
