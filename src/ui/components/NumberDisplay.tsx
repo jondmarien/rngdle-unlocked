@@ -70,6 +70,8 @@ export function NumberDisplay({
     if (value == null) {
       targetRef.current = null;
       lockedRef.current = 0;
+      // Board clear / mode switch — allow the next revealKey=1 to animate again
+      lastRevealKey.current = 0;
       setDisplay(Array.from({ length: 6 }, () => '?'));
       setLockedCount(0);
       setIsAnimating(false);
@@ -94,7 +96,10 @@ export function NumberDisplay({
   // Pre-result scramble while waiting for roll()
   useEffect(() => {
     if (!spinning || revealKey > 0) return;
-    if (prefersReducedMotion()) return;
+    if (prefersReducedMotion()) {
+      setIsAnimating(true);
+      return;
+    }
 
     setIsAnimating(true);
     lockedRef.current = 0;
@@ -112,7 +117,11 @@ export function NumberDisplay({
 
   // Scramble, then lock digits left → right one by one
   useEffect(() => {
-    if (value == null || revealKey === 0) return;
+    if (value == null || revealKey === 0) {
+      // Parent reset the board — forget last played reveal id
+      if (revealKey === 0) lastRevealKey.current = 0;
+      return;
+    }
     if (revealKey === lastRevealKey.current) return;
     lastRevealKey.current = revealKey;
 

@@ -6,7 +6,10 @@ import {
   type RollResult,
 } from '../../game';
 import { playRollSound, shouldCelebrate } from '../../game/fx';
+import { createLogger } from '../../lib/logger';
 import { useGame } from '../../state/GameProvider';
+
+const log = createLogger('home');
 import { BadgeBreakdown } from '../components/BadgeCard';
 import { BestRollCard } from '../components/BestRollCard';
 import { CommunityHighlights } from '../components/CommunityHighlights';
@@ -87,7 +90,12 @@ export function HomeScreen({
     setAttestMsg(null);
   }, [lastRoll?.id]);
 
-  /** Mode switch must wipe the whole roll board (reel, meta, share, cascade). */
+  /**
+   * Mode switch must wipe the whole roll board (reel, meta, share, cascade).
+   * Use a remount key so NumberDisplay internal lastRevealKey cannot collide
+   * with a reused revealKey after reset (that stuck the reel on ?????).
+   */
+  const [reelMountKey, setReelMountKey] = useState(0);
   useEffect(() => {
     clearShareTimer();
     setShareRoll(null);
@@ -100,6 +108,7 @@ export function HomeScreen({
     setAwaitingResult(false);
     pendingFx.current = false;
     revealRollRef.current = null;
+    setReelMountKey((k) => k + 1);
   }, [rollMode]);
 
   const handleRoll = async () => {
@@ -116,14 +125,22 @@ export function HomeScreen({
     try {
       const outcome = await roll();
       if (!outcome) {
-        setRevealDone(true);
+        // Keep empty reel; allow another Generate (do not leave "settling" busy)
+        setRevealDone(false);
         pendingFx.current = false;
         setAwaitingResult(false);
         return;
       }
       revealRollRef.current = outcome.roll;
+      // Set number first, then bump reveal so NumberDisplay always sees both
       setSlotValue(outcome.roll.number);
       setRevealKey((k) => k + 1);
+    } catch (e) {
+      pendingFx.current = false;
+      setRevealDone(false);
+      log.error('handleRoll failed', {
+        err: e instanceof Error ? e.message : String(e),
+      });
     } finally {
       setAwaitingResult(false);
     }
@@ -210,6 +227,7 @@ export function HomeScreen({
         )}
 
         <NumberDisplay
+          key={reelMountKey}
           value={slotValue}
           rarity={revealDone ? lastRoll?.rarity : undefined}
           revealKey={revealKey}

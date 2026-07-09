@@ -155,6 +155,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
    * free/challenge roll cannot paint onto a different mode after switch.
    */
   const rollEpochRef = useRef(0);
+  /** Sync guard — React `rolling` state can lag a tick and block Generate. */
+  const rollInFlightRef = useRef(false);
 
   useEffect(() => {
     applyTheme(state.settings.theme);
@@ -275,9 +277,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
     });
   }, [persist, enqueueAutoSync]);
 
-  /** Switch free/daily/weekly and abandon any in-flight roll UI. */
+  /** Switch free/daily/weekly/ranked and abandon any in-flight roll UI. */
   const setRollMode = useCallback((m: RollMode) => {
     rollEpochRef.current += 1;
+    rollInFlightRef.current = false;
     setRollModeState(m);
     setLastRoll(null);
     setLastJourneyUnlocks([]);
@@ -288,9 +291,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const roll = useCallback(async (): Promise<RollOutcome | null> => {
-    if (rolling) return null;
+    if (rollInFlightRef.current || rolling) return null;
     const epoch = rollEpochRef.current;
     const modeAtStart = rollMode;
+    rollInFlightRef.current = true;
     setRolling(true);
     log.debug('roll:start', {
       lifetimeRollCount: state.lifetimeRollCount,
@@ -452,9 +456,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
       });
       throw err;
     } finally {
-      if (epoch === rollEpochRef.current) {
-        setRolling(false);
-      }
+      // Always release the lock — mode switch may have already cleared these
+      rollInFlightRef.current = false;
+      setRolling(false);
     }
   }, [enqueueAutoSync, persist, rolling, rollMode, session?.user, state]);
 
