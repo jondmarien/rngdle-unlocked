@@ -110,9 +110,7 @@ function AppRoutes() {
       ? route.tab
       : route.kind === 'profile'
         ? 'account'
-        : route.kind === 'admin'
-          ? 'account'
-          : 'home';
+        : 'home';
 
   const profileActive =
     route.kind === 'profile' &&
@@ -128,9 +126,6 @@ function AppRoutes() {
       onOpenMyProfile={goMyProfile}
       profileActive={profileActive}
     >
-      {route.kind === 'admin' && (
-        <AdminScreen onBack={() => goTab('account')} />
-      )}
       {route.kind === 'profile' && (
         <ProfileScreen
           username={route.username}
@@ -171,9 +166,12 @@ function AppRoutes() {
         />
       )}
       {route.kind === 'tab' && tab === 'account' && (
-        <AccountScreen onOpenAdmin={() => navigate('/admin', { kind: 'admin' })} />
+        <AccountScreen onOpenAdmin={() => goTab('admin')} />
       )}
       {route.kind === 'tab' && tab === 'about' && <AboutScreen />}
+      {route.kind === 'tab' && tab === 'admin' && (
+        <AdminScreen onBack={() => goTab('account')} />
+      )}
       {route.kind === 'tab' && tab === 'settings' && <SettingsScreen />}
     </AppShell>
   );

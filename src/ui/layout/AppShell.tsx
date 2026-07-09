@@ -15,8 +15,8 @@ type NavItem =
   | { kind: 'tab'; id: TabId; label: string }
   | { kind: 'profile'; label: string };
 
-/** Main strip — Alerts lives in the header only. */
-const NAV: NavItem[] = [
+/** Main strip — Alerts lives in the header only. Admin inserted when allowed. */
+const NAV_BASE: NavItem[] = [
   { kind: 'tab', id: 'home', label: 'Roll' },
   { kind: 'tab', id: 'history', label: 'History' },
   { kind: 'tab', id: 'collection', label: 'Codex' },
@@ -47,6 +47,7 @@ export function AppShell({
     useGame();
   const { data: session } = useSession();
   const [unread, setUnread] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
   const lastUnread = useRef(0);
 
   useEffect(() => {
@@ -88,9 +89,42 @@ export function AppShell({
     };
   }, [session?.user, tab, profileActive]);
 
+  useEffect(() => {
+    if (!session?.user) {
+      setIsAdmin(false);
+      return;
+    }
+    let cancelled = false;
+    fetch('/api/admin/broadcast', { credentials: 'include' })
+      .then((r) => {
+        if (!cancelled) setIsAdmin(r.ok || r.status === 405);
+      })
+      .catch(() => {
+        if (!cancelled) setIsAdmin(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.user?.id]);
+
   const myUsername =
     (session?.user as { username?: string | null } | undefined)?.username ??
     null;
+
+  const navItems: NavItem[] = (() => {
+    if (!isAdmin) return NAV_BASE;
+    const items = [...NAV_BASE];
+    const settingsIdx = items.findIndex(
+      (i) => i.kind === 'tab' && i.id === 'settings',
+    );
+    const adminItem: NavItem = { kind: 'tab', id: 'admin', label: 'Admin' };
+    if (settingsIdx === -1) {
+      items.push(adminItem);
+      return items;
+    }
+    items.splice(settingsIdx, 0, adminItem);
+    return items;
+  })();
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-[var(--bg)] text-[var(--prose)]">
@@ -145,7 +179,7 @@ export function AppShell({
           className="flex gap-0.5 overflow-x-auto px-2 py-1.5 sm:px-3"
           aria-label="Main"
         >
-        {NAV.map((item) => {
+        {navItems.map((item) => {
           if (item.kind === 'profile') {
             const href = myUsername
               ? `/u/${encodeURIComponent(myUsername)}`

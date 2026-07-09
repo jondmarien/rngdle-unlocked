@@ -8,6 +8,7 @@ export type TabId =
   | "notifications"
   | "account"
   | "about"
+  | "admin"
   | "settings";
 
 /** Canonical path for each main tab (SPA, History API). */
@@ -21,6 +22,7 @@ export const TAB_PATH: Record<TabId, string> = {
   notifications: "/notifications",
   account: "/account",
   about: "/about",
+  admin: "/admin",
   settings: "/settings",
 };
 
@@ -37,20 +39,17 @@ const PATH_TO_TAB: Record<string, TabId> = {
   alerts: "notifications",
   account: "account",
   about: "about",
+  admin: "admin",
   settings: "settings",
 };
 
 export type AppRoute =
   | { kind: "tab"; tab: TabId }
   | { kind: "profile"; username: string }
-  | { kind: "roll"; rollId: string; username?: string }
-  | { kind: "admin" };
+  | { kind: "roll"; rollId: string; username?: string };
 
 export function parsePath(pathname: string): AppRoute {
   const parts = pathname.split("/").filter(Boolean);
-  if (parts[0] === "admin") {
-    return { kind: "admin" };
-  }
   if (parts[0] === "u" && parts[1]) {
     return {
       kind: "profile",

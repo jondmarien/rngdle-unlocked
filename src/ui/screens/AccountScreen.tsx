@@ -43,6 +43,9 @@ export function AccountScreen({
   const [status, setStatus] = useState<string | null>(null);
   const [waitTimedOut, setWaitTimedOut] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [linkedAccounts, setLinkedAccounts] = useState<
+    { providerId: 'discord' | 'github'; accountId: string; label: string }[]
+  >([]);
 
   useEffect(() => {
     log.debug('mount', {
@@ -60,9 +63,12 @@ export function AccountScreen({
     });
   }, [isPending, session?.user, error]);
 
-  // Load vanity + username from /api/me when signed in
+  // Load vanity + username + linked OAuth from /api/me when signed in
   useEffect(() => {
-    if (!session?.user) return;
+    if (!session?.user) {
+      setLinkedAccounts([]);
+      return;
+    }
     let cancelled = false;
     fetch('/api/me', { credentials: 'include' })
       .then(async (r) => {
@@ -75,6 +81,11 @@ export function AccountScreen({
             profileAvatar?: string;
             profileShowCodex?: boolean;
           } | null;
+          linkedAccounts?: {
+            providerId: 'discord' | 'github';
+            accountId: string;
+            label: string;
+          }[];
         };
         if (cancelled || !data.user) return;
         if (data.user.username) setUsername(data.user.username);
@@ -83,6 +94,7 @@ export function AccountScreen({
         setProfileFlair(data.user.profileFlair ?? '');
         setProfileAvatar(normalizeProfileAvatar(data.user.profileAvatar));
         setProfileShowCodex(data.user.profileShowCodex !== false);
+        setLinkedAccounts(data.linkedAccounts ?? []);
       })
       .catch(() => {
         /* ignore */
@@ -220,6 +232,22 @@ export function AccountScreen({
     }
   };
 
+  const refreshLinkedAccounts = async () => {
+    try {
+      const res = await fetch('/api/me', { credentials: 'include' });
+      const data = (await res.json()) as {
+        linkedAccounts?: {
+          providerId: 'discord' | 'github';
+          accountId: string;
+          label: string;
+        }[];
+      };
+      setLinkedAccounts(data.linkedAccounts ?? []);
+    } catch {
+      /* ignore */
+    }
+  };
+
   const onLinkSocial = async (provider: 'discord' | 'github') => {
     setBusy(true);
     setMsg(null);
@@ -230,6 +258,34 @@ export function AccountScreen({
       });
     } catch (err) {
       setMsg(err instanceof Error ? err.message : `Link ${provider} failed`);
+      setBusy(false);
+    }
+  };
+
+  const onUnlinkSocial = async (provider: 'discord' | 'github') => {
+    const linked = linkedAccounts.find((a) => a.providerId === provider);
+    if (!linked) return;
+    const ok = window.confirm(
+      `Unlink ${provider === 'discord' ? 'Discord' : 'GitHub'} (${linked.label})? You can link again later.`,
+    );
+    if (!ok) return;
+    setBusy(true);
+    setMsg(null);
+    try {
+      const res = await authClient.unlinkAccount({
+        providerId: provider,
+        accountId: linked.accountId,
+      });
+      if (res.error) {
+        throw new Error(res.error.message ?? `Unlink ${provider} failed`);
+      }
+      await refreshLinkedAccounts();
+      setMsg(
+        `${provider === 'discord' ? 'Discord' : 'GitHub'} unlinked (${linked.label}).`,
+      );
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : `Unlink ${provider} failed`);
+    } finally {
       setBusy(false);
     }
   };
@@ -456,23 +512,65 @@ export function AccountScreen({
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => void onLinkSocial('discord')}
-              className="rounded-lg border border-[#5865F2]/40 px-3 py-2 text-xs font-bold disabled:opacity-50"
-            >
-              Link Discord
-            </button>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => void onLinkSocial('github')}
-              className="rounded-lg border border-[var(--outline)] px-3 py-2 text-xs font-bold disabled:opacity-50"
-            >
-              Link GitHub
-            </button>
+          <div className="space-y-2 rounded-xl border border-[var(--outline)] bg-[var(--surface)] p-4">
+            <p className="text-sm font-semibold text-[var(--prose)]">
+              Linked sign-in
+            </p>
+            <p className="text-xs text-[var(--prose-3)]">
+              Connect Discord and/or GitHub to this account. Linked providers
+              show the connected handle; unlink anytime.
+            </p>
+            {(['discord', 'github'] as const).map((provider) => {
+              const linked = linkedAccounts.find(
+                (a) => a.providerId === provider,
+              );
+              const label =
+                provider === 'discord' ? 'Discord' : 'GitHub';
+              return (
+                <div
+                  key={provider}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--outline)] bg-[var(--bg)] px-3 py-2"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-[var(--prose)]">
+                      {label}
+                    </p>
+                    <p className="truncate text-xs text-[var(--prose-3)]">
+                      {linked
+                        ? `Linked as ${linked.label}`
+                        : 'Not linked'}
+                    </p>
+                  </div>
+                  {linked ? (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void onUnlinkSocial(provider)}
+                      className={`shrink-0 rounded-lg border px-3 py-1.5 text-xs font-bold disabled:opacity-50 ${
+                        provider === 'discord'
+                          ? 'border-[#5865F2]/40'
+                          : 'border-[var(--outline)]'
+                      }`}
+                    >
+                      Unlink {label}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void onLinkSocial(provider)}
+                      className={`shrink-0 rounded-lg border px-3 py-1.5 text-xs font-bold disabled:opacity-50 ${
+                        provider === 'discord'
+                          ? 'border-[#5865F2]/40'
+                          : 'border-[var(--outline)]'
+                      }`}
+                    >
+                      Link {label}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           <div className="flex flex-wrap gap-2">
