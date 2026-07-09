@@ -58,6 +58,23 @@ export function AccountScreen({
     });
   }, []);
 
+  // Better Auth OAuth errors land as ?error=… after redirect to /account
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const oauthError = params.get('error');
+    if (!oauthError) return;
+    const nicer =
+      oauthError === "email_doesn't_match" ||
+      oauthError === 'email_doesnt_match'
+        ? 'Could not link that provider — its email did not match your account email. Try again after the latest deploy (different emails are now allowed for Discord/GitHub).'
+        : `Sign-in / link failed: ${oauthError.replace(/_/g, ' ')}`;
+    setMsg(nicer);
+    params.delete('error');
+    const next = `${window.location.pathname}${params.toString() ? `?${params}` : ''}${window.location.hash}`;
+    window.history.replaceState(null, '', next);
+  }, []);
+
   useEffect(() => {
     log.debug('session state', {
       isPending,

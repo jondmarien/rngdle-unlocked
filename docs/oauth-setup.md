@@ -137,6 +137,7 @@ Open the printed URL (usually `http://localhost:3000`) → **Account** → Conti
 ## 4. Account linking (product behavior)
 
 - Linking is **enabled** for trusted providers (`discord`, `github`).
+- `allowDifferentEmails: true` — Discord/GitHub emails often differ from the account email; without this, link redirects back to `/account` with `error=email_doesn't_match`.
 - If someone already has email/password and later signs in with Discord/GitHub using the **same verified email**, Better Auth should attach the social account to that user instead of creating a duplicate.
 - Signed-in users can also **Link Discord / Link GitHub** from Account (after UI ships).
 - **Ranked** still requires a public `@username` after OAuth — set it on Account before Ranked Generate.
