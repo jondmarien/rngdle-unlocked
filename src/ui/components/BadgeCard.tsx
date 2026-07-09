@@ -10,11 +10,60 @@ import {
 } from '../../lib/badge-theme';
 import { FAMILY_ICON, RARITY_ICON } from '../../lib/icons';
 
-const CASCADE_MS = 130;
+/** Delay between cascading badge cards (ms) */
+const CASCADE_MS = 220;
+/** Slow follow-scroll duration when a new card appears */
+const SCROLL_MS = 720;
 
 function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined') return false;
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+/** Ease-out scroll for window (and optional overflow parent) — slower than native smooth. */
+function slowScrollElementIntoView(
+  el: HTMLElement,
+  durationMs: number,
+  block: 'start' | 'end' | 'center' = 'end',
+): () => void {
+  const rect = el.getBoundingClientRect();
+  const vh = window.innerHeight;
+  let targetY: number;
+  if (block === 'start') {
+    targetY = window.scrollY + rect.top - 16;
+  } else if (block === 'center') {
+    targetY = window.scrollY + rect.top - vh / 2 + rect.height / 2;
+  } else {
+    // end: leave a little air under the card
+    targetY = window.scrollY + rect.bottom - vh + 48;
+  }
+  const maxY = Math.max(
+    0,
+    document.documentElement.scrollHeight - vh,
+  );
+  targetY = Math.max(0, Math.min(maxY, targetY));
+  const startY = window.scrollY;
+  const delta = targetY - startY;
+  if (Math.abs(delta) < 2) return () => {};
+
+  const start = performance.now();
+  let raf = 0;
+  let cancelled = false;
+
+  const tick = (now: number) => {
+    if (cancelled) return;
+    const t = Math.min(1, (now - start) / durationMs);
+    // ease-out cubic — gentle settle
+    const e = 1 - (1 - t) ** 3;
+    window.scrollTo(0, startY + delta * e);
+    if (t < 1) raf = requestAnimationFrame(tick);
+  };
+  raf = requestAnimationFrame(tick);
+
+  return () => {
+    cancelled = true;
+    cancelAnimationFrame(raf);
+  };
 }
 
 export function BadgeCard({
@@ -187,35 +236,30 @@ export function BadgeBreakdown({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animateCascade, badgeSig]);
 
-  // Keep the newest cascading badge in view (window + nested overflow)
+  // Keep the newest cascading badge in view with a slow, controlled scroll
   useEffect(() => {
     if (!animateCascade || visibleCount < 1) return;
     if (prefersReducedMotion()) return;
 
-    const smooth = { behavior: 'smooth' as const };
-    // First badge: bring the breakdown section into view
-    if (visibleCount === 1) {
-      rootRef.current?.scrollIntoView({ ...smooth, block: 'start' });
-    }
-
-    // After paint, follow the latest card so the user doesn't scroll manually
+    let cancelScroll: (() => void) | undefined;
+    // Wait a frame so the new card is laid out, then ease the viewport
     const id = window.requestAnimationFrame(() => {
-      lastItemRef.current?.scrollIntoView({
-        ...smooth,
-        block: 'nearest',
-        inline: 'nearest',
-      });
-      // Prefer pinning the latest card toward the lower third of the viewport
-      // when the list is growing long
-      if (visibleCount > 2) {
-        lastItemRef.current?.scrollIntoView({
-          ...smooth,
-          block: 'end',
-          inline: 'nearest',
-        });
-      }
+      const el =
+        visibleCount === 1
+          ? rootRef.current
+          : lastItemRef.current;
+      if (!el) return;
+      cancelScroll = slowScrollElementIntoView(
+        el,
+        SCROLL_MS,
+        visibleCount === 1 ? 'start' : 'end',
+      );
     });
-    return () => window.cancelAnimationFrame(id);
+
+    return () => {
+      window.cancelAnimationFrame(id);
+      cancelScroll?.();
+    };
   }, [visibleCount, animateCascade]);
 
   if (badges.length === 0) {
