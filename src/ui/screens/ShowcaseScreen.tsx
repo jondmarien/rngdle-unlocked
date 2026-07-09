@@ -126,11 +126,9 @@ function StatCard({
 }) {
   return (
     <div className="rounded-lg border border-[var(--outline)] bg-[var(--surface)] p-3 text-left">
-      <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--prose-3)]">
-        {label}
-      </div>
+      <div className="text-sm font-semibold text-[var(--prose-2)]">{label}</div>
       <div className="mono-number text-xl font-bold">{value}</div>
-      {sub && <div className="text-[10px] text-[var(--prose-3)]">{sub}</div>}
+      {sub && <div className="text-sm text-[var(--prose-2)]">{sub}</div>}
     </div>
   );
 }
