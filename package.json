@@ -17,6 +17,9 @@
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "1.6.23",
+    "@fontsource-variable/outfit": "^5.2.8",
+    "@fontsource-variable/syne": "^5.2.7",
+    "@fontsource/jetbrains-mono": "^5.2.8",
     "@neondatabase/serverless": "^1.1.0",
     "@types/node": "^24.13.2",
     "@vercel/analytics": "^2.0.1",

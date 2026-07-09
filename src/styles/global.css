@@ -1,4 +1,10 @@
 @import 'tailwindcss';
+@import '@fontsource-variable/outfit';
+@import '@fontsource-variable/syne';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+@import '@fontsource/jetbrains-mono/600.css';
+@import '@fontsource/jetbrains-mono/700.css';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -6,7 +12,6 @@
   --bg: #f6f4ef;
   --surface: #ffffff;
   --surface-raised: #efece4;
-  /* Body / secondary / muted: keep WCAG-friendly contrast on cream bg */
   --prose: #14120f;
   --prose-2: #2f2c27;
   --prose-3: #4f4a42;
@@ -19,11 +24,25 @@
   --epic: #7c3aed;
   --anomaly: #c026d3;
   --mythic: #d97706;
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+
+  /* Typography */
+  --font-sans: 'Outfit Variable', Outfit, system-ui, sans-serif;
+  --font-display: 'Syne Variable', Syne, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  font-family: var(--font-sans);
   font-size: 16px;
-  line-height: 1.5;
+  line-height: 1.55;
+  font-feature-settings:
+    'liga' 1,
+    'calt' 1,
+    'kern' 1,
+    'ss01' 1;
+  font-optical-sizing: auto;
   color: var(--prose);
   background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .dark {
@@ -31,7 +50,6 @@
   --surface: #171512;
   --surface-raised: #221f1a;
   --prose: #f3efe6;
-  /* Brighter secondary/muted on dark so labels stay readable */
   --prose-2: #d4cec0;
   --prose-3: #a8a092;
   --outline: #3a352c;
@@ -52,12 +70,87 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--prose);
+  font-family: var(--font-sans);
 }
 
+/* Display type — titles, brand, section heads */
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  text-wrap: balance;
+  font-feature-settings:
+    'liga' 1,
+    'calt' 1,
+    'ss01' 1,
+    'ss02' 1;
+}
+
+h1 {
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+}
+
+h2 {
+  font-size: clamp(1.15rem, 1.8vw, 1.35rem);
+}
+
+/* Body prose slightly looser */
+p {
+  text-wrap: pretty;
+}
+
+/* Roll numbers / stats — mono, tabular, no confusing ligatures */
 .mono-number {
-  font-family: 'Cascadia Mono', 'Consolas', 'SF Mono', ui-monospace, monospace;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.04em;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: 0.02em;
+  font-feature-settings:
+    'tnum' 1,
+    'lnum' 1,
+    'liga' 0,
+    'calt' 0;
+}
+
+/* Optional: enable code-style ligatures on mono when wanted */
+.mono-liga {
+  font-family: var(--font-mono);
+  font-feature-settings:
+    'liga' 1,
+    'calt' 1,
+    'ss01' 1,
+    'ss02' 1,
+    'ss19' 1;
+}
+
+/* Nav / UI labels */
+.font-ui {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  font-feature-settings:
+    'liga' 1,
+    'calt' 1;
+}
+
+/* Icon chips */
+.icon-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.icon-chip img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .rarity-trash {

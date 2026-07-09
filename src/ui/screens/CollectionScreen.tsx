@@ -8,6 +8,7 @@ import {
   type BadgeFamily,
   type SecretBadgeDef,
 } from '../../game';
+import { FAMILY_ICON } from '../../lib/icons';
 import { useGame } from '../../state/GameProvider';
 
 type FilterId = BadgeFamily | 'all' | 'secret';
@@ -94,24 +95,32 @@ export function CollectionScreen() {
       </div>
 
       <div className="flex flex-wrap gap-1.5">
-        {FAMILIES.map((f) => (
-          <button
-            key={f.id}
-            type="button"
-            onClick={() => setFilter(f.id)}
-            className={`rounded-md border px-2.5 py-1.5 text-sm font-semibold ${
-              filter === f.id
-                ? f.id === 'secret'
-                  ? 'border-amber-400 bg-amber-400 text-black'
-                  : 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
-                : f.id === 'secret'
-                  ? 'border-amber-500/40 text-amber-700 dark:text-amber-300'
-                  : 'border-[var(--outline)] text-[var(--prose-2)]'
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
+        {FAMILIES.map((f) => {
+          const icon = FAMILY_ICON[f.id];
+          return (
+            <button
+              key={f.id}
+              type="button"
+              onClick={() => setFilter(f.id)}
+              className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-sm font-semibold ${
+                filter === f.id
+                  ? f.id === 'secret'
+                    ? 'border-amber-400 bg-amber-400 text-black'
+                    : 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
+                  : f.id === 'secret'
+                    ? 'border-amber-500/40 text-amber-700 dark:text-amber-300'
+                    : 'border-[var(--outline)] text-[var(--prose-2)]'
+              }`}
+            >
+              {icon && (
+                <span className="icon-chip h-5 w-5 ring-1 ring-black/15 dark:ring-white/10">
+                  <img src={icon} alt="" aria-hidden />
+                </span>
+              )}
+              {f.label}
+            </button>
+          );
+        })}
         <button
           type="button"
           onClick={() => setShowLocked((v) => !v)}

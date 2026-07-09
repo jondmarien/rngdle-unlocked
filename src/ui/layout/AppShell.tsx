@@ -98,7 +98,7 @@ export function AppShell({
         <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
           <a
             href={tabPath('home')}
-            className="text-base font-bold tracking-wide sm:text-lg"
+            className="font-display text-base font-bold tracking-wide sm:text-lg"
             onClick={(e) => {
               e.preventDefault();
               onTab('home');
