@@ -242,7 +242,7 @@ Important tables: `user` (username, vanity profile fields), `user_progress`, `ro
 | `/api/reports`                        | Signed-in users file abuse / username reports          |
 | `/api/challenge`                      | Period seeds metadata                                  |
 | `/api/attest`                         | Optional HMAC seal on claim                            |
-| `/api/og`, `/api/share/*`, `/api/u/*` | OG / share / profile HTML for bots                     |
+| `/api/og`, `/api/share/*`, `/api/u/*`, `/api/page/*` | OG / share / profile / static-page HTML for bots |
 | `/api/rolls/:id`                      | Public roll lookup for share gate                      |
 | `/api/health`                         | Liveness + env presence                                |
 

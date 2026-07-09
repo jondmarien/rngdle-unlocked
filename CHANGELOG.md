@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - About → **What’s new** — player-facing release highlights (`src/lib/whats-new.ts`), separate from this developer changelog.
+- **Open Graph for public SPA routes** — bot rewrites for `/`, `/leaderboard`, `/about`, `/collection`, `/showcase`, `/stats`, `/terms`, `/privacy` (+ aliases); shared brand card via `/api/og?type=page`; baseline `og:*` / `twitter:*` in `index.html`; legacy `/r/:id` bot rewrite; browser `document.title` per route.
 
 ## [0.5.0] - 2026-07-09
 

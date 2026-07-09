@@ -2,6 +2,12 @@ import { Analytics } from '@vercel/analytics/react';
 import { useCallback, useEffect, useState } from 'react';
 import { useSession } from './lib/auth-client';
 import { createLogger } from './lib/logger';
+import {
+  documentTitleForLegal,
+  documentTitleForProfile,
+  documentTitleForRoll,
+  documentTitleForTab,
+} from './lib/pageMeta';
 import { parsePath, tabPath, type AppRoute, type TabId } from './lib/routes';
 import { GameProvider } from './state/GameProvider';
 import { CelebrationLayer } from './ui/components/Celebration';
@@ -43,6 +49,29 @@ function AppRoutes() {
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
   }, []);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    switch (route.kind) {
+      case 'tab':
+        document.title = documentTitleForTab(route.tab);
+        break;
+      case 'profile':
+        document.title = documentTitleForProfile(route.username);
+        break;
+      case 'roll':
+        document.title = documentTitleForRoll();
+        break;
+      case 'legal':
+        document.title = documentTitleForLegal(route.page);
+        break;
+      default: {
+        const _exhaustive: never = route;
+        void _exhaustive;
+        break;
+      }
+    }
+  }, [route]);
 
   const navigate = useCallback((path: string, next: AppRoute) => {
     if (window.location.pathname !== path) {

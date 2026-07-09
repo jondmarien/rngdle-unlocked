@@ -164,7 +164,11 @@ flowchart TB
   HTML --> Img["/api/og SVG"]
   Profile["/u/:user"] -->|bot UA| UHTML["/api/u · profile OG"]
   UHTML --> Img
+  Pages["/ · /leaderboard · /about · …"] -->|bot UA| PageHTML["/api/page/:slug"]
+  PageHTML --> PageImg["/api/og?type=page"]
 ```
+
+Static SPA routes use [`server/pageOg.ts`](../server/pageOg.ts) titles/descriptions plus a shared brand SVG (`type=page`). Humans still get the SPA; bots are rewritten in `vercel.json`. Baseline `og:*` / `twitter:*` tags also live in `index.html` for non-rewritten crawlers.
 
 ## Key directories
 

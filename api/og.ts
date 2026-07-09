@@ -4,6 +4,7 @@ import { requestUrl } from '../server/http.js';
 import { createLogger } from '../server/logger.js';
 import {
   fallbackOgResponse,
+  pageOgResponse,
   profileOgResponse,
   rollOgResponse,
 } from '../server/ogSvg.js';
@@ -37,6 +38,10 @@ export default defineHandler(async (request) => {
 
     if (type === 'profile') {
       return await profileOgResponse(url, db);
+    }
+
+    if (type === 'page') {
+      return pageOgResponse(url);
     }
 
     return await rollOgResponse(url, db);

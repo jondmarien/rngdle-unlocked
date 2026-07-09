@@ -21,6 +21,7 @@ const ACCENT_STROKE: Record<string, string> = {
  * Dynamic OG image rendering (moved verbatim from api/og.ts).
  * Roll: ?code= / ?id= or n, r, ep, u
  * Profile: ?type=profile&u=handle&ep=&badges=&rolls=&flair=&accent=
+ * Page: ?type=page&page=leaderboard&label=…
  */
 export async function rollOgResponse(url: URL, db: Db): Promise<Response> {
   const key =
@@ -141,6 +142,25 @@ export async function profileOgResponse(url: URL, db: Db): Promise<Response> {
   return svgResponse(svg, 120);
 }
 
+/** Shared brand card for static SPA routes (home, leaderboard, about, …). */
+export function pageOgResponse(url: URL): Response {
+  const page = (url.searchParams.get('page') || 'home').toLowerCase();
+  const headline =
+    url.searchParams.get('headline') ||
+    url.searchParams.get('h') ||
+    page.replace(/-/g, ' ');
+  const label =
+    url.searchParams.get('label') ||
+    url.searchParams.get('l') ||
+    'Unlimited CSPRNG · badges · EP';
+  const svg = buildPageOgSvg({
+    headline: escapeXml(truncate(headline, 40)),
+    label: escapeXml(truncate(label, 56)),
+  });
+  log.info('og page', { page });
+  return svgResponse(svg, 300);
+}
+
 /** Branded fallback card when rendering fails. */
 export function fallbackOgResponse(): Response {
   const svg = buildRollOgSvg({
@@ -198,6 +218,25 @@ function buildRollOgSvg(opts: {
   <text x="80" y="460" fill="#fbbf24" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="36" font-weight="600">${ep} EP</text>
   ${handle ? `<text x="80" y="540" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="28">${handle}</text>` : ''}
   <text x="1120" y="540" fill="#334155" font-family="system-ui, sans-serif" font-size="22" text-anchor="end">unlimited CSPRNG · badges · cloud</text>
+</svg>`;
+}
+
+function buildPageOgSvg(opts: { headline: string; label: string }): string {
+  const { headline, label } = opts;
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f1412"/>
+      <stop offset="100%" stop-color="#1a2e28"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="40" y="40" width="1120" height="550" rx="24" fill="none" stroke="#5eead4" stroke-width="3" opacity="0.5"/>
+  <text x="80" y="120" fill="#5eead4" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="28" font-weight="700" letter-spacing="8">RNGDLE UNLOCKED</text>
+  <text x="80" y="280" fill="#ecfdf5" font-family="system-ui, sans-serif" font-size="64" font-weight="800">${headline}</text>
+  <text x="80" y="380" fill="#a7f3d0" font-family="system-ui, sans-serif" font-size="36" font-weight="600">${label}</text>
+  <text x="1120" y="540" fill="#334155" font-family="system-ui, sans-serif" font-size="22" text-anchor="end">rngdle-unlocked.chron0.tech</text>
 </svg>`;
 }
 
