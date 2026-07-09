@@ -25,13 +25,16 @@ type FeedItem = {
   number: number;
   totalEP: number;
   rarity: string;
+  source?: 'ranked' | 'client' | 'challenge';
   rolledAt: string;
   username: string | null;
   name: string;
   attested?: boolean;
+  isMe?: boolean;
 };
 
 type BoardView = 'board' | 'feed' | 'find';
+type FeedSource = 'all' | 'ranked' | 'practice';
 
 export function LeaderboardScreen({
   onOpenProfile,
@@ -55,6 +58,8 @@ export function LeaderboardScreen({
   const [feed, setFeed] = useState<FeedItem[]>([]);
   const [feedError, setFeedError] = useState<string | null>(null);
   const [feedLoading, setFeedLoading] = useState(false);
+  /** Feed lane: all · Ranked server · Free play / practice client */
+  const [feedSource, setFeedSource] = useState<FeedSource>('all');
   const [following, setFollowing] = useState<Set<string>>(new Set());
   const [followBusy, setFollowBusy] = useState<string | null>(null);
 
@@ -121,13 +126,18 @@ export function LeaderboardScreen({
     if (view !== 'feed') return;
     if (!session?.user) {
       setFeed([]);
-      setFeedError('Sign in to see friends’ rare rolls.');
+      setFeedError('Sign in to see your rolls and people you follow.');
       return;
     }
     let cancelled = false;
     setFeedLoading(true);
     setFeedError(null);
-    fetch('/api/feed', { credentials: 'include' })
+    const q = new URLSearchParams({
+      source: feedSource,
+      days: '14',
+      limit: '60',
+    });
+    fetch(`/api/feed?${q}`, { credentials: 'include' })
       .then(async (r) => {
         const data = (await r.json()) as {
           error?: string;
@@ -138,6 +148,9 @@ export function LeaderboardScreen({
         if (!cancelled) {
           setFeed(data.items ?? []);
           if (data.message && !(data.items?.length)) {
+            setFeedError(data.message);
+          } else if (data.message) {
+            // Soft tip (e.g. only showing self) — keep as non-blocking note
             setFeedError(data.message);
           }
         }
@@ -153,7 +166,7 @@ export function LeaderboardScreen({
     return () => {
       cancelled = true;
     };
-  }, [view, session?.user]);
+  }, [view, session?.user, feedSource]);
 
   const toggleFollow = async (username: string) => {
     if (!session?.user) return;
@@ -230,8 +243,33 @@ export function LeaderboardScreen({
       {view === 'feed' && (
         <div className="space-y-3">
           <p className="text-sm text-[var(--prose-2)]">
-            Rare+ public rolls from people you follow (last 14 days). Use Find
-            or + on the board to follow.
+            Public rolls from <strong className="text-[var(--prose)]">you</strong>{' '}
+            and people you follow (last 14 days). Use Find or + on the board to
+            follow others.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Toggle
+              active={feedSource === 'all'}
+              onClick={() => setFeedSource('all')}
+              label="All"
+            />
+            <Toggle
+              active={feedSource === 'ranked'}
+              onClick={() => setFeedSource('ranked')}
+              label="Ranked"
+            />
+            <Toggle
+              active={feedSource === 'practice'}
+              onClick={() => setFeedSource('practice')}
+              label="Free play"
+            />
+          </div>
+          <p className="text-xs text-[var(--prose-3)]">
+            {feedSource === 'ranked'
+              ? 'Server Ranked free-play rolls only.'
+              : feedSource === 'practice'
+                ? 'Client Free play + challenge rolls (not Ranked).'
+                : 'Both Ranked and Free play public rolls.'}
           </p>
           {feedLoading && (
             <p className="text-sm text-[var(--prose-2)]">Loading feed…</p>
@@ -239,41 +277,70 @@ export function LeaderboardScreen({
           {feedError && (
             <p className="text-sm text-[var(--prose-2)]">{feedError}</p>
           )}
-          {!feedLoading && !feedError && feed.length === 0 && (
+          {!feedLoading && feed.length === 0 && !feedError && (
             <p className="text-sm text-[var(--prose-2)]">
-              No rare rolls yet. Follow players from Board or Find.
+              No public rolls in this lane yet. Roll Free or Ranked, or follow
+              players from Board / Find.
             </p>
           )}
           <ul className="divide-y divide-[var(--outline)] border border-[var(--outline)]">
-            {feed.map((item) => (
-              <li
-                key={`${item.id}-${item.rolledAt}`}
-                className="flex flex-wrap items-center justify-between gap-2 px-3 py-2"
-              >
-                <div>
-                  <button
-                    type="button"
-                    className="font-bold hover:underline"
-                    onClick={() =>
-                      item.username && onOpenProfile(item.username)
-                    }
-                  >
-                    @{item.username}
-                  </button>
-                  <div className="mono-number text-lg font-bold">
-                    {item.number.toLocaleString()}
+            {feed.map((item) => {
+              const isMe =
+                item.isMe ||
+                (myUsername &&
+                  item.username &&
+                  item.username.toLowerCase() === myUsername.toLowerCase());
+              const lane =
+                item.source === 'ranked'
+                  ? 'Ranked'
+                  : item.source === 'challenge'
+                    ? 'Challenge'
+                    : 'Free play';
+              return (
+                <li
+                  key={`${item.id}-${item.rolledAt}`}
+                  className={`flex flex-wrap items-center justify-between gap-2 px-3 py-2 ${
+                    isMe
+                      ? 'bg-[color-mix(in_srgb,var(--accent)_12%,transparent)]'
+                      : ''
+                  }`}
+                >
+                  <div>
+                    <button
+                      type="button"
+                      className="font-bold hover:underline"
+                      onClick={() =>
+                        item.username && onOpenProfile(item.username)
+                      }
+                    >
+                      @{item.username}
+                      {isMe && (
+                        <span className="ml-1.5 text-xs font-bold text-[var(--accent)]">
+                          you
+                        </span>
+                      )}
+                    </button>
+                    <div className="mono-number text-lg font-bold">
+                      {item.number.toLocaleString()}
+                    </div>
+                    <p className="text-[11px] text-[var(--prose-3)]">
+                      {lane}
+                      {item.rolledAt
+                        ? ` · ${new Date(item.rolledAt).toLocaleString()}`
+                        : ''}
+                    </p>
                   </div>
-                </div>
-                <div className="text-sm text-[var(--prose-2)]">
-                  <span className="font-semibold capitalize text-amber-600 dark:text-amber-400">
-                    {item.rarity}
-                  </span>
-                  {' · '}
-                  {item.totalEP.toLocaleString()} EP
-                  {item.attested ? ' · sealed' : ''}
-                </div>
-              </li>
-            ))}
+                  <div className="text-sm text-[var(--prose-2)]">
+                    <span className="font-semibold capitalize text-amber-600 dark:text-amber-400">
+                      {item.rarity}
+                    </span>
+                    {' · '}
+                    {item.totalEP.toLocaleString()} EP
+                    {item.attested ? ' · sealed' : ''}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}

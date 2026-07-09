@@ -54,6 +54,27 @@ const SORT_OPTIONS: { id: HistorySort; label: string }[] = [
   { id: 'lowest_number', label: 'Lowest #' },
 ];
 
+type HistoryLane = 'all' | 'free' | 'ranked' | 'challenge';
+
+const LANE_OPTIONS: { id: HistoryLane; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'free', label: 'Free play' },
+  { id: 'ranked', label: 'Ranked' },
+  { id: 'challenge', label: 'Challenge' },
+];
+
+/** Normalize older history rows that predate `source`. */
+function rollLane(r: RollResult): 'free' | 'ranked' | 'challenge' {
+  if (r.source === 'ranked') return 'ranked';
+  if (r.source === 'challenge' || r.challengeKey) return 'challenge';
+  return 'free';
+}
+
+function filterByLane(list: RollResult[], lane: HistoryLane): RollResult[] {
+  if (lane === 'all') return list;
+  return list.filter((r) => rollLane(r) === lane);
+}
+
 function sortHistory(list: RollResult[], sort: HistorySort): RollResult[] {
   const copy = [...list];
   const byTime = (a: RollResult, b: RollResult) =>
@@ -110,6 +131,7 @@ export function HistoryScreen({
   const [shareRoll, setShareRoll] = useState<RollResult | null>(null);
   const [replayRoll, setReplayRoll] = useState<RollResult | null>(null);
   const [sort, setSort] = useState<HistorySort>('newest');
+  const [lane, setLane] = useState<HistoryLane>('all');
 
   const best = stats.bestRoll;
   const bestFull = useMemo(() => {
@@ -117,10 +139,28 @@ export function HistoryScreen({
     return history.find((r) => r.id === best.id) ?? null;
   }, [history, best]);
 
-  const sorted = useMemo(
-    () => sortHistory(history, sort),
-    [history, sort],
+  const filtered = useMemo(
+    () => filterByLane(history, lane),
+    [history, lane],
   );
+
+  const sorted = useMemo(
+    () => sortHistory(filtered, sort),
+    [filtered, sort],
+  );
+
+  const laneCounts = useMemo(() => {
+    let free = 0;
+    let ranked = 0;
+    let challenge = 0;
+    for (const r of history) {
+      const l = rollLane(r);
+      if (l === 'ranked') ranked += 1;
+      else if (l === 'challenge') challenge += 1;
+      else free += 1;
+    }
+    return { free, ranked, challenge, all: history.length };
+  }, [history]);
 
   if (history.length === 0) {
     return (
@@ -136,6 +176,7 @@ export function HistoryScreen({
         <h1 className="text-xl font-bold uppercase tracking-wider">History</h1>
         <p className="text-xs text-[var(--prose-3)]">
           Last {history.length} rolls (cap 500). Lifetime count never shrinks.
+          Filter by Free play (client) or Ranked (server).
         </p>
       </div>
 
@@ -153,11 +194,21 @@ export function HistoryScreen({
       <div>
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--prose-3)]">
-            All rolls
+            {lane === 'all'
+              ? 'All rolls'
+              : lane === 'free'
+                ? 'Free play'
+                : lane === 'ranked'
+                  ? 'Ranked'
+                  : 'Challenge'}
+            <span className="ml-1.5 font-normal normal-case tracking-normal text-[var(--prose-3)]">
+              ({sorted.length}
+              {lane !== 'all' ? ` of ${history.length}` : ''})
+            </span>
           </h2>
           <label className="flex items-center gap-2 text-xs text-[var(--prose-2)]">
             <span className="font-semibold uppercase tracking-wide">
-              Filter by
+              Sort by
             </span>
             <select
               value={sort}
@@ -172,6 +223,37 @@ export function HistoryScreen({
               ))}
             </select>
           </label>
+        </div>
+
+        <div className="mb-2 flex flex-wrap gap-1.5">
+          {LANE_OPTIONS.map((o) => {
+            const selected = lane === o.id;
+            const count =
+              o.id === 'all'
+                ? laneCounts.all
+                : o.id === 'free'
+                  ? laneCounts.free
+                  : o.id === 'ranked'
+                    ? laneCounts.ranked
+                    : laneCounts.challenge;
+            return (
+              <button
+                key={o.id}
+                type="button"
+                onClick={() => setLane(o.id)}
+                className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold sm:text-xs ${
+                  selected
+                    ? o.id === 'ranked'
+                      ? 'border-amber-500 bg-amber-500 text-black'
+                      : 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
+                    : 'border-[var(--outline)] text-[var(--prose-2)] hover:bg-[var(--surface-raised)]'
+                }`}
+              >
+                {o.label}
+                <span className="ml-1 opacity-80">({count})</span>
+              </button>
+            );
+          })}
         </div>
 
         <div className="mb-2 flex flex-wrap gap-1.5">
@@ -193,6 +275,17 @@ export function HistoryScreen({
             );
           })}
         </div>
+
+        {sorted.length === 0 ? (
+          <p className="rounded-lg border border-dashed border-[var(--outline)] px-3 py-6 text-center text-sm text-[var(--prose-2)]">
+            No rolls in this lane yet.
+            {lane === 'ranked'
+              ? ' Generate with Roll → Ranked to fill this list.'
+              : lane === 'free'
+                ? ' Generate with Roll → Free play.'
+                : ' Try Daily / Weekly challenges.'}
+          </p>
+        ) : null}
 
         <ul className="divide-y divide-[var(--outline)] border border-[var(--outline)]">
           {sorted.map((r, idx) => {
@@ -228,6 +321,28 @@ export function HistoryScreen({
                         Best
                       </span>
                     )}
+                    {(() => {
+                      const l = rollLane(r);
+                      if (l === 'ranked') {
+                        return (
+                          <span className="rounded bg-amber-500/90 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-black">
+                            Ranked
+                          </span>
+                        );
+                      }
+                      if (l === 'challenge') {
+                        return (
+                          <span className="rounded border border-[var(--outline)] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--prose-2)]">
+                            Challenge
+                          </span>
+                        );
+                      }
+                      return (
+                        <span className="rounded border border-[var(--outline)] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--prose-3)]">
+                          Free
+                        </span>
+                      );
+                    })()}
                     <time className="text-xs text-[var(--prose-3)]">
                       {fmtDate(r.rolledAt)}
                     </time>
