@@ -26,78 +26,99 @@ async function requireUserId(request: Request): Promise<string | null> {
 
 export default defineHandler(async (request) => {
   log.info('request', { method: request.method });
-  const userId = await requireUserId(request);
-  if (!userId) {
-    log.warn('unauthorized');
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  log.debug('user', { userId });
-  const db = createDb();
 
-  if (request.method === 'GET') {
-    const rl = await checkRateLimit(
-      db,
-      `user:${userId}:sync-get`,
-      LIMITS.syncPerMinute,
-      60_000,
-    );
-    if (isRateLimited(rl)) {
-      return rateLimitedResponse(rl);
+  try {
+    const userId = await requireUserId(request);
+    if (!userId) {
+      log.warn('unauthorized');
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const cloud = await loadCloudSave(db, userId);
-    return Response.json({ cloud });
-  }
+    log.debug('user', { userId });
+    const db = createDb();
 
-  if (request.method === 'POST') {
-    const rl = await checkRateLimit(
-      db,
-      `user:${userId}:sync-post`,
-      LIMITS.syncPerMinute,
-      60_000,
-    );
-    if (isRateLimited(rl)) {
-      return rateLimitedResponse(
-        rl,
-        `Slow down — try again in ${rl.retryAfterSec}s`,
+    if (request.method === 'GET') {
+      const rl = await checkRateLimit(
+        db,
+        `user:${userId}:sync-get`,
+        LIMITS.syncPerMinute,
+        60_000,
       );
+      if (isRateLimited(rl)) {
+        return rateLimitedResponse(rl);
+      }
+      const cloud = await loadCloudSave(db, userId);
+      return Response.json({ cloud });
     }
 
-    const hourRl = await checkRateLimit(
-      db,
-      `user:${userId}:rolls-hour`,
-      LIMITS.rollsUploadPerHour,
-      3_600_000,
-    );
-    if (isRateLimited(hourRl)) {
-      return rateLimitedResponse(
-        hourRl,
-        'Roll upload limit reached for this hour. Play locally and sync later — no 24h lock, just soft fairness.',
+    if (request.method === 'POST') {
+      const rl = await checkRateLimit(
+        db,
+        `user:${userId}:sync-post`,
+        LIMITS.syncPerMinute,
+        60_000,
       );
+      if (isRateLimited(rl)) {
+        return rateLimitedResponse(
+          rl,
+          `Slow down — try again in ${rl.retryAfterSec}s`,
+        );
+      }
+
+      const hourRl = await checkRateLimit(
+        db,
+        `user:${userId}:rolls-hour`,
+        LIMITS.rollsUploadPerHour,
+        3_600_000,
+      );
+      if (isRateLimited(hourRl)) {
+        return rateLimitedResponse(
+          hourRl,
+          'Roll upload limit reached for this hour. Play locally and sync later — no 24h lock, just soft fairness.',
+        );
+      }
+
+      let body: CloudSavePayload;
+      try {
+        body = (await request.json()) as CloudSavePayload;
+      } catch {
+        return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+      }
+
+      if (
+        typeof body.lifetimeEP !== 'number' ||
+        typeof body.lifetimeRollCount !== 'number' ||
+        !Array.isArray(body.history)
+      ) {
+        return Response.json({ error: 'Invalid payload' }, { status: 400 });
+      }
+
+      const merged = await saveCloudMerge(db, userId, {
+        lifetimeEP: body.lifetimeEP,
+        lifetimeRollCount: body.lifetimeRollCount,
+        journeyEP: body.journeyEP ?? 0,
+        collection: Array.isArray(body.collection) ? body.collection : [],
+        stats: body.stats,
+        history: body.history ?? [],
+      });
+      log.info('merged', {
+        userId,
+        rolls: merged.lifetimeRollCount,
+        ep: merged.lifetimeEP,
+        history: merged.history.length,
+      });
+      return Response.json({ cloud: merged });
     }
 
-    const body = (await request.json()) as CloudSavePayload;
-    if (
-      typeof body.lifetimeEP !== 'number' ||
-      typeof body.lifetimeRollCount !== 'number' ||
-      !Array.isArray(body.history)
-    ) {
-      return Response.json({ error: 'Invalid payload' }, { status: 400 });
-    }
-    const merged = await saveCloudMerge(db, userId, {
-      lifetimeEP: body.lifetimeEP,
-      lifetimeRollCount: body.lifetimeRollCount,
-      journeyEP: body.journeyEP ?? 0,
-      collection: body.collection ?? [],
-      stats: body.stats,
-      history: body.history ?? [],
-    });
-    log.info('merged', {
-      userId,
-      rolls: merged.lifetimeRollCount,
-      ep: merged.lifetimeEP,
-    });
-    return Response.json({ cloud: merged });
+    return Response.json({ error: 'Method not allowed' }, { status: 405 });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    log.error('handler threw', { err: message });
+    return Response.json(
+      {
+        error: 'Sync failed',
+        detail: message.slice(0, 300),
+      },
+      { status: 500 },
+    );
   }
-
-  return Response.json({ error: 'Method not allowed' }, { status: 405 });
 });

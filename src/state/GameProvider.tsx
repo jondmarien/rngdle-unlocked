@@ -144,6 +144,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
   /** Coalesce rapid auto-syncs so spam-rolling doesn't race the server. */
   const autoSyncChain = useRef(Promise.resolve());
   const latestAutoPayload = useRef<CloudSavePayload | null>(null);
+  /** Always the latest persisted state (avoids stale force-push on share). */
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   useEffect(() => {
     applyTheme(state.settings.theme);
@@ -586,7 +589,30 @@ export function GameProvider({ children }: { children: ReactNode }) {
       // Drain auto-sync queue first
       await autoSyncChain.current.catch(() => {});
       const key = roll.shortCode || roll.id;
-      for (let attempt = 0; attempt < 10; attempt++) {
+
+      const ensurePayloadHasRoll = (): CloudSavePayload => {
+        const base = toCloudPayload(stateRef.current);
+        if (base.history.some((r) => r.id === roll.id)) return base;
+        return {
+          ...base,
+          history: [roll, ...base.history].slice(0, 500),
+        };
+      };
+
+      // Immediate force-push so the roll is not waiting on a failed auto-sync
+      try {
+        setSyncing(true);
+        const merged = await pushCloudSave(ensurePayloadHasRoll());
+        applyCloudPayload(merged);
+      } catch (e) {
+        log.error('waitForCloudPublish:push fail', {
+          err: e instanceof Error ? e.message : String(e),
+        });
+      } finally {
+        setSyncing(false);
+      }
+
+      for (let attempt = 0; attempt < 8; attempt++) {
         try {
           const res = await fetch(
             `/api/rolls/${encodeURIComponent(key)}`,
@@ -599,25 +625,20 @@ export function GameProvider({ children }: { children: ReactNode }) {
         } catch {
           /* retry */
         }
-        await new Promise((r) => setTimeout(r, 350 + attempt * 100));
+        // Re-push mid-loop if still missing (handles transient 500s)
+        if (attempt === 2 || attempt === 5) {
+          try {
+            await pushCloudSave(ensurePayloadHasRoll());
+          } catch {
+            /* continue polling */
+          }
+        }
+        await new Promise((r) => setTimeout(r, 400 + attempt * 150));
       }
-      // Last chance: force push current state
-      try {
-        setSyncing(true);
-        const merged = await pushCloudSave(toCloudPayload(state));
-        applyCloudPayload(merged);
-        const res = await fetch(`/api/rolls/${encodeURIComponent(key)}`);
-        if (res.ok) return 'ok';
-      } catch (e) {
-        log.error('waitForCloudPublish:force fail', {
-          err: e instanceof Error ? e.message : String(e),
-        });
-      } finally {
-        setSyncing(false);
-      }
+      log.error('waitForCloudPublish:exhausted', { key });
       return 'error';
     },
-    [applyCloudPayload, state],
+    [applyCloudPayload],
   );
 
   const value = useMemo<GameContextValue>(

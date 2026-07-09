@@ -56,9 +56,13 @@ export async function pushCloudSave(
       'pushCloudSave',
     );
     if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      const message =
-        (err as { error?: string }).error ?? `Sync failed (${res.status})`;
+      const err = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        detail?: string;
+      };
+      const message = err.detail
+        ? `${err.error ?? 'Sync failed'}: ${err.detail}`
+        : (err.error ?? `Sync failed (${res.status})`);
       log.error('push failed', { status: res.status, message });
       throw new Error(message);
     }
