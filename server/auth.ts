@@ -83,7 +83,13 @@ export function createAuth() {
       sendOnSignUp: true,
       sendOnSignIn: true,
       autoSignInAfterVerification: true,
-      sendVerificationEmail: async ({ user, url }) => {
+      sendVerificationEmail: async ({
+        user,
+        url,
+      }: {
+        user: { email: string };
+        url: string;
+      }) => {
         void sendEmail({
           to: user.email,
           subject: "Verify your RNGdle Unlocked email",
@@ -124,7 +130,13 @@ export function createAuth() {
     plugins: [
       magicLink({
         expiresIn: 60 * 10,
-        sendMagicLink: async ({ email, url }) => {
+        sendMagicLink: async ({
+          email,
+          url,
+        }: {
+          email: string;
+          url: string;
+        }) => {
           void sendEmail({
             to: email,
             subject: "Your RNGdle Unlocked sign-in link",
