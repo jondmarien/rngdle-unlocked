@@ -3,6 +3,7 @@ import {
   contributeKeyEntropy,
   contributePointerEntropy,
   topPercentFromPercentile,
+  type RollResult,
 } from '../../game';
 import { playRollSound, shouldCelebrate } from '../../game/fx';
 import { useGame } from '../../state/GameProvider';
@@ -41,7 +42,7 @@ export function HomeScreen({
     setRollMode,
     attestRoll,
   } = useGame();
-  const [shareOpen, setShareOpen] = useState(false);
+  const [shareRoll, setShareRoll] = useState<RollResult | null>(null);
   const [attestMsg, setAttestMsg] = useState<string | null>(null);
   // Fresh home each load: empty reel until this session’s first Generate.
   const [slotValue, setSlotValue] = useState<number | null>(null);
@@ -51,6 +52,16 @@ export function HomeScreen({
   /** True from Generate until roll() returns a number (pre-reel scramble). */
   const [awaitingResult, setAwaitingResult] = useState(false);
   const pendingFx = useRef(false);
+  /** Roll that is currently revealing (not a later race-y lastRoll). */
+  const revealRollRef = useRef<RollResult | null>(null);
+  const shareTimerRef = useRef<number | null>(null);
+
+  const clearShareTimer = () => {
+    if (shareTimerRef.current != null) {
+      window.clearTimeout(shareTimerRef.current);
+      shareTimerRef.current = null;
+    }
+  };
 
   useEffect(() => {
     const onMove = (e: PointerEvent) => {
@@ -64,6 +75,7 @@ export function HomeScreen({
     return () => {
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('keydown', onKey);
+      clearShareTimer();
     };
   }, []);
 
@@ -72,9 +84,13 @@ export function HomeScreen({
   }, [lastRoll?.id]);
 
   const handleRoll = async () => {
+    // Cancel deferred anomaly/mythic share from a previous roll
+    clearShareTimer();
+    setShareRoll(null);
     setRevealDone(false);
     setAwaitingResult(true);
     pendingFx.current = true;
+    revealRollRef.current = null;
     setAttestMsg(null);
     // Scramble immediately while roll() resolves
     setSlotValue(null);
@@ -86,6 +102,7 @@ export function HomeScreen({
         setAwaitingResult(false);
         return;
       }
+      revealRollRef.current = outcome.roll;
       setSlotValue(outcome.roll.number);
       setRevealKey((k) => k + 1);
     } finally {
@@ -96,14 +113,22 @@ export function HomeScreen({
   const onRevealComplete = () => {
     setRevealDone(true);
     setCascadeKey((k) => k + 1);
-    if (pendingFx.current && lastRoll) {
-      playRollSound(lastRoll.rarity, settings.soundEnabled);
-      if (settings.confettiEnabled && shouldCelebrate(lastRoll.rarity)) {
+    const settled = revealRollRef.current;
+    if (pendingFx.current && settled) {
+      playRollSound(settled.rarity, settings.soundEnabled);
+      if (settings.confettiEnabled && shouldCelebrate(settled.rarity)) {
         fireCelebration();
       }
-      if (lastRoll.rarity === 'mythic' || lastRoll.rarity === 'anomaly') {
-        // Defer share until badges cascade a bit
-        window.setTimeout(() => setShareOpen(true), 900);
+      if (settled.rarity === 'mythic' || settled.rarity === 'anomaly') {
+        const rollId = settled.id;
+        clearShareTimer();
+        // Only open share if this roll is still the one we settled
+        shareTimerRef.current = window.setTimeout(() => {
+          shareTimerRef.current = null;
+          if (revealRollRef.current?.id === rollId) {
+            setShareRoll(settled);
+          }
+        }, 900);
       }
       pendingFx.current = false;
     }
@@ -241,7 +266,7 @@ export function HomeScreen({
               <button
                 type="button"
                 className="rounded-md border border-[var(--outline)] bg-[var(--surface)] px-3 py-2 text-sm font-semibold text-[var(--prose)] hover:border-[var(--prose-2)]"
-                onClick={() => setShareOpen(true)}
+                onClick={() => setShareRoll(lastRoll)}
               >
                 Share
               </button>
@@ -317,12 +342,12 @@ export function HomeScreen({
         </div>
       )}
 
-      {shareOpen && lastRoll && (
+      {shareRoll && (
         <SharePanel
-          roll={lastRoll}
+          roll={shareRoll}
           rollCount={lifetimeRollCount}
           showRollCount={settings.shareShowRollCount}
-          onClose={() => setShareOpen(false)}
+          onClose={() => setShareRoll(null)}
           onGoAccount={onGoAccount}
         />
       )}

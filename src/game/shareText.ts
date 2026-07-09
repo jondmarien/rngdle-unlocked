@@ -12,7 +12,8 @@ const RARITY_SQUARE: Record<RarityTier, string> = {
   mythic: '🟨',
 };
 
-const MAX_BADGE_LINES = 3;
+/** Full list for share text (Discord 2k limit is fine for typical rolls). */
+const MAX_BADGE_LINES = 48;
 
 /** Turn badge names into a short Discord-style flavor line. */
 export function buildFlavorQuote(badges: BadgeHit[]): string {

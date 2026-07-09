@@ -242,15 +242,25 @@ export function SharePanel({
             Top {topPercentFromPercentile(roll.percentile)}% of roll scores
           </p>
           <div className="flex flex-wrap justify-center gap-1 pt-2">
-            {roll.badges.slice(0, 6).map((b) => (
-              <span
-                key={b.id}
-                className="rounded bg-[var(--surface-raised)] px-2 py-0.5 text-[10px] uppercase"
-              >
-                {b.emoji} {b.name}
-              </span>
-            ))}
+            {roll.badges
+              .slice()
+              .sort((a, b) => b.ep - a.ep)
+              .map((b) => (
+                <span
+                  key={b.id}
+                  className="rounded bg-[var(--surface-raised)] px-2 py-0.5 text-[10px] uppercase"
+                >
+                  {b.emoji} {b.name}
+                </span>
+              ))}
           </div>
+          {roll.badges.length > 0 && (
+            <p className="pt-1 text-[10px] text-[var(--prose-3)]">
+              {roll.badges.length} badge
+              {roll.badges.length === 1 ? '' : 's'} · full list above in share
+              text
+            </p>
+          )}
         </div>
 
         {status && (
