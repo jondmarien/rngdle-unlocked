@@ -9,23 +9,23 @@ const MODES: {
   {
     id: 'free',
     label: 'Free play',
-    short: 'Local RNG · unlimited',
+    short: 'Local RNG · practice',
     detail:
-      'Unlimited CSPRNG rolls in your browser. Every Generate is a new number. Fun and offline-friendly — does not count for the competitive leaderboard or community crowns.',
+      'Unlimited CSPRNG rolls in your browser — offline-friendly practice. Synced progress appears on the Leaderboard → Practice board (social / honor system). Does not place on Ranked, and does not claim community today/week crowns.',
   },
   {
     id: 'ranked',
     label: 'Ranked',
-    short: 'Server RNG · board',
+    short: 'Server RNG · competitive',
     detail:
-      'Server-issued free-play rolls. Requires sign-in and a public @username. These are the only free-play rolls that count for the leaderboard, today’s/week’s best, and overtake alerts. Fair competition.',
+      'Server-issued free-play rolls. Requires sign-in and a public @username. These are the only free-play rolls that place on Leaderboard → Ranked, claim today/week/all-time community crowns, and trigger overtake alerts. Fair competition.',
   },
   {
     id: 'daily',
     label: 'Daily',
     short: 'One personal number / UTC day',
     detail:
-      'Shared day seed + your account makes a fixed personal number for today. Same inputs always match. Optional challenge — Free and Ranked stay available anytime.',
+      'Shared day seed + your account makes a fixed personal number for today. Same inputs always match. Challenges are optional — Free (Practice board) and Ranked stay available anytime.',
   },
   {
     id: 'weekly',
@@ -50,8 +50,8 @@ export function RollModePicker({
       <div>
         <p className="text-sm font-semibold text-[var(--prose)]">How to roll</p>
         <p className="mt-0.5 text-sm leading-snug text-[var(--prose-2)]">
-          Local free play, competitive Ranked (server), or optional timed
-          challenges.
+          Free play for practice, Ranked for the competitive board, or optional
+          Daily / Weekly challenges.
         </p>
       </div>
 

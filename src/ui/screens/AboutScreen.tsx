@@ -15,8 +15,9 @@ export function AboutScreen() {
         </p>
         <p>
           Solo by default (everything stays in your browser). Optional cloud
-          accounts unlock usernames, auto-sync, leaderboards, follows, public
-          profiles, share links, challenges, and roll seals.
+          accounts unlock usernames, auto-sync, dual leaderboards (Ranked +
+          Practice), follows, public profiles, share links, challenges, and
+          roll seals.
         </p>
       </header>
 
@@ -34,16 +35,19 @@ export function AboutScreen() {
             <ul className="mt-1.5 list-disc space-y-1 pl-5">
               <li>
                 <strong className="text-[var(--prose)]">Free play</strong> —
-                unlimited browser CSPRNG (practice). Does not count for the
-                competitive leaderboard or community crowns. Absolute Ceiling (
+                unlimited browser CSPRNG (practice). Synced progress places on
+                Leaderboard → <strong className="text-[var(--prose)]">Practice</strong>{' '}
+                (social / honor system). Does not place on Ranked or claim
+                community crowns. Absolute Ceiling (
                 <span className="font-mono">1,000,000</span>) ~1 in a million, or
                 a separate 1-in-100M jackpot, unlocks the ultra-rare seal.
               </li>
               <li>
                 <strong className="text-[var(--prose)]">Ranked</strong> —
-                server-issued free-play rolls (sign-in + @username). Only Ranked
-                free play places on the leaderboard and can claim today / week /
-                all-time crowns. Fair competition.
+                server-issued free-play rolls (sign-in + @username). Places on
+                Leaderboard → <strong className="text-[var(--prose)]">Ranked</strong>,
+                and is the only free-play mode that can claim today / week /
+                all-time community crowns and overtake alerts. Fair competition.
               </li>
               <li>
                 <strong className="text-[var(--prose)]">Daily / Weekly</strong> —
@@ -130,8 +134,10 @@ export function AboutScreen() {
             <strong className="text-[var(--prose)]">@username</strong> for the{' '}
             <a className="underline" href="/leaderboard">
               leaderboard
-            </a>
-            , profiles at <code className="text-xs">/u/you</code>, and vanity
+            </a>{' '}
+            (both <strong className="text-[var(--prose)]">Ranked</strong> and{' '}
+            <strong className="text-[var(--prose)]">Practice</strong> boards),
+            profiles at <code className="text-xs">/u/you</code>, and vanity
             share paths.
           </li>
           <li>
@@ -140,8 +146,8 @@ export function AboutScreen() {
           </li>
           <li>
             <strong className="text-[var(--prose)]">You on the board</strong> —
-            your rank is highlighted after sync, even if you are outside the top
-            50 list.
+            your rank is highlighted on Ranked or Practice after you place,
+            even if you are outside the top 50 list.
           </li>
           <li>
             <strong className="text-[var(--prose)]">Follow friends</strong> —
@@ -155,16 +161,16 @@ export function AboutScreen() {
             (follows, first-time badge unlocks, secret masteries, and when
             someone overtakes your daily / weekly / all-time crown) and System
             messages (developer broadcasts + community crown notices when
-            someone takes today&apos;s, this week&apos;s, or the all-time best
-            public roll).
+            someone takes today&apos;s, this week&apos;s, or the all-time best{' '}
+            <strong className="text-[var(--prose)]">Ranked</strong> roll).
           </li>
           <li>
             Optional{' '}
             <strong className="text-[var(--prose)]">daily / weekly challenge</strong>{' '}
             seeds and{' '}
             <strong className="text-[var(--prose)]">Prove this roll</strong>{' '}
-            (server HMAC seal). A seal means the server stamped that claim; free
-            play is still client-side RNG.
+            (server HMAC seal). A seal means the server stamped that claim;
+            Free play still uses client CSPRNG; Ranked uses server CSPRNG.
           </li>
           <li>
             Share links look like{' '}
@@ -206,22 +212,30 @@ export function AboutScreen() {
           Randomness
         </h2>
         <p>
-          Free-play rolls use a fortified browser CSPRNG path:{' '}
+          <strong className="text-[var(--prose)]">Free play</strong> uses a
+          fortified browser CSPRNG path:{' '}
           <code className="text-xs">crypto.getRandomValues</code> mixed with
           interaction timing noise, hashed (SHA-256 when available), then
           reject-sampled into range. Not{' '}
           <code className="text-xs">Math.random</code>, not user-seedable.
         </p>
         <p>
-          Challenge mode is different on purpose: a shared period seed plus your
+          <strong className="text-[var(--prose)]">Ranked</strong> free play is
+          different: the server issues the number with Node CSPRNG (
+          <code className="text-xs">POST /api/ranked-roll</code>
+          ), scores badges/EP, and stores{' '}
+          <code className="text-xs">source=ranked</code>. Client sync cannot
+          forge ranked rows.
+        </p>
+        <p>
+          Challenge mode is different again: a shared period seed plus your
           account id produces a deterministic personal number you can re-verify
           — still not a lottery.
         </p>
         <p className="text-xs text-[var(--prose-3)]">
-          This is not hardware TRNG and not fully server-authoritative free play.
-          Attestation seals prove the server saw a roll claim, not that the
-          client CSPRNG was honest. Treat free play as a strong casual browser
-          CSPRNG — not a cryptographic commitment scheme.
+          This is not hardware TRNG. Attestation seals prove the server saw a
+          roll claim for free-play/client rows — not that client CSPRNG was
+          honest. Use Ranked when you care about competitive fairness.
         </p>
       </section>
 
@@ -231,15 +245,20 @@ export function AboutScreen() {
         </h2>
         <ul className="list-disc space-y-1.5 pl-5">
           <li>
-            No daily lock; soft rate limits only protect cloud APIs from spam.
+            No daily lock; soft rate limits protect cloud APIs (including Ranked
+            rolls per hour).
           </li>
           <li>
-            Sync rejects absurd EP / out-of-range numbers, but free-play rolls
-            are still generated on the client.
+            <strong className="text-[var(--prose)]">Ranked board</strong> —
+            server-issued free-play only. Fair competition baseline.
           </li>
           <li>
-            Leaderboards show who synced with a public username — not “proof”
-            of impossible luck.
+            <strong className="text-[var(--prose)]">Practice board</strong> —
+            synced free-play / overall progress. Social honor system; still
+            client-authoritative for Free play RNG.
+          </li>
+          <li>
+            Community crowns and overtake alerts use Ranked rolls only.
           </li>
           <li>
             Optional seals and challenge seeds add competitive flavor without

@@ -335,12 +335,12 @@ export function HomeScreen({
             </div>
             {lastRoll.source === 'ranked' && (
               <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
-                Ranked · server roll · counts for the board
+                Ranked · server roll · places on Leaderboard → Ranked
               </p>
             )}
             {lastRoll.source === 'client' && rollMode === 'free' && (
               <p className="text-sm text-[var(--prose-2)]">
-                Local free play · practice only (not ranked)
+                Free play · places on Leaderboard → Practice (not Ranked)
               </p>
             )}
             {lastRoll.challengeKey && (

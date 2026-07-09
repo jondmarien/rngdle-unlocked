@@ -1,6 +1,6 @@
 # Architecture
 
-RNGdle Unlocked is a **client-first** number game with an **optional** cloud social layer.
+RNGdle Unlocked is a **client-first** number game with an **optional** cloud social layer and a **server-issued Ranked** free-play path for fair competition.
 
 ## High-level
 
@@ -17,18 +17,31 @@ flowchart TB
   subgraph Vercel
     Static[dist/ static]
     API["/api/* serverless"]
+    Ranked["POST /api/ranked-roll"]
   end
 
   subgraph Neon
-    DB[(Postgres)]
+    DB[(Postgres · rolls.source)]
   end
 
   Static --> UI
-  UI -->|auth · sync · social| API
+  UI -->|auth · sync · Practice board| API
+  UI -->|Ranked Generate| Ranked
+  Ranked --> DB
   API --> DB
 ```
 
-## Roll lifecycle (free play)
+## Roll modes
+
+| Mode | RNG | Persist | Competitive surfaces |
+| --- | --- | --- | --- |
+| **Free play** | Browser CSPRNG | localStorage → sync as `source=client` | **Leaderboard → Practice** only |
+| **Ranked** | Server CSPRNG | Neon `source=ranked` first; client merges history | **Leaderboard → Ranked**, community crowns, overtakes |
+| **Daily / Weekly** | Deterministic seed | sync as `source=challenge` | Optional challenge; not Ranked crowns |
+
+Mode switch fully resets the home reel / session roll (and abandons in-flight Generate).
+
+## Free play lifecycle
 
 ```mermaid
 sequenceDiagram
@@ -39,20 +52,59 @@ sequenceDiagram
   participant S as localStorage
   participant C as /api/sync
 
-  U->>H: Generate
+  U->>H: Generate Free play
   H->>H: Scramble reel · ??? EP
-  H->>G: roll()
-  G->>E: CSPRNG + evaluate
+  H->>G: roll() free
+  G->>E: client CSPRNG + evaluate
   E-->>G: number · badges · EP · rarity
   G->>S: history + collection + stats
-  G-->>H: lastRoll + lastNewBadgeIds
-  H->>H: Lock number · cascade badges · count EP
+  G-->>H: lastRoll source=client
+  H->>H: Lock · cascade · count EP
   opt signed in
-    G->>C: auto-sync merge
+    G->>C: auto-sync merge source=client
     C-->>G: merged cloud
-    Note over C: unlock notifs · crown msgs · overtake alerts
+    Note over C: unlock notifs only — no Ranked crowns
   end
 ```
+
+## Ranked free play lifecycle
+
+```mermaid
+sequenceDiagram
+  participant U as User
+  participant H as HomeScreen
+  participant G as GameProvider
+  participant R as /api/ranked-roll
+  participant DB as Neon
+  participant A as rollActivity
+
+  U->>H: Generate Ranked
+  H->>G: roll() ranked
+  G->>R: POST credentials
+  R->>R: auth + username + rate limit
+  R->>R: server CSPRNG + evaluateBadges
+  R->>DB: insert rolls source=ranked
+  R->>A: crowns / overtake if #1
+  R-->>G: RollResult
+  G->>G: local history + collection merge
+  G-->>H: lastRoll source=ranked
+  Note over DB: Leaderboard Ranked + highlights query source=ranked
+```
+
+## Leaderboards
+
+```mermaid
+flowchart LR
+  Free[Free play sync] --> Practice[Leaderboard Practice]
+  Ranked[Ranked API rolls] --> RankedBoard[Leaderboard Ranked]
+  Ranked --> Crowns[Community crowns + overtakes]
+  Free -.->|does not| Crowns
+```
+
+- **Practice all-time** — `user_progress` lifetime EP / rolls / badge counts (synced free play).
+- **Practice week** — public rolls with `source != ranked`.
+- **Ranked all-time / week** — sum of public `source=ranked` rolls only.
+- Client sync **cannot** set `source=ranked` (server preserves ranked on conflict).
 
 ## Badge unlock & notifications
 
@@ -64,8 +116,9 @@ flowchart LR
   Sync --> Diff{new badge ids?}
   Diff -->|yes| Act[Activity inbox]
   Diff -->|secret mastery| Sec[secret_mastery notif]
-  Sync --> Crown{public roll #1 today/week?}
-  Crown -->|yes| Sys[System message broadcast]
+  RankedIns[Ranked insert] --> Crown{ranked #1 today/week/alltime?}
+  Crown -->|yes| Sys[System crown broadcast]
+  Crown -->|overtook other| Over[Activity overtaken]
 ```
 
 ## Share & OG
@@ -87,20 +140,23 @@ flowchart TB
 | Path | Responsibility |
 | --- | --- |
 | `src/game/` | Pure rules: RNG, badges, rarity, secrets, challenges, share text |
-| `src/state/` | Persistence, roll orchestration, auto-sync |
-| `src/ui/` | Screens & motion (reel, cascade, codex) |
-| `api/` | Vercel route entrypoints |
-| `server/` | Auth, DB, merge, rate limits, roll activity, OG HTML |
-| `public/` | Icons, avatars, secret art, PWA |
+| `src/state/` | Persistence, Free / Ranked / challenge orchestration, auto-sync |
+| `src/ui/` | Screens & motion (reel, cascade, codex, dual boards) |
+| `api/` | Vercel route entrypoints (`ranked-roll`, `leaderboard`, …) |
+| `server/` | Auth, DB, merge, ranked issue, rate limits, roll activity, OG HTML |
+| `public/` | Icons, avatars, secret art, Absolute Ceiling badge, PWA |
 
 ## Trust model (honest)
 
 | Claim | Reality |
 | --- | --- |
-| Free-play randomness | Browser CSPRNG + entropy pool — **client-authoritative** |
+| Free-play randomness | Browser CSPRNG + entropy pool — **client-authoritative**; Practice board honor system |
+| Ranked free-play randomness | **Server CSPRNG** via `/api/ranked-roll`; scores server-side; `source=ranked` |
 | Challenge numbers | Deterministic from period seed + subject id |
-| Attestation seal | Server HMAC on a **claim** — not proof of honest RNG |
-| Leaderboard | Who **synced** with a username — not lottery proof |
+| Attestation seal | Server HMAC on a **claim** — not proof of honest client RNG |
+| Leaderboard Ranked | Fair competition baseline (server-issued only) |
+| Leaderboard Practice | Who **synced** free-play progress with a username |
+| Community crowns | Ranked rolls only |
 | Share links | Only after roll row exists in Neon |
 
 ## Related docs

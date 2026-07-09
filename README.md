@@ -4,7 +4,7 @@
 
 ### Unlimited CSPRNG rolls · badges · EP · cloud social — *no 24-hour lock.*
 
-Inspired by the daily number-game genre, but **unlocked**: roll as often as you want, keep a lifetime collection, and optionally sync to Neon for accounts, leaderboards, follows, challenges, and shareable rolls.
+Inspired by the daily number-game genre, but **unlocked**: roll as often as you want, keep a lifetime collection, and optionally sync to Neon for accounts, **Ranked + Practice leaderboards**, follows, challenges, and shareable rolls.
 
 **[Live Site](https://rngdle-unlocked.chron0.tech)**
 
@@ -26,14 +26,14 @@ Inspired by the daily number-game genre, but **unlocked**: roll as often as you 
 
 **RNGdle Unlocked** is a browser game: roll an integer from **0–1,000,000**, earn **entropy points (EP)** and **badges** from number properties, climb a **journey** of lifetime milestones, and share rolls to Discord.
 
-Unlike a classic daily lock, you can roll **unlimited** times. Progress defaults to **localStorage** on your device. Optional **cloud social** (accounts, username, auto-sync, leaderboard, follows/feed, challenges, attestation seals, vanity share URLs + OG images) runs on **Vercel serverless + Neon Postgres + Better Auth**.
+Unlike a classic daily lock, you can roll **unlimited** times. Progress defaults to **localStorage** on your device. Optional **cloud social** (accounts, username, auto-sync, dual leaderboards, follows/feed, challenges, attestation seals, vanity share URLs + OG images) runs on **Vercel serverless + Neon Postgres + Better Auth**.
 
 > **Not affiliated with [rngdle.com](https://www.rngdle.com/).** Badge names, scoring, and implementation are original.
 
 | Mode | What you get |
 | --- | --- |
-| **Solo (default)** | Fortified CSPRNG rolls, reel animation, badges, EP, history, codex (unlock times + 5‑min New tab), showcase, stats, export/import — offline-capable |
-| **Social (opt-in)** | Email sign-up, `@username`, auto cloud sync, community today/week bests, leaderboard, follows/feed, public profiles (accent/flair/bio/avatar), alerts (unlocks + crowns), cloud-gated share + OG, challenges, optional roll seals |
+| **Solo (default)** | Fortified browser CSPRNG Free play, reel animation, badges, EP, history, codex, showcase, stats, export/import — offline-capable |
+| **Social (opt-in)** | Email sign-up, `@username`, auto cloud sync, **Leaderboard → Practice** (synced free play) + **Leaderboard → Ranked** (server free play), community crowns (Ranked only), follows/feed, profiles, alerts, share + OG, challenges, seals |
 
 ## 📋 Table of contents
 
@@ -56,32 +56,39 @@ flowchart TB
   subgraph CLIENT["Browser SPA"]
     UI["React UI<br/>Roll reel · Codex · Board · Share"]
     LS[("localStorage<br/>primary save")]
-    RNG["CSPRNG / challenge seed<br/>crypto.getRandomValues · entropy pool"]
-    UI --> RNG
+    FREE["Free play CSPRNG<br/>crypto.getRandomValues"]
+    CHAL["Daily / Weekly seed"]
+    UI --> FREE
+    UI --> CHAL
     UI --> LS
   end
 
   subgraph VERCEL["Vercel"]
     STATIC["Static dist/"]
     API["Serverless /api/*"]
+    RANK["POST /api/ranked-roll<br/>server CSPRNG"]
   end
 
   subgraph DATA["Neon Postgres"]
-    NEON[("auth · progress · rolls · follows<br/>notifications · system_messages")]
+    NEON[("auth · progress · rolls.source<br/>follows · notifications · crowns")]
   end
 
-  UI -->|optional sync / social| API
+  UI -->|Free play sync · Practice board| API
+  UI -->|Ranked Generate| RANK
+  RANK --> NEON
   API --> NEON
   STATIC --> UI
 ```
 
-Deeper diagrams (roll lifecycle, notifications, OG): **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)**.
+Deeper diagrams (roll lifecycle, Ranked vs Free, notifications, OG): **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)**.
 
-**Roll path (free play):** fortified browser CSPRNG → badge evaluation → EP / rarity / percentile → history + collection (with `firstEarnedAt`) → localStorage → auto-sync when signed in. UI: full-digit scramble → lock + rarity glow → cascading badge cards + EP count-up. Refresh clears the home reel (session-only); history/codex persist.
+**Free play (practice):** fortified browser CSPRNG → badge evaluation → EP / rarity → history + collection → localStorage → auto-sync when signed in → places on **Leaderboard → Practice**. Does **not** claim community crowns.
+
+**Ranked free play (competitive):** sign-in + `@username` → `POST /api/ranked-roll` (server CSPRNG + server score) → `rolls.source = ranked` → places on **Leaderboard → Ranked**, community today/week/all-time crowns, overtake alerts. Client sync cannot forge ranked rows.
 
 **Challenge path (optional):** Roll tab → **Daily** or **Weekly**. Shared UTC period seed + your account id → one personal deterministic number for that period.
 
-**Social path (optional):** Better Auth → merge-safe sync → username on board → follows/feed → vanity share after cloud confirm → OG for rolls (`/s/…`) and profiles (`/u/…`). Sync may enqueue Activity unlocks and System crown messages.
+**Social path (optional):** Better Auth → merge-safe sync → dual boards → follows/feed → vanity share after cloud confirm → OG. Sync may enqueue Activity unlocks; Ranked rolls may enqueue System crown messages.
 
 ## 🚀 Quick start
 
@@ -131,7 +138,7 @@ Or `pnpm dev` for the SPA only and point APIs at a deployed preview.
 - **Fortified CSPRNG** — `crypto.getRandomValues`, entropy mixing, reject sampling (not `Math.random`)
 - **Reel animation** — all digits scramble, then lock with rarity glow; `??? EP` while spinning; badges cascade in; EP counts up
 - **Fresh reel on refresh** — home does not restore the last roll; History/Codex keep progress
-- **Roll mode picker** — Free play vs Daily vs Weekly with plain-language explanations
+- **Roll mode picker** — Free play · Ranked · Daily · Weekly with plain-language board placement copy
 - **185 number badges** + journey + secret masteries (section seals + Codex Absolute)
 - **Badge codex** — spoiler-safe locked entries, **unlock timestamps**, **New** tab (first unlocks in the last 5 minutes)
 - **NEW ribbons** on first-time unlocks in the roll breakdown
@@ -144,40 +151,40 @@ Or `pnpm dev` for the SPA only and point APIs at a deployed preview.
 - **Export / import** save files; theme light / dark / system
 - **Discord-style share text** + PNG card
 
-### Roll modes (Free / Daily / Weekly)
+### Roll modes
 
-| Mode | Number source | Notes |
+| Mode | Number source | Leaderboard / crowns |
 | --- | --- | --- |
-| **Free play** | Browser CSPRNG each Generate | Main game; unlimited |
-| **Daily** | `hash(daySeed + yourId)` | One personal number per UTC day; re-Generate repeats it |
-| **Weekly** | `hash(weekSeed + yourId)` | Same idea for the ISO week |
+| **Free play** | Browser CSPRNG each Generate | **Practice** board (synced progress). No community crowns. |
+| **Ranked** | Server CSPRNG (`POST /api/ranked-roll`) | **Ranked** board + today/week/all-time crowns + overtakes. Needs sign-in + `@username`. |
+| **Daily** | `hash(daySeed + yourId)` | Challenge number; Free/Ranked stay available. |
+| **Weekly** | `hash(weekSeed + yourId)` | Same idea for the ISO week. |
 
-Switch modes anytime. Badges, EP, history, sync, and share work the same after you have a number.
+Switch modes anytime (board fully resets). Badges, EP, history, and share work after you have a number. Absolute Ceiling jackpot (1 in 100M) exists on Free and Ranked.
 
 ### Social & competitive
 - **Email + password** auth (Better Auth)
 - **@username** public identity
-- **Auto cloud sync** on every roll when signed in (merge-safe)
-- **Community highlights** — today’s + weekly best public rolls on the home tab when idle (`/api/highlights`)
-- **You on the board** — rank highlighted + sticky card if outside top list
-- **Leaderboard** — all-time / week; sort by EP / rolls / badges
+- **Auto cloud sync** on Free play / challenges when signed in (merge-safe; cannot forge `source=ranked`)
+- **Dual leaderboard** — **Ranked** (server free play) · **Practice** (synced free play / overall progress); all-time / week; Practice all-time can sort EP / rolls / badges
+- **Community highlights** — today’s + weekly best **Ranked** rolls on the home tab when idle (`/api/highlights`)
+- **You on the board** — rank highlighted + sticky card if outside top list (per active board)
 - **Follows + Feed** — Board (+), Find search, or profile; rare+ rolls in Feed
-- **In-app notifications** — Alerts (Activity: follows, badge unlocks, secret masteries, overtake when someone takes your day/week/all-time crown; System: broadcasts + community crowns); optional browser notifications
-- **System messages** — developer broadcasts (`POST /api/system-messages` + `ADMIN_SECRET`); auto crown posts when a public roll takes day/week/all-time EP #1
+- **In-app notifications** — Activity (follows, unlocks, **overtaken** on Ranked crowns); System (broadcasts + Ranked crown notices)
+- **System messages** — developer broadcasts (`POST /api/system-messages` + `ADMIN_SECRET`); auto crowns for Ranked day/week/all-time EP #1
 - **Profiles** — `/u/:username` with accent, flair, bio, **preset emblem avatars**, secret seals, recent rolls + Follow
 - **Vanity share URLs** — `/s/:username/:shortCode`
 - **Share gates** — no public link until cloud confirms
-- **Mythic / anomaly** auto-open share after reveal
-- **Prove this roll** — optional server HMAC seal (`/api/attest`)
+- **Mythic / anomaly** auto-open share after reveal (optional setting)
+- **Prove this roll** — optional server HMAC seal (`/api/attest`) for claims
 - **Dynamic OG** — `/api/og` for rolls; bot rewrite of `/u/:user` → profile OG HTML
-- **Soft rate limits** on sync and public APIs
+- **Soft rate limits** on sync, Ranked rolls (~90/h), and public APIs
 
 ### Planned later
 - Discord / GitHub OAuth
 - Turnstile on sign-up
 - Server-side EP velocity caps
 - Admin wipe / username report
-- Fully server-authoritative free-play RNG
 
 ## 📁 What's in this repo
 
@@ -185,13 +192,13 @@ Switch modes anytime. Badges, EP, history, sync, and share work the same after y
 rngdle-unlocked/
 ├── api/                 ⚡ Vercel serverless (Node adapter → Web Request)
 │   ├── auth.ts · me.ts · sync.ts · health.ts
-│   ├── leaderboard.ts · highlights.ts · follow.ts · feed.ts
+│   ├── leaderboard.ts · ranked-roll.ts · highlights.ts · follow.ts · feed.ts
 │   ├── notifications.ts · system-messages.ts
 │   ├── challenge.ts · attest.ts · og.ts
 │   ├── profile/[username].ts · u/[username].ts   # profile JSON + profile OG HTML
 │   ├── rolls/[id].ts · share/[id].ts · users/search.ts
 ├── server/              🧠 Shared API logic
-│   ├── auth · db/schema · sync · rollActivity · notifications
+│   ├── auth · db/schema · sync · rankedRoll · rollActivity · notifications
 │   ├── ogHtml · secretMasteries · rateLimit · vercel-adapter
 ├── src/
 │   ├── game/            Pure TS engine (rng, badges, secrets, challenge)
@@ -215,12 +222,12 @@ rngdle-unlocked/
 
 | Path | Screen |
 | --- | --- |
-| `/` | Roll (free / daily / weekly) |
+| `/` | Roll (Free / Ranked / Daily / Weekly) |
 | `/history` | History + share |
 | `/collection` | Badge **codex** (encyclopedia, unlock times, **New** 5‑min tab) |
 | `/showcase` | Best rolls & streaks |
 | `/stats` | Rarity histogram, EP/hour, calendar |
-| `/leaderboard` | Board + Feed + **Find** |
+| `/leaderboard` | **Ranked** + **Practice** boards · Feed · **Find** |
 | `/notifications` | Alerts (Activity + System) |
 | `/account` | Auth, username, profile look (avatar/accent/flair/bio), push/pull |
 | `/about` | How to play, social, fairness |
@@ -230,7 +237,7 @@ rngdle-unlocked/
 | `/r/:id` | Legacy public roll path |
 
 **API (serverless):**  
-`/api/auth/*`, `/api/me`, `/api/sync`, `/api/leaderboard`, `/api/highlights`, `/api/follow`, `/api/feed`, `/api/users/search`, `/api/notifications`, `/api/system-messages`, `/api/challenge`, `/api/attest`, `/api/og`, `/api/profile/:user`, `/api/u/:user`, `/api/rolls/:id`, `/api/share/:id`, `/api/health`.
+`/api/auth/*`, `/api/me`, `/api/sync`, `/api/ranked-roll`, `/api/leaderboard?scope=ranked|practice`, `/api/highlights`, `/api/follow`, `/api/feed`, `/api/users/search`, `/api/notifications`, `/api/system-messages`, `/api/challenge`, `/api/attest`, `/api/og`, `/api/profile/:user`, `/api/u/:user`, `/api/rolls/:id`, `/api/share/:id`, `/api/health`.
 
 Bot user-agents: `/s/:user/:code` → `/api/share/:code`; `/u/:username` → `/api/u/:username` for OG HTML + image.
 
@@ -322,10 +329,12 @@ Full diagrams: **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)**.
 - **Serverless handlers** use a **Node `(req, res)` adapter** (`server/vercel-adapter.ts`) with absolute URLs for Better Auth.
 - **Auth multi-segment paths** rewritten to `/api/auth?__path=…` (no Next-style catch-all).
 - **Merge-safe sync** — max counters, union collections (earliest `firstEarnedAt`), merge histories by id.
-- **Roll activity on sync** (`server/rollActivity.ts`) — idempotent unlock notifications; system crown messages for day/week/all-time EP #1; personal `overtaken` Activity alerts for the previous holder.
+- **Ranked rolls** (`POST /api/ranked-roll`, `server/rankedRoll.ts`) — server CSPRNG + score; `rolls.source = ranked`.
+- **Leaderboard scopes** — `?scope=ranked|practice` (default ranked).
+- **Roll activity** (`server/rollActivity.ts`) — unlock notifications; Ranked-only crowns + overtake alerts.
 - **Share publish** polls `/api/rolls/:key` (`waitForCloudPublish`) before enabling vanity links.
-- **Attestation** — optional HMAC on a claim; free-play RNG remains client-side.
-- **Session reel** — `lastRoll` is session-only (not restored from history/cloud on load).
+- **Attestation** — optional HMAC on a claim (does not prove Free-play client RNG honesty).
+- **Session reel** — `lastRoll` is session-only; mode switch fully resets the board.
 
 ## ❓ FAQ / troubleshooting
 
@@ -342,7 +351,10 @@ The roll must exist in Neon (`rolls` table). Sign in so auto-sync runs, or Accou
 Need `follows` table — run `node scripts/migrate-feature-wave.mjs` on that database. Sign in required.
 
 **Leaderboard empty / “you” missing**  
-Needs a **username** and **cloud progress**. Set @handle, push, refresh Board.
+Needs a **username**. **Ranked** board: generate via Roll → Ranked. **Practice** board: Free play + sync. Toggle boards on the Leaderboard screen.
+
+**Ranked roll 500 / “Ranked roll failed”**  
+Needs signed-in session + `@username`. Check Vercel function logs for `/api/ranked-roll`. Schema needs `rolls.source` (`node scripts/add-roll-source.mjs`).
 
 **Wrong database**  
 Compare `DATABASE_URL` host in Vercel with `.env.local`. A Neon project in another region is a different database.
@@ -359,16 +371,16 @@ The Account screen times out after a few seconds and shows the sign-in form. Che
 | Badges / EP / journey / secrets | ✅ Shipped |
 | Codex unlock times + 5‑min New tab | ✅ Shipped |
 | Accounts + auto cloud sync | ✅ Shipped |
-| Community today/week bests | ✅ Shipped |
-| Leaderboards + follows + feed | ✅ Shipped |
+| Community today/week bests (Ranked) | ✅ Shipped |
+| Dual leaderboards (Ranked + Practice) + follows + feed | ✅ Shipped |
+| Server Ranked free play (`/api/ranked-roll`) | ✅ Shipped |
 | Profiles (vanity + avatars) + follows | ✅ Shipped |
-| Activity unlocks + system crown msgs + overtake notifs | ✅ Shipped |
+| Activity unlocks + Ranked crown msgs + overtake notifs | ✅ Shipped |
 | Cloud-gated vanity share + OG (rolls + profiles) | ✅ Shipped |
 | Daily/weekly challenge + attestation | ✅ Shipped |
 | Custom fonts + rarity/family icon art | ✅ Shipped |
 | OAuth (Discord/GitHub) | 🔮 Later |
 | Turnstile / EP velocity / admin tools | 🔮 Later |
-| Server-authoritative free-play rolls | 🔮 Future |
 
 Design docs:
 

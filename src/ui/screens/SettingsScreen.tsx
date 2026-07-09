@@ -216,7 +216,7 @@ export function SettingsScreen() {
         )}
       </section>
 
-      <p className="text-xs text-[var(--prose-3)]">RNGdle Unlocked v0.2.0</p>
+      <p className="text-xs text-[var(--prose-3)]">RNGdle Unlocked v0.4.0</p>
     </div>
   );
 }

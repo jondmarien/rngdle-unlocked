@@ -192,11 +192,12 @@ export function LeaderboardScreen({
       <div>
         <h1 className="text-xl font-bold tracking-tight">Leaderboard</h1>
         <p className="text-sm text-[var(--prose-2)]">
-          Two boards: <strong className="text-[var(--prose)]">Ranked</strong>{' '}
-          (server free play — fair competition) and{' '}
-          <strong className="text-[var(--prose)]">Practice</strong> (synced free
-          play / overall progress — social honor system). Feed and Find are
-          separate.
+          Two boards:{' '}
+          <strong className="text-[var(--prose)]">Ranked</strong> (from Roll →
+          Ranked — server free play, fair competition) and{' '}
+          <strong className="text-[var(--prose)]">Practice</strong> (from Roll →
+          Free play sync — overall progress, social honor system). Feed and Find
+          are separate.
         </p>
       </div>
 
@@ -296,8 +297,8 @@ export function LeaderboardScreen({
           </div>
           <p className="text-xs leading-snug text-[var(--prose-3)]">
             {scope === 'ranked'
-              ? 'Server-issued free-play rolls only. Requires Ranked mode + @username.'
-              : 'Synced free-play progress and public practice rolls. Fun / social — not anti-cheat competitive.'}
+              ? 'Only rolls from Roll → Ranked (server CSPRNG). Sign-in + @username required. Crowns use this board too.'
+              : 'Synced Free play progress (all-time) and public practice rolls this week. Social — not anti-cheat competitive.'}
           </p>
 
           <div className="flex flex-wrap gap-2">
