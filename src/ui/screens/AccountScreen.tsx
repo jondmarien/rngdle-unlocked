@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { authClient, useSession } from '../../lib/auth-client';
 import { createLogger, withTimeout } from '../../lib/logger';
+import { fetchMe, patchMe, type LinkedAccount } from '../../lib/me-api';
 import {
   PROFILE_AVATARS,
   normalizeProfileAvatar,
@@ -11,7 +12,8 @@ import {
   normalizeAccent,
   type ProfileAccent,
 } from '../../lib/profile-theme';
-import { useGame } from '../../state/GameProvider';
+import { useIsAdmin } from '../../lib/useIsAdmin';
+import { useCloudSync } from '../../state/GameProvider';
 
 const log = createLogger('account');
 
@@ -27,7 +29,7 @@ export function AccountScreen({
 } = {}) {
   const { data: session, isPending, error, refetch } = useSession();
   const { syncToCloud, pullFromCloud, lastSyncAt, syncError, syncing } =
-    useGame();
+    useCloudSync();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [emailAuthTab, setEmailAuthTab] = useState<'magic' | 'password'>(
     'magic',
@@ -45,10 +47,8 @@ export function AccountScreen({
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [waitTimedOut, setWaitTimedOut] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [linkedAccounts, setLinkedAccounts] = useState<
-    { providerId: 'discord' | 'github'; accountId: string; label: string }[]
-  >([]);
+  const { isAdmin } = useIsAdmin(session?.user?.id);
+  const [linkedAccounts, setLinkedAccounts] = useState<LinkedAccount[]>([]);
 
   useEffect(() => {
     log.debug('mount', {
@@ -90,23 +90,8 @@ export function AccountScreen({
       return;
     }
     let cancelled = false;
-    fetch('/api/me', { credentials: 'include' })
-      .then(async (r) => {
-        const data = (await r.json()) as {
-          user?: {
-            username?: string | null;
-            profileAccent?: string;
-            profileBio?: string;
-            profileFlair?: string;
-            profileAvatar?: string;
-            profileShowCodex?: boolean;
-          } | null;
-          linkedAccounts?: {
-            providerId: 'discord' | 'github';
-            accountId: string;
-            label: string;
-          }[];
-        };
+    fetchMe()
+      .then((data) => {
         if (cancelled || !data.user) return;
         if (data.user.username) setUsername(data.user.username);
         setProfileAccent(normalizeAccent(data.user.profileAccent));
@@ -118,24 +103,6 @@ export function AccountScreen({
       })
       .catch(() => {
         /* ignore */
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [session?.user?.id]);
-
-  useEffect(() => {
-    if (!session?.user) {
-      setIsAdmin(false);
-      return;
-    }
-    let cancelled = false;
-    fetch('/api/admin/broadcast', { credentials: 'include' })
-      .then((r) => {
-        if (!cancelled) setIsAdmin(r.ok || r.status === 405);
-      })
-      .catch(() => {
-        if (!cancelled) setIsAdmin(false);
       });
     return () => {
       cancelled = true;
@@ -303,14 +270,7 @@ export function AccountScreen({
 
   const refreshLinkedAccounts = async () => {
     try {
-      const res = await fetch('/api/me', { credentials: 'include' });
-      const data = (await res.json()) as {
-        linkedAccounts?: {
-          providerId: 'discord' | 'github';
-          accountId: string;
-          label: string;
-        }[];
-      };
+      const data = await fetchMe();
       setLinkedAccounts(data.linkedAccounts ?? []);
     } catch {
       /* ignore */
@@ -385,18 +345,7 @@ export function AccountScreen({
     setMsg(null);
     log.info('username:save', { username });
     try {
-      const res = await withTimeout(
-        fetch('/api/me', {
-          method: 'PATCH',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username }),
-        }),
-        15_000,
-        'PATCH /api/me',
-      );
-      const data = (await res.json()) as { error?: string; username?: string };
-      if (!res.ok) throw new Error(data.error ?? 'Failed');
+      const data = await patchMe({ username });
       log.info('username:ok', { username: data.username });
       setMsg(`Username set to @${data.username}`);
       await refetch().catch(() => {});
@@ -414,24 +363,13 @@ export function AccountScreen({
     setBusy(true);
     setMsg(null);
     try {
-      const res = await withTimeout(
-        fetch('/api/me', {
-          method: 'PATCH',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            profileAccent,
-            profileBio,
-            profileFlair,
-            profileAvatar,
-            profileShowCodex,
-          }),
-        }),
-        15_000,
-        'PATCH /api/me vanity',
-      );
-      const data = (await res.json()) as { error?: string };
-      if (!res.ok) throw new Error(data.error ?? 'Failed');
+      await patchMe({
+        profileAccent,
+        profileBio,
+        profileFlair,
+        profileAvatar,
+        profileShowCodex,
+      });
       setMsg('Profile look saved. Open your public /u page to preview.');
     } catch (err) {
       setMsg(err instanceof Error ? err.message : 'Failed');
@@ -637,8 +575,8 @@ export function AccountScreen({
               Signed in as <strong>{session.user.email}</strong>
             </p>
             <p className="text-[var(--prose-3)]">
-              {(session.user as { username?: string }).username
-                ? `@${(session.user as { username?: string }).username}`
+              {session.user.username
+                ? `@${session.user.username}`
                 : 'No username yet'}
             </p>
             <div className="mt-2 flex flex-wrap gap-3">

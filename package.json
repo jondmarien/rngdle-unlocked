@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit && vite build",
-    "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.server.json --noEmit",
     "postinstall": "node scripts/patch-typescript-api.cjs",
     "lint": "vp lint",
     "fmt": "vp fmt",
@@ -23,6 +23,7 @@
     "@fontsource-variable/syne": "^5.2.7",
     "@fontsource/jetbrains-mono": "^5.2.8",
     "@neondatabase/serverless": "^1.1.0",
+    "@tanstack/react-query": "^5.101.2",
     "@types/node": "^24.13.2",
     "@vercel/analytics": "^2.0.1",
     "better-auth": "^1.6.23",
@@ -31,7 +32,8 @@
     "react": "^19.2.7",
     "react-confetti": "^6.4.0",
     "react-dom": "^19.2.7",
-    "resend": "^6.17.2"
+    "resend": "^6.17.2",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.2",

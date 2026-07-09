@@ -1,40 +1,20 @@
+import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useSession } from '../../lib/auth-client';
-import { createLogger, withTimeout } from '../../lib/logger';
+import {
+  fetchFeed,
+  fetchLeaderboard,
+  type FeedSource,
+} from '../../lib/leaderboard-api';
 import {
   fetchFollowingUsernames,
   followUser,
   unfollowUser,
 } from '../../lib/notifications-api';
 import { FindPlayers } from '../components/FindPlayers';
-
-const log = createLogger('leaderboard');
-
-type Entry = {
-  rank: number;
-  username: string | null;
-  name: string;
-  lifetimeEP: number;
-  lifetimeRollCount: number;
-  badgeCount: number | null;
-};
-
-type FeedItem = {
-  id: string;
-  shortCode?: string | null;
-  number: number;
-  totalEP: number;
-  rarity: string;
-  source?: 'ranked' | 'client' | 'challenge';
-  rolledAt: string;
-  username: string | null;
-  name: string;
-  attested?: boolean;
-  isMe?: boolean;
-};
+import { SegmentedToggle } from '../components/SegmentedToggle';
 
 type BoardView = 'board' | 'feed' | 'find';
-type FeedSource = 'all' | 'ranked' | 'practice';
 
 export function LeaderboardScreen({
   onOpenProfile,
@@ -42,22 +22,13 @@ export function LeaderboardScreen({
   onOpenProfile: (username: string) => void;
 }) {
   const { data: session } = useSession();
-  const myUsername =
-    (session?.user as { username?: string | null } | undefined)?.username ??
-    null;
+  const myUsername = session?.user.username ?? null;
 
   const [view, setView] = useState<BoardView>('board');
   /** Ranked = server free play · Practice = synced free-play / overall progress */
   const [scope, setScope] = useState<'ranked' | 'practice'>('ranked');
   const [period, setPeriod] = useState<'all' | 'week'>('all');
   const [sort, setSort] = useState<'ep' | 'rolls' | 'badges'>('ep');
-  const [entries, setEntries] = useState<Entry[]>([]);
-  const [me, setMe] = useState<Entry | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [feed, setFeed] = useState<FeedItem[]>([]);
-  const [feedError, setFeedError] = useState<string | null>(null);
-  const [feedLoading, setFeedLoading] = useState(false);
   /** Feed lane: all · Ranked server · Free play / practice client */
   const [feedSource, setFeedSource] = useState<FeedSource>('all');
   const [following, setFollowing] = useState<Set<string>>(new Set());
@@ -71,104 +42,46 @@ export function LeaderboardScreen({
     void fetchFollowingUsernames().then(setFollowing);
   }, [session?.user]);
 
-  useEffect(() => {
-    if (view !== 'board') return;
-    let cancelled = false;
-    const ac = new AbortController();
-    setLoading(true);
-    setError(null);
-    // Ranked board only supports ep/rolls
-    const effectiveSort = scope === 'ranked' && sort === 'badges' ? 'ep' : sort;
-    const q = new URLSearchParams({
-      scope,
-      period,
-      sort: effectiveSort,
-      limit: '50',
-    });
-    const url = `/api/leaderboard?${q}`;
-    log.info('fetch:start', { scope, period, sort: effectiveSort });
+  // Ranked board only supports ep/rolls
+  const effectiveSort = scope === 'ranked' && sort === 'badges' ? 'ep' : sort;
+  const boardQuery = useQuery({
+    queryKey: ['leaderboard', scope, period, effectiveSort],
+    queryFn: ({ signal }) =>
+      fetchLeaderboard({
+        scope,
+        period,
+        sort: effectiveSort,
+        limit: 50,
+        signal,
+      }),
+    enabled: view === 'board',
+  });
+  const entries = boardQuery.data?.entries ?? [];
+  const me = boardQuery.data?.me ?? null;
+  const loading = view === 'board' && boardQuery.isPending;
+  const error = boardQuery.error
+    ? boardQuery.error instanceof Error
+      ? boardQuery.error.message
+      : 'Failed'
+    : null;
 
-    withTimeout(
-      fetch(url, { signal: ac.signal, credentials: 'include' }),
-      15_000,
-      'leaderboard fetch',
-    )
-      .then(async (r) => {
-        const data = (await r.json()) as {
-          error?: string;
-          entries?: Entry[];
-          me?: Entry | null;
-        };
-        if (!r.ok) throw new Error(data.error ?? 'Failed to load');
-        if (!cancelled) {
-          setEntries(data.entries ?? []);
-          setMe(data.me ?? null);
-        }
-      })
-      .catch((e) => {
-        if (
-          cancelled ||
-          (e instanceof DOMException && e.name === 'AbortError')
-        ) {
-          return;
-        }
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Failed');
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-      ac.abort();
-    };
-  }, [scope, period, sort, view]);
-
-  useEffect(() => {
-    if (view !== 'feed') return;
-    if (!session?.user) {
-      setFeed([]);
-      setFeedError('Sign in to see your rolls and people you follow.');
-      return;
-    }
-    let cancelled = false;
-    setFeedLoading(true);
-    setFeedError(null);
-    const q = new URLSearchParams({
-      source: feedSource,
-      days: '14',
-      limit: '60',
-    });
-    fetch(`/api/feed?${q}`, { credentials: 'include' })
-      .then(async (r) => {
-        const data = (await r.json()) as {
-          error?: string;
-          items?: FeedItem[];
-          message?: string;
-        };
-        if (!r.ok) throw new Error(data.error ?? 'Feed failed');
-        if (!cancelled) {
-          setFeed(data.items ?? []);
-          if (data.message && !data.items?.length) {
-            setFeedError(data.message);
-          } else if (data.message) {
-            // Soft tip (e.g. only showing self) — keep as non-blocking note
-            setFeedError(data.message);
-          }
-        }
-      })
-      .catch((e) => {
-        if (!cancelled) {
-          setFeedError(e instanceof Error ? e.message : 'Failed');
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setFeedLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [view, session?.user, feedSource]);
+  const feedQuery = useQuery({
+    queryKey: ['feed', feedSource],
+    queryFn: ({ signal }) =>
+      fetchFeed({ source: feedSource, days: 14, limit: 60, signal }),
+    enabled: view === 'feed' && Boolean(session?.user),
+  });
+  const feed = session?.user ? (feedQuery.data?.items ?? []) : [];
+  const feedLoading =
+    view === 'feed' && Boolean(session?.user) && feedQuery.isPending;
+  const feedError = !session?.user
+    ? 'Sign in to see your rolls and people you follow.'
+    : feedQuery.error
+      ? feedQuery.error instanceof Error
+        ? feedQuery.error.message
+        : 'Failed'
+      : // Soft tip (e.g. only showing self) — keep as non-blocking note
+        (feedQuery.data?.message ?? null);
 
   const toggleFollow = async (username: string) => {
     if (!session?.user) return;
@@ -215,23 +128,15 @@ export function LeaderboardScreen({
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <Toggle
-          active={view === 'board'}
-          onClick={() => setView('board')}
-          label="Board"
-        />
-        <Toggle
-          active={view === 'feed'}
-          onClick={() => setView('feed')}
-          label="Feed"
-        />
-        <Toggle
-          active={view === 'find'}
-          onClick={() => setView('find')}
-          label="Find"
-        />
-      </div>
+      <SegmentedToggle
+        options={[
+          { id: 'board', label: 'Board' },
+          { id: 'feed', label: 'Feed' },
+          { id: 'find', label: 'Find' },
+        ]}
+        value={view}
+        onChange={setView}
+      />
 
       {view === 'find' && (
         <FindPlayers
@@ -248,23 +153,15 @@ export function LeaderboardScreen({
             <strong className="text-[var(--prose)]">you</strong> and people you
             follow (last 14 days). Use Find or + on the board to follow others.
           </p>
-          <div className="flex flex-wrap gap-2">
-            <Toggle
-              active={feedSource === 'all'}
-              onClick={() => setFeedSource('all')}
-              label="All"
-            />
-            <Toggle
-              active={feedSource === 'ranked'}
-              onClick={() => setFeedSource('ranked')}
-              label="Ranked"
-            />
-            <Toggle
-              active={feedSource === 'practice'}
-              onClick={() => setFeedSource('practice')}
-              label="Free play"
-            />
-          </div>
+          <SegmentedToggle
+            options={[
+              { id: 'all', label: 'All' },
+              { id: 'ranked', label: 'Ranked' },
+              { id: 'practice', label: 'Free play' },
+            ]}
+            value={feedSource}
+            onChange={setFeedSource}
+          />
           <p className="text-xs text-[var(--prose-3)]">
             {feedSource === 'ranked'
               ? 'Server Ranked free-play rolls only.'
@@ -348,21 +245,17 @@ export function LeaderboardScreen({
 
       {view === 'board' && (
         <>
-          <div className="flex flex-wrap gap-2">
-            <Toggle
-              active={scope === 'ranked'}
-              onClick={() => {
-                setScope('ranked');
-                if (sort === 'badges') setSort('ep');
-              }}
-              label="Ranked"
-            />
-            <Toggle
-              active={scope === 'practice'}
-              onClick={() => setScope('practice')}
-              label="Practice"
-            />
-          </div>
+          <SegmentedToggle
+            options={[
+              { id: 'ranked', label: 'Ranked' },
+              { id: 'practice', label: 'Practice' },
+            ]}
+            value={scope}
+            onChange={(next) => {
+              setScope(next);
+              if (next === 'ranked' && sort === 'badges') setSort('ep');
+            }}
+          />
           <p className="text-xs leading-snug text-[var(--prose-3)]">
             {scope === 'ranked'
               ? 'Only rolls from Roll → Ranked (server CSPRNG). Sign-in + @username required. Crowns use this board too.'
@@ -370,36 +263,28 @@ export function LeaderboardScreen({
           </p>
 
           <div className="flex flex-wrap gap-2">
-            <Toggle
-              active={period === 'all'}
-              onClick={() => setPeriod('all')}
-              label="All-time"
-            />
-            <Toggle
-              active={period === 'week'}
-              onClick={() => setPeriod('week')}
-              label="This week"
+            <SegmentedToggle
+              className="contents"
+              options={[
+                { id: 'all', label: 'All-time' },
+                { id: 'week', label: 'This week' },
+              ]}
+              value={period}
+              onChange={setPeriod}
             />
             {period === 'all' && (
-              <>
-                <Toggle
-                  active={sort === 'ep'}
-                  onClick={() => setSort('ep')}
-                  label="EP"
-                />
-                <Toggle
-                  active={sort === 'rolls'}
-                  onClick={() => setSort('rolls')}
-                  label="Rolls"
-                />
-                {scope === 'practice' && (
-                  <Toggle
-                    active={sort === 'badges'}
-                    onClick={() => setSort('badges')}
-                    label="Badges"
-                  />
-                )}
-              </>
+              <SegmentedToggle
+                className="contents"
+                options={[
+                  { id: 'ep', label: 'EP' },
+                  { id: 'rolls', label: 'Rolls' },
+                  ...(scope === 'practice'
+                    ? [{ id: 'badges' as const, label: 'Badges' }]
+                    : []),
+                ]}
+                value={sort}
+                onChange={setSort}
+              />
             )}
           </div>
 
@@ -510,29 +395,5 @@ export function LeaderboardScreen({
         </>
       )}
     </div>
-  );
-}
-
-function Toggle({
-  active,
-  onClick,
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-md border px-2.5 py-1.5 text-sm font-semibold ${
-        active
-          ? 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
-          : 'border-[var(--outline)] text-[var(--prose-2)]'
-      }`}
-    >
-      {label}
-    </button>
   );
 }

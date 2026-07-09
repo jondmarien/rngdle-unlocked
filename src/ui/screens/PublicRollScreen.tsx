@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { buildShareText } from '../../game/shareText';
-import type { BadgeHit, RarityTier, RollResult } from '../../game/types';
+import type { RollResult } from '../../game/types';
 import { createLogger } from '../../lib/logger';
+import { fetchPublicRoll, type PublicRollDto } from '../../lib/roll-api';
 import { useGame } from '../../state/GameProvider';
 import { BadgeBreakdown } from '../components/BadgeCard';
 import { EPPill } from '../components/EPPill';
@@ -9,16 +10,7 @@ import { RarityBadge } from '../components/RarityBadge';
 
 const log = createLogger('public-roll');
 
-type PublicRoll = {
-  id: string;
-  shortCode?: string | null;
-  number: number;
-  totalEP: number;
-  rarity: RarityTier;
-  percentile: number;
-  badges: BadgeHit[];
-  rolledAt: string;
-  player: { username: string | null; name: string };
+type PublicRoll = PublicRollDto & {
   source: 'cloud' | 'local';
 };
 
@@ -45,16 +37,10 @@ export function PublicRollScreen({
     setRoll(null);
     log.info('load', { rollId, routeUser });
 
-    const q = routeUser ? `?user=${encodeURIComponent(routeUser)}` : '';
-    fetch(`/api/rolls/${encodeURIComponent(rollId)}${q}`)
-      .then(async (r) => {
-        const data = (await r.json()) as {
-          error?: string;
-          roll?: Omit<PublicRoll, 'source'>;
-        };
-        if (!r.ok) throw new Error(data.error ?? 'Not found');
-        if (!cancelled && data.roll) {
-          setRoll({ ...data.roll, source: 'cloud' });
+    fetchPublicRoll(rollId, routeUser)
+      .then((cloudRoll) => {
+        if (!cancelled) {
+          setRoll({ ...cloudRoll, source: 'cloud' });
           log.info('loaded from cloud', { rollId });
         }
       })

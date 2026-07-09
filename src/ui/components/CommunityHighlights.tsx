@@ -1,36 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type { RarityTier } from '../../game';
-import { createLogger } from '../../lib/logger';
-import { BadgePill, type BadgePillData } from './BadgePill';
+import { useQuery } from '@tanstack/react-query';
+import { coerceRarity } from '../../game';
+import { rarityRing } from '../../lib/badge-theme';
+import { fetchHighlights, type HighlightRoll } from '../../lib/highlights-api';
+import { BadgePill } from './BadgePill';
 import { RarityBadge } from './RarityBadge';
 
-const log = createLogger('highlights');
-
-export type HighlightRoll = {
-  id: string;
-  shortCode: string | null;
-  number: number;
-  totalEP: number;
-  rarity: string;
-  username: string | null;
-  badgeCount: number;
-  topBadges: BadgePillData[];
-  rolledAt: string;
-};
-
-type HighlightsPayload = {
-  today: HighlightRoll | null;
-  week: HighlightRoll | null;
-  todayRollCount: number;
-  weekRollCount: number;
-};
+export type { HighlightRoll };
 
 const MAX_PILLS = 4;
 const POLL_MS = 90_000;
-const CACHE_TTL_MS = 120_000;
-
-/** Soft session cache so remount / tab focus doesn't flash empty on a slow fetch. */
-let highlightsCache: { data: HighlightsPayload; at: number } | null = null;
 
 export function CommunityHighlights({
   onOpenProfile,
@@ -39,89 +17,21 @@ export function CommunityHighlights({
   onOpenProfile?: (username: string) => void;
   onOpenRoll?: (id: string, username?: string | null) => void;
 } = {}) {
-  const [data, setData] = useState<HighlightsPayload | null>(() =>
-    highlightsCache && Date.now() - highlightsCache.at < CACHE_TTL_MS
-      ? highlightsCache.data
-      : null,
-  );
-  const [error, setError] = useState<string | null>(null);
-  const fetchGen = useRef(0);
-  const abortRef = useRef<AbortController | null>(null);
-  const hasDataRef = useRef(Boolean(data));
-  hasDataRef.current = Boolean(data);
-  const retryTimer = useRef<number | null>(null);
-
-  const load = useCallback(async (reason: string) => {
-    abortRef.current?.abort();
-    const ac = new AbortController();
-    abortRef.current = ac;
-    const gen = ++fetchGen.current;
-
-    try {
-      const tzOffset = new Date().getTimezoneOffset();
-      const res = await fetch(
-        `/api/highlights?tzOffset=${encodeURIComponent(String(tzOffset))}`,
-        { signal: ac.signal, credentials: 'same-origin' },
-      );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = (await res.json()) as HighlightsPayload;
-
-      // Stale response (newer fetch started, or unmounted cleanup aborted us)
-      if (gen !== fetchGen.current || ac.signal.aborted) return;
-
-      highlightsCache = { data: json, at: Date.now() };
-      setData(json);
-      setError(null);
-      log.debug('loaded', {
-        reason,
-        today: json.today?.number,
-        week: json.week?.number,
-      });
-    } catch (e) {
-      if (ac.signal.aborted || gen !== fetchGen.current) return;
-      const msg = e instanceof Error ? e.message : String(e);
-      if (
-        msg === 'AbortError' ||
-        (e instanceof DOMException && e.name === 'AbortError')
-      ) {
-        return;
-      }
-      log.warn('fetch failed', { reason, err: msg });
-      // Keep last good board if we have one — only hard-error when empty
-      if (!hasDataRef.current && !highlightsCache?.data) {
-        setError('Could not load community highlights');
-      }
-      // Soft retry once after a beat (covers cold-start / rate-limit blips)
-      if (reason !== 'retry') {
-        if (retryTimer.current != null) window.clearTimeout(retryTimer.current);
-        retryTimer.current = window.setTimeout(() => {
-          retryTimer.current = null;
-          if (gen === fetchGen.current) void load('retry');
-        }, 1_200);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    void load('mount');
-    const t = window.setInterval(() => void load('poll'), POLL_MS);
-    const onVis = () => {
-      if (document.visibilityState === 'visible') void load('visible');
-    };
-    document.addEventListener('visibilitychange', onVis);
-    return () => {
-      fetchGen.current += 1;
-      abortRef.current?.abort();
-      if (retryTimer.current != null) window.clearTimeout(retryTimer.current);
-      window.clearInterval(t);
-      document.removeEventListener('visibilitychange', onVis);
-    };
-  }, [load]);
+  // Query cache replaces the old module-level "soft session cache":
+  // last good board survives remounts, poll + focus refresh, one soft retry.
+  const { data, error } = useQuery({
+    queryKey: ['highlights'],
+    queryFn: ({ signal }) => fetchHighlights(signal),
+    refetchInterval: POLL_MS,
+    refetchOnWindowFocus: true,
+    retry: 1,
+    retryDelay: 1_200,
+  });
 
   if (error && !data) {
     return (
       <p className="mx-auto w-full max-w-md text-center text-xs text-[var(--prose-3)]">
-        {error}
+        Could not load community highlights
       </p>
     );
   }
@@ -192,7 +102,7 @@ function HighlightCard({
   onOpenProfile?: (username: string) => void;
   onOpenRoll?: (id: string, username?: string | null) => void;
 }) {
-  const rarity = asRarity(roll.rarity);
+  const rarity = coerceRarity(roll.rarity);
   const pills = roll.topBadges.slice(0, MAX_PILLS);
   const extra = Math.max(0, roll.badgeCount - pills.length);
   const clickable = Boolean(onOpenRoll);
@@ -283,34 +193,4 @@ function HighlightCard({
 function formatHighlightNumber(n: number): string {
   // Keep plain digits so more of the value fits the tile
   return String(Math.trunc(n));
-}
-
-function asRarity(r: string): RarityTier {
-  const ok: RarityTier[] = [
-    'trash',
-    'common',
-    'uncommon',
-    'rare',
-    'epic',
-    'anomaly',
-    'mythic',
-  ];
-  return (ok.includes(r as RarityTier) ? r : 'common') as RarityTier;
-}
-
-function rarityRing(r: RarityTier): string {
-  switch (r) {
-    case 'mythic':
-      return 'border-amber-400/70';
-    case 'anomaly':
-      return 'border-fuchsia-400/70';
-    case 'epic':
-      return 'border-violet-400/60';
-    case 'rare':
-      return 'border-blue-400/55';
-    case 'uncommon':
-      return 'border-teal-400/50';
-    default:
-      return 'border-[var(--outline)]';
-  }
 }

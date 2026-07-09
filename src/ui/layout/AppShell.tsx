@@ -6,7 +6,8 @@ import {
   showBrowserNotification,
 } from '../../lib/notifications-api';
 import { tabPath, type TabId } from '../../lib/routes';
-import { useGame } from '../../state/GameProvider';
+import { useIsAdmin } from '../../lib/useIsAdmin';
+import { useGame, useGameSettings } from '../../state/GameProvider';
 import { ThemeToggle } from './ThemeToggle';
 
 export type { TabId };
@@ -43,11 +44,11 @@ export function AppShell({
   profileActive?: boolean;
   children: ReactNode;
 }) {
-  const { settings, setTheme, lifetimeEP, lifetimeRollCount, stats } =
-    useGame();
+  const { lifetimeEP, lifetimeRollCount, stats } = useGame();
+  const { settings, setTheme } = useGameSettings();
   const { data: session } = useSession();
   const [unread, setUnread] = useState(0);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { isAdmin } = useIsAdmin(session?.user?.id);
   const lastUnread = useRef(0);
 
   useEffect(() => {
@@ -89,27 +90,7 @@ export function AppShell({
     };
   }, [session?.user, tab, profileActive]);
 
-  useEffect(() => {
-    if (!session?.user) {
-      setIsAdmin(false);
-      return;
-    }
-    let cancelled = false;
-    fetch('/api/admin/broadcast', { credentials: 'include' })
-      .then((r) => {
-        if (!cancelled) setIsAdmin(r.ok || r.status === 405);
-      })
-      .catch(() => {
-        if (!cancelled) setIsAdmin(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [session?.user?.id]);
-
-  const myUsername =
-    (session?.user as { username?: string | null } | undefined)?.username ??
-    null;
+  const myUsername = session?.user.username ?? null;
 
   const navItems: NavItem[] = (() => {
     if (!isAdmin) return NAV_BASE;

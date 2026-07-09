@@ -11,12 +11,15 @@ import {
 } from '../../lib/admin-api';
 import { useSession } from '../../lib/auth-client';
 import { createLogger } from '../../lib/logger';
+import { useIsAdmin } from '../../lib/useIsAdmin';
+import { SegmentedToggle } from '../components/SegmentedToggle';
 
 const log = createLogger('admin-ui');
 
 export function AdminScreen({ onBack }: { onBack: () => void }) {
   const { data: session, isPending } = useSession();
-  const [allowed, setAllowed] = useState<boolean | null>(null);
+  const { isAdmin, checking } = useIsAdmin(session?.user?.id);
+  const allowed: boolean | null = checking ? null : isAdmin;
   const [tab, setTab] = useState<'broadcast' | 'users' | 'reports'>(
     'broadcast',
   );
@@ -30,24 +33,6 @@ export function AdminScreen({ onBack }: { onBack: () => void }) {
   const [users, setUsers] = useState<AdminUserRow[]>([]);
 
   const [reports, setReports] = useState<AdminReportRow[]>([]);
-
-  const probeAdmin = useCallback(async () => {
-    const res = await fetch('/api/admin/broadcast', { credentials: 'include' });
-    if (res.status === 401 || res.status === 403) {
-      setAllowed(false);
-      return;
-    }
-    setAllowed(res.ok || res.status === 405);
-  }, []);
-
-  useEffect(() => {
-    if (isPending) return;
-    if (!session?.user) {
-      setAllowed(false);
-      return;
-    }
-    void probeAdmin();
-  }, [isPending, session?.user, probeAdmin]);
 
   const loadReports = useCallback(async () => {
     const res = await listReports('open');
@@ -172,28 +157,16 @@ export function AdminScreen({ onBack }: { onBack: () => void }) {
         </button>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {(
-          [
-            ['broadcast', 'Broadcast'],
-            ['users', 'Users'],
-            ['reports', 'Reports'],
-          ] as const
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => setTab(id)}
-            className={`rounded-md px-3 py-1.5 text-xs font-semibold ${
-              tab === id
-                ? 'bg-[var(--prose)] text-[var(--bg)]'
-                : 'border border-[var(--outline)] text-[var(--prose-2)]'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <SegmentedToggle
+        chipClassName="rounded-md border px-3 py-1.5 text-xs font-semibold"
+        options={[
+          { id: 'broadcast', label: 'Broadcast' },
+          { id: 'users', label: 'Users' },
+          { id: 'reports', label: 'Reports' },
+        ]}
+        value={tab}
+        onChange={setTab}
+      />
 
       {msg && (
         <p className="rounded-lg border border-[var(--outline)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--prose)]">
