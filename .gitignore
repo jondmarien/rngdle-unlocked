@@ -33,5 +33,3 @@ dist-ssr
 *.tmp
 scripts/*.tmp
 next notes.txt
-
-docs/opus-report.md
