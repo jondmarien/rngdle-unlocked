@@ -87,4 +87,13 @@ export const rolls = pgTable('rolls', {
   badgesJson: text('badges_json').notNull().default('[]'),
   rolledAt: timestamp('rolled_at').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
+  /** Public share page / OG */
+  isPublic: boolean('is_public').notNull().default(true),
+});
+
+/** Fixed-window rate limit counters (serverless-safe). */
+export const rateLimits = pgTable('rate_limits', {
+  key: text('key').primaryKey(),
+  windowStart: timestamp('window_start').notNull(),
+  count: integer('count').notNull().default(0),
 });

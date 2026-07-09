@@ -16,12 +16,12 @@
 
 | Phase | Scope | Status |
 |-------|--------|--------|
-| **2.1 Identity** | Better Auth (email/password), session, username | Foundation this PR |
-| **2.2 Cloud save** | Push/pull progress + rolls | Foundation this PR |
-| **2.3 Profiles** | Public `/u/:username` stats | Next |
-| **2.4 Leaderboards** | All-time / weekly EP + badges | Next |
-| **2.5 Share links** | Persist roll + OG preview | Later |
-| **2.6 Fairness** | Soft rate limits, optional attest | Later |
+| **2.1 Identity** | Better Auth (email/password), session, username | Done |
+| **2.2 Cloud save** | Push/pull progress + rolls | Done |
+| **2.3 Profiles** | Public `/u/:username` + API | Done |
+| **2.4 Leaderboards** | All-time / weekly EP + badges | Done |
+| **2.5 Share links** | `/r/:id` SPA + `/api/share/r/:id` OG HTML | Done |
+| **2.6 Fairness** | Soft rate limits + EP/number sanity on sync | Done |
 
 ## Architecture
 

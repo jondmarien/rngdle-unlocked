@@ -167,8 +167,14 @@ export async function saveCloudMerge(
       },
     });
 
-  // Upsert rolls (ignore conflicts)
-  for (const r of merged.history) {
+  // Soft fairness: cap how many new rolls we accept in one sync burst
+  const toUpsert = merged.history.slice(0, 200);
+
+  for (const r of toUpsert) {
+    // Sanity: reject absurd EP (anti-cheat soft bound)
+    if (r.totalEP < 0 || r.totalEP > 500_000) continue;
+    if (r.number < 0 || r.number > 1_000_000) continue;
+
     await db
       .insert(rolls)
       .values({
@@ -181,6 +187,7 @@ export async function saveCloudMerge(
         badgesJson: JSON.stringify(r.badges),
         rolledAt: new Date(r.rolledAt),
         createdAt: now,
+        isPublic: true,
       })
       .onConflictDoNothing();
   }

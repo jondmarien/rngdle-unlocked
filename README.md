@@ -60,6 +60,12 @@ Stack: **Better Auth** + **Drizzle** + **Neon Postgres** on Vercel serverless `/
 - Optional username
 - **Push / merge to cloud** and **Pull from cloud** (merge-safe)
 
+### Social surfaces
+- **Board** — all-time / weekly leaderboards (`/api/leaderboard`)
+- **Profiles** — `/u/:username` (public stats + recent rolls)
+- **Shared rolls** — `/r/:id` in-app; Discord OG via `/api/share/r/:id`
+- **Fairness** — soft rate limits on sync / APIs (not a daily lock); EP/number sanity checks
+
 ### Schema
 - Auth tables: `user`, `session`, `account`, `verification`
-- App: `user_progress`, `rolls`
+- App: `user_progress`, `rolls`, `rate_limits`

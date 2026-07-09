@@ -48,6 +48,8 @@ export function buildFlavorQuote(badges: BadgeHit[]): string {
 export type ShareTextOptions = {
   /** Site URL for the footer (defaults to current origin in browser). */
   siteUrl?: string;
+  /** Prefer OG-friendly share link for this roll when synced. */
+  rollShareUrl?: string;
   showRollCount?: boolean;
   rollCount?: number;
 };
@@ -93,15 +95,20 @@ export function buildShareText(
   const quote = buildFlavorQuote(sorted);
   const ep = roll.totalEP.toLocaleString('en-US');
 
-  let site =
+  let origin =
     opts.siteUrl ??
     (typeof window !== 'undefined' && window.location?.origin
       ? window.location.origin
       : 'https://rngdle-unlocked.vercel.app');
   // Prefer production host when on localhost preview of share text in tests
-  if (site.includes('localhost') || site.includes('127.0.0.1')) {
-    site = 'https://rngdle-unlocked.vercel.app';
+  if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+    origin = 'https://rngdle-unlocked.vercel.app';
   }
+
+  // OG HTML endpoint works better for Discord embeds than SPA path alone
+  const link =
+    opts.rollShareUrl ??
+    `${origin}/api/share/r/${encodeURIComponent(roll.id)}`;
 
   const lines = [
     `RNGdle Unlocked 🎲 ${numberPlain}`,
@@ -119,7 +126,7 @@ export function buildShareText(
     lines.push(`${opts.rollCount.toLocaleString('en-US')} lifetime rolls`);
   }
 
-  lines.push(site);
+  lines.push(link);
 
   return lines.join('\n');
 }
