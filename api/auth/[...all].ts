@@ -1,4 +1,4 @@
-import { createAuth } from '../../server/auth';
+import { createAuth } from '../../server/auth.js';
 
 /**
  * Better Auth catch-all on Vercel serverless (Web Request/Response).

@@ -1,6 +1,6 @@
-import { createAuth } from '../server/auth';
-import { createDb } from '../server/db';
-import { user } from '../server/db/schema';
+import { createAuth } from '../server/auth.js';
+import { createDb } from '../server/db/index.js';
+import { user } from '../server/db/schema.js';
 import { eq } from 'drizzle-orm';
 
 async function getSession(request: Request) {

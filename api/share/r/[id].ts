@@ -1,6 +1,6 @@
 import { and, eq } from 'drizzle-orm';
-import { createDb } from '../../../server/db';
-import { rolls, user } from '../../../server/db/schema';
+import { createDb } from '../../../server/db/index.js';
+import { rolls, user } from '../../../server/db/schema.js';
 
 /**
  * HTML share page with Open Graph tags for Discord / social crawlers.

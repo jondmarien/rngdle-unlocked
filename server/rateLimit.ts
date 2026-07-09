@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
-import type { Db } from './db';
-import { rateLimits } from './db/schema';
+import type { Db } from './db/index.js';
+import { rateLimits } from './db/schema.js';
 
 export type RateLimitResult =
   | { ok: true; remaining: number }

@@ -1,11 +1,11 @@
-import { createAuth } from '../server/auth';
-import { createDb } from '../server/db';
-import { checkRateLimit, LIMITS } from '../server/rateLimit';
+import { createAuth } from '../server/auth.js';
+import { createDb } from '../server/db/index.js';
+import { checkRateLimit, LIMITS } from '../server/rateLimit.js';
 import {
   loadCloudSave,
   saveCloudMerge,
   type CloudSavePayload,
-} from '../server/sync';
+} from '../server/sync.js';
 
 async function requireUserId(request: Request): Promise<string | null> {
   const auth = createAuth();

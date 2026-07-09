@@ -4,8 +4,8 @@ import type {
   RarityTier,
   RollHighlight,
   RollResult,
-} from './types';
-import { rollToHighlight } from './types';
+} from './types.js';
+import { rollToHighlight } from './types.js';
 
 const QUALITY: RarityTier[] = [
   'uncommon',

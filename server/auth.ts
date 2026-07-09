@@ -1,6 +1,6 @@
 import { betterAuth } from 'better-auth';
-import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { createDb, schema } from './db';
+import { drizzleAdapter } from '@better-auth/drizzle-adapter';
+import { createDb, schema } from './db/index.js';
 
 function getDb() {
   return createDb(process.env.DATABASE_URL);

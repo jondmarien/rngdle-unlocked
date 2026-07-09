@@ -1,8 +1,8 @@
 import { eq } from 'drizzle-orm';
-import type { CollectionEntry, PlayStats, RollResult } from '../src/game/types';
-import { defaultPlayStats } from '../src/game/stats';
-import type { Db } from './db';
-import { rolls, userProgress } from './db/schema';
+import type { CollectionEntry, PlayStats, RollResult } from '../src/game/types.js';
+import { defaultPlayStats } from '../src/game/stats.js';
+import type { Db } from './db/index.js';
+import { rolls, userProgress } from './db/schema.js';
 
 export type CloudSavePayload = {
   lifetimeEP: number;

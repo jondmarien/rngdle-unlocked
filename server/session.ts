@@ -1,4 +1,4 @@
-import { createAuth } from './auth';
+import { createAuth } from './auth.js';
 
 export async function getSessionUser(request: Request) {
   const auth = createAuth();

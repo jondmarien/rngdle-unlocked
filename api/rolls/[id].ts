@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm';
-import { createDb } from '../../server/db';
-import { rolls, user } from '../../server/db/schema';
-import { checkRateLimit, clientIp, LIMITS } from '../../server/rateLimit';
+import { createDb } from '../../server/db/index.js';
+import { rolls, user } from '../../server/db/schema.js';
+import { checkRateLimit, clientIp, LIMITS } from '../../server/rateLimit.js';
 
 export default async function handler(request: Request): Promise<Response> {
   if (request.method !== 'GET') {
