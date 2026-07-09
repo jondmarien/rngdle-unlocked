@@ -1,4 +1,4 @@
-import { evaluateBadges } from './badges';
+import { evaluateBadges } from './badges/index';
 import { makeShortCode, newRollId } from './ids';
 import { percentileFromEP } from './percentile';
 import { rarityFromEP } from './rarity';

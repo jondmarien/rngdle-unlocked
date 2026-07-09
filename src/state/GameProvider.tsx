@@ -324,9 +324,15 @@ export function GameProvider({ children }: { children: ReactNode }) {
               ? 'Sign in to play Ranked free play.'
               : res.status === 429
                 ? 'Ranked rate limit — try again later.'
-                : 'Ranked roll failed.');
+                : res.status === 500
+                  ? 'Ranked roll server error — try again in a moment.'
+                  : 'Ranked roll failed.');
           setSaveError(msg);
-          log.warn('ranked-roll:fail', { status: res.status, msg });
+          log.warn('ranked-roll:fail', {
+            status: res.status,
+            msg,
+            body,
+          });
           return null;
         }
         result = { ...body.roll, source: 'ranked' };
