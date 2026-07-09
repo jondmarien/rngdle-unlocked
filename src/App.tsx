@@ -151,7 +151,9 @@ function AppRoutes() {
         <HistoryScreen onGoAccount={() => goTab('account')} />
       )}
       {route.kind === 'tab' && tab === 'collection' && <CollectionScreen />}
-      {route.kind === 'tab' && tab === 'showcase' && <ShowcaseScreen />}
+      {route.kind === 'tab' && tab === 'showcase' && (
+        <ShowcaseScreen onGoAccount={() => goTab('account')} />
+      )}
       {route.kind === 'tab' && tab === 'stats' && <StatsScreen />}
       {route.kind === 'tab' && tab === 'leaderboard' && (
         <LeaderboardScreen onOpenProfile={goProfile} />

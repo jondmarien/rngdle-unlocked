@@ -1,5 +1,9 @@
+import { useMemo, useState } from 'react';
+import type { RollResult } from '../../game';
 import { useGame } from '../../state/GameProvider';
-import { RarityBadge } from '../components/RarityBadge';
+import { BestRollCard } from '../components/BestRollCard';
+import { RollReplayModal } from '../components/RollReplayModal';
+import { SharePanel } from '../components/ShareCard';
 
 function fmtDate(iso: string): string {
   try {
@@ -9,9 +13,21 @@ function fmtDate(iso: string): string {
   }
 }
 
-export function ShowcaseScreen() {
-  const { stats, lifetimeRollCount, lifetimeEP } = useGame();
+export function ShowcaseScreen({
+  onGoAccount,
+}: {
+  onGoAccount?: () => void;
+} = {}) {
+  const { stats, lifetimeRollCount, lifetimeEP, history, settings } =
+    useGame();
   const best = stats.bestRoll;
+  const [shareRoll, setShareRoll] = useState<RollResult | null>(null);
+  const [replayRoll, setReplayRoll] = useState<RollResult | null>(null);
+
+  const bestFull = useMemo(() => {
+    if (!best) return null;
+    return history.find((r) => r.id === best.id) ?? null;
+  }, [history, best]);
 
   return (
     <div className="space-y-6">
@@ -24,13 +40,20 @@ export function ShowcaseScreen() {
       </div>
 
       <section className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <StatCard label="Day streak" value={String(stats.dayStreak)} sub={`Best ${stats.bestDayStreak}`} />
+        <StatCard
+          label="Day streak"
+          value={String(stats.dayStreak)}
+          sub={`Best ${stats.bestDayStreak}`}
+        />
         <StatCard
           label="Quality streak"
           value={String(stats.qualityStreak)}
           sub={`Best ${stats.bestQualityStreak} (uncommon+)`}
         />
-        <StatCard label="Lifetime rolls" value={lifetimeRollCount.toLocaleString()} />
+        <StatCard
+          label="Lifetime rolls"
+          value={lifetimeRollCount.toLocaleString()}
+        />
         <StatCard label="Lifetime EP" value={lifetimeEP.toLocaleString()} />
       </section>
 
@@ -39,27 +62,18 @@ export function ShowcaseScreen() {
           Best roll
         </h2>
         {!best ? (
-          <p className="text-sm text-[var(--prose-3)]">No rolls yet — go spin.</p>
+          <p className="text-sm text-[var(--prose-3)]">
+            No rolls yet — go spin.
+          </p>
         ) : (
-          <div className="rounded-xl border border-[var(--outline)] bg-[var(--surface)] p-4">
-            <div className="mono-number text-3xl font-bold">
-              {best.number.toLocaleString()}
-            </div>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <RarityBadge rarity={best.rarity} />
-              <span className="text-sm font-semibold text-amber-600 dark:text-amber-400">
-                {best.totalEP.toLocaleString()} EP
-              </span>
-              <span className="text-xs text-[var(--prose-3)]">
-                {best.badgeCount} badges · {fmtDate(best.rolledAt)}
-              </span>
-            </div>
-            {best.topBadges.length > 0 && (
-              <p className="mt-2 text-xs text-[var(--prose-2)]">
-                {best.topBadges.join(' · ')}
-              </p>
-            )}
-          </div>
+          <BestRollCard
+            best={best}
+            fullRoll={bestFull}
+            onReplay={
+              bestFull ? () => setReplayRoll(bestFull) : undefined
+            }
+            onShare={bestFull ? () => setShareRoll(bestFull) : undefined}
+          />
         )}
       </section>
 
@@ -100,9 +114,9 @@ export function ShowcaseScreen() {
                   >
                     <span className="mono-number font-bold">
                       {r.number.toLocaleString()}
-                    </span>{' '}
-                    <span className="text-[var(--prose-3)]">
-                      {r.totalEP.toLocaleString()} EP · {r.rarity}
+                    </span>
+                    <span className="ml-1 text-[var(--prose-3)]">
+                      {r.totalEP.toLocaleString()} EP
                     </span>
                   </li>
                 ))}
@@ -111,6 +125,27 @@ export function ShowcaseScreen() {
           ))
         )}
       </section>
+
+      {shareRoll && (
+        <SharePanel
+          roll={shareRoll}
+          rollCount={lifetimeRollCount}
+          showRollCount={settings.shareShowRollCount}
+          onClose={() => setShareRoll(null)}
+          onGoAccount={onGoAccount}
+        />
+      )}
+
+      {replayRoll && (
+        <RollReplayModal
+          roll={replayRoll}
+          onClose={() => setReplayRoll(null)}
+          onShare={() => {
+            setShareRoll(replayRoll);
+            setReplayRoll(null);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -125,10 +160,10 @@ function StatCard({
   sub?: string;
 }) {
   return (
-    <div className="rounded-lg border border-[var(--outline)] bg-[var(--surface)] p-3 text-left">
-      <div className="text-sm font-semibold text-[var(--prose-2)]">{label}</div>
+    <div className="rounded-lg border border-[var(--outline)] bg-[var(--surface)] p-3">
+      <div className="text-xs font-semibold text-[var(--prose-3)]">{label}</div>
       <div className="mono-number text-xl font-bold">{value}</div>
-      {sub && <div className="text-sm text-[var(--prose-2)]">{sub}</div>}
+      {sub && <div className="mt-0.5 text-[11px] text-[var(--prose-3)]">{sub}</div>}
     </div>
   );
 }

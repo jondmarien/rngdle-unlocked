@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   contributeKeyEntropy,
   contributePointerEntropy,
@@ -8,6 +8,7 @@ import {
 import { playRollSound, shouldCelebrate } from '../../game/fx';
 import { useGame } from '../../state/GameProvider';
 import { BadgeBreakdown } from '../components/BadgeCard';
+import { BestRollCard } from '../components/BestRollCard';
 import { CommunityHighlights } from '../components/CommunityHighlights';
 import { CountUpEP } from '../components/CountUpEP';
 import { GenerateButton } from '../components/GenerateButton';
@@ -15,6 +16,7 @@ import { NumberDisplay } from '../components/NumberDisplay';
 import { OnboardingTip } from '../components/OnboardingTip';
 import { RarityBadge } from '../components/RarityBadge';
 import { RollModePicker } from '../components/RollModePicker';
+import { RollReplayModal } from '../components/RollReplayModal';
 import { SharePanel } from '../components/ShareCard';
 
 export function HomeScreen({
@@ -37,12 +39,14 @@ export function HomeScreen({
     lifetimeRollCount,
     settings,
     stats,
+    history,
     fireCelebration,
     rollMode,
     setRollMode,
     attestRoll,
   } = useGame();
   const [shareRoll, setShareRoll] = useState<RollResult | null>(null);
+  const [replayRoll, setReplayRoll] = useState<RollResult | null>(null);
   const [attestMsg, setAttestMsg] = useState<string | null>(null);
   // Fresh home each load: empty reel until this session’s first Generate.
   const [slotValue, setSlotValue] = useState<number | null>(null);
@@ -143,6 +147,11 @@ export function HomeScreen({
   const showCommunityBest = !rolling && !lastRoll && !busy;
   const showPendingEp = awaitingResult || numberSettling;
   const showMeta = lastRoll && revealDone;
+  const best = stats.bestRoll;
+  const bestFull = useMemo(() => {
+    if (!best) return null;
+    return history.find((r) => r.id === best.id) ?? null;
+  }, [history, best]);
 
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col">
@@ -151,27 +160,39 @@ export function HomeScreen({
 
         <RollModePicker value={rollMode} onChange={setRollMode} />
 
-        {(stats.dayStreak > 0 || stats.qualityStreak > 0 || stats.bestRoll) &&
-          !busy &&
-          !lastRoll && (
-            <div className="flex flex-wrap justify-center gap-2 text-sm text-[var(--prose-2)]">
-              {stats.dayStreak > 0 && (
-                <span className="rounded-md border border-[var(--outline)] px-2.5 py-1">
-                  {stats.dayStreak}d streak
-                </span>
-              )}
-              {stats.qualityStreak > 0 && (
-                <span className="rounded-md border border-[var(--outline)] px-2.5 py-1">
-                  {stats.qualityStreak} quality
-                </span>
-              )}
-              {stats.bestRoll && (
-                <span className="rounded-md border border-[var(--outline)] px-2.5 py-1">
-                  Best {stats.bestRoll.totalEP.toLocaleString()} EP
-                </span>
-              )}
-            </div>
-          )}
+        {!busy && !lastRoll && (
+          <div className="flex w-full max-w-md flex-col items-center gap-3">
+            {(stats.dayStreak > 0 || stats.qualityStreak > 0) && (
+              <div className="flex flex-wrap justify-center gap-2 text-sm text-[var(--prose-2)]">
+                {stats.dayStreak > 0 && (
+                  <span className="rounded-md border border-[var(--outline)] px-2.5 py-1">
+                    {stats.dayStreak}d streak
+                  </span>
+                )}
+                {stats.qualityStreak > 0 && (
+                  <span className="rounded-md border border-[var(--outline)] px-2.5 py-1">
+                    {stats.qualityStreak} quality
+                  </span>
+                )}
+              </div>
+            )}
+            {best && (
+              <div className="w-full text-left">
+                <BestRollCard
+                  best={best}
+                  fullRoll={bestFull}
+                  compact
+                  onReplay={
+                    bestFull ? () => setReplayRoll(bestFull) : undefined
+                  }
+                  onShare={
+                    bestFull ? () => setShareRoll(bestFull) : undefined
+                  }
+                />
+              </div>
+            )}
+          </div>
+        )}
 
         <NumberDisplay
           value={slotValue}
@@ -352,6 +373,17 @@ export function HomeScreen({
           showRollCount={settings.shareShowRollCount}
           onClose={() => setShareRoll(null)}
           onGoAccount={onGoAccount}
+        />
+      )}
+
+      {replayRoll && (
+        <RollReplayModal
+          roll={replayRoll}
+          onClose={() => setReplayRoll(null)}
+          onShare={() => {
+            setShareRoll(replayRoll);
+            setReplayRoll(null);
+          }}
         />
       )}
     </div>
