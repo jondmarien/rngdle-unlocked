@@ -99,16 +99,17 @@ export function buildShareText(
     opts.siteUrl ??
     (typeof window !== 'undefined' && window.location?.origin
       ? window.location.origin
-      : 'https://rngdle-unlocked.vercel.app');
-  // Prefer production host when on localhost preview of share text in tests
+      : 'https://rngdle-unlocked.chron0.tech');
+  // Prefer production host when building share text on localhost
   if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-    origin = 'https://rngdle-unlocked.vercel.app';
+    origin = 'https://rngdle-unlocked.chron0.tech';
   }
 
-  // OG HTML endpoint works better for Discord embeds than SPA path alone
+  // OG HTML endpoint (meta tags for Discord) → meta-refresh to SPA /r/:id
+  // Requires the roll to be cloud-synced (public row in DB).
   const link =
     opts.rollShareUrl ??
-    `${origin}/api/share/r/${encodeURIComponent(roll.id)}`;
+    `${origin}/api/share/${encodeURIComponent(roll.id)}`;
 
   const lines = [
     `RNGdle Unlocked 🎲 ${numberPlain}`,

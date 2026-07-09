@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react';
 import { buildShareText } from '../../game/shareText';
 import type { BadgeHit, RarityTier, RollResult } from '../../game/types';
+import { createLogger } from '../../lib/logger';
+import { useGame } from '../../state/GameProvider';
 import { BadgeBreakdown } from '../components/BadgeCard';
 import { EPPill } from '../components/EPPill';
 import { RarityBadge } from '../components/RarityBadge';
+
+const log = createLogger('public-roll');
 
 type PublicRoll = {
   id: string;
@@ -14,6 +18,7 @@ type PublicRoll = {
   badges: BadgeHit[];
   rolledAt: string;
   player: { username: string | null; name: string };
+  source: 'cloud' | 'local';
 };
 
 export function PublicRollScreen({
@@ -25,30 +30,71 @@ export function PublicRollScreen({
   onOpenProfile: (username: string) => void;
   onBack?: () => void;
 }) {
+  const { history } = useGame();
   const [roll, setRoll] = useState<PublicRoll | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
+    setError(null);
+    setRoll(null);
+    log.info('load', { rollId });
+
     fetch(`/api/rolls/${encodeURIComponent(rollId)}`)
       .then(async (r) => {
-        const data = await r.json();
+        const data = (await r.json()) as {
+          error?: string;
+          roll?: Omit<PublicRoll, 'source'>;
+        };
         if (!r.ok) throw new Error(data.error ?? 'Not found');
-        if (!cancelled) setRoll(data.roll);
+        if (!cancelled && data.roll) {
+          setRoll({ ...data.roll, source: 'cloud' });
+          log.info('loaded from cloud', { rollId });
+        }
       })
       .catch((e) => {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Failed');
+        if (cancelled) return;
+        // Same-browser fallback: roll may only exist in localStorage
+        const local = history.find((h) => h.id === rollId);
+        if (local) {
+          log.info('loaded from local history', { rollId });
+          setRoll({
+            id: local.id,
+            number: local.number,
+            totalEP: local.totalEP,
+            rarity: local.rarity,
+            percentile: local.percentile,
+            badges: local.badges,
+            rolledAt: local.rolledAt,
+            player: { username: null, name: 'You (local)' },
+            source: 'local',
+          });
+          return;
+        }
+        log.warn('not found', {
+          rollId,
+          err: e instanceof Error ? e.message : String(e),
+        });
+        setError(
+          e instanceof Error
+            ? `${e.message}. Cloud public rolls need an account + Push to cloud. Local-only rolls only open on this device.`
+            : 'Failed',
+        );
       });
     return () => {
       cancelled = true;
     };
-  }, [rollId]);
+  }, [rollId, history]);
 
   if (error) {
     return (
-      <div className="space-y-2">
+      <div className="space-y-3">
         <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+        <p className="text-xs text-[var(--prose-3)]">
+          Tip: sign in → Account → Push / merge to cloud, then re-share. Public
+          links use the cloud copy of the roll.
+        </p>
         {onBack && (
           <button type="button" className="text-xs underline" onClick={onBack}>
             Back
@@ -79,9 +125,19 @@ export function PublicRollScreen({
   return (
     <div className="space-y-6">
       {onBack && (
-        <button type="button" className="text-xs uppercase underline" onClick={onBack}>
+        <button
+          type="button"
+          className="text-xs uppercase underline"
+          onClick={onBack}
+        >
           ← Back
         </button>
+      )}
+
+      {roll.source === 'local' && (
+        <p className="rounded border border-amber-600/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+          Showing local copy — push to cloud so others can open this link.
+        </p>
       )}
 
       <div className="text-center">
@@ -102,9 +158,12 @@ export function PublicRollScreen({
               </button>
             </>
           )}
+          {!roll.player.username && roll.player.name && (
+            <> · {roll.player.name}</>
+          )}
         </p>
-        <div className="mono-number mt-2 text-5xl font-bold">
-          {roll.number.toLocaleString()}
+        <div className="mt-4 font-mono text-4xl font-bold tracking-wider">
+          {roll.number}
         </div>
         <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
           <RarityBadge rarity={roll.rarity} />
@@ -112,19 +171,19 @@ export function PublicRollScreen({
         </div>
       </div>
 
+      <BadgeBreakdown badges={roll.badges ?? []} number={roll.number} />
+
       <button
         type="button"
-        className="w-full border-2 border-[var(--prose)] bg-[var(--prose)] px-4 py-2 text-xs font-bold uppercase text-[var(--bg)]"
+        className="w-full border border-[var(--outline)] px-3 py-2 text-xs font-bold uppercase"
         onClick={async () => {
           await navigator.clipboard.writeText(share);
           setCopied(true);
-          window.setTimeout(() => setCopied(false), 2000);
+          window.setTimeout(() => setCopied(false), 1500);
         }}
       >
         {copied ? 'Copied!' : 'Copy Discord share'}
       </button>
-
-      <BadgeBreakdown badges={roll.badges ?? []} number={roll.number} />
     </div>
   );
 }

@@ -2,10 +2,13 @@ import { useRef, useState } from 'react';
 import { toPng } from 'html-to-image';
 import { topPercentFromPercentile, type RollResult } from '../../game';
 import { buildShareText } from '../../game/shareText';
+import { createLogger } from '../../lib/logger';
 import { RarityBadge } from './RarityBadge';
 import { EPPill } from './EPPill';
 
 export { buildShareText } from '../../game/shareText';
+
+const log = createLogger('share-panel');
 
 export function SharePanel({
   roll,
@@ -24,11 +27,16 @@ export function SharePanel({
     showRollCount,
     rollCount,
   });
+  const publicPath = `/r/${encodeURIComponent(roll.id)}`;
+  const ogPath = `/api/share/${encodeURIComponent(roll.id)}`;
 
   const copyText = async () => {
     try {
       await navigator.clipboard.writeText(text);
-      setStatus('Copied for Discord!');
+      log.info('copied share text', { rollId: roll.id });
+      setStatus(
+        'Copied for Discord! Public links need Account → Push to cloud first.',
+      );
     } catch {
       setStatus('Could not copy — select the text manually.');
     }
@@ -82,7 +90,10 @@ export function SharePanel({
         </div>
 
         <p className="mb-2 text-xs text-[var(--prose-3)]">
-          Discord-style text — copy and paste into a chat.
+          Discord-style text — copy and paste into a chat. Public links need the
+          roll in the cloud (Account → Push). App page:{' '}
+          <code className="text-[10px]">{publicPath}</code> · OG:{' '}
+          <code className="text-[10px]">{ogPath}</code>
         </p>
 
         {/* Primary: Discord paste block */}
