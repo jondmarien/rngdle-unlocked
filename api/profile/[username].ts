@@ -1,10 +1,4 @@
 import { and, desc, eq } from 'drizzle-orm';
-import {
-  evaluateOwnedSecrets,
-  SECRET_BADGES,
-  sectionProgress,
-  type SectionFamily,
-} from '../../src/game/secrets.js';
 import { createDb } from '../../server/db/index.js';
 import { rolls, user, userProgress } from '../../server/db/schema.js';
 import { requestUrl } from '../../server/http.js';
@@ -16,6 +10,11 @@ import {
   LIMITS,
   rateLimitedResponse,
 } from '../../server/rateLimit.js';
+import {
+  earnedSecretSeals,
+  parseCollectionIds,
+  sectionProgress,
+} from '../../server/secretMasteries.js';
 import { defineHandler } from '../../server/vercel-adapter.js';
 
 const log = createLogger('api/profile');
@@ -99,51 +98,25 @@ export default defineHandler(async (request) => {
     } catch {
       collectionRaw = [];
     }
-    const stats = progress ? JSON.parse(progress.statsJson || '{}') : {};
 
-    // Collect badge ids (tolerate badgeId / id / badge_id shapes)
-    const unlockedIds = new Set<string>();
-    for (const entry of collectionRaw) {
-      if (!entry || typeof entry !== 'object') continue;
-      const o = entry as Record<string, unknown>;
-      const id = o.badgeId ?? o.id ?? o.badge_id;
-      if (typeof id === 'string' && id.length > 0) unlockedIds.add(id);
+    let stats: Record<string, unknown> = {};
+    try {
+      stats = progress ? JSON.parse(progress.statsJson || '{}') : {};
+    } catch {
+      stats = {};
     }
 
-    // Section complete → secret earned (does not require secret id already stored)
-    const earned = evaluateOwnedSecrets(unlockedIds);
-    for (const id of unlockedIds) {
-      if (id.startsWith('secret-') && !earned.some((s) => s.id === id)) {
-        const def = SECRET_BADGES.find((s) => s.id === id);
-        if (def) earned.push(def);
-      }
-    }
-
-    // Only unlocked secret section seals (and omega) — never locked stubs
-    const secrets = earned.map((s) => ({
-      id: s.id,
-      name: s.name,
-      emoji: s.emoji,
-      tier: s.tier,
-      section: String(s.section),
-      ep: s.ep,
-      unlocked: true,
+    const unlockedIds = parseCollectionIds(collectionRaw);
+    const secrets = earnedSecretSeals(unlockedIds).map((s) => ({
+      ...s,
+      unlocked: true as const,
     }));
 
-    // Debug aid for incomplete sections (not shown in UI)
-    const sectionDebug: Record<string, { have: number; total: number }> = {};
-    for (const s of SECRET_BADGES) {
-      if (s.section === 'omega') continue;
-      sectionDebug[s.section] = sectionProgress(
-        s.section as SectionFamily,
-        unlockedIds,
-      );
-    }
     log.info('secrets', {
       username,
       collectionSize: unlockedIds.size,
       secrets: secrets.map((s) => s.id),
-      element: sectionDebug.element,
+      element: sectionProgress('element', unlockedIds),
     });
 
     return Response.json({
@@ -200,6 +173,7 @@ export default defineHandler(async (request) => {
   } catch (err) {
     log.error('handler threw', {
       err: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined,
     });
     return Response.json(
       { error: err instanceof Error ? err.message : 'Server error' },
