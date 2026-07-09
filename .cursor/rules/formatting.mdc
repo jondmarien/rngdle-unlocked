@@ -8,9 +8,9 @@ alwaysApply: true
 This repo formats with **Oxfmt** (`vp fmt` / `vp check`) using **single quotes**.
 
 - Config: [`.oxfmtrc.json`](../../.oxfmtrc.json) — `singleQuote: true`
-- Mirror for Prettier-based IDE extensions: [`.prettierrc.json`](../../.prettierrc.json)
-- Cursor/VS Code default formatter: **Prettier** (`esbenp.prettier-vscode`) — Oxc is optional if installed
+- Cursor/VS Code default formatter: **Oxc** (`oxc.oxc-vscode`) — reads `.oxfmtrc.json`
+- Mirror for Prettier-based tools: [`.prettierrc.json`](../../.prettierrc.json) (same single-quote rules)
 - Do **not** reformat files to double quotes.
 - Do **not** commit pure quote-style or semicolon-only diffs.
 - After editing, prefer `pnpm fmt` (or `vp fmt`) once; re-running should be a no-op.
-- If an editor rewrites quotes on save, check `.vscode/settings.json` and that Prettier reads `.prettierrc.json` (`singleQuote: true`).
+- If an editor rewrites quotes on save, check `.vscode/settings.json` uses `oxc.oxc-vscode` and `.oxfmtrc.json` has `singleQuote: true`.
