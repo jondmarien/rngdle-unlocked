@@ -1,5 +1,6 @@
 import { Analytics } from '@vercel/analytics/react';
 import { useCallback, useEffect, useState } from 'react';
+import { useSession } from './lib/auth-client';
 import { createLogger } from './lib/logger';
 import { parsePath, tabPath, type AppRoute, type TabId } from './lib/routes';
 import { GameProvider } from './state/GameProvider';
@@ -21,6 +22,11 @@ import { NotificationsScreen } from './ui/screens/NotificationsScreen';
 const log = createLogger('router');
 
 function AppRoutes() {
+  const { data: session } = useSession();
+  const myUsername =
+    (session?.user as { username?: string | null } | undefined)?.username ??
+    null;
+
   const [route, setRoute] = useState<AppRoute>(() =>
     typeof window !== 'undefined'
       ? parsePath(window.location.pathname)
@@ -64,10 +70,22 @@ function AppRoutes() {
   const goProfile = useCallback(
     (username: string) => {
       const path = `/u/${encodeURIComponent(username)}`;
-      navigate(path, { kind: 'profile', username });
+      navigate(path, {
+        kind: 'profile',
+        username: username.toLowerCase(),
+      });
     },
     [navigate],
   );
+
+  const goMyProfile = useCallback(() => {
+    if (myUsername && myUsername.length >= 3) {
+      goProfile(myUsername);
+      return;
+    }
+    // Need a public handle first
+    goTab('account');
+  }, [goProfile, goTab, myUsername]);
 
   const goRoll = useCallback(
     (rollId: string, username?: string | null) => {
@@ -86,10 +104,27 @@ function AppRoutes() {
     [navigate],
   );
 
-  const tab: TabId = route.kind === 'tab' ? route.tab : 'home';
+  const tab: TabId =
+    route.kind === 'tab'
+      ? route.tab
+      : route.kind === 'profile'
+        ? 'account'
+        : 'home';
+
+  const profileActive =
+    route.kind === 'profile' &&
+    Boolean(
+      myUsername &&
+        route.username.toLowerCase() === myUsername.toLowerCase(),
+    );
 
   return (
-    <AppShell tab={tab} onTab={goTab}>
+    <AppShell
+      tab={tab}
+      onTab={goTab}
+      onOpenMyProfile={goMyProfile}
+      profileActive={profileActive}
+    >
       {route.kind === 'profile' && (
         <ProfileScreen
           username={route.username}

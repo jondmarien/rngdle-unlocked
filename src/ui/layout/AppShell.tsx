@@ -11,26 +11,36 @@ import { ThemeToggle } from './ThemeToggle';
 
 export type { TabId };
 
-const TABS: { id: TabId; label: string }[] = [
-  { id: 'home', label: 'Roll' },
-  { id: 'history', label: 'History' },
-  { id: 'collection', label: 'Codex' },
-  { id: 'showcase', label: 'Showcase' },
-  { id: 'stats', label: 'Stats' },
-  { id: 'leaderboard', label: 'Board' },
-  { id: 'notifications', label: 'Alerts' },
-  { id: 'account', label: 'Account' },
-  { id: 'about', label: 'About' },
-  { id: 'settings', label: 'Settings' },
+type NavItem =
+  | { kind: 'tab'; id: TabId; label: string }
+  | { kind: 'profile'; label: string };
+
+/** Main strip — Alerts lives in the header only. */
+const NAV: NavItem[] = [
+  { kind: 'tab', id: 'home', label: 'Roll' },
+  { kind: 'tab', id: 'history', label: 'History' },
+  { kind: 'tab', id: 'collection', label: 'Codex' },
+  { kind: 'tab', id: 'showcase', label: 'Showcase' },
+  { kind: 'tab', id: 'stats', label: 'Stats' },
+  { kind: 'tab', id: 'leaderboard', label: 'Board' },
+  { kind: 'profile', label: 'Profile' },
+  { kind: 'tab', id: 'account', label: 'Account' },
+  { kind: 'tab', id: 'about', label: 'About' },
+  { kind: 'tab', id: 'settings', label: 'Settings' },
 ];
 
 export function AppShell({
   tab,
   onTab,
+  onOpenMyProfile,
+  profileActive = false,
   children,
 }: {
   tab: TabId;
   onTab: (t: TabId) => void;
+  /** Open /u/me or Account if no username yet */
+  onOpenMyProfile?: () => void;
+  profileActive?: boolean;
   children: ReactNode;
 }) {
   const { settings, setTheme, lifetimeEP, lifetimeRollCount, stats } =
@@ -76,7 +86,11 @@ export function AppShell({
       cancelled = true;
       window.clearInterval(id);
     };
-  }, [session?.user, tab]);
+  }, [session?.user, tab, profileActive]);
+
+  const myUsername =
+    (session?.user as { username?: string | null } | undefined)?.username ??
+    null;
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-[var(--bg)] text-[var(--prose)]">
@@ -107,7 +121,11 @@ export function AppShell({
               type="button"
               title="Notifications"
               onClick={() => onTab('notifications')}
-              className="relative rounded-md border border-[var(--outline)] px-2.5 py-1.5 text-sm font-semibold"
+              className={`relative rounded-md border px-2.5 py-1.5 text-sm font-semibold ${
+                tab === 'notifications'
+                  ? 'border-[var(--prose)] bg-[var(--surface-raised)]'
+                  : 'border-[var(--outline)]'
+              }`}
             >
               Alerts
               {unread > 0 && (
@@ -125,24 +143,49 @@ export function AppShell({
         className="flex gap-0.5 overflow-x-auto border-b border-[var(--outline)] px-2 py-1.5 sm:px-3"
         aria-label="Main"
       >
-        {TABS.map((t) => (
-          <a
-            key={t.id}
-            href={tabPath(t.id)}
-            onClick={(e) => {
-              e.preventDefault();
-              onTab(t.id);
-            }}
-            className={`whitespace-nowrap rounded-md px-3 py-2 text-sm font-semibold tracking-wide ${
-              tab === t.id
-                ? 'bg-[var(--surface-raised)] text-[var(--prose)]'
-                : 'text-[var(--prose-2)] hover:bg-[var(--surface)] hover:text-[var(--prose)]'
-            }`}
-          >
-            {t.label}
-            {t.id === 'notifications' && unread > 0 ? ` (${unread})` : ''}
-          </a>
-        ))}
+        {NAV.map((item) => {
+          if (item.kind === 'profile') {
+            const href = myUsername
+              ? `/u/${encodeURIComponent(myUsername)}`
+              : tabPath('account');
+            return (
+              <a
+                key="profile"
+                href={href}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onOpenMyProfile?.();
+                }}
+                className={`whitespace-nowrap rounded-md px-3 py-2 text-sm font-semibold tracking-wide ${
+                  profileActive
+                    ? 'bg-[var(--surface-raised)] text-[var(--prose)]'
+                    : 'text-[var(--prose-2)] hover:bg-[var(--surface)] hover:text-[var(--prose)]'
+                }`}
+              >
+                {item.label}
+              </a>
+            );
+          }
+          // Don't highlight other tabs as active when viewing a profile
+          const active = !profileActive && tab === item.id;
+          return (
+            <a
+              key={item.id}
+              href={tabPath(item.id)}
+              onClick={(e) => {
+                e.preventDefault();
+                onTab(item.id);
+              }}
+              className={`whitespace-nowrap rounded-md px-3 py-2 text-sm font-semibold tracking-wide ${
+                active
+                  ? 'bg-[var(--surface-raised)] text-[var(--prose)]'
+                  : 'text-[var(--prose-2)] hover:bg-[var(--surface)] hover:text-[var(--prose)]'
+              }`}
+            >
+              {item.label}
+            </a>
+          );
+        })}
       </nav>
 
       <main className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col px-4 py-6 sm:px-5">
