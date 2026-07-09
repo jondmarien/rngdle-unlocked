@@ -2,7 +2,7 @@
 
 Step-by-step guide to enable **Continue with Discord** and **Continue with GitHub** on the Account screen (Better Auth).
 
-You can complete this **before** the OAuth code ships: create the apps, upload the icon, and paste Client ID/Secret into local + Vercel env. Sign-in buttons will work after the next deploy that wires `socialProviders`.
+OAuth **code is already shipped** on `main`. Remaining work is **portal + env verification**: create the Discord/GitHub apps, upload the icon, paste Client ID/Secret into local + Vercel, and redeploy. Sign-in buttons register providers when those env vars are present.
 
 **Live origin:** `https://rngdle-unlocked.chron0.tech`  
 **Auth base path:** `/api/auth`  
@@ -16,6 +16,8 @@ You can complete this **before** the OAuth code ships: create the apps, upload t
 | Homepage         | `https://rngdle-unlocked.chron0.tech`         |
 
 **Brand icon for portals:** [`public/brand/oauth-icon-512.png`](../public/brand/oauth-icon-512.png) (512×512 PNG from the site favicon).
+
+Ops checklist also lives in [`HANDOFF.md`](../HANDOFF.md) §7.
 
 ---
 
@@ -161,12 +163,12 @@ Open the printed URL (usually `http://localhost:3000`) → **Account** → Conti
 - Linking is **enabled** for trusted providers (`discord`, `github`).
 - `allowDifferentEmails: true` — Discord/GitHub emails often differ from the account email; without this, link redirects back to `/account` with `error=email_doesn't_match`.
 - If someone already has email/password and later signs in with Discord/GitHub using the **same verified email**, Better Auth should attach the social account to that user instead of creating a duplicate.
-- Signed-in users can also **Link Discord / Link GitHub** from Account (after UI ships).
+- Signed-in users can also **Link Discord / Link GitHub** from Account.
 - **Ranked** still requires a public `@username` after OAuth — set it on Account before Ranked Generate.
 
 ---
 
-## 5. Verify after OAuth code is deployed
+## 5. Verify after portal + env are configured
 
 1. Production: Account → **Continue with Discord** → approve → land on `/account` signed in.
 2. Repeat with GitHub (incognito or another browser if needed).
@@ -192,7 +194,7 @@ Then sign out/in and open `/admin` (or Account → Admin panel).
 | GitHub `email_not_found`                 | Private email / GitHub App missing Email Read-only                    | OAuth App + `user:email`, or fix GitHub App permission         |
 | Cookies / session missing after redirect | Mixed origins (SPA on 5173, API on 3000) without proxy                | Use `npx vercel dev` single origin                             |
 | Discord null email                       | Phone-only Discord account                                            | Need code fallback; contact maintainer                         |
-| Buttons missing in UI                    | OAuth code not deployed yet, or env empty so providers not registered | Finish this guide; wait for deploy that adds `socialProviders` |
+| Buttons missing in UI                    | OAuth env empty so providers not registered                           | Finish this guide; redeploy after setting Client ID/Secret     |
 
 ---
 

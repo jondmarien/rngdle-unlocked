@@ -2,21 +2,30 @@
 
 RNGdle Unlocked is a **client-first** number game with an **optional** cloud social layer and a **server-issued Ranked** free-play path for fair competition.
 
+July 2026 readability refactor summary: [`refactor-notes-2026-07.md`](./refactor-notes-2026-07.md).
+
 ## High-level
 
 ```mermaid
 flowchart TB
   subgraph Browser
     UI[React SPA]
+    LibApi[lib API wrappers]
+    TQ[TanStack Query]
     Engine[game engine pure TS]
     LS[(localStorage)]
+    UI --> LibApi
+    UI --> TQ
+    TQ --> LibApi
     UI --> Engine
     UI --> LS
   end
 
   subgraph Vercel
     Static[Static dist]
-    API[Serverless API]
+    API[Thin api handlers]
+    Guards[apiGuards]
+    Server[server pipelines]
     Ranked[POST ranked-roll]
   end
 
@@ -25,10 +34,12 @@ flowchart TB
   end
 
   Static --> UI
-  UI -->|auth sync Practice board| API
-  UI -->|Ranked Generate| Ranked
+  LibApi -->|auth sync Practice board| API
+  LibApi -->|Ranked Generate| Ranked
+  API --> Guards
+  Guards --> Server
+  Server --> DB
   Ranked --> DB
-  API --> DB
 ```
 
 ## Roll modes
@@ -48,6 +59,7 @@ sequenceDiagram
   participant U as User
   participant H as HomeScreen
   participant G as GameProvider
+  participant Sync as useSync
   participant E as game/engine
   participant S as localStorage
   participant C as /api/sync
@@ -61,8 +73,9 @@ sequenceDiagram
   G-->>H: lastRoll source=client
   H->>H: Lock · cascade · count EP
   opt signed in
-    G->>C: auto-sync merge source=client
-    C-->>G: merged cloud
+    G->>Sync: enqueueAutoSync
+    Sync->>C: auto-sync merge source=client
+    C-->>Sync: merged cloud
     Note over C: unlock notifs only — no Ranked crowns
   end
 ```
@@ -74,22 +87,38 @@ sequenceDiagram
   participant U as User
   participant H as HomeScreen
   participant G as GameProvider
+  participant RollApi as roll-api
   participant R as /api/ranked-roll
   participant DB as Neon
   participant A as rollActivity
 
   U->>H: Generate Ranked
   H->>G: roll() ranked
-  G->>R: POST credentials
-  R->>R: auth + username + rate limit
+  G->>RollApi: requestRankedRoll
+  RollApi->>R: POST credentials
+  R->>R: apiGuards + username + rate limit
   R->>R: server CSPRNG + evaluateBadges
   R->>DB: insert rolls source=ranked
   R->>A: crowns / overtake if #1
-  R-->>G: RollResult
+  R-->>RollApi: RollResult
+  RollApi-->>G: RollResult
   G->>G: local history + collection merge
   G-->>H: lastRoll source=ranked
   Note over DB: Leaderboard Ranked + highlights query source=ranked
 ```
+
+## Client data layer
+
+- **Mandatory `src/lib/*-api.ts` wrappers** — UI must not call `fetch('/api/...')` directly (PNG `dataUrl` blob fetches are fine).
+- **TanStack Query** (`QueryClientProvider` in `src/main.tsx`) caches leaderboard, feed, highlights, profile, and admin-check reads. Some screens still use effects + wrappers (notifications, account).
+- **Zod** validates save import payloads, cloud sync POST bodies, and public profile GET responses — not every endpoint.
+
+## Server handler pattern
+
+- Thin `api/*` entrypoints use `defineHandler` + [`server/apiGuards.ts`](../server/apiGuards.ts) (`requireUser` / `readJson` / `rateGuard`).
+- **Read pipelines** live in `server/{leaderboard,profile,feed,ogSvg,notifications}.ts`.
+- Some write handlers (`follow`, `me`, `attest`, sync orchestration) still keep more logic inline — prefer extracting when touching them.
+- **`tsconfig.server.json`** uses **NodeNext** / **nodenext** so extensionless relative imports fail `pnpm typecheck` before deploy.
 
 ## Leaderboards
 
@@ -139,14 +168,15 @@ flowchart TB
 
 ## Key directories
 
-| Path         | Responsibility                                                     |
-| ------------ | ------------------------------------------------------------------ |
-| `src/game/`  | Pure rules: RNG, badges, rarity, secrets, challenges, share text   |
-| `src/state/` | Persistence, Free / Ranked / challenge orchestration, auto-sync    |
-| `src/ui/`    | Screens & motion (reel, cascade, codex, dual boards)               |
-| `api/`       | Vercel route entrypoints (`ranked-roll`, `leaderboard`, …)         |
-| `server/`    | Auth, DB, merge, ranked issue, rate limits, roll activity, OG HTML |
-| `public/`    | Icons, avatars, secret art, Absolute Ceiling badge, PWA            |
+| Path              | Responsibility                                                                 |
+| ----------------- | ------------------------------------------------------------------------------ |
+| `src/game/`       | Pure rules: RNG, badges, rarity, secrets, challenges, share text               |
+| `src/state/`      | `GameProvider` contexts, `useSync`, settings reducer, localStorage             |
+| `src/lib/`        | `*-api.ts` wrappers, `schemas.ts`, auth client, routes, themes                 |
+| `src/ui/`         | Screens & motion (reel, cascade, codex, dual boards)                           |
+| `api/`            | Thin Vercel route entrypoints                                                  |
+| `server/`         | `apiGuards`, auth, DB, merge, ranked issue, read pipelines, rate limits, OG    |
+| `public/`         | Icons, avatars, secret art, Absolute Ceiling badge, PWA                        |
 
 ## Trust model (honest)
 
@@ -160,9 +190,12 @@ flowchart TB
 | Leaderboard Practice        | Who **synced** free-play progress with a username                                     |
 | Community crowns            | Ranked rolls only                                                                     |
 | Share links                 | Only after roll row exists in Neon                                                    |
+| Runtime schema validation   | Zod at **import / sync / profile** boundaries only — not blanket on every API         |
 
 ## Related docs
 
-- [Solo design](./superpowers/specs/2026-07-08-rngdle-unlocked-design.md)
-- [Social design](./superpowers/specs/2026-07-09-mvp-part2-social-design.md)
-- [Feature wave plan](./superpowers/plans/2026-07-09-feature-wave.md)
+- [Refactor notes (July 2026)](./refactor-notes-2026-07.md)
+- [Opus audit + §H implementation status](./opus-report.md)
+- [Solo design](./superpowers/specs/2026-07-08-rngdle-unlocked-design.md) _(historical)_
+- [Social design](./superpowers/specs/2026-07-09-mvp-part2-social-design.md) _(historical)_
+- [Feature wave plan](./superpowers/plans/2026-07-09-feature-wave.md) _(historical)_
