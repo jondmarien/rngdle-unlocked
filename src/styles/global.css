@@ -22,8 +22,9 @@
   --uncommon: #2a7a8c;
   --rare: #3b5bdb;
   --epic: #7c3aed;
-  --anomaly: #c026d3;
-  --mythic: #d97706;
+  /* anomaly = orange, mythic = pink (digit chips + rarity labels) */
+  --anomaly: #ea580c;
+  --mythic: #db2777;
 
   /* Typography */
   --font-sans: 'Outfit Variable', Outfit, system-ui, sans-serif;

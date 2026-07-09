@@ -2,7 +2,12 @@ import { useEffect, useState } from 'react';
 import type { BadgeHit } from '../../game';
 import { formatRollDigits } from '../../game/digits';
 import { RARITY_LABELS } from '../../game/rarity';
-import { FAMILY_PILL, RARITY_PILL } from '../../lib/badge-theme';
+import {
+  FAMILY_PILL,
+  RARITY_DIGIT_OFF,
+  RARITY_DIGIT_ON,
+  RARITY_PILL,
+} from '../../lib/badge-theme';
 import { FAMILY_ICON, RARITY_ICON } from '../../lib/icons';
 
 const CASCADE_MS = 130;
@@ -116,10 +121,8 @@ export function BadgeCard({
             <span
               key={i}
               className={[
-                'mono-number flex h-8 w-8 items-center justify-center rounded-md text-sm font-bold transition-colors sm:h-9 sm:w-9',
-                on
-                  ? 'bg-white text-zinc-900 shadow-sm dark:bg-zinc-100'
-                  : 'bg-[var(--bg)] text-[var(--prose-3)] ring-1 ring-[var(--outline)]',
+                'mono-number flex h-8 w-8 items-center justify-center rounded-md border text-sm font-bold transition-colors sm:h-9 sm:w-9',
+                on ? RARITY_DIGIT_ON[badge.rarity] : RARITY_DIGIT_OFF,
                 visible && on ? 'digit-chip-pulse' : '',
               ].join(' ')}
               style={
