@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 import type { Db } from './db/index.js';
 import { rateLimits } from './db/schema.js';
+import type { ApiRequest } from './http.js';
 
 export type RateLimitOk = { ok: true; remaining: number };
 export type RateLimitBlocked = { ok: false; retryAfterSec: number };
@@ -72,7 +73,7 @@ export async function checkRateLimit(
   return { ok: true, remaining: limit - row.count - 1 };
 }
 
-export function clientIp(request: Request): string {
+export function clientIp(request: ApiRequest): string {
   return (
     request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
     request.headers.get('x-real-ip') ||

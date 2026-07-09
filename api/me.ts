@@ -1,14 +1,16 @@
 import { createAuth } from '../server/auth.js';
 import { createDb } from '../server/db/index.js';
 import { user } from '../server/db/schema.js';
+import type { ApiRequest } from '../server/http.js';
 import { eq } from 'drizzle-orm';
 
-async function getSession(request: Request) {
+async function getSession(request: ApiRequest) {
   const auth = createAuth();
-  return auth.api.getSession({ headers: request.headers });
+  // Runtime headers are a real Headers object; cast for better-auth's HeadersInit.
+  return auth.api.getSession({ headers: request.headers as never });
 }
 
-export default async function handler(request: Request): Promise<Response> {
+export default async function handler(request: ApiRequest): Promise<Response> {
   try {
     if (request.method === 'GET') {
       const session = await getSession(request);

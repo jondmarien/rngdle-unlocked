@@ -1,5 +1,6 @@
 import { createAuth } from '../server/auth.js';
 import { createDb } from '../server/db/index.js';
+import type { ApiRequest } from '../server/http.js';
 import {
   checkRateLimit,
   isRateLimited,
@@ -12,13 +13,15 @@ import {
   type CloudSavePayload,
 } from '../server/sync.js';
 
-async function requireUserId(request: Request): Promise<string | null> {
+async function requireUserId(request: ApiRequest): Promise<string | null> {
   const auth = createAuth();
-  const session = await auth.api.getSession({ headers: request.headers });
+  const session = await auth.api.getSession({
+    headers: request.headers as never,
+  });
   return session?.user?.id ?? null;
 }
 
-export default async function handler(request: Request): Promise<Response> {
+export default async function handler(request: ApiRequest): Promise<Response> {
   try {
     const userId = await requireUserId(request);
     if (!userId) {

@@ -1,12 +1,13 @@
 import { and, eq } from 'drizzle-orm';
 import { createDb } from '../../../server/db/index.js';
 import { rolls, user } from '../../../server/db/schema.js';
+import type { ApiRequest } from '../../../server/http.js';
 
 /**
  * HTML share page with Open Graph tags for Discord / social crawlers.
  * Humans get a meta-refresh into the SPA at /r/:id
  */
-export default async function handler(request: Request): Promise<Response> {
+export default async function handler(request: ApiRequest): Promise<Response> {
   try {
     const url = new URL(request.url);
     const parts = url.pathname.split('/').filter(Boolean);

@@ -1,6 +1,7 @@
 import { and, desc, eq } from 'drizzle-orm';
 import { createDb } from '../../server/db/index.js';
 import { rolls, user, userProgress } from '../../server/db/schema.js';
+import type { ApiRequest } from '../../server/http.js';
 import {
   checkRateLimit,
   clientIp,
@@ -9,7 +10,7 @@ import {
   rateLimitedResponse,
 } from '../../server/rateLimit.js';
 
-export default async function handler(request: Request): Promise<Response> {
+export default async function handler(request: ApiRequest): Promise<Response> {
   if (request.method !== 'GET') {
     return Response.json({ error: 'Method not allowed' }, { status: 405 });
   }
