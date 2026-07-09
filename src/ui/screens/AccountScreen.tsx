@@ -183,7 +183,12 @@ export function AccountScreen({
           hasData: Boolean(res.data),
         });
         if (res.error) {
-          throw new Error(res.error.message ?? 'Sign in failed');
+          const raw = res.error.message ?? 'Sign in failed';
+          const nicer =
+            /user not found/i.test(raw) || /invalid email or password/i.test(raw)
+              ? 'No account for that email (or wrong password). Use the exact address you signed up with, or Continue with Discord/GitHub.'
+              : raw;
+          throw new Error(nicer);
         }
         setStatus('Refreshing session…');
         setMsg('Signed in.');
@@ -251,6 +256,8 @@ export function AccountScreen({
   const onLinkSocial = async (provider: 'discord' | 'github') => {
     setBusy(true);
     setMsg(null);
+    setStatus(`Opening ${provider} to link…`);
+    log.info('link-social:start', { provider });
     try {
       await authClient.linkSocial({
         provider,
@@ -258,6 +265,7 @@ export function AccountScreen({
       });
     } catch (err) {
       setMsg(err instanceof Error ? err.message : `Link ${provider} failed`);
+      setStatus(null);
       setBusy(false);
     }
   };
@@ -410,14 +418,18 @@ export function AccountScreen({
               Continue with GitHub
             </button>
             <p className="text-[11px] text-[var(--prose-3)]">
-              OAuth needs Discord/GitHub apps configured — see{' '}
-              <code className="text-[10px]">docs/oauth-setup.md</code>.
+              Prefer Discord/GitHub. Email is optional below.
             </p>
           </div>
-          <p className="text-center text-xs font-semibold uppercase tracking-wider text-[var(--prose-3)]">
-            or email
-          </p>
-          <form onSubmit={onAuth} className="space-y-3">
+          <details className="rounded-lg border border-[var(--outline)] bg-[var(--surface)] p-3">
+            <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-[var(--prose-3)]">
+              Or use email / password
+            </summary>
+            <form
+              onSubmit={onAuth}
+              className="mt-3 space-y-3"
+              autoComplete="on"
+            >
           <div className="flex gap-2 text-xs font-bold uppercase">
             <button
               type="button"
@@ -436,7 +448,7 @@ export function AccountScreen({
           </div>
           {mode === 'signup' && (
             <input
-              className="w-full border border-[var(--outline)] bg-[var(--surface)] px-3 py-2 text-sm"
+              className="w-full border border-[var(--outline)] bg-[var(--bg)] px-3 py-2 text-sm"
               placeholder="Display name"
               name="name"
               autoComplete="name"
@@ -449,7 +461,7 @@ export function AccountScreen({
             name="email"
             required
             autoComplete="email"
-            className="w-full border border-[var(--outline)] bg-[var(--surface)] px-3 py-2 text-sm"
+            className="w-full border border-[var(--outline)] bg-[var(--bg)] px-3 py-2 text-sm"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -460,7 +472,7 @@ export function AccountScreen({
             required
             minLength={8}
             autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-            className="w-full border border-[var(--outline)] bg-[var(--surface)] px-3 py-2 text-sm"
+            className="w-full border border-[var(--outline)] bg-[var(--bg)] px-3 py-2 text-sm"
             placeholder="Password (8+)"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -480,6 +492,7 @@ export function AccountScreen({
             <p className="text-xs text-[var(--prose-3)]">{status}</p>
           )}
         </form>
+          </details>
         </div>
       ) : (
         <div className="space-y-4">
