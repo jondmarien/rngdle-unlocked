@@ -3,7 +3,7 @@
 Instructions for AI coding agents and humans working in this repository.
 
 **Live:** https://rngdle-unlocked.chron0.tech  
-**Stack:** Vite + React 19 + TypeScript · Tailwind v4 · Vercel serverless · Neon Postgres · Better Auth · Drizzle  
+**Stack:** Vite + React 19 + TypeScript · Tailwind v4 · TanStack Query · Zod · Vercel serverless · Neon Postgres · Better Auth · Drizzle  
 **Package manager:** pnpm 10 (`packageManager` field is authoritative)
 
 ---
@@ -42,14 +42,15 @@ Instructions for AI coding agents and humans working in this repository.
 ## 2. Repo map
 
 ```
-api/                 Vercel serverless entrypoints (Node adapter)
-server/              Shared backend: auth, db, sync, rankedRoll, rollActivity, rateLimit
+api/                 Vercel serverless entrypoints (Node adapter) — thin handlers
+server/              Shared backend: apiGuards, auth, db, sync, rankedRoll, rollActivity,
+                     rateLimit, leaderboard, profile, feed, ogSvg, notifications
 src/game/            Pure TS engine (no React) — RNG, badges, rarity, secrets, challenge
-src/state/           GameProvider, localStorage, auto-sync orchestration
+src/state/           GameProvider (contexts) + useSync + localStorage + settings reducer
 src/ui/              Screens + reel/cascade components
-src/lib/             Auth client, routes, sync-api, notifications-api, themes
+src/lib/             Auth client, routes, *-api.ts wrappers, schemas.ts, themes, format
 public/              Avatars, rarity/family icons, secrets art, Absolute Ceiling badge
-docs/                ARCHITECTURE.md + design specs/plans
+docs/                ARCHITECTURE.md + refactor notes + design specs/plans
 scripts/             Migrations, diagnostics (prefer additive SQL over destructive push)
 ```
 
@@ -57,7 +58,8 @@ scripts/             Migrations, diagnostics (prefer additive SQL over destructi
 | ------------------------ | -------------------------------------------------------------------------------------------------- |
 | `src/game/`              | Pure, testable, no React/DOM side effects at import time (except `fx.ts` intentionally uses Audio) |
 | `src/ui/` + `src/state/` | UI + persistence; call game engine, never reimplement scoring                                      |
-| `api/*`                  | Thin handlers → `server/*`; use `defineHandler` from `server/vercel-adapter.ts`                    |
+| `src/lib/*-api.ts`       | **Mandatory** client API wrappers — UI must not call `fetch('/api/...')` directly                  |
+| `api/*`                  | Thin handlers → `server/*`; preamble via `server/apiGuards.ts`; `defineHandler` from vercel-adapter |
 | `server/db/schema.ts`    | Source of truth for tables; deploy schema carefully (see §6)                                       |
 
 Deep diagrams: [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md).
@@ -70,14 +72,16 @@ Deep diagrams: [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md).
 pnpm install
 pnpm dev              # SPA only (game works offline)
 pnpm test             # vite-plus / vitest
-pnpm typecheck        # app + node + api/server tsconfigs
-pnpm build            # typecheck + vite build
+pnpm typecheck        # app + node + tsconfig.server.json (NodeNext for api/server)
+pnpm build            # app + node typecheck, then Vite production build (server graph is typecheck’s job)
 pnpm lint
 pnpm fmt              # Oxfmt write (single quotes — .oxfmtrc.json)
 pnpm fmt:check        # format check (should be a no-op after fmt)
 npx vercel dev        # SPA + /api/* locally (social)
 pnpm db:push          # drizzle-kit push (can prompt truncate — avoid in prod blindly)
 ```
+
+**TypeScript projects:** root `tsconfig.json` is a solution file referencing `tsconfig.app.json` (bundler), `tsconfig.node.json`, and `tsconfig.server.json` (`module`/`moduleResolution`: **NodeNext** / **nodenext** for `api/**` + `server/**`).
 
 **Formatting:** Oxfmt via Vite+ (`vp fmt`). Repo standard is **single quotes** (`.oxfmtrc.json` + `vite.config.ts` `fmt.singleQuote`). Do not commit quote-only churn; re-running `pnpm fmt` should be a no-op.
 
@@ -137,14 +141,30 @@ Serverless loads `src/game/**` as ESM under `/var/task`. **Relative imports in t
 
 Vite resolves `.js` → `.ts` fine. Keep this pattern when adding game modules used by `server/`.
 
+**Compile-time enforcement:** `tsconfig.server.json` uses `moduleResolution: nodenext`, so `pnpm typecheck` fails on extensionless relative imports in the api/server graph. Do not switch the server project back to `bundler` — that was the root cause of recurring Ranked outages.
+
 ### 5.4 Serverless handlers
 
 - Export default via `defineHandler` (Node `req/res` → Fetch `Request`/`Response`).
-- Auth: Better Auth session from request headers.
-- Rate limits: `server/rateLimit.ts` — soft API burst guards, **not** free-play gameplay locks.
+- **Required preamble** for new handlers: `requireUser`, `readJson`, and/or `rateGuard` from [`server/apiGuards.ts`](./server/apiGuards.ts) — do not re-copy per-handler auth/JSON/rate-limit boilerplate.
+- **Thin `api/*` → `server/*`:** enforced for **reads** (leaderboard, profile, feed, notifications, og) as well as writes. Query/assembly logic lives in `server/{leaderboard,profile,feed,ogSvg,notifications}.ts` (and peers). Some write handlers (`follow`, `me`, `attest`, `sync` orchestration) still keep more logic inline — prefer extracting when touching them.
+- Auth: Better Auth session via `apiGuards` / `getSessionUser` (typed username/role — no `as` casts for session fields).
+- Rate limits: `server/rateLimit.ts` via `rateGuard` — soft API burst guards, **not** free-play gameplay locks.
   - There is **no** hourly free-play roll-upload cap (removed).
   - Ranked still has `rankedRollsPerHour` (server cost).
 - Prefer **lazy `import()`** of heavy game/rollActivity code after auth when cold-start risk is high.
+
+### 5.4b Zod at trust boundaries
+
+Runtime schemas live primarily in [`src/lib/schemas.ts`](./src/lib/schemas.ts) (shared shapes) plus server sync validation:
+
+| Boundary | Where |
+| -------- | ----- |
+| Save **import** payload | `parseImportPayload` in `src/state/storage.ts` |
+| Cloud **sync** POST body | `api/sync.ts` + schema in `server/sync.ts` |
+| Public **profile** GET response | `src/lib/profile-api.ts` |
+
+Do not claim blanket Zod on every POST/query — only these trust boundaries are validated today.
 
 ### 5.5 Sync merge (client-authoritative progress)
 
@@ -217,7 +237,7 @@ Important tables: `user` (username, vanity profile fields), `user_progress`, `ro
 | `/api/feed`                           | `?source=all\|ranked\|practice` — self + following     |
 | `/api/follow`                         | Follow graph                                           |
 | `/api/notifications`                  | Activity + system inbox                                |
-| `/api/system-messages`                | GET list; POST **admin session** (role=admin)          |
+| `/api/system-messages`                | GET list; POST **admin session** (role=admin). Still live alongside `api/admin/broadcast.ts` — redundant POST not removed. |
 | `/api/admin/*`                        | Admin: broadcast, users search/wipe/ban, reports       |
 | `/api/reports`                        | Signed-in users file abuse / username reports          |
 | `/api/challenge`                      | Period seeds metadata                                  |
@@ -233,8 +253,11 @@ SPA routes: History API in `src/lib/routes.ts`; Vercel rewrites non-`/api` to `i
 ## 8. Frontend conventions
 
 - **Styling:** Tailwind v4 utility classes + CSS vars (`--bg`, `--prose`, `--outline`, …) in `src/styles/global.css`.
+- **Segmented controls:** use `SegmentedToggle` for simple scope/lane chips (Leaderboard, History, Admin, Notifications). **Do not** migrate `RollModePicker` radio cards or `CollectionScreen` family-filter chips — those stay bespoke by design.
 - **Fonts:** Outfit (UI), Syne (display), JetBrains Mono (numbers).
-- **State:** `GameProvider` owns rolls, history, collection, settings, sync; screens consume hooks.
+- **Client API wrappers:** screens and components must use `src/lib/*-api.ts` (`leaderboard-api`, `profile-api`, `me-api`, `roll-api`, `highlights-api`, `sync-api`, `notifications-api`, `admin-api`, …). **Never** call `fetch('/api/...')` directly from `src/ui/**` (blob/`dataUrl` fetches for PNG export are fine).
+- **TanStack Query:** `QueryClientProvider` in `src/main.tsx`. Use `useQuery` for cached reads — leaderboard, feed, highlights, profile, admin-check (`useIsAdmin`). Some screens (notifications, account) still use effects + wrappers; prefer Query when adding new reads. No broad `useMutation` adoption yet.
+- **State:** `GameProvider` mounts three contexts — `useGame` (rolls/history/collection), `useGameSettings`, `useCloudSync`. Cloud sync orchestration lives in [`src/state/useSync.ts`](./src/state/useSync.ts) (`enqueueAutoSync`, `applyCloudPayload`, `syncToCloud`, `pullFromCloud`, `waitForCloudPublish`). Settings setters live in `src/state/settings.ts`.
 - **Logging:** `createLogger('area')` → `[rngdle:area]` in browser/Vercel logs. Optional `window.__rngdleLog`.
 - **Share:** no public vanity URL until `waitForCloudPublish` confirms the roll row exists.
 - **Copy:** keep Free vs Ranked board placement language consistent (About, RollModePicker, Leaderboard, README).
@@ -263,6 +286,8 @@ GitHub Mermaid: avoid `<br/>`, unicode middle-dots, and heavy path punctuation i
 3. Switch Free → Generate still settles (mode-switch reel remount).
 4. Ranked (signed in + username) → Generate settles and appears under History → Ranked.
 
+These four checks require a **manual browser smoke** — automated `pnpm test` / `pnpm typecheck` do not cover reel settle or mode-switch UX. Do not mark this checklist complete in docs or release notes without explicit smoke evidence.
+
 ---
 
 ## 10. Git & release hygiene
@@ -279,7 +304,7 @@ GitHub Mermaid: avoid `<br/>`, unicode middle-dots, and heavy path punctuation i
 
 | Symptom                                                       | Likely cause                                    | Fix direction                                     |
 | ------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------- |
-| Ranked `FUNCTION_INVOCATION_FAILED` / missing `rarity` module | ESM extensionless import in `src/game`          | Add `.js` extensions on relative imports          |
+| Ranked `FUNCTION_INVOCATION_FAILED` / missing `rarity` module | ESM extensionless import in `src/game`          | Add `.js` extensions; `pnpm typecheck` (NodeNext) should fail before deploy |
 | Ranked 500 after auth                                         | Insert insert / missing `source` column         | Run `scripts/add-roll-source.mjs`                 |
 | Free play sync `429` hourly upload                            | Old hourly cap                                  | Removed — only soft per-minute sync burst remains |
 | Reel stuck on `?????` after Daily/Weekly                      | `lastRevealKey` collision                       | Remount reel + reset lastRevealKey (see §5.6)     |
@@ -303,19 +328,25 @@ GitHub Mermaid: avoid `<br/>`, unicode middle-dots, and heavy path punctuation i
 
 ## 13. Key files cheat sheet
 
-| Concern            | Start here                                              |
-| ------------------ | ------------------------------------------------------- |
-| Roll orchestration | `src/state/GameProvider.tsx`                            |
-| Reel animation     | `src/ui/components/NumberDisplay.tsx`, `HomeScreen.tsx` |
-| Mode picker copy   | `src/ui/components/RollModePicker.tsx`                  |
-| Badge catalog      | `src/game/badges/catalog.ts`                            |
-| Ranked issue       | `server/rankedRoll.ts`, `api/ranked-roll.ts`            |
-| Crowns / overtake  | `server/rollActivity.ts`                                |
-| Sync merge         | `server/sync.ts`, `api/sync.ts`                         |
-| Leaderboards       | `api/leaderboard.ts`, `LeaderboardScreen.tsx`           |
-| Feed               | `api/feed.ts`                                           |
-| Schema             | `server/db/schema.ts`                                   |
-| Architecture       | `docs/ARCHITECTURE.md`                                  |
+| Concern                 | Start here                                                              |
+| ----------------------- | ----------------------------------------------------------------------- |
+| Roll orchestration      | `src/state/GameProvider.tsx`                                            |
+| Cloud sync orchestration| `src/state/useSync.ts`, `useCloudSync`                                  |
+| Client API wrappers     | `src/lib/*-api.ts` (esp. `roll-api`, `leaderboard-api`, `profile-api`)  |
+| Zod schemas             | `src/lib/schemas.ts`, `server/sync.ts`                                  |
+| QueryClient             | `src/main.tsx`                                                          |
+| Handler guards          | `server/apiGuards.ts`                                                   |
+| Read pipelines          | `server/leaderboard.ts`, `profile.ts`, `feed.ts`, `ogSvg.ts`            |
+| Reel animation          | `src/ui/components/NumberDisplay.tsx`, `HomeScreen.tsx`                 |
+| Mode picker copy        | `src/ui/components/RollModePicker.tsx`                                  |
+| Badge catalog           | `src/game/badges/catalog.ts`                                            |
+| Ranked issue            | `server/rankedRoll.ts`, `api/ranked-roll.ts`                            |
+| Crowns / overtake       | `server/rollActivity.ts`                                                |
+| Sync merge              | `server/sync.ts`, `api/sync.ts`                                         |
+| Leaderboards            | `server/leaderboard.ts`, `api/leaderboard.ts`, `LeaderboardScreen.tsx`  |
+| Feed                    | `server/feed.ts`, `api/feed.ts`                                         |
+| Schema                  | `server/db/schema.ts`                                                   |
+| Architecture            | `docs/ARCHITECTURE.md`, `docs/refactor-notes-2026-07.md`                |
 
 ---
 
