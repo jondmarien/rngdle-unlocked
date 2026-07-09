@@ -6,7 +6,7 @@
 
 Inspired by the daily number-game genre, but **unlocked**: roll as often as you want, keep a lifetime collection, and optionally sync progress to Neon for accounts, leaderboards, and shareable rolls.
 
-**Live:** [rngdle-unlocked.chron0.tech](https://rngdle-unlocked.chron0.tech)
+**[Live Site](https://rngdle-unlocked.chron0.tech)**
 
 [![React 19](https://img.shields.io/badge/UI-React_19-61dafb?logo=react&logoColor=black)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/lang-TypeScript_7-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
