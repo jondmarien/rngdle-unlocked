@@ -105,7 +105,9 @@ export function loadState(): PersistedState {
   const state: PersistedState = {
     history,
     lifetimeEP: Number.isFinite(lifetimeEP) ? lifetimeEP : 0,
-    lifetimeRollCount: Number.isFinite(lifetimeRollCount) ? lifetimeRollCount : 0,
+    lifetimeRollCount: Number.isFinite(lifetimeRollCount)
+      ? lifetimeRollCount
+      : 0,
     journeyEP: Number.isFinite(journeyEP) ? journeyEP : 0,
     collection,
     settings,
@@ -193,7 +195,10 @@ function collectionNeedsPersist(
   return false;
 }
 
-export function prependHistory(history: RollResult[], roll: RollResult): RollResult[] {
+export function prependHistory(
+  history: RollResult[],
+  roll: RollResult,
+): RollResult[] {
   return [roll, ...history].slice(0, HISTORY_CAP);
 }
 

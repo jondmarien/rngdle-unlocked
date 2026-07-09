@@ -1,0 +1,15 @@
+---
+description: Keep TypeScript/JS quote style stable — single quotes via oxfmt
+alwaysApply: true
+---
+
+# Formatting (no quote flip-flops)
+
+This repo formats with **Oxfmt** (`vp fmt` / `vp check`) using **single quotes**.
+
+- Config: [`.oxfmtrc.json`](../../.oxfmtrc.json) — `singleQuote: true`
+- Mirror for Prettier-based IDE extensions: [`.prettierrc.json`](../../.prettierrc.json)
+- Do **not** reformat files to double quotes.
+- Do **not** commit pure quote-style or semicolon-only diffs.
+- After editing, prefer `pnpm fmt` (or `vp fmt`) once; re-running should be a no-op.
+- If an editor rewrites quotes on save, check `.vscode/settings.json` and that Oxc/Prettier both use single quotes.

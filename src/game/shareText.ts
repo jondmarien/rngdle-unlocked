@@ -20,15 +20,13 @@ export function buildFlavorQuote(badges: BadgeHit[]): string {
   if (badges.length === 0) {
     return 'nothing but the void, and yet we roll';
   }
-  const words = badges
-    .slice(0, 8)
-    .flatMap((b) =>
-      b.name
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .split(/[\s-]+/)
-        .filter((w) => w.length > 1 && w !== 'of' && w !== 'the' && w !== 'a'),
-    );
+  const words = badges.slice(0, 8).flatMap((b) =>
+    b.name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .split(/[\s-]+/)
+      .filter((w) => w.length > 1 && w !== 'of' && w !== 'the' && w !== 'a'),
+  );
   // Prefer a readable short phrase
   const unique: string[] = [];
   for (const w of words) {
@@ -108,9 +106,7 @@ export function buildShareText(
   const shown = sorted.slice(0, MAX_BADGE_LINES);
   const more = sorted.length - shown.length;
 
-  const badgeLines = shown.map(
-    (b) => `${sq} ${b.emoji} ${b.name}`,
-  );
+  const badgeLines = shown.map((b) => `${sq} ${b.emoji} ${b.name}`);
   if (more > 0) {
     badgeLines.push(`+${more} more`);
   }

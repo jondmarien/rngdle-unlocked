@@ -73,9 +73,13 @@ pnpm test             # vite-plus / vitest
 pnpm typecheck        # app + node + api/server tsconfigs
 pnpm build            # typecheck + vite build
 pnpm lint
+pnpm fmt              # Oxfmt write (single quotes — .oxfmtrc.json)
+pnpm fmt:check        # format check (should be a no-op after fmt)
 npx vercel dev        # SPA + /api/* locally (social)
 pnpm db:push          # drizzle-kit push (can prompt truncate — avoid in prod blindly)
 ```
+
+**Formatting:** Oxfmt via Vite+ (`vp fmt`). Repo standard is **single quotes** (`.oxfmtrc.json` + `vite.config.ts` `fmt.singleQuote`). Do not commit quote-only churn; re-running `pnpm fmt` should be a no-op.
 
 **Prefer** additive scripts when drizzle wants to truncate:
 
