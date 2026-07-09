@@ -6,8 +6,8 @@ function ids(n: number): string[] {
 }
 
 describe('badge catalog', () => {
-  it('has at least 40 number badges', () => {
-    expect(NUMBER_BADGES.length).toBeGreaterThanOrEqual(40);
+  it('has a large catalog for variety', () => {
+    expect(NUMBER_BADGES.length).toBeGreaterThanOrEqual(120);
   });
 
   it('has unique ids', () => {

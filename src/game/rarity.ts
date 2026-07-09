@@ -1,24 +1,27 @@
 import type { RarityTier } from './types';
 
-/** Highest matching minEP wins — used for full roll score. */
+/**
+ * Full-roll rarity from total EP.
+ * Tuned so a solid multi-badge roll can hit Epic; Anomaly/Mythic stay rare.
+ */
 export const RARITY_THRESHOLDS: { tier: RarityTier; minEP: number }[] = [
-  { tier: 'mythic', minEP: 50_000 },
-  { tier: 'anomaly', minEP: 15_000 },
-  { tier: 'epic', minEP: 5_000 },
-  { tier: 'rare', minEP: 1_500 },
-  { tier: 'uncommon', minEP: 400 },
-  { tier: 'common', minEP: 50 },
+  { tier: 'mythic', minEP: 12_000 },
+  { tier: 'anomaly', minEP: 4_500 },
+  { tier: 'epic', minEP: 1_800 },
+  { tier: 'rare', minEP: 700 },
+  { tier: 'uncommon', minEP: 220 },
+  { tier: 'common', minEP: 40 },
   { tier: 'trash', minEP: 0 },
 ];
 
-/** Slightly softer ladder for individual badge cards (OG-style chips). */
+/** Softer ladder for individual badge chips. */
 export const BADGE_RARITY_THRESHOLDS: { tier: RarityTier; minEP: number }[] = [
-  { tier: 'mythic', minEP: 12_000 },
-  { tier: 'anomaly', minEP: 6_000 },
-  { tier: 'epic', minEP: 3_000 },
-  { tier: 'rare', minEP: 1_500 },
-  { tier: 'uncommon', minEP: 700 },
-  { tier: 'common', minEP: 80 },
+  { tier: 'mythic', minEP: 8_000 },
+  { tier: 'anomaly', minEP: 3_500 },
+  { tier: 'epic', minEP: 1_500 },
+  { tier: 'rare', minEP: 600 },
+  { tier: 'uncommon', minEP: 200 },
+  { tier: 'common', minEP: 40 },
   { tier: 'trash', minEP: 0 },
 ];
 

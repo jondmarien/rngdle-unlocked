@@ -4,15 +4,15 @@ import { percentileFromEP } from './percentile';
 import { sumEP } from './score';
 
 describe('rarityFromEP', () => {
-  it('maps boundaries', () => {
+  it('maps boundaries (rebalanced ladder)', () => {
     expect(rarityFromEP(0)).toBe('trash');
-    expect(rarityFromEP(49)).toBe('trash');
-    expect(rarityFromEP(50)).toBe('common');
-    expect(rarityFromEP(400)).toBe('uncommon');
-    expect(rarityFromEP(1500)).toBe('rare');
-    expect(rarityFromEP(5000)).toBe('epic');
-    expect(rarityFromEP(15000)).toBe('anomaly');
-    expect(rarityFromEP(50000)).toBe('mythic');
+    expect(rarityFromEP(39)).toBe('trash');
+    expect(rarityFromEP(40)).toBe('common');
+    expect(rarityFromEP(220)).toBe('uncommon');
+    expect(rarityFromEP(700)).toBe('rare');
+    expect(rarityFromEP(1800)).toBe('epic');
+    expect(rarityFromEP(4500)).toBe('anomaly');
+    expect(rarityFromEP(12000)).toBe('mythic');
   });
 });
 
