@@ -611,7 +611,6 @@ export const NUMBER_BADGES: BadgeDef[] = [
   containsSub('zoom-555', 'Triple Fives', '555', 800, '5️⃣'),
   containsSub('zoom-999', 'Triple Nines', '999', 900, '9️⃣'),
 
-  // fix: remove the bad exact hello badge - I'll not include it
   // ========== patterns / sequences ==========
   {
     id: 'all-same-digits',

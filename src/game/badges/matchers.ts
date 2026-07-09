@@ -180,10 +180,6 @@ export function digitCounts(n: number): Map<number, number> {
   return m;
 }
 
-export function uniqueDigitCount(n: number): number {
-  return new Set(digitArray(n)).size;
-}
-
 export function pokerHand(
   n: number,
 ):
@@ -296,10 +292,6 @@ export function isBalanced(n: number): boolean {
   const left = d.slice(0, mid).reduce((a, b) => a + b, 0);
   const right = d.slice(d.length - mid).reduce((a, b) => a + b, 0);
   return left === right;
-}
-
-export function hasOnlyDigits(n: number, allowed: Set<number>): boolean {
-  return digitArray(n).every((d) => allowed.has(d));
 }
 
 export function maxDigit(n: number): number {

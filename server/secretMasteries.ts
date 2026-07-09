@@ -1,6 +1,6 @@
 /**
  * Lightweight secret mastery evaluation for API (no game catalog import).
- * Section badge ID lists live in sectionBadgeIds.json (regenerate via
+ * Section badge ID lists live in sectionBadgeIds.ts (regenerate via
  * `pnpm exec tsx scripts/dump-section-ids.mts`).
  */
 import { sectionBadgeIds, type SectionKey } from './sectionBadgeIds.js';

@@ -2,7 +2,6 @@ import type {
   ConsecutiveHighlight,
   PlayStats,
   RarityTier,
-  RollHighlight,
   RollResult,
 } from './types.js';
 import { rollToHighlight } from './types.js';
@@ -129,20 +128,4 @@ export function recomputeBestConsecutive(
     }
   }
   return found;
-}
-
-export function mergeBestRoll(
-  current: RollHighlight | null,
-  incoming: RollHighlight | null,
-): RollHighlight | null {
-  if (!current) return incoming;
-  if (!incoming) return current;
-  if (incoming.totalEP > current.totalEP) return incoming;
-  if (
-    incoming.totalEP === current.totalEP &&
-    incoming.percentile > current.percentile
-  ) {
-    return incoming;
-  }
-  return current;
 }

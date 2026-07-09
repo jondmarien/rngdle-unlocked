@@ -45,10 +45,6 @@ export function mixPoolInto(target: Uint8Array): void {
   }
 }
 
-export function getPoolSampleCount(): number {
-  return samples;
-}
-
 /** Test-only: reset pool state. */
 export function __resetEntropyPoolForTests(): void {
   pool.fill(0);

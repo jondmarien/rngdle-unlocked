@@ -22,7 +22,3 @@ export function formatRollDigits(n: number): string {
 export function naturalDigits(n: number): string {
   return formatRollDigits(n);
 }
-
-export function naturalDigitLength(n: number): number {
-  return naturalDigits(n).length;
-}

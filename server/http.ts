@@ -35,14 +35,3 @@ export function requestUrl(
     return new URL(path, `${proto}://${host}`);
   }
 }
-
-export function clientHeader(
-  request: Request | ApiRequest,
-  name: string,
-): string | null {
-  try {
-    return request.headers.get(name);
-  } catch {
-    return null;
-  }
-}
