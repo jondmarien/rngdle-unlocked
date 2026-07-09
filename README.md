@@ -130,7 +130,7 @@ Or `pnpm dev` for the SPA only and point APIs at a deployed preview.
 - **Roll mode picker** — Free play vs Daily vs Weekly with plain-language explanations on the Roll tab
 - **140+ badges** across math, patterns, culture, sequences, and more
 - **Badge codex** — locked vs unlocked with **spoiler-safe** family hints
-- **EP + rarity ladder** (trash → mythic) and percentile framing
+- **EP + rarity ladder** (trash → mythic; thresholds retuned for the dense badge catalog so low tiers actually appear) and percentile framing
 - **Journey milestones** (lifetime EP)
 - **History, showcase, stats** — rarity histogram, EP/hour, 28-day streak calendar
 - **Streaks**, optional confetti / SFX

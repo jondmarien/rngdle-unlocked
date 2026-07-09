@@ -2,25 +2,30 @@ import type { RarityTier } from './types';
 
 /**
  * Full-roll rarity from total EP.
- * Tuned so a solid multi-badge roll can hit Epic; Anomaly/Mythic stay rare.
+ *
+ * Thresholds are calibrated against the live badge catalog (dense stacking):
+ * most random 0..1e6 rolls land ~1.5k–8k EP, so low tiers need high bars
+ * or trash/common/uncommon never appear. Target shape ~:
+ * trash 15–20% · common 20–25% · uncommon 20–25% · rare 15–20% ·
+ * epic ~10% · anomaly ~5–7% · mythic ~1%.
  */
 export const RARITY_THRESHOLDS: { tier: RarityTier; minEP: number }[] = [
-  { tier: 'mythic', minEP: 12_000 },
-  { tier: 'anomaly', minEP: 4_500 },
-  { tier: 'epic', minEP: 1_800 },
-  { tier: 'rare', minEP: 700 },
-  { tier: 'uncommon', minEP: 220 },
-  { tier: 'common', minEP: 40 },
+  { tier: 'mythic', minEP: 11_000 },
+  { tier: 'anomaly', minEP: 8_000 },
+  { tier: 'epic', minEP: 6_500 },
+  { tier: 'rare', minEP: 3_500 },
+  { tier: 'uncommon', minEP: 2_200 },
+  { tier: 'common', minEP: 1_650 },
   { tier: 'trash', minEP: 0 },
 ];
 
-/** Softer ladder for individual badge chips. */
+/** Softer ladder for individual badge chips (single-badge EP, not full roll). */
 export const BADGE_RARITY_THRESHOLDS: { tier: RarityTier; minEP: number }[] = [
   { tier: 'mythic', minEP: 8_000 },
-  { tier: 'anomaly', minEP: 3_500 },
-  { tier: 'epic', minEP: 1_500 },
-  { tier: 'rare', minEP: 600 },
-  { tier: 'uncommon', minEP: 200 },
+  { tier: 'anomaly', minEP: 4_000 },
+  { tier: 'epic', minEP: 2_500 },
+  { tier: 'rare', minEP: 900 },
+  { tier: 'uncommon', minEP: 250 },
   { tier: 'common', minEP: 40 },
   { tier: 'trash', minEP: 0 },
 ];

@@ -4,15 +4,20 @@ import { percentileFromEP } from './percentile';
 import { sumEP } from './score';
 
 describe('rarityFromEP', () => {
-  it('maps boundaries (rebalanced ladder)', () => {
+  it('maps boundaries (dense-catalog ladder)', () => {
     expect(rarityFromEP(0)).toBe('trash');
-    expect(rarityFromEP(39)).toBe('trash');
-    expect(rarityFromEP(40)).toBe('common');
-    expect(rarityFromEP(220)).toBe('uncommon');
-    expect(rarityFromEP(700)).toBe('rare');
-    expect(rarityFromEP(1800)).toBe('epic');
-    expect(rarityFromEP(4500)).toBe('anomaly');
-    expect(rarityFromEP(12000)).toBe('mythic');
+    expect(rarityFromEP(1_649)).toBe('trash');
+    expect(rarityFromEP(1_650)).toBe('common');
+    expect(rarityFromEP(2_199)).toBe('common');
+    expect(rarityFromEP(2_200)).toBe('uncommon');
+    expect(rarityFromEP(3_499)).toBe('uncommon');
+    expect(rarityFromEP(3_500)).toBe('rare');
+    expect(rarityFromEP(6_499)).toBe('rare');
+    expect(rarityFromEP(6_500)).toBe('epic');
+    expect(rarityFromEP(7_999)).toBe('epic');
+    expect(rarityFromEP(8_000)).toBe('anomaly');
+    expect(rarityFromEP(10_999)).toBe('anomaly');
+    expect(rarityFromEP(11_000)).toBe('mythic');
   });
 });
 
