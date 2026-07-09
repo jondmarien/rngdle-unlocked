@@ -10,17 +10,20 @@ import {
 } from '../../lib/badge-theme';
 import { FAMILY_ICON, RARITY_ICON } from '../../lib/icons';
 
-/** Delay between cascading badge cards (ms) */
-const CASCADE_MS = 220;
-/** Slow follow-scroll duration when a new card appears */
-const SCROLL_MS = 720;
+/**
+ * One cadence for reveal + follow-scroll.
+ * Card appears every CASCADE_MS; scroll eases over the same window so it
+ * never races ahead of the unlocks.
+ */
+const CASCADE_MS = 520;
+const SCROLL_MS = CASCADE_MS;
 
 function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined') return false;
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-/** Ease-out scroll for window (and optional overflow parent) — slower than native smooth. */
+/** Ease-out window scroll — duration matched to badge cascade. */
 function slowScrollElementIntoView(
   el: HTMLElement,
   durationMs: number,
@@ -28,23 +31,29 @@ function slowScrollElementIntoView(
 ): () => void {
   const rect = el.getBoundingClientRect();
   const vh = window.innerHeight;
+  const margin = 72;
+
+  // Skip if already comfortably on screen (except first pin)
+  if (block !== 'start') {
+    const fullyVisible =
+      rect.top >= margin * 0.5 && rect.bottom <= vh - margin;
+    if (fullyVisible) return () => {};
+  }
+
   let targetY: number;
   if (block === 'start') {
-    targetY = window.scrollY + rect.top - 16;
+    targetY = window.scrollY + rect.top - 20;
   } else if (block === 'center') {
     targetY = window.scrollY + rect.top - vh / 2 + rect.height / 2;
   } else {
-    // end: leave a little air under the card
-    targetY = window.scrollY + rect.bottom - vh + 48;
+    // Keep newest card in the lower portion of the viewport
+    targetY = window.scrollY + rect.bottom - vh + margin;
   }
-  const maxY = Math.max(
-    0,
-    document.documentElement.scrollHeight - vh,
-  );
+  const maxY = Math.max(0, document.documentElement.scrollHeight - vh);
   targetY = Math.max(0, Math.min(maxY, targetY));
   const startY = window.scrollY;
   const delta = targetY - startY;
-  if (Math.abs(delta) < 2) return () => {};
+  if (Math.abs(delta) < 4) return () => {};
 
   const start = performance.now();
   let raf = 0;
@@ -53,8 +62,9 @@ function slowScrollElementIntoView(
   const tick = (now: number) => {
     if (cancelled) return;
     const t = Math.min(1, (now - start) / durationMs);
-    // ease-out cubic — gentle settle
-    const e = 1 - (1 - t) ** 3;
+    // ease-in-out: starts gently, no snap
+    const e =
+      t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
     window.scrollTo(0, startY + delta * e);
     if (t < 1) raf = requestAnimationFrame(tick);
   };
@@ -70,8 +80,8 @@ export function BadgeCard({
   badge,
   number,
   isNew = false,
-  /** Stagger index for cascade-in (0 = first). */
-  cascadeIndex = 0,
+  /** Kept for call-site compatibility; parent owns cascade timing. */
+  cascadeIndex: _cascadeIndex = 0,
   animateIn = false,
 }: {
   badge: BadgeHit;
@@ -81,12 +91,14 @@ export function BadgeCard({
   cascadeIndex?: number;
   animateIn?: boolean;
 }) {
+  void _cascadeIndex;
   const digits = formatRollDigits(number).split('');
   const highlights =
     badge.highlights.length === digits.length
       ? badge.highlights
       : digits.map(() => false);
 
+  // Parent already staggers mount timing — only a short fade-in here (no re-delay)
   const [visible, setVisible] = useState(!animateIn || prefersReducedMotion());
 
   useEffect(() => {
@@ -95,12 +107,9 @@ export function BadgeCard({
       return;
     }
     setVisible(false);
-    const t = window.setTimeout(
-      () => setVisible(true),
-      cascadeIndex * CASCADE_MS,
-    );
+    const t = window.setTimeout(() => setVisible(true), 40);
     return () => window.clearTimeout(t);
-  }, [animateIn, cascadeIndex, badge.id]);
+  }, [animateIn, badge.id]);
 
   return (
     <article
@@ -176,7 +185,7 @@ export function BadgeCard({
               ].join(' ')}
               style={
                 visible && on
-                  ? { animationDelay: `${cascadeIndex * 40 + i * 45}ms` }
+                  ? { animationDelay: `${i * 50}ms` }
                   : undefined
               }
             >
@@ -236,28 +245,26 @@ export function BadgeBreakdown({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animateCascade, badgeSig]);
 
-  // Keep the newest cascading badge in view with a slow, controlled scroll
+  // Follow-scroll in lockstep with cascade: one ease per badge, same duration
   useEffect(() => {
     if (!animateCascade || visibleCount < 1) return;
     if (prefersReducedMotion()) return;
 
     let cancelScroll: (() => void) | undefined;
-    // Wait a frame so the new card is laid out, then ease the viewport
-    const id = window.requestAnimationFrame(() => {
+    // Let the card mount + fade start, then scroll over the rest of CASCADE_MS
+    const delay = window.setTimeout(() => {
       const el =
-        visibleCount === 1
-          ? rootRef.current
-          : lastItemRef.current;
+        visibleCount === 1 ? rootRef.current : lastItemRef.current;
       if (!el) return;
       cancelScroll = slowScrollElementIntoView(
         el,
-        SCROLL_MS,
+        Math.max(280, SCROLL_MS - 80),
         visibleCount === 1 ? 'start' : 'end',
       );
-    });
+    }, 60);
 
     return () => {
-      window.cancelAnimationFrame(id);
+      window.clearTimeout(delay);
       cancelScroll?.();
     };
   }, [visibleCount, animateCascade]);
