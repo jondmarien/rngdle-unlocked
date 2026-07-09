@@ -16,7 +16,7 @@ export function AboutScreen() {
         <p>
           Solo by default (everything stays in your browser). Optional cloud
           accounts unlock usernames, auto-sync, leaderboards, follows, public
-          share links, challenges, and roll seals.
+          profiles, share links, challenges, and roll seals.
         </p>
       </header>
 
@@ -27,11 +27,15 @@ export function AboutScreen() {
         <ol className="list-decimal space-y-2 pl-5">
           <li>
             <strong className="text-[var(--prose)]">Roll</strong> — pick a mode
-            at the top of the Roll tab, then Generate. Digits spin, then settle.
+            at the top of the Roll tab, then Generate. Digits scramble in a
+            glowing reel, then lock; EP shows as{' '}
+            <code className="text-xs">???</code> until the number settles, then
+            badges cascade in while EP counts up.
             <ul className="mt-1.5 list-disc space-y-1 pl-5">
               <li>
                 <strong className="text-[var(--prose)]">Free play</strong> —
-                unlimited browser CSPRNG (new number every Generate).
+                unlimited browser CSPRNG (new number every Generate). Refreshing
+                clears the reel so you start fresh (history still saves).
               </li>
               <li>
                 <strong className="text-[var(--prose)]">Daily / Weekly</strong> —
@@ -42,13 +46,30 @@ export function AboutScreen() {
             </ul>
           </li>
           <li>
+            <strong className="text-[var(--prose)]">Community bests</strong> —
+            on an idle Roll tab (no session roll yet), see{' '}
+            <em>Today&apos;s best</em> and <em>Best this week</em> from public
+            cloud rolls. They hide while you spin so your result stays center
+            stage.
+          </li>
+          <li>
             <strong className="text-[var(--prose)]">Badges</strong> — number
             properties fire (patterns, math, culture, sequences…). Each badge
-            awards EP. Browse the{' '}
+            awards EP. First-time unlocks show a yellow{' '}
+            <strong className="text-[var(--prose)]">NEW</strong> pill on the
+            breakdown. Browse the{' '}
             <a className="underline" href="/collection">
               Codex
             </a>{' '}
-            for locked vs unlocked entries (spoilers stay hidden until earned).
+            for locked vs unlocked entries, unlock timestamps, and a{' '}
+            <strong className="text-[var(--prose)]">New</strong> tab (first-time
+            unlocks from the last 5 minutes).
+          </li>
+          <li>
+            <strong className="text-[var(--prose)]">Secrets</strong> — complete
+            every badge in a codex section to earn a section mastery seal; finish
+            all sections for Codex Absolute. Secrets never appear on a single
+            roll.
           </li>
           <li>
             <strong className="text-[var(--prose)]">Rarity &amp; EP</strong> —
@@ -107,6 +128,10 @@ export function AboutScreen() {
             share paths.
           </li>
           <li>
+            <strong className="text-[var(--prose)]">Public profile look</strong>{' '}
+            — accent color, flair, bio, and a preset emblem avatar on Account.
+          </li>
+          <li>
             <strong className="text-[var(--prose)]">You on the board</strong> —
             your rank is highlighted after sync, even if you are outside the top
             50 list.
@@ -115,18 +140,19 @@ export function AboutScreen() {
             <strong className="text-[var(--prose)]">Follow friends</strong> —
             Board → Find (username search), + on a leaderboard row, or Follow on
             a profile. Rare rolls show under Board → Feed. They get an in-app
-            alert (Alerts tab) when you follow them; optional browser
-            notifications can be enabled there.
+            alert when you follow them; optional browser notifications can be
+            enabled under Alerts.
           </li>
           <li>
-            <strong className="text-[var(--prose)]">Alerts</strong> — personal
-            Activity (follows, etc.) and System messages (developer broadcasts
-            to everyone).
+            <strong className="text-[var(--prose)]">Alerts</strong> — Activity
+            (follows, first-time badge unlocks, secret masteries) and System
+            messages (developer broadcasts + community crown notices when
+            someone takes today&apos;s or this week&apos;s best public roll).
           </li>
           <li>
             Optional{' '}
             <strong className="text-[var(--prose)]">daily / weekly challenge</strong>{' '}
-            seeds (personal number from shared seed + your account) and{' '}
+            seeds and{' '}
             <strong className="text-[var(--prose)]">Prove this roll</strong>{' '}
             (server HMAC seal). A seal means the server stamped that claim; free
             play is still client-side RNG.
@@ -138,10 +164,9 @@ export function AboutScreen() {
             account you can still copy roll text — no dead vanity URL.
           </li>
           <li>
-            Discord previews get a{' '}
-            <strong className="text-[var(--prose)]">dynamic OG image</strong>{' '}
-            (number, rarity, EP, handle) via <code className="text-xs">/api/og</code>
-            .
+            Discord previews get{' '}
+            <strong className="text-[var(--prose)]">dynamic OG images</strong> for
+            rolls and public profiles (number / rarity / EP, or profile stats).
           </li>
         </ul>
         <p className="text-xs text-[var(--prose-3)]">
@@ -221,7 +246,7 @@ export function AboutScreen() {
         <ul className="list-disc space-y-1 pl-5 text-xs sm:text-sm">
           <li>
             <strong className="text-[var(--prose)]">Roll</strong> — free /
-            daily / weekly generate
+            daily / weekly generate, reel animation, community bests when idle
           </li>
           <li>
             <strong className="text-[var(--prose)]">History</strong> — last rolls
@@ -229,7 +254,7 @@ export function AboutScreen() {
           </li>
           <li>
             <strong className="text-[var(--prose)]">Codex</strong> — badge
-            encyclopedia
+            encyclopedia, unlock times, New (5 min) tab
           </li>
           <li>
             <strong className="text-[var(--prose)]">Showcase</strong> — best
@@ -241,11 +266,15 @@ export function AboutScreen() {
           </li>
           <li>
             <strong className="text-[var(--prose)]">Board</strong> — ranks +
-            friends feed
+            friends feed + Find
           </li>
           <li>
-            <strong className="text-[var(--prose)]">Account</strong> — auth,
-            username, push/pull
+            <strong className="text-[var(--prose)]">Alerts</strong> — activity &amp;
+            system (header badge)
+          </li>
+          <li>
+            <strong className="text-[var(--prose)]">Profile / Account</strong> —
+            vanity look, auth, push/pull
           </li>
         </ul>
       </section>
@@ -255,8 +284,9 @@ export function AboutScreen() {
           Stack
         </h2>
         <p>
-          React 19 · TypeScript 7 · Vite · Tailwind · Vercel (SPA + serverless) ·
-          Neon Postgres · Better Auth · Drizzle.
+          React 19 · TypeScript · Vite · Tailwind · Outfit / Syne / JetBrains
+          Mono · Vercel (SPA + serverless) · Neon Postgres · Better Auth ·
+          Drizzle.
         </p>
         <p className="text-xs text-[var(--prose-3)]">
           Source:{' '}
@@ -277,6 +307,16 @@ export function AboutScreen() {
             rel="noreferrer"
           >
             rngdle-unlocked.chron0.tech
+          </a>
+          {' · '}
+          Architecture:{' '}
+          <a
+            className="underline"
+            href="https://github.com/jondmarien/rngdle-unlocked/blob/main/docs/ARCHITECTURE.md"
+            target="_blank"
+            rel="noreferrer"
+          >
+            docs/ARCHITECTURE.md
           </a>
         </p>
       </section>

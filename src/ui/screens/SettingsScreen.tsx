@@ -78,8 +78,30 @@ export function SettingsScreen() {
         </label>
         <p className="text-xs text-[var(--prose-3)]">
           Public vanity links require an account and a confirmed cloud sync.
-          Logged-out share is Discord text / PNG only.
+          Logged-out share is Discord text / PNG only. Discord embeds use
+          dynamic OG art for rolls and public profiles.
         </p>
+      </section>
+
+      <section className="space-y-2 text-sm text-[var(--prose-2)]">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--prose-3)]">
+          Roll &amp; codex tips
+        </h2>
+        <ul className="list-disc space-y-1 pl-5 text-xs sm:text-sm">
+          <li>
+            Refreshing the site clears the home reel so you start a fresh spin;
+            History and the Codex still keep everything you earned.
+          </li>
+          <li>
+            Codex → <strong className="text-[var(--prose)]">New</strong> lists
+            first-time unlocks from the last 5 minutes (with unlock times on
+            every badge).
+          </li>
+          <li>
+            Community “today / week best” cards appear on Roll only when you
+            are not mid-session on a roll.
+          </li>
+        </ul>
       </section>
 
       <section className="space-y-1 text-sm text-[var(--prose-2)]">

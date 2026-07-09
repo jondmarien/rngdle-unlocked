@@ -31,8 +31,9 @@ export function OnboardingTip({ onGoAccount }: { onGoAccount?: () => void }) {
     <div className="w-full max-w-lg rounded-lg border border-[var(--outline)] bg-[var(--surface-raised)] p-4 text-left">
       <p className="text-base font-bold text-[var(--prose)]">Nice roll</p>
       <p className="mt-1 text-sm leading-relaxed text-[var(--prose-2)]">
-        Create an account to keep progress forever, climb the board, and get a
-        public share link for rare hits.
+        Create an account to keep progress forever, climb the board, claim
+        today&apos;s best with a public handle, and get vanity share links for
+        rare hits. Badge unlocks also show up under Alerts.
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         {onGoAccount && (

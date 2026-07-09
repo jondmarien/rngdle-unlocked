@@ -16,7 +16,7 @@ Inspired by the daily number-game genre, but **unlocked**: roll as often as you 
 [![Neon](https://img.shields.io/badge/db-Neon_Postgres-00E599?logo=postgresql&logoColor=white)](https://neon.tech)
 [![Better Auth](https://img.shields.io/badge/auth-Better_Auth-ffffff?logoColor=black)](https://www.better-auth.com)
 
-[Quick start](#-quick-start) · [How it works](#-how-it-works) · [Features](#-features) · [Repo layout](#-whats-in-this-repo) · [Social setup](#-social--cloud-setup) · [Commands](#-commands) · [FAQ](#-faq--troubleshooting)
+[Quick start](#-quick-start) · [How it works](#-how-it-works) · [Features](#-features) · [Architecture](./docs/ARCHITECTURE.md) · [Repo layout](#-whats-in-this-repo) · [Social setup](#-social--cloud-setup) · [Commands](#-commands) · [FAQ](#-faq--troubleshooting)
 
 </div>
 
@@ -32,8 +32,8 @@ Unlike a classic daily lock, you can roll **unlimited** times. Progress defaults
 
 | Mode | What you get |
 | --- | --- |
-| **Solo (default)** | Fortified CSPRNG rolls, badges, EP, history, badge codex, showcase, stats, export/import — offline-capable |
-| **Social (opt-in)** | Email sign-up, `@username`, auto cloud sync, “you on the board,” follows + rare-roll feed, public profiles, cloud-gated share links, daily/weekly challenge seeds, optional roll seals, dynamic OG images |
+| **Solo (default)** | Fortified CSPRNG rolls, reel animation, badges, EP, history, codex (unlock times + 5‑min New tab), showcase, stats, export/import — offline-capable |
+| **Social (opt-in)** | Email sign-up, `@username`, auto cloud sync, community today/week bests, leaderboard, follows/feed, public profiles (accent/flair/bio/avatar), alerts (unlocks + crowns), cloud-gated share + OG, challenges, optional roll seals |
 
 ## 📋 Table of contents
 
@@ -45,7 +45,7 @@ Unlike a classic daily lock, you can roll **unlimited** times. Progress defaults
 - [Social / cloud setup](#-social--cloud-setup)
 - [Commands](#-commands)
 - [Environment variables](#-environment-variables)
-- [Architecture notes](#-architecture-notes)
+- [Architecture notes](#-architecture-notes) · [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)
 - [FAQ / troubleshooting](#-faq--troubleshooting)
 - [Status & roadmap](#-status--roadmap)
 
@@ -54,20 +54,20 @@ Unlike a classic daily lock, you can roll **unlimited** times. Progress defaults
 ```mermaid
 flowchart TB
   subgraph CLIENT["Browser SPA"]
-    UI["React UI<br/>Roll · Codex · Stats · Board · Share"]
+    UI["React UI<br/>Roll reel · Codex · Board · Share"]
     LS[("localStorage<br/>primary save")]
-    RNG["CSPRNG / challenge seed<br/>crypto.getRandomValues · entropy pool · reject sampling"]
+    RNG["CSPRNG / challenge seed<br/>crypto.getRandomValues · entropy pool"]
     UI --> RNG
     UI --> LS
   end
 
   subgraph VERCEL["Vercel"]
-    STATIC["Static dist/<br/>Vite build"]
-    API["Serverless /api/*<br/>Node req/res adapter"]
+    STATIC["Static dist/"]
+    API["Serverless /api/*"]
   end
 
-  subgraph DATA["Data"]
-    NEON[("Neon Postgres<br/>auth · progress · rolls · follows")]
+  subgraph DATA["Neon Postgres"]
+    NEON[("auth · progress · rolls · follows<br/>notifications · system_messages")]
   end
 
   UI -->|optional sync / social| API
@@ -75,11 +75,13 @@ flowchart TB
   STATIC --> UI
 ```
 
-**Roll path (free play):** fortified browser CSPRNG → badge evaluation → EP / rarity / percentile → history + collection → localStorage → auto-sync when signed in.
+Deeper diagrams (roll lifecycle, notifications, OG): **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)**.
 
-**Challenge path (optional):** on the Roll tab, pick **Daily** or **Weekly**. A shared UTC period seed + your account id yields a **personal, deterministic** number for that period (same inputs always match). Free play stays unlimited CSPRNG whenever you switch back.
+**Roll path (free play):** fortified browser CSPRNG → badge evaluation → EP / rarity / percentile → history + collection (with `firstEarnedAt`) → localStorage → auto-sync when signed in. UI: full-digit scramble → lock + rarity glow → cascading badge cards + EP count-up. Refresh clears the home reel (session-only); history/codex persist.
 
-**Social path (optional):** Better Auth session → merge-safe sync → public username on leaderboards → follow graph → vanity share links only after cloud confirm → Discord OG HTML + `/api/og` image.
+**Challenge path (optional):** Roll tab → **Daily** or **Weekly**. Shared UTC period seed + your account id → one personal deterministic number for that period.
+
+**Social path (optional):** Better Auth → merge-safe sync → username on board → follows/feed → vanity share after cloud confirm → OG for rolls (`/s/…`) and profiles (`/u/…`). Sync may enqueue Activity unlocks and System crown messages.
 
 ## 🚀 Quick start
 
@@ -127,16 +129,20 @@ Or `pnpm dev` for the SPA only and point APIs at a deployed preview.
 ### Solo playground
 - **Unlimited rolls** 0–1,000,000 (no daily lock)
 - **Fortified CSPRNG** — `crypto.getRandomValues`, entropy mixing, reject sampling (not `Math.random`)
-- **Roll mode picker** — Free play vs Daily vs Weekly with plain-language explanations on the Roll tab
-- **140+ badges** across math, patterns, culture, sequences, and more
-- **Badge codex** — locked vs unlocked with **spoiler-safe** family hints
-- **EP + rarity ladder** (trash → mythic; thresholds retuned for the dense badge catalog so low tiers actually appear) and percentile framing
+- **Reel animation** — all digits scramble, then lock with rarity glow; `??? EP` while spinning; badges cascade in; EP counts up
+- **Fresh reel on refresh** — home does not restore the last roll; History/Codex keep progress
+- **Roll mode picker** — Free play vs Daily vs Weekly with plain-language explanations
+- **185 number badges** + journey + secret masteries (section seals + Codex Absolute)
+- **Badge codex** — spoiler-safe locked entries, **unlock timestamps**, **New** tab (first unlocks in the last 5 minutes)
+- **NEW ribbons** on first-time unlocks in the roll breakdown
+- **Family-colored badge pills** + custom rarity/family icon art
+- **Typography** — Outfit (UI), Syne (display), JetBrains Mono (numbers)
+- **EP + rarity ladder** (trash → mythic) and percentile framing
 - **Journey milestones** (lifetime EP)
 - **History, showcase, stats** — rarity histogram, EP/hour, 28-day streak calendar
 - **Streaks**, optional confetti / SFX
 - **Export / import** save files; theme light / dark / system
 - **Discord-style share text** + PNG card
-- **Readable UI** — larger body/nav type, higher-contrast muted text (light + dark)
 
 ### Roll modes (Free / Daily / Weekly)
 
@@ -152,18 +158,19 @@ Switch modes anytime. Badges, EP, history, sync, and share work the same after y
 - **Email + password** auth (Better Auth)
 - **@username** public identity
 - **Auto cloud sync** on every roll when signed in (merge-safe)
-- **You on the board** — your rank highlighted + sticky card if outside top list
+- **Community highlights** — today’s + weekly best public rolls on the home tab when idle (`/api/highlights`)
+- **You on the board** — rank highlighted + sticky card if outside top list
 - **Leaderboard** — all-time / week; sort by EP / rolls / badges
-- **Follows + Feed** — follow `@user` from Board (+), Find search, or profile; rare+ public rolls in Board → Feed
-- **In-app notifications** — Alerts tab (Activity + System messages); optional browser notifications
-- **System messages** — developer broadcasts (`POST /api/system-messages` with `ADMIN_SECRET`)
-- **Profiles** — `/u/:username` with accent color, flair, bio, showcase-style recent rolls + Follow
-- **Vanity share URLs** — `/s/:username/:shortCode` (no `/api` in the human path)
-- **Share gates** — no public link until cloud confirms; logged-out = account CTA + text only
+- **Follows + Feed** — Board (+), Find search, or profile; rare+ rolls in Feed
+- **In-app notifications** — Alerts (Activity: follows, badge unlocks, secret masteries; System: broadcasts + community crowns); optional browser notifications
+- **System messages** — developer broadcasts (`POST /api/system-messages` + `ADMIN_SECRET`); auto crown posts when a public roll takes day/week EP #1
+- **Profiles** — `/u/:username` with accent, flair, bio, **preset emblem avatars**, secret seals, recent rolls + Follow
+- **Vanity share URLs** — `/s/:username/:shortCode`
+- **Share gates** — no public link until cloud confirms
 - **Mythic / anomaly** auto-open share after reveal
-- **Prove this roll** — optional server HMAC seal (`/api/attest`). Stamps the claim; does **not** mean free-play RNG was server-side
-- **Dynamic OG image** — `/api/og` SVG card for Discord / social crawlers
-- **Soft rate limits** on sync and public APIs (fairness, not a 24h lock)
+- **Prove this roll** — optional server HMAC seal (`/api/attest`)
+- **Dynamic OG** — `/api/og` for rolls; bot rewrite of `/u/:user` → profile OG HTML
+- **Soft rate limits** on sync and public APIs
 
 ### Planned later
 - Discord / GitHub OAuth
@@ -177,38 +184,25 @@ Switch modes anytime. Badges, EP, history, sync, and share work the same after y
 
 ```
 rngdle-unlocked/
-├── api/                 ⚡ Vercel serverless routes (Node adapter → Web Request)
-│   ├── auth.ts             Better Auth mount (/api/auth/* via rewrite)
-│   ├── health.ts           Smoke test (env presence)
-│   ├── me.ts               Session + username
-│   ├── sync.ts             Cloud save merge
-│   ├── leaderboard.ts      Board + “me” rank
-│   ├── follow.ts           Follow / unfollow / list
-│   ├── feed.ts             Friends’ rare rolls
-│   ├── challenge.ts        Daily + weekly seed payload
-│   ├── attest.ts           Optional roll seal
-│   ├── og.ts               Dynamic OG image (SVG)
-│   ├── profile/[username].ts
-│   ├── rolls/[id].ts
-│   └── share/[id].ts       OG HTML + image meta for crawlers
+├── api/                 ⚡ Vercel serverless (Node adapter → Web Request)
+│   ├── auth.ts · me.ts · sync.ts · health.ts
+│   ├── leaderboard.ts · highlights.ts · follow.ts · feed.ts
+│   ├── notifications.ts · system-messages.ts
+│   ├── challenge.ts · attest.ts · og.ts
+│   ├── profile/[username].ts · u/[username].ts   # profile JSON + profile OG HTML
+│   ├── rolls/[id].ts · share/[id].ts · users/search.ts
 ├── server/              🧠 Shared API logic
-│   ├── auth.ts             betterAuth + Drizzle adapter
-│   ├── attest.ts           HMAC seal helpers
-│   ├── db/                 Neon + schema (progress, rolls, follows, …)
-│   ├── sync.ts             Merge rules + roll upsert
-│   ├── rateLimit.ts
-│   ├── vercel-adapter.ts   (req, res) ↔ Fetch Request/Response
-│   └── logger.ts
+│   ├── auth · db/schema · sync · rollActivity · notifications
+│   ├── ogHtml · secretMasteries · rateLimit · vercel-adapter
 ├── src/
-│   ├── game/               Pure TS engine (rng, badges, challenge, share text)
-│   ├── state/              GameProvider + localStorage + waitForCloudPublish
-│   ├── lib/                Auth client, sync API, routes, onboarding, logger
-│   └── ui/                 Screens + components
-├── docs/superpowers/    📚 Specs & plans
-├── scripts/             🔧 migrate-feature-wave, check-db, TS7 API patch
-├── public/              🖼️ Favicon / PWA icons
-├── vercel.json          Rewrites (SPA + auth/share path helpers)
-└── package.json         pnpm 10 · React 19 · TS 7 · Vite 6
+│   ├── game/            Pure TS engine (rng, badges, secrets, challenge)
+│   ├── state/           GameProvider + localStorage + auto-sync
+│   ├── lib/             Auth, icons, profile themes/avatars, routes
+│   └── ui/              Screens + reel / cascade components
+├── public/              Avatars, rarity/family icons, secret art, PWA
+├── docs/                ARCHITECTURE.md + superpowers specs/plans
+├── scripts/             migrate-feature-wave, check-db, TS7 API patch
+└── vercel.json          SPA + bot OG rewrites for /s and /u
 ```
 
 | Area | Role | Stack |
@@ -224,22 +218,22 @@ rngdle-unlocked/
 | --- | --- |
 | `/` | Roll (free / daily / weekly) |
 | `/history` | History + share |
-| `/collection` | Badge **codex** (encyclopedia) |
+| `/collection` | Badge **codex** (encyclopedia, unlock times, **New** 5‑min tab) |
 | `/showcase` | Best rolls & streaks |
 | `/stats` | Rarity histogram, EP/hour, calendar |
-| `/leaderboard` | Board + Feed + **Find** (username search) |
-| `/notifications` | Alerts (Activity + System messages) |
-| `/account` | Auth + username + push/pull |
-| `/about` | About |
-| `/settings` | Theme, effects, export/import |
+| `/leaderboard` | Board + Feed + **Find** |
+| `/notifications` | Alerts (Activity + System) |
+| `/account` | Auth, username, profile look (avatar/accent/flair/bio), push/pull |
+| `/about` | How to play, social, fairness |
+| `/settings` | Theme, effects, tips, export/import |
 | `/u/:username` | Public profile (+ follow) |
 | `/s/:user/:code` | Vanity public roll (SPA) |
 | `/r/:id` | Legacy public roll path |
 
 **API (serverless):**  
-`/api/auth/*`, `/api/me`, `/api/sync`, `/api/leaderboard`, `/api/follow`, `/api/feed`, `/api/users/search`, `/api/notifications`, `/api/system-messages`, `/api/challenge`, `/api/attest`, `/api/og`, `/api/profile/:user`, `/api/rolls/:id`, `/api/share/:id`, `/api/health`.
+`/api/auth/*`, `/api/me`, `/api/sync`, `/api/leaderboard`, `/api/highlights`, `/api/follow`, `/api/feed`, `/api/users/search`, `/api/notifications`, `/api/system-messages`, `/api/challenge`, `/api/attest`, `/api/og`, `/api/profile/:user`, `/api/u/:user`, `/api/rolls/:id`, `/api/share/:id`, `/api/health`.
 
-Bot user-agents hitting `/s/:user/:code` are rewritten to `/api/share/:code` for OG HTML + image.
+Bot user-agents: `/s/:user/:code` → `/api/share/:code`; `/u/:username` → `/api/u/:username` for OG HTML + image.
 
 ## ☁️ Social / cloud setup
 
@@ -250,7 +244,7 @@ Bot user-agents hitting `/s/:user/:code` are rewritten to `/api/share/:code` for
   - `pnpm db:push`, **or**
   - `node scripts/migrate-feature-wave.mjs` (additive: `short_code`, attestation columns, `follows` — avoids truncate prompts)
 
-Tables include: `user`, `session`, `account`, `verification`, `user_progress`, `rolls`, `follows`, `rate_limits`.
+Tables include: `user` (incl. vanity: accent, bio, flair, avatar), `session`, `account`, `verification`, `user_progress`, `rolls`, `follows`, `notifications`, `system_messages`, `system_message_reads`, `rate_limits`.
 
 ### 2. Better Auth env
 | Variable | Local example | Production |
@@ -322,14 +316,17 @@ See [`.env.example`](./.env.example). Never commit `.env` / `.env.local`.
 
 ## 🏗️ Architecture notes
 
-- **Game engine is pure TS** under `src/game/` — no React imports; covered by unit tests (including challenge seeds).
+Full diagrams: **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)**.
+
+- **Game engine is pure TS** under `src/game/` — no React imports; unit tests cover badges, secrets, challenges, rarity.
 - **SPA routing** uses the History API (`src/lib/routes.ts`); Vercel rewrites non-`/api` paths to `index.html`.
-- **Serverless handlers** use a small **Node `(req, res)` adapter** (`server/vercel-adapter.ts`) because Vercel’s Node runtime does not pass a Web `Request` by default. The adapter builds an absolute URL (required by Better Auth / better-call).
-- **Auth multi-segment paths** (`/api/auth/sign-up/email`) are rewritten to `/api/auth?__path=…` and expanded in the adapter — Vite does not reliably support Next-style `[...all]` catch-alls.
-- **TypeScript 7** is native; a postinstall shim re-points `require('typescript')` at `@typescript/typescript6` so Vercel’s classic API typecheck still works.
-- **Merge-safe sync** never blindly overwrites: lifetime counters take max, collections union, histories merge by roll id.
-- **Share publish** polls `/api/rolls/:key` after auto-sync (`waitForCloudPublish`) before showing a public link.
-- **Attestation** is optional HMAC over `(userId, rollId, number, totalEp, rolledAt)` — not a claim of honest client RNG.
+- **Serverless handlers** use a **Node `(req, res)` adapter** (`server/vercel-adapter.ts`) with absolute URLs for Better Auth.
+- **Auth multi-segment paths** rewritten to `/api/auth?__path=…` (no Next-style catch-all).
+- **Merge-safe sync** — max counters, union collections (earliest `firstEarnedAt`), merge histories by id.
+- **Roll activity on sync** (`server/rollActivity.ts`) — idempotent unlock notifications; system messages when a public roll takes day/week EP crown.
+- **Share publish** polls `/api/rolls/:key` (`waitForCloudPublish`) before enabling vanity links.
+- **Attestation** — optional HMAC on a claim; free-play RNG remains client-side.
+- **Session reel** — `lastRoll` is session-only (not restored from history/cloud on load).
 
 ## ❓ FAQ / troubleshooting
 
@@ -359,21 +356,24 @@ The Account screen times out after a few seconds and shows the sign-in form. Che
 | Area | Status |
 | --- | --- |
 | Solo unlimited playground | ✅ Shipped |
-| Badges / EP / journey / share card | ✅ Shipped |
+| Reel / cascade / EP count-up UX | ✅ Shipped |
+| Badges / EP / journey / secrets | ✅ Shipped |
+| Codex unlock times + 5‑min New tab | ✅ Shipped |
 | Accounts + auto cloud sync | ✅ Shipped |
-| Leaderboards + “you on the board” | ✅ Shipped |
-| Profiles + follows + feed | ✅ Shipped |
-| Cloud-gated vanity share + mythic auto-share | ✅ Shipped |
-| Badge codex + stats page + onboarding tip | ✅ Shipped |
-| Daily/weekly challenge + roll attestation | ✅ Shipped |
-| Dynamic OG image | ✅ Shipped |
-| Readable roll-mode UI + type scale | ✅ Shipped (v0.3) |
+| Community today/week bests | ✅ Shipped |
+| Leaderboards + follows + feed | ✅ Shipped |
+| Profiles (vanity + avatars) + follows | ✅ Shipped |
+| Activity unlocks + system crown msgs | ✅ Shipped |
+| Cloud-gated vanity share + OG (rolls + profiles) | ✅ Shipped |
+| Daily/weekly challenge + attestation | ✅ Shipped |
+| Custom fonts + rarity/family icon art | ✅ Shipped |
 | OAuth (Discord/GitHub) | 🔮 Later |
-| Notifications / Turnstile / EP velocity / admin | 🔮 Later |
+| Turnstile / EP velocity / admin tools | 🔮 Later |
 | Server-authoritative free-play rolls | 🔮 Future |
 
 Design docs:
 
+- [**Architecture (mermaid)**](docs/ARCHITECTURE.md)
 - [Solo design](docs/superpowers/specs/2026-07-08-rngdle-unlocked-design.md)
 - [Part 2 social design](docs/superpowers/specs/2026-07-09-mvp-part2-social-design.md)
 - [Feature wave plan](docs/superpowers/plans/2026-07-09-feature-wave.md)

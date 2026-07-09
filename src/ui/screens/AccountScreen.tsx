@@ -265,7 +265,9 @@ export function AccountScreen() {
         <h1 className="text-xl font-bold uppercase tracking-wider">Account</h1>
         <p className="text-xs text-[var(--prose-3)]">
           Sign in to keep progress forever, auto-sync rolls, climb the board,
-          follow friends, and unlock public share links.
+          follow friends, unlock public share links, and customize your public
+          profile (username, accent, flair, bio, emblem avatar). First-time
+          badge unlocks and secret masteries land in Alerts while signed in.
         </p>
         {(error || waitTimedOut) && !session?.user && (
           <p className="mt-1 text-xs text-[var(--prose-3)]">
