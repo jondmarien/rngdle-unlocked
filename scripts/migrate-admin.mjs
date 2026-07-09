@@ -62,10 +62,7 @@ const cols = await sql`
   WHERE table_name = 'user'
   ORDER BY ordinal_position
 `;
-console.log(
-  'user cols:',
-  cols.map((c) => c.column_name).join(', '),
-);
+console.log('user cols:', cols.map((c) => c.column_name).join(', '));
 
 const tables = await sql`
   SELECT to_regclass('public.user_reports') AS reports,

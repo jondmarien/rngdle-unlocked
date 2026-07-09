@@ -44,7 +44,9 @@ export function BadgePill({
       </span>
       <span className="truncate tracking-wide">{badge.name}</span>
       {showEp && badge.ep != null && (
-        <span className="shrink-0 opacity-70">+{badge.ep.toLocaleString()}</span>
+        <span className="shrink-0 opacity-70">
+          +{badge.ep.toLocaleString()}
+        </span>
       )}
     </span>
   );

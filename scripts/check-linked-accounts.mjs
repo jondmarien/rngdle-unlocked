@@ -22,5 +22,11 @@ if (users[0]) {
   console.log('accounts:', accounts);
 }
 
-console.log('discord env set:', Boolean(process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET));
-console.log('github env set:', Boolean(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET));
+console.log(
+  'discord env set:',
+  Boolean(process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET),
+);
+console.log(
+  'github env set:',
+  Boolean(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET),
+);

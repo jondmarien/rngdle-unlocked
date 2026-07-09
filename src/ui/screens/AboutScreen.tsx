@@ -16,8 +16,8 @@ export function AboutScreen() {
         <p>
           Solo by default (everything stays in your browser). Optional cloud
           accounts unlock usernames, auto-sync, dual leaderboards (Ranked +
-          Practice), follows, public profiles, share links, challenges, and
-          roll seals.
+          Practice), follows, public profiles, share links, challenges, and roll
+          seals.
         </p>
       </header>
 
@@ -36,23 +36,26 @@ export function AboutScreen() {
               <li>
                 <strong className="text-[var(--prose)]">Free play</strong> —
                 unlimited browser CSPRNG (practice). Synced progress places on
-                Leaderboard → <strong className="text-[var(--prose)]">Practice</strong>{' '}
+                Leaderboard →{' '}
+                <strong className="text-[var(--prose)]">Practice</strong>{' '}
                 (social / honor system). Does not place on Ranked or claim
                 community crowns. Absolute Ceiling (
-                <span className="font-mono">1,000,000</span>) ~1 in a million, or
-                a separate 1-in-100M jackpot, unlocks the ultra-rare seal.
+                <span className="font-mono">1,000,000</span>) ~1 in a million,
+                or a separate 1-in-100M jackpot, unlocks the ultra-rare seal.
               </li>
               <li>
                 <strong className="text-[var(--prose)]">Ranked</strong> —
                 server-issued free-play rolls (sign-in + @username). Places on
-                Leaderboard → <strong className="text-[var(--prose)]">Ranked</strong>,
-                and is the only free-play mode that can claim today / week /
-                all-time community crowns and overtake alerts. Fair competition.
+                Leaderboard →{' '}
+                <strong className="text-[var(--prose)]">Ranked</strong>, and is
+                the only free-play mode that can claim today / week / all-time
+                community crowns and overtake alerts. Fair competition.
               </li>
               <li>
-                <strong className="text-[var(--prose)]">Daily / Weekly</strong> —
-                optional challenge: shared UTC seed + your account → one personal
-                number for that period. Free and Ranked stay available anytime.
+                <strong className="text-[var(--prose)]">Daily / Weekly</strong>{' '}
+                — optional challenge: shared UTC seed + your account → one
+                personal number for that period. Free and Ranked stay available
+                anytime.
               </li>
             </ul>
           </li>
@@ -78,9 +81,9 @@ export function AboutScreen() {
           </li>
           <li>
             <strong className="text-[var(--prose)]">Secrets</strong> — complete
-            every badge in a codex section to earn a section mastery seal; finish
-            all sections for Codex Absolute. Secrets never appear on a single
-            roll.
+            every badge in a codex section to earn a section mastery seal;
+            finish all sections for Codex Absolute. Secrets never appear on a
+            single roll.
           </li>
           <li>
             <strong className="text-[var(--prose)]">Rarity &amp; EP</strong> —
@@ -92,7 +95,9 @@ export function AboutScreen() {
             milestones unlock as you keep rolling (journey EP is lifetime-only).
           </li>
           <li>
-            <strong className="text-[var(--prose)]">Stats &amp; showcase</strong>{' '}
+            <strong className="text-[var(--prose)]">
+              Stats &amp; showcase
+            </strong>{' '}
             —{' '}
             <a className="underline" href="/stats">
               Stats
@@ -101,9 +106,9 @@ export function AboutScreen() {
             highlights best runs.
           </li>
           <li>
-            <strong className="text-[var(--prose)]">Share</strong> — Discord-style
-            text, PNG card, or a public vanity link (account required). Mythic
-            and anomaly rolls auto-open share after reveal.
+            <strong className="text-[var(--prose)]">Share</strong> —
+            Discord-style text, PNG card, or a public vanity link (account
+            required). Mythic and anomaly rolls auto-open share after reveal.
           </li>
         </ol>
       </section>
@@ -146,8 +151,8 @@ export function AboutScreen() {
           </li>
           <li>
             <strong className="text-[var(--prose)]">You on the board</strong> —
-            your rank is highlighted on Ranked or Practice after you place,
-            even if you are outside the top 50 list.
+            your rank is highlighted on Ranked or Practice after you place, even
+            if you are outside the top 50 list.
           </li>
           <li>
             <strong className="text-[var(--prose)]">Follow friends</strong> —
@@ -166,11 +171,13 @@ export function AboutScreen() {
           </li>
           <li>
             Optional{' '}
-            <strong className="text-[var(--prose)]">daily / weekly challenge</strong>{' '}
+            <strong className="text-[var(--prose)]">
+              daily / weekly challenge
+            </strong>{' '}
             seeds and{' '}
             <strong className="text-[var(--prose)]">Prove this roll</strong>{' '}
-            (server HMAC seal). A seal means the server stamped that claim;
-            Free play still uses client CSPRNG; Ranked uses server CSPRNG.
+            (server HMAC seal). A seal means the server stamped that claim; Free
+            play still uses client CSPRNG; Ranked uses server CSPRNG.
           </li>
           <li>
             Share links look like{' '}
@@ -180,8 +187,9 @@ export function AboutScreen() {
           </li>
           <li>
             Discord previews get{' '}
-            <strong className="text-[var(--prose)]">dynamic OG images</strong> for
-            rolls and public profiles (number / rarity / EP, or profile stats).
+            <strong className="text-[var(--prose)]">dynamic OG images</strong>{' '}
+            for rolls and public profiles (number / rarity / EP, or profile
+            stats).
           </li>
         </ul>
         <p className="text-xs text-[var(--prose-3)]">
@@ -245,9 +253,9 @@ export function AboutScreen() {
         </h2>
         <ul className="list-disc space-y-1.5 pl-5">
           <li>
-            No daily lock and no free-play roll-upload cap. Soft rate limits only
-            protect cloud APIs from spam bursts. Ranked is capped at about 90
-            rolls per hour (server cost); Free play stays unlimited.
+            No daily lock and no free-play roll-upload cap. Soft rate limits
+            only protect cloud APIs from spam bursts. Ranked is capped at about
+            90 rolls per hour (server cost); Free play stays unlimited.
           </li>
           <li>
             <strong className="text-[var(--prose)]">Ranked board</strong> —
@@ -258,9 +266,7 @@ export function AboutScreen() {
             synced free-play / overall progress. Social honor system; still
             client-authoritative for Free play RNG.
           </li>
-          <li>
-            Community crowns and overtake alerts use Ranked rolls only.
-          </li>
+          <li>Community crowns and overtake alerts use Ranked rolls only.</li>
           <li>
             Optional seals and challenge seeds add competitive flavor without
             claiming impossible fairness.
@@ -274,12 +280,12 @@ export function AboutScreen() {
         </h2>
         <ul className="list-disc space-y-1 pl-5 text-xs sm:text-sm">
           <li>
-            <strong className="text-[var(--prose)]">Roll</strong> — free /
-            daily / weekly generate, reel animation, community bests when idle
+            <strong className="text-[var(--prose)]">Roll</strong> — free / daily
+            / weekly generate, reel animation, community bests when idle
           </li>
           <li>
-            <strong className="text-[var(--prose)]">History</strong> — last rolls
-            + share
+            <strong className="text-[var(--prose)]">History</strong> — last
+            rolls + share
           </li>
           <li>
             <strong className="text-[var(--prose)]">Codex</strong> — badge
@@ -290,16 +296,16 @@ export function AboutScreen() {
             runs &amp; streaks
           </li>
           <li>
-            <strong className="text-[var(--prose)]">Stats</strong> — histogram &amp;
-            calendar
+            <strong className="text-[var(--prose)]">Stats</strong> — histogram
+            &amp; calendar
           </li>
           <li>
             <strong className="text-[var(--prose)]">Board</strong> — ranks +
             friends feed + Find
           </li>
           <li>
-            <strong className="text-[var(--prose)]">Alerts</strong> — activity &amp;
-            system (header badge)
+            <strong className="text-[var(--prose)]">Alerts</strong> — activity
+            &amp; system (header badge)
           </li>
           <li>
             <strong className="text-[var(--prose)]">Profile / Account</strong> —

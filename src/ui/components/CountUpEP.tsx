@@ -59,8 +59,7 @@ export function CountUpEP({
     // Always climb from 0 for a clean, non-fighting counter
     setShown(0);
     const duration =
-      durationMs ??
-      Math.min(1600, Math.max(550, 400 + Math.sqrt(target) * 12));
+      durationMs ?? Math.min(1600, Math.max(550, 400 + Math.sqrt(target) * 12));
     const start = performance.now();
 
     const tick = (now: number) => {

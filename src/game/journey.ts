@@ -102,7 +102,9 @@ export function journeyBadgesForCount(count: number): BadgeDef[] {
 }
 
 export function newlyUnlockedJourney(prev: number, next: number): BadgeDef[] {
-  return JOURNEY_THRESHOLDS.filter((t) => prev < t && next >= t).map(journeyBadge);
+  return JOURNEY_THRESHOLDS.filter((t) => prev < t && next >= t).map(
+    journeyBadge,
+  );
 }
 
 export function journeyHits(defs: BadgeDef[]): BadgeHit[] {

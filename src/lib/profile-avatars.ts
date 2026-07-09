@@ -58,9 +58,7 @@ export function normalizeProfileAvatar(v: string | null | undefined): string {
   return BY_ID.has(id) ? id : '';
 }
 
-export function profileAvatarSrc(
-  id: string | null | undefined,
-): string | null {
+export function profileAvatarSrc(id: string | null | undefined): string | null {
   const n = normalizeProfileAvatar(id);
   if (!n) return null;
   return BY_ID.get(n)?.src ?? null;

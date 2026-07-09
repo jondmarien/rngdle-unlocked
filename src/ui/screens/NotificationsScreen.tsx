@@ -212,9 +212,7 @@ export function NotificationsScreen({
         </button>
       </div>
 
-      {loading && (
-        <p className="text-sm text-[var(--prose-2)]">Loading…</p>
-      )}
+      {loading && <p className="text-sm text-[var(--prose-2)]">Loading…</p>}
       {error && (
         <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
       )}

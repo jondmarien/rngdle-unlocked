@@ -1,8 +1,8 @@
-import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "@better-auth/drizzle-adapter";
-import { admin, magicLink } from "better-auth/plugins";
-import { createDb, schema } from "./db/index.js";
-import { sendEmail } from "./email.js";
+import { betterAuth } from 'better-auth';
+import { drizzleAdapter } from '@better-auth/drizzle-adapter';
+import { admin, magicLink } from 'better-auth/plugins';
+import { createDb, schema } from './db/index.js';
+import { sendEmail } from './email.js';
 
 function getDb() {
   return createDb(process.env.DATABASE_URL);
@@ -14,16 +14,16 @@ function resolveBaseURL(): string {
   const explicit = process.env.BETTER_AUTH_URL || process.env.VITE_APP_URL;
   if (
     explicit &&
-    !explicit.includes("localhost") &&
-    !explicit.includes("127.0.0.1")
+    !explicit.includes('localhost') &&
+    !explicit.includes('127.0.0.1')
   ) {
-    return explicit.replace(/\/$/, "");
+    return explicit.replace(/\/$/, '');
   }
   if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`.replace(/\/$/, "");
+    return `https://${process.env.VERCEL_URL}`.replace(/\/$/, '');
   }
-  if (explicit) return explicit.replace(/\/$/, "");
-  return "http://localhost:5173";
+  if (explicit) return explicit.replace(/\/$/, '');
+  return 'http://localhost:5173';
 }
 
 function socialProviders() {
@@ -45,8 +45,8 @@ function socialProviders() {
 }
 
 function adminUserIds(): string[] {
-  return (process.env.ADMIN_USER_IDS ?? "")
-    .split(",")
+  return (process.env.ADMIN_USER_IDS ?? '')
+    .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
 }
@@ -54,7 +54,7 @@ function adminUserIds(): string[] {
 export function createAuth() {
   const secret = process.env.BETTER_AUTH_SECRET;
   if (!secret) {
-    throw new Error("BETTER_AUTH_SECRET is not set");
+    throw new Error('BETTER_AUTH_SECRET is not set');
   }
 
   const db = getDb();
@@ -64,9 +64,9 @@ export function createAuth() {
   return betterAuth({
     secret,
     baseURL,
-    basePath: "/api/auth",
+    basePath: '/api/auth',
     database: drizzleAdapter(db, {
-      provider: "pg",
+      provider: 'pg',
       schema: {
         user: schema.user,
         session: schema.session,
@@ -92,7 +92,7 @@ export function createAuth() {
       }) => {
         void sendEmail({
           to: user.email,
-          subject: "Verify your RNGdle Unlocked email",
+          subject: 'Verify your RNGdle Unlocked email',
           text: `Verify your email for RNGdle Unlocked:\n\n${url}\n\nIf you did not create an account, ignore this message.`,
           html: `<p>Verify your email for <strong>RNGdle Unlocked</strong>.</p><p><a href="${url}">Click here to verify</a></p><p>If you did not create an account, ignore this message.</p>`,
         });
@@ -104,7 +104,7 @@ export function createAuth() {
           account: {
             accountLinking: {
               enabled: true,
-              trustedProviders: ["github", "discord"],
+              trustedProviders: ['github', 'discord'],
               // Discord/GitHub emails often differ from the credential email
               // (e.g. jon@chron0.tech vs Discord's registered address).
               allowDifferentEmails: true,
@@ -115,14 +115,14 @@ export function createAuth() {
     user: {
       additionalFields: {
         username: {
-          type: "string",
+          type: 'string',
           required: false,
           input: true,
         },
         role: {
-          type: "string",
+          type: 'string',
           required: false,
-          defaultValue: "user",
+          defaultValue: 'user',
           input: false,
         },
       },
@@ -139,15 +139,15 @@ export function createAuth() {
         }) => {
           void sendEmail({
             to: email,
-            subject: "Your RNGdle Unlocked sign-in link",
+            subject: 'Your RNGdle Unlocked sign-in link',
             text: `Sign in to RNGdle Unlocked:\n\n${url}\n\nThis link expires in 10 minutes. If you did not request it, ignore this message.`,
             html: `<p>Sign in to <strong>RNGdle Unlocked</strong>.</p><p><a href="${url}">Click here to sign in</a></p><p>This link expires in 10 minutes. If you did not request it, ignore this message.</p>`,
           });
         },
       }),
       admin({
-        defaultRole: "user",
-        adminRoles: ["admin"],
+        defaultRole: 'user',
+        adminRoles: ['admin'],
         adminUserIds: adminUserIds(),
       }),
     ],
@@ -155,9 +155,9 @@ export function createAuth() {
       baseURL,
       process.env.VITE_APP_URL,
       process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined,
-      "http://localhost:5173",
-      "http://localhost:3000",
-      "http://127.0.0.1:5173",
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'http://127.0.0.1:5173',
     ].filter(Boolean) as string[],
   });
 }

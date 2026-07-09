@@ -32,7 +32,10 @@ console.log(counts);
 console.log(
   'rates',
   Object.fromEntries(
-    Object.entries(counts).map(([k, v]) => [k, ((100 * v) / N).toFixed(2) + '%']),
+    Object.entries(counts).map(([k, v]) => [
+      k,
+      ((100 * v) / N).toFixed(2) + '%',
+    ]),
   ),
 );
 console.log(

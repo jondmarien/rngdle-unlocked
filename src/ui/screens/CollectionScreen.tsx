@@ -134,7 +134,10 @@ export function CollectionScreen() {
   }, [filter, showLocked, unlocked, recentIds, unlockedAt]);
 
   const journeyList = useMemo(() => {
-    if (filter === 'secret' || (filter !== 'all' && filter !== 'journey' && filter !== 'new')) {
+    if (
+      filter === 'secret' ||
+      (filter !== 'all' && filter !== 'journey' && filter !== 'new')
+    ) {
       return [];
     }
     let list = [...JOURNEY_BADGES];
@@ -153,7 +156,10 @@ export function CollectionScreen() {
   }, [filter, showLocked, unlocked, recentIds, unlockedAt]);
 
   const secretList = useMemo(() => {
-    if (filter === 'journey' || (filter !== 'all' && filter !== 'secret' && filter !== 'new')) {
+    if (
+      filter === 'journey' ||
+      (filter !== 'all' && filter !== 'secret' && filter !== 'new')
+    ) {
       return [];
     }
     let list = [...SECRET_BADGES];
@@ -177,8 +183,8 @@ export function CollectionScreen() {
         <h1 className="text-xl font-bold tracking-tight">Badge codex</h1>
         <p className="text-sm text-[var(--prose-2)]">
           Number: {numberUnlocked}/{NUMBER_BADGES.length} · Journey:{' '}
-          {journeyUnlocked}/{JOURNEY_BADGES.length} · Secrets:{' '}
-          {secretUnlocked}/{SECRET_BADGES.length}
+          {journeyUnlocked}/{JOURNEY_BADGES.length} · Secrets: {secretUnlocked}/
+          {SECRET_BADGES.length}
         </p>
         <p className="mt-1 text-sm text-[var(--prose-2)]">
           Complete every badge in a section to unlock a Secret mastery. Finish
@@ -213,7 +219,9 @@ export function CollectionScreen() {
               {isNewTab ? (
                 <span
                   className={`rounded px-1 py-0.5 text-[10px] font-black uppercase tracking-wider ${
-                    selected ? 'bg-black/15 text-black' : 'bg-amber-400 text-black'
+                    selected
+                      ? 'bg-black/15 text-black'
+                      : 'bg-amber-400 text-black'
                   }`}
                 >
                   New
@@ -653,4 +661,3 @@ function SecretCard({
     </article>
   );
 }
-

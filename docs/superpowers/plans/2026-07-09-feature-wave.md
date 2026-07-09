@@ -7,20 +7,20 @@
 
 ## In scope
 
-| # | Feature | Phase |
-|---|---------|-------|
-| 1 | “You on the board” — highlight own rank after sync | B |
-| 2 | Friends / following — follow @user, rare-roll feed | C |
-| 4 | Server roll attestation — optional “prove this roll” | D |
-| 5 | Weekly/daily challenge seed — optional mode | D |
-| 6 | Onboarding tooltip — first roll + account CTA | B |
-| 7 | Badge encyclopedia — locked vs unlocked, spoiler-safe | B |
-| 8 | Stats page — histogram, EP/hour, streak calendar | B |
-| 10 | Auto-open share on mythic+ | A |
-| 11 | Dynamic OG image for Discord | D |
-| 12 | Share link only after cloud 200 | A |
-| — | Logged-out share: no public link, account CTA | A |
-| — | “Waiting for cloud…” share panel | A |
+| #   | Feature                                               | Phase |
+| --- | ----------------------------------------------------- | ----- |
+| 1   | “You on the board” — highlight own rank after sync    | B     |
+| 2   | Friends / following — follow @user, rare-roll feed    | C     |
+| 4   | Server roll attestation — optional “prove this roll”  | D     |
+| 5   | Weekly/daily challenge seed — optional mode           | D     |
+| 6   | Onboarding tooltip — first roll + account CTA         | B     |
+| 7   | Badge encyclopedia — locked vs unlocked, spoiler-safe | B     |
+| 8   | Stats page — histogram, EP/hour, streak calendar      | B     |
+| 10  | Auto-open share on mythic+                            | A     |
+| 11  | Dynamic OG image for Discord                          | D     |
+| 12  | Share link only after cloud 200                       | A     |
+| —   | Logged-out share: no public link, account CTA         | A     |
+| —   | “Waiting for cloud…” share panel                      | A     |
 
 ## Out of scope (later)
 

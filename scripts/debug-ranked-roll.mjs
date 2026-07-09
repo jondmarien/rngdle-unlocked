@@ -1,6 +1,10 @@
 import 'dotenv/config';
 import { createDb } from '../server/db/index.ts';
-import { issueRankedRoll, serverRollNumber, getUsername } from '../server/rankedRoll.ts';
+import {
+  issueRankedRoll,
+  serverRollNumber,
+  getUsername,
+} from '../server/rankedRoll.ts';
 import { user } from '../server/db/schema.ts';
 import { isNotNull } from 'drizzle-orm';
 

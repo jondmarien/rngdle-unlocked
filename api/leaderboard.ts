@@ -59,7 +59,9 @@ export default defineHandler(async (request) => {
     const url = requestUrl(request);
     const scopeParam = url.searchParams.get('scope');
     const scope: Scope =
-      scopeParam === 'practice' || scopeParam === 'local' ? 'practice' : 'ranked';
+      scopeParam === 'practice' || scopeParam === 'local'
+        ? 'practice'
+        : 'ranked';
     const period = url.searchParams.get('period') === 'week' ? 'week' : 'all';
     const sort = url.searchParams.get('sort') ?? 'ep';
     log.info('query', { scope, period, sort, ip });
@@ -175,7 +177,8 @@ async function rankedBoard(
       userId: r.userId,
     }))
     .sort((a, b) => {
-      if (opts.sort === 'rolls') return b.lifetimeRollCount - a.lifetimeRollCount;
+      if (opts.sort === 'rolls')
+        return b.lifetimeRollCount - a.lifetimeRollCount;
       return b.lifetimeEP - a.lifetimeEP;
     })
     .map((e, i) => ({ rank: i + 1, ...e }));
@@ -220,9 +223,7 @@ async function practiceBoard(
         userId: rolls.userId,
         username: user.username,
         name: user.name,
-        weekEP: sql<number>`coalesce(sum(${rolls.totalEp}), 0)`.mapWith(
-          Number,
-        ),
+        weekEP: sql<number>`coalesce(sum(${rolls.totalEp}), 0)`.mapWith(Number),
         weekRolls: sql<number>`count(*)`.mapWith(Number),
       })
       .from(rolls)
@@ -310,7 +311,8 @@ async function practiceBoard(
     })
     .sort((a, b) => {
       if (opts.sort === 'badges') return b.badgeCount - a.badgeCount;
-      if (opts.sort === 'rolls') return b.lifetimeRollCount - a.lifetimeRollCount;
+      if (opts.sort === 'rolls')
+        return b.lifetimeRollCount - a.lifetimeRollCount;
       return b.lifetimeEP - a.lifetimeEP;
     })
     .map((e, i) => ({ rank: i + 1, ...e }));

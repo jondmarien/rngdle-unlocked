@@ -14,7 +14,8 @@ const users = await sql`SELECT id, username FROM "user" LIMIT 3`;
 console.log('users sample:', users);
 
 // Check recent rate limit keys
-const rl = await sql`SELECT key, count FROM rate_limits WHERE key LIKE '%sync%' ORDER BY window_start DESC LIMIT 10`;
+const rl =
+  await sql`SELECT key, count FROM rate_limits WHERE key LIKE '%sync%' ORDER BY window_start DESC LIMIT 10`;
 console.log('rate limits:', rl);
 
 // Try insert system message like rollActivity does

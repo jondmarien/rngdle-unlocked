@@ -78,8 +78,7 @@ export function LeaderboardScreen({
     setLoading(true);
     setError(null);
     // Ranked board only supports ep/rolls
-    const effectiveSort =
-      scope === 'ranked' && sort === 'badges' ? 'ep' : sort;
+    const effectiveSort = scope === 'ranked' && sort === 'badges' ? 'ep' : sort;
     const q = new URLSearchParams({
       scope,
       period,
@@ -107,7 +106,10 @@ export function LeaderboardScreen({
         }
       })
       .catch((e) => {
-        if (cancelled || (e instanceof DOMException && e.name === 'AbortError')) {
+        if (
+          cancelled ||
+          (e instanceof DOMException && e.name === 'AbortError')
+        ) {
           return;
         }
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed');
@@ -147,7 +149,7 @@ export function LeaderboardScreen({
         if (!r.ok) throw new Error(data.error ?? 'Feed failed');
         if (!cancelled) {
           setFeed(data.items ?? []);
-          if (data.message && !(data.items?.length)) {
+          if (data.message && !data.items?.length) {
             setFeedError(data.message);
           } else if (data.message) {
             // Soft tip (e.g. only showing self) — keep as non-blocking note
@@ -205,9 +207,8 @@ export function LeaderboardScreen({
       <div>
         <h1 className="text-xl font-bold tracking-tight">Leaderboard</h1>
         <p className="text-sm text-[var(--prose-2)]">
-          Two boards:{' '}
-          <strong className="text-[var(--prose)]">Ranked</strong> (from Roll →
-          Ranked — server free play, fair competition) and{' '}
+          Two boards: <strong className="text-[var(--prose)]">Ranked</strong>{' '}
+          (from Roll → Ranked — server free play, fair competition) and{' '}
           <strong className="text-[var(--prose)]">Practice</strong> (from Roll →
           Free play sync — overall progress, social honor system). Feed and Find
           are separate.
@@ -243,9 +244,9 @@ export function LeaderboardScreen({
       {view === 'feed' && (
         <div className="space-y-3">
           <p className="text-sm text-[var(--prose-2)]">
-            Public rolls from <strong className="text-[var(--prose)]">you</strong>{' '}
-            and people you follow (last 14 days). Use Find or + on the board to
-            follow others.
+            Public rolls from{' '}
+            <strong className="text-[var(--prose)]">you</strong> and people you
+            follow (last 14 days). Use Find or + on the board to follow others.
           </p>
           <div className="flex flex-wrap gap-2">
             <Toggle
@@ -415,8 +416,7 @@ export function LeaderboardScreen({
               </span>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="font-bold">
-                  #{me.rank}{' '}
-                  {me.username ? `@${me.username}` : me.name}
+                  #{me.rank} {me.username ? `@${me.username}` : me.name}
                   <span className="ml-2 rounded bg-[var(--prose)] px-1.5 py-0.5 text-xs text-[var(--bg)]">
                     you
                   </span>
@@ -436,9 +436,7 @@ export function LeaderboardScreen({
             </p>
           )}
 
-          {loading && (
-            <p className="text-sm text-[var(--prose-2)]">Loading…</p>
-          )}
+          {loading && <p className="text-sm text-[var(--prose-2)]">Loading…</p>}
           {error && (
             <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
           )}

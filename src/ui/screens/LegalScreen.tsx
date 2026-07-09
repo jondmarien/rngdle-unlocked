@@ -63,8 +63,8 @@ function TermsBody() {
           <a className="underline" href={SITE}>
             {SITE}
           </a>
-          ) is a free, fan-made random-number game (roll 0–1,000,000, badges, EP,
-          optional accounts). It is{' '}
+          ) is a free, fan-made random-number game (roll 0–1,000,000, badges,
+          EP, optional accounts). It is{' '}
           <strong className="text-[var(--prose)]">
             not affiliated with rngdle.com
           </strong>
@@ -99,7 +99,9 @@ function TermsBody() {
         </h2>
         <ul className="list-disc space-y-1 pl-5">
           <li>
-            <strong className="text-[var(--prose)]">Free play / Practice</strong>{' '}
+            <strong className="text-[var(--prose)]">
+              Free play / Practice
+            </strong>{' '}
             is client-side RNG synced on an honor system. Do not treat Practice
             leaderboards as competitive proof.
           </li>
@@ -188,15 +190,17 @@ function PrivacyBody() {
             accent).
           </li>
           <li>
-            <strong className="text-[var(--prose)]">OAuth (Discord / GitHub)</strong>{' '}
+            <strong className="text-[var(--prose)]">
+              OAuth (Discord / GitHub)
+            </strong>{' '}
             — provider account id, email (if the provider returns one), and
             tokens needed to keep the link working. We do not post to Discord or
             GitHub on your behalf.
           </li>
           <li>
-            <strong className="text-[var(--prose)]">Game progress</strong> — rolls,
-            badges, EP, stats, and related sync data when you use cloud sync or
-            Ranked.
+            <strong className="text-[var(--prose)]">Game progress</strong> —
+            rolls, badges, EP, stats, and related sync data when you use cloud
+            sync or Ranked.
           </li>
           <li>
             <strong className="text-[var(--prose)]">Social</strong> — follows,
@@ -294,7 +298,9 @@ function PrivacyBody() {
 
 export function LegalScreen({ kind }: { kind: LegalKind }) {
   return (
-    <LegalShell title={kind === 'terms' ? 'Terms of Service' : 'Privacy Policy'}>
+    <LegalShell
+      title={kind === 'terms' ? 'Terms of Service' : 'Privacy Policy'}
+    >
       {kind === 'terms' ? <TermsBody /> : <PrivacyBody />}
     </LegalShell>
   );

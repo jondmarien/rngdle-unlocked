@@ -44,7 +44,12 @@ export async function processRollActivity(
   },
 ): Promise<void> {
   try {
-    await notifyNewBadges(db, opts.userId, opts.prevCollection, opts.nextCollection);
+    await notifyNewBadges(
+      db,
+      opts.userId,
+      opts.prevCollection,
+      opts.nextCollection,
+    );
   } catch (e) {
     log.error('notify badges failed', {
       err: e instanceof Error ? e.message : String(e),
@@ -246,10 +251,8 @@ async function tryCrown(
     .orderBy(desc(rolls.totalEp), desc(rolls.rolledAt))
     .limit(1);
 
-  const dethronedHandle =
-    prev?.username?.trim().toLowerCase() || null;
-  const dethronedOther =
-    prev != null && prev.userId !== opts.championUserId;
+  const dethronedHandle = prev?.username?.trim().toLowerCase() || null;
+  const dethronedOther = prev != null && prev.userId !== opts.championUserId;
 
   const systemBody = [
     dethronedOther && dethronedHandle
@@ -370,5 +373,7 @@ function summarizeBadges(roll: RollResult): string {
 }
 
 function startOfUtcDay(d: Date): Date {
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  return new Date(
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()),
+  );
 }

@@ -14,7 +14,10 @@ export type ApiRequest = {
 };
 
 /** Safe absolute URL parse for handlers (never throws). */
-export function requestUrl(request: Request | ApiRequest, fallbackPath = '/'): URL {
+export function requestUrl(
+  request: Request | ApiRequest,
+  fallbackPath = '/',
+): URL {
   try {
     return new URL(request.url);
   } catch {

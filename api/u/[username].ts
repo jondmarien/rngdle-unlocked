@@ -20,9 +20,7 @@ export default defineHandler(async (request) => {
     // /api/u/:username or bare last segment
     const uIdx = parts.indexOf('u');
     const raw =
-      uIdx >= 0
-        ? parts[uIdx + 1] ?? ''
-        : (parts[parts.length - 1] ?? '');
+      uIdx >= 0 ? (parts[uIdx + 1] ?? '') : (parts[parts.length - 1] ?? '');
     const username = decodeURIComponent(raw).trim().toLowerCase();
     const origin = url.origin;
     const spaUrl = username

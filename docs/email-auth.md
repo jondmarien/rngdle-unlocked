@@ -4,10 +4,10 @@ Outbound mail for **magic links** and **email verification** uses [Resend](https
 
 ## Env (local + Vercel)
 
-| Variable | Example |
-| --- | --- |
-| `RESEND_API_KEY` | `re_…` |
-| `EMAIL_FROM` | `RNGdle Unlocked <noreply@outreach.chron0.tech>` |
+| Variable         | Example                                          |
+| ---------------- | ------------------------------------------------ |
+| `RESEND_API_KEY` | `re_…`                                           |
+| `EMAIL_FROM`     | `RNGdle Unlocked <noreply@outreach.chron0.tech>` |
 
 Add both to Vercel **Production** (and Preview if you test auth there).
 

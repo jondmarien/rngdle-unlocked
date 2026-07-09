@@ -130,8 +130,8 @@ export function SettingsScreen() {
             every badge).
           </li>
           <li>
-            Community “today / week best” cards appear on Roll only when you
-            are not mid-session on a roll.
+            Community “today / week best” cards appear on Roll only when you are
+            not mid-session on a roll.
           </li>
           <li>
             Badge auto-scroll is under Effects above — turn it off if you prefer

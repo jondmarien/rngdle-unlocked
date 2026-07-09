@@ -93,7 +93,9 @@ export function RollModePicker({
       </div>
 
       <p className="rounded-lg border border-[var(--outline)] bg-[var(--surface-raised)] px-3 py-2.5 text-sm leading-relaxed text-[var(--prose-2)]">
-        <span className="font-semibold text-[var(--prose)]">{active.label}: </span>
+        <span className="font-semibold text-[var(--prose)]">
+          {active.label}:{' '}
+        </span>
         {active.detail}
       </p>
     </div>

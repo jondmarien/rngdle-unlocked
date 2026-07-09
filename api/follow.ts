@@ -81,7 +81,10 @@ export default defineHandler(async (request) => {
       return Response.json({ error: 'User not found' }, { status: 404 });
     }
     if (target.id === session.user.id) {
-      return Response.json({ error: 'Cannot follow yourself' }, { status: 400 });
+      return Response.json(
+        { error: 'Cannot follow yourself' },
+        { status: 400 },
+      );
     }
 
     const actorUsername =

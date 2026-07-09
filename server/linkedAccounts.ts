@@ -1,12 +1,12 @@
-import { eq } from "drizzle-orm";
-import type { Db } from "./db/index.js";
-import { account } from "./db/schema.js";
-import { createLogger } from "./logger.js";
+import { eq } from 'drizzle-orm';
+import type { Db } from './db/index.js';
+import { account } from './db/schema.js';
+import { createLogger } from './logger.js';
 
-const log = createLogger("linked-accounts");
+const log = createLogger('linked-accounts');
 
 export type LinkedProviderInfo = {
-  providerId: "discord" | "github";
+  providerId: 'discord' | 'github';
   accountId: string;
   /** Human label e.g. Discord username or GitHub login */
   label: string;
@@ -18,7 +18,7 @@ async function discordLabel(
 ): Promise<string> {
   if (!accessToken) return `Discord · ${accountId}`;
   try {
-    const res = await fetch("https://discord.com/api/users/@me", {
+    const res = await fetch('https://discord.com/api/users/@me', {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     if (!res.ok) return `Discord · ${accountId}`;
@@ -30,13 +30,13 @@ async function discordLabel(
     if (data.global_name) return data.global_name;
     if (data.username) {
       const disc =
-        data.discriminator && data.discriminator !== "0"
+        data.discriminator && data.discriminator !== '0'
           ? `#${data.discriminator}`
-          : "";
+          : '';
       return `${data.username}${disc}`;
     }
   } catch (e) {
-    log.debug("discord label fetch failed", {
+    log.debug('discord label fetch failed', {
       message: e instanceof Error ? e.message : String(e),
     });
   }
@@ -49,11 +49,11 @@ async function githubLabel(
 ): Promise<string> {
   if (!accessToken) return `GitHub · ${accountId}`;
   try {
-    const res = await fetch("https://api.github.com/user", {
+    const res = await fetch('https://api.github.com/user', {
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        Accept: "application/vnd.github+json",
-        "User-Agent": "rngdle-unlocked",
+        Accept: 'application/vnd.github+json',
+        'User-Agent': 'rngdle-unlocked',
       },
     });
     if (!res.ok) return `GitHub · ${accountId}`;
@@ -64,7 +64,7 @@ async function githubLabel(
     if (data.login) return data.login;
     if (data.name) return data.name;
   } catch (e) {
-    log.debug("github label fetch failed", {
+    log.debug('github label fetch failed', {
       message: e instanceof Error ? e.message : String(e),
     });
   }
@@ -89,15 +89,15 @@ export async function getLinkedSocialAccounts(
 
   const out: LinkedProviderInfo[] = [];
   for (const row of rows) {
-    if (row.providerId === "discord") {
+    if (row.providerId === 'discord') {
       out.push({
-        providerId: "discord",
+        providerId: 'discord',
         accountId: row.accountId,
         label: await discordLabel(row.accessToken, row.accountId),
       });
-    } else if (row.providerId === "github") {
+    } else if (row.providerId === 'github') {
       out.push({
-        providerId: "github",
+        providerId: 'github',
         accountId: row.accountId,
         label: await githubLabel(row.accessToken, row.accountId),
       });

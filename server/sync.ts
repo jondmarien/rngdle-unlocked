@@ -1,5 +1,9 @@
 import { eq, sql } from 'drizzle-orm';
-import type { CollectionEntry, PlayStats, RollResult } from '../src/game/types.js';
+import type {
+  CollectionEntry,
+  PlayStats,
+  RollResult,
+} from '../src/game/types.js';
 import { defaultPlayStats } from '../src/game/stats.js';
 import type { Db } from './db/index.js';
 import { rolls, userProgress } from './db/schema.js';
@@ -61,18 +65,20 @@ export function mergeStats(
   const left = { ...defaultPlayStats(), ...(a ?? {}) };
   const right = { ...defaultPlayStats(), ...(b ?? {}) };
 
-  const bestRoll =
-    !left.bestRoll
-      ? right.bestRoll
-      : !right.bestRoll
-        ? left.bestRoll
-        : right.bestRoll.totalEP > left.bestRoll.totalEP
-          ? right.bestRoll
-          : left.bestRoll;
+  const bestRoll = !left.bestRoll
+    ? right.bestRoll
+    : !right.bestRoll
+      ? left.bestRoll
+      : right.bestRoll.totalEP > left.bestRoll.totalEP
+        ? right.bestRoll
+        : left.bestRoll;
 
   return {
     qualityStreak: Math.max(left.qualityStreak, right.qualityStreak),
-    bestQualityStreak: Math.max(left.bestQualityStreak, right.bestQualityStreak),
+    bestQualityStreak: Math.max(
+      left.bestQualityStreak,
+      right.bestQualityStreak,
+    ),
     dayStreak: Math.max(left.dayStreak, right.dayStreak),
     bestDayStreak: Math.max(left.bestDayStreak, right.bestDayStreak),
     lastPlayDate:
@@ -81,9 +87,10 @@ export function mergeStats(
         : right.lastPlayDate,
     bestRoll,
     bestConsecutive:
-      (left.bestConsecutive?.length ?? 0) >= (right.bestConsecutive?.length ?? 0)
-        ? left.bestConsecutive ?? []
-        : right.bestConsecutive ?? [],
+      (left.bestConsecutive?.length ?? 0) >=
+      (right.bestConsecutive?.length ?? 0)
+        ? (left.bestConsecutive ?? [])
+        : (right.bestConsecutive ?? []),
   };
 }
 
@@ -223,13 +230,10 @@ async function upsertRoll(
   };
 
   try {
-    await db
-      .insert(rolls)
-      .values(values)
-      .onConflictDoUpdate({
-        target: rolls.id,
-        set: conflictSet,
-      });
+    await db.insert(rolls).values(values).onConflictDoUpdate({
+      target: rolls.id,
+      set: conflictSet,
+    });
   } catch (err) {
     if (!isUniqueViolation(err)) throw err;
     // short_code collision with a different row — retry without code

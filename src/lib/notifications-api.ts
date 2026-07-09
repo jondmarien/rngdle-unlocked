@@ -43,10 +43,9 @@ export async function markNotificationsRead(opts: {
 export async function searchUsers(
   q: string,
 ): Promise<{ username: string; name: string }[]> {
-  const res = await fetch(
-    `/api/users/search?q=${encodeURIComponent(q)}`,
-    { credentials: 'include' },
-  );
+  const res = await fetch(`/api/users/search?q=${encodeURIComponent(q)}`, {
+    credentials: 'include',
+  });
   const data = (await res.json()) as {
     users?: { username: string; name: string }[];
     error?: string;

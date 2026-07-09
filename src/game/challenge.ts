@@ -55,7 +55,10 @@ function endOfUtcIsoWeek(d = new Date()): Date {
 }
 
 /** Deterministic material for period seeds (no user id). */
-export function buildPeriodSeed(kind: ChallengeKind, at = new Date()): ChallengeInfo {
+export function buildPeriodSeed(
+  kind: ChallengeKind,
+  at = new Date(),
+): ChallengeInfo {
   if (kind === 'daily') {
     const periodKey = utcDateKey(at);
     return {
@@ -109,6 +112,10 @@ export async function challengeNumber(
   // Extremely unlikely path if reject sampling never accepts
   void REJECT_THRESHOLD;
   const digest = await sha256Text(material);
-  const view = new DataView(digest.buffer, digest.byteOffset, digest.byteLength);
+  const view = new DataView(
+    digest.buffer,
+    digest.byteOffset,
+    digest.byteLength,
+  );
   return view.getUint32(0, false) % 1_000_001;
 }

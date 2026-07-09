@@ -211,7 +211,8 @@ export function LatestRunsPanel({
                       <p className="mt-0.5 text-[10px] text-[var(--prose-3)]">
                         {fmtWhen(r.rolledAt)}
                         {' · '}
-                        {r.badges.length} badge{r.badges.length === 1 ? '' : 's'}
+                        {r.badges.length} badge
+                        {r.badges.length === 1 ? '' : 's'}
                       </p>
                     </div>
                   </button>
@@ -219,7 +220,11 @@ export function LatestRunsPanel({
               );
             })}
             {exiting.map((r) => (
-              <li key={`exit-${r.id}`} className="latest-runs-item latest-runs-item-exit" aria-hidden>
+              <li
+                key={`exit-${r.id}`}
+                className="latest-runs-item latest-runs-item-exit"
+                aria-hidden
+              >
                 <div className="flex w-full items-start gap-2 rounded-lg px-2.5 py-2 text-left opacity-70">
                   <span className="mono-number mt-0.5 w-4 shrink-0 text-[10px] font-bold text-[var(--prose-3)]">
                     —

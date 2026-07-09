@@ -179,21 +179,41 @@ export function AppShell({
           className="flex gap-0.5 overflow-x-auto px-2 py-1.5 sm:px-3"
           aria-label="Main"
         >
-        {navItems.map((item) => {
-          if (item.kind === 'profile') {
-            const href = myUsername
-              ? `/u/${encodeURIComponent(myUsername)}`
-              : tabPath('account');
+          {navItems.map((item) => {
+            if (item.kind === 'profile') {
+              const href = myUsername
+                ? `/u/${encodeURIComponent(myUsername)}`
+                : tabPath('account');
+              return (
+                <a
+                  key="profile"
+                  href={href}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onOpenMyProfile?.();
+                  }}
+                  className={`whitespace-nowrap rounded-md px-3 py-2 text-sm font-semibold tracking-wide ${
+                    profileActive
+                      ? 'bg-[var(--surface-raised)] text-[var(--prose)]'
+                      : 'text-[var(--prose-2)] hover:bg-[var(--surface)] hover:text-[var(--prose)]'
+                  }`}
+                >
+                  {item.label}
+                </a>
+              );
+            }
+            // Don't highlight other tabs as active when viewing a profile
+            const active = !profileActive && tab === item.id;
             return (
               <a
-                key="profile"
-                href={href}
+                key={item.id}
+                href={tabPath(item.id)}
                 onClick={(e) => {
                   e.preventDefault();
-                  onOpenMyProfile?.();
+                  onTab(item.id);
                 }}
                 className={`whitespace-nowrap rounded-md px-3 py-2 text-sm font-semibold tracking-wide ${
-                  profileActive
+                  active
                     ? 'bg-[var(--surface-raised)] text-[var(--prose)]'
                     : 'text-[var(--prose-2)] hover:bg-[var(--surface)] hover:text-[var(--prose)]'
                 }`}
@@ -201,27 +221,7 @@ export function AppShell({
                 {item.label}
               </a>
             );
-          }
-          // Don't highlight other tabs as active when viewing a profile
-          const active = !profileActive && tab === item.id;
-          return (
-            <a
-              key={item.id}
-              href={tabPath(item.id)}
-              onClick={(e) => {
-                e.preventDefault();
-                onTab(item.id);
-              }}
-              className={`whitespace-nowrap rounded-md px-3 py-2 text-sm font-semibold tracking-wide ${
-                active
-                  ? 'bg-[var(--surface-raised)] text-[var(--prose)]'
-                  : 'text-[var(--prose-2)] hover:bg-[var(--surface)] hover:text-[var(--prose)]'
-              }`}
-            >
-              {item.label}
-            </a>
-          );
-        })}
+          })}
         </nav>
       </div>
 

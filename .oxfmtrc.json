@@ -10,10 +10,5 @@
   "bracketSpacing": true,
   "endOfLine": "lf",
   "sortPackageJson": false,
-  "ignorePatterns": [
-    "dist/**",
-    "node_modules/**",
-    ".vercel/**",
-    "coverage/**"
-  ]
+  "ignorePatterns": ["dist/**", "node_modules/**", ".vercel/**", "coverage/**"]
 }

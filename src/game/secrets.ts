@@ -218,7 +218,9 @@ export function evaluateOwnedSecrets(
 export function newlyUnlockedSecrets(
   unlockedIds: Set<string>,
 ): SecretBadgeDef[] {
-  return evaluateOwnedSecrets(unlockedIds).filter((s) => !unlockedIds.has(s.id));
+  return evaluateOwnedSecrets(unlockedIds).filter(
+    (s) => !unlockedIds.has(s.id),
+  );
 }
 
 export function secretHits(defs: SecretBadgeDef[]): BadgeHit[] {

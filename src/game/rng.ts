@@ -8,7 +8,8 @@ export const ROLL_RANGE = ROLL_MAX + 1; // 1_000_001
  * Largest multiple of ROLL_RANGE that fits in 2^32.
  * Values >= this are rejected to avoid modulo bias.
  */
-export const REJECT_THRESHOLD = Math.floor(0x1_0000_0000 / ROLL_RANGE) * ROLL_RANGE;
+export const REJECT_THRESHOLD =
+  Math.floor(0x1_0000_0000 / ROLL_RANGE) * ROLL_RANGE;
 
 /**
  * Independent Absolute Ceiling jackpot (free play only).
@@ -117,6 +118,8 @@ export async function rollNumber(): Promise<number> {
 
 export function assertValidRollNumber(n: number): void {
   if (!Number.isInteger(n) || n < 0 || n > ROLL_MAX) {
-    throw new RangeError(`Roll number must be integer in 0..${ROLL_MAX}, got ${n}`);
+    throw new RangeError(
+      `Roll number must be integer in 0..${ROLL_MAX}, got ${n}`,
+    );
   }
 }

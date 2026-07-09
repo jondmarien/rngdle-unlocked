@@ -2,7 +2,7 @@
 
 # 🎲 RNGdle Unlocked
 
-### Unlimited CSPRNG rolls · badges · EP · cloud social — *no 24-hour lock.*
+### Unlimited CSPRNG rolls · badges · EP · cloud social — _no 24-hour lock._
 
 Inspired by the daily number-game genre, but **unlocked**: roll as often as you want, keep a lifetime collection, and optionally sync to Neon for accounts, **Ranked + Practice leaderboards**, follows, challenges, and shareable rolls.
 
@@ -30,9 +30,9 @@ Unlike a classic daily lock, you can roll **unlimited** times. Progress defaults
 
 > **Not affiliated with [rngdle.com](https://www.rngdle.com/).** Badge names, scoring, and implementation are original.
 
-| Mode | What you get |
-| --- | --- |
-| **Solo (default)** | Fortified browser CSPRNG Free play, reel animation, badges, EP, history, codex, showcase, stats, export/import — offline-capable |
+| Mode                | What you get                                                                                                                                                                                                                            |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Solo (default)**  | Fortified browser CSPRNG Free play, reel animation, badges, EP, history, codex, showcase, stats, export/import — offline-capable                                                                                                        |
 | **Social (opt-in)** | Email sign-up, `@username`, auto cloud sync, **Leaderboard → Practice** (synced free play) + **Leaderboard → Ranked** (server free play), community crowns (Ranked only), follows/feed, profiles, alerts, share + OG, challenges, seals |
 
 ## 📋 Table of contents
@@ -134,6 +134,7 @@ Or `pnpm dev` for the SPA only and point APIs at a deployed preview.
 ## ✨ Features
 
 ### Solo playground
+
 - **Unlimited rolls** 0–1,000,000 (no daily lock)
 - **Fortified CSPRNG** — `crypto.getRandomValues`, entropy mixing, reject sampling (not `Math.random`)
 - **Reel animation** — all digits scramble, then lock with rarity glow; `??? EP` while spinning; badges cascade in; EP counts up
@@ -153,16 +154,17 @@ Or `pnpm dev` for the SPA only and point APIs at a deployed preview.
 
 ### Roll modes
 
-| Mode | Number source | Leaderboard / crowns |
-| --- | --- | --- |
-| **Free play** | Browser CSPRNG each Generate | **Practice** board (synced progress). No community crowns. |
-| **Ranked** | Server CSPRNG (`POST /api/ranked-roll`) | **Ranked** board + today/week/all-time crowns + overtakes. Needs sign-in + `@username`. |
-| **Daily** | `hash(daySeed + yourId)` | Challenge number; Free/Ranked stay available. |
-| **Weekly** | `hash(weekSeed + yourId)` | Same idea for the ISO week. |
+| Mode          | Number source                           | Leaderboard / crowns                                                                    |
+| ------------- | --------------------------------------- | --------------------------------------------------------------------------------------- |
+| **Free play** | Browser CSPRNG each Generate            | **Practice** board (synced progress). No community crowns.                              |
+| **Ranked**    | Server CSPRNG (`POST /api/ranked-roll`) | **Ranked** board + today/week/all-time crowns + overtakes. Needs sign-in + `@username`. |
+| **Daily**     | `hash(daySeed + yourId)`                | Challenge number; Free/Ranked stay available.                                           |
+| **Weekly**    | `hash(weekSeed + yourId)`               | Same idea for the ISO week.                                                             |
 
 Switch modes anytime (board fully resets). Badges, EP, history, and share work after you have a number. Absolute Ceiling jackpot (1 in 100M) exists on Free and Ranked.
 
 ### Social & competitive
+
 - **Email + password** auth (Better Auth)
 - **@username** public identity
 - **Auto cloud sync** on Free play / challenges when signed in (merge-safe; cannot forge `source=ranked`)
@@ -181,6 +183,7 @@ Switch modes anytime (board fully resets). Badges, EP, history, and share work a
 - **Soft rate limits** on sync, Ranked rolls (~90/h), and public APIs
 
 ### Planned later / in progress
+
 - Discord / GitHub OAuth — code wired; finish apps + env: [`docs/oauth-setup.md`](./docs/oauth-setup.md)
 - Turnstile on sign-up
 - Server-side EP velocity caps
@@ -210,30 +213,30 @@ rngdle-unlocked/
 └── vercel.json          SPA + bot OG rewrites for /s and /u
 ```
 
-| Area | Role | Stack |
-| --- | --- | --- |
-| **`src/game/`** | Pure game rules — testable without React | TypeScript |
-| **`src/ui/` + `state/`** | SPA experience + persistence | React 19 · Tailwind v4 |
-| **`api/` + `server/`** | Social backend on Vercel | Better Auth · Drizzle · Neon |
-| **`docs/`** | Design specs and implementation plans | Markdown |
+| Area                     | Role                                     | Stack                        |
+| ------------------------ | ---------------------------------------- | ---------------------------- |
+| **`src/game/`**          | Pure game rules — testable without React | TypeScript                   |
+| **`src/ui/` + `state/`** | SPA experience + persistence             | React 19 · Tailwind v4       |
+| **`api/` + `server/`**   | Social backend on Vercel                 | Better Auth · Drizzle · Neon |
+| **`docs/`**              | Design specs and implementation plans    | Markdown                     |
 
 ## 🗺️ Routes (SPA)
 
-| Path | Screen |
-| --- | --- |
-| `/` | Roll (Free / Ranked / Daily / Weekly) |
-| `/history` | History + share |
-| `/collection` | Badge **codex** (encyclopedia, unlock times, **New** 5‑min tab) |
-| `/showcase` | Best rolls & streaks |
-| `/stats` | Rarity histogram, EP/hour, calendar |
-| `/leaderboard` | **Ranked** + **Practice** boards · Feed · **Find** |
-| `/notifications` | Alerts (Activity + System) |
-| `/account` | Auth, username, profile look (avatar/accent/flair/bio), push/pull |
-| `/about` | How to play, social, fairness |
-| `/settings` | Theme, effects, tips, export/import |
-| `/u/:username` | Public profile (+ follow) |
-| `/s/:user/:code` | Vanity public roll (SPA) |
-| `/r/:id` | Legacy public roll path |
+| Path             | Screen                                                            |
+| ---------------- | ----------------------------------------------------------------- |
+| `/`              | Roll (Free / Ranked / Daily / Weekly)                             |
+| `/history`       | History + share                                                   |
+| `/collection`    | Badge **codex** (encyclopedia, unlock times, **New** 5‑min tab)   |
+| `/showcase`      | Best rolls & streaks                                              |
+| `/stats`         | Rarity histogram, EP/hour, calendar                               |
+| `/leaderboard`   | **Ranked** + **Practice** boards · Feed · **Find**                |
+| `/notifications` | Alerts (Activity + System)                                        |
+| `/account`       | Auth, username, profile look (avatar/accent/flair/bio), push/pull |
+| `/about`         | How to play, social, fairness                                     |
+| `/settings`      | Theme, effects, tips, export/import                               |
+| `/u/:username`   | Public profile (+ follow)                                         |
+| `/s/:user/:code` | Vanity public roll (SPA)                                          |
+| `/r/:id`         | Legacy public roll path                                           |
 
 **API (serverless):**  
 `/api/auth/*`, `/api/me`, `/api/sync`, `/api/ranked-roll`, `/api/leaderboard?scope=ranked|practice`, `/api/highlights`, `/api/follow`, `/api/feed`, `/api/users/search`, `/api/notifications`, `/api/system-messages`, `/api/challenge`, `/api/attest`, `/api/og`, `/api/profile/:user`, `/api/u/:user`, `/api/rolls/:id`, `/api/share/:id`, `/api/health`.
@@ -243,6 +246,7 @@ Bot user-agents: `/s/:user/:code` → `/api/share/:code`; `/u/:username` → `/a
 ## ☁️ Social / cloud setup
 
 ### 1. Neon
+
 - Create a Postgres project (or use Vercel Neon integration).
 - Put the **pooled** connection string in `DATABASE_URL` (local + Vercel Production).
 - Apply schema:
@@ -252,12 +256,13 @@ Bot user-agents: `/s/:user/:code` → `/api/share/:code`; `/u/:username` → `/a
 Tables include: `user` (incl. vanity: accent, bio, flair, avatar), `session`, `account`, `verification`, `user_progress`, `rolls`, `follows`, `notifications`, `system_messages`, `system_message_reads`, `rate_limits`.
 
 ### 2. Better Auth env
-| Variable | Local example | Production |
-| --- | --- | --- |
-| `DATABASE_URL` | Neon pooled URL | **Same real Neon project** you intend to use live |
-| `BETTER_AUTH_SECRET` | long random string | same or stronger (also used as attest HMAC key) |
-| `BETTER_AUTH_URL` | `http://localhost:5173` | `https://rngdle-unlocked.chron0.tech` (**not** localhost) |
-| `VITE_APP_URL` | same as above | production origin |
+
+| Variable             | Local example           | Production                                                |
+| -------------------- | ----------------------- | --------------------------------------------------------- |
+| `DATABASE_URL`       | Neon pooled URL         | **Same real Neon project** you intend to use live         |
+| `BETTER_AUTH_SECRET` | long random string      | same or stronger (also used as attest HMAC key)           |
+| `BETTER_AUTH_URL`    | `http://localhost:5173` | `https://rngdle-unlocked.chron0.tech` (**not** localhost) |
+| `VITE_APP_URL`       | same as above           | production origin                                         |
 
 Generate a secret:
 
@@ -266,42 +271,44 @@ openssl rand -base64 32
 ```
 
 ### 3. Vercel
+
 - Framework: Vite · build `pnpm run build` · output `dist`
 - Set env for **Production** (and Preview if you use it)
 - Redeploy after any env change
 
 ### 4. Share links (cloud-gated)
+
 Public vanity URLs only work for **rolls that exist in Neon**. Flow:
 
-1. Sign in → set `@username`  
-2. Roll (auto-sync) or **Push / merge to cloud**  
-3. Share panel waits for cloud → then enables the vanity link  
+1. Sign in → set `@username`
+2. Roll (auto-sync) or **Push / merge to cloud**
+3. Share panel waits for cloud → then enables the vanity link
 4. Discord crawlers get OG HTML + `/api/og` image; humans open `/s/user/code`
 
 Logged out: Discord-style text / PNG only — no public URL, with a create-account CTA.
 
 ## 🧰 Commands
 
-| Command | Purpose |
-| --- | --- |
-| `pnpm dev` | Vite dev server (SPA) |
-| `pnpm build` | Typecheck app + Vite production build → `dist/` |
-| `pnpm typecheck` | App, node, and API tsconfigs |
-| `pnpm preview` | Preview `dist/` |
-| `pnpm test` | Unit tests (`vp test`) |
-| `pnpm lint` | Lint via Vite+ |
-| `pnpm db:push` | Push Drizzle schema to Neon |
-| `pnpm db:studio` | Drizzle Studio |
+| Command                                 | Purpose                                             |
+| --------------------------------------- | --------------------------------------------------- |
+| `pnpm dev`                              | Vite dev server (SPA)                               |
+| `pnpm build`                            | Typecheck app + Vite production build → `dist/`     |
+| `pnpm typecheck`                        | App, node, and API tsconfigs                        |
+| `pnpm preview`                          | Preview `dist/`                                     |
+| `pnpm test`                             | Unit tests (`vp test`)                              |
+| `pnpm lint`                             | Lint via Vite+                                      |
+| `pnpm db:push`                          | Push Drizzle schema to Neon                         |
+| `pnpm db:studio`                        | Drizzle Studio                                      |
 | `node scripts/migrate-feature-wave.mjs` | Additive SQL migration (follows, seals, short_code) |
-| `npx vercel dev` | Local SPA + serverless APIs |
+| `npx vercel dev`                        | Local SPA + serverless APIs                         |
 
 ### Debug logging (browser)
 
 Open DevTools console:
 
 ```js
-__rngdleLog.setLevel('debug')
-__rngdleLog.dump()
+__rngdleLog.setLevel('debug');
+__rngdleLog.dump();
 ```
 
 Server logs use the same `[rngdle:…]` prefixes in Vercel function logs.
@@ -310,14 +317,14 @@ Server logs use the same `[rngdle:…]` prefixes in Vercel function logs.
 
 See [`.env.example`](./.env.example). Never commit `.env` / `.env.local`.
 
-| Name | Required for | Notes |
-| --- | --- | --- |
-| `DATABASE_URL` | Social APIs | Neon; must match the project you inspect in the console |
-| `BETTER_AUTH_SECRET` | Auth + attest seals | Required in production |
-| `BETTER_AUTH_URL` | Auth cookies / CSRF | Production site origin |
-| `VITE_APP_URL` | Trusted origins | Usually same as `BETTER_AUTH_URL` |
-| `LOG_LEVEL` | Server logs | Optional (`debug` / `info`) |
-| `ADMIN_SECRET` | System message broadcasts | Optional; required for `POST /api/system-messages` |
+| Name                 | Required for              | Notes                                                   |
+| -------------------- | ------------------------- | ------------------------------------------------------- |
+| `DATABASE_URL`       | Social APIs               | Neon; must match the project you inspect in the console |
+| `BETTER_AUTH_SECRET` | Auth + attest seals       | Required in production                                  |
+| `BETTER_AUTH_URL`    | Auth cookies / CSRF       | Production site origin                                  |
+| `VITE_APP_URL`       | Trusted origins           | Usually same as `BETTER_AUTH_URL`                       |
+| `LOG_LEVEL`          | Server logs               | Optional (`debug` / `info`)                             |
+| `ADMIN_SECRET`       | System message broadcasts | Optional; required for `POST /api/system-messages`      |
 
 ## 🏗️ Architecture notes
 
@@ -363,26 +370,26 @@ The Account screen times out after a few seconds and shows the sign-in form. Che
 
 ## 📌 Status & roadmap
 
-| Area | Status |
-| --- | --- |
-| Solo unlimited playground | ✅ Shipped |
-| Reel / cascade / EP count-up UX | ✅ Shipped |
-| Badges / EP / journey / secrets | ✅ Shipped |
-| Codex unlock times + 5‑min New tab | ✅ Shipped |
-| Accounts + auto cloud sync | ✅ Shipped |
-| Community today/week bests (Ranked) | ✅ Shipped |
-| Dual leaderboards (Ranked + Practice) + follows + feed | ✅ Shipped |
-| Server Ranked free play (`/api/ranked-roll`) | ✅ Shipped |
-| Profiles (vanity + avatars) + follows | ✅ Shipped |
-| Activity unlocks + Ranked crown msgs + overtake notifs | ✅ Shipped |
-| Cloud-gated vanity share + OG (rolls + profiles) | ✅ Shipped |
-| Daily/weekly challenge + attestation | ✅ Shipped |
-| Custom fonts + rarity/family icon art | ✅ Shipped |
-| OAuth (Discord/GitHub) | ✅ Wired — finish portal setup via [`docs/oauth-setup.md`](./docs/oauth-setup.md) |
-| Email verification + magic link (Resend) | ✅ New signups must verify; OAuth preferred |
-| Cloned-progress profile pills + sync integrity | ✅ Best-roll ownership + EP/collection checks |
-| Turnstile / EP velocity | 🔮 Later |
-| Admin panel (role-gated) | ✅ Shipped (`/admin`) |
+| Area                                                   | Status                                                                            |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------- |
+| Solo unlimited playground                              | ✅ Shipped                                                                        |
+| Reel / cascade / EP count-up UX                        | ✅ Shipped                                                                        |
+| Badges / EP / journey / secrets                        | ✅ Shipped                                                                        |
+| Codex unlock times + 5‑min New tab                     | ✅ Shipped                                                                        |
+| Accounts + auto cloud sync                             | ✅ Shipped                                                                        |
+| Community today/week bests (Ranked)                    | ✅ Shipped                                                                        |
+| Dual leaderboards (Ranked + Practice) + follows + feed | ✅ Shipped                                                                        |
+| Server Ranked free play (`/api/ranked-roll`)           | ✅ Shipped                                                                        |
+| Profiles (vanity + avatars) + follows                  | ✅ Shipped                                                                        |
+| Activity unlocks + Ranked crown msgs + overtake notifs | ✅ Shipped                                                                        |
+| Cloud-gated vanity share + OG (rolls + profiles)       | ✅ Shipped                                                                        |
+| Daily/weekly challenge + attestation                   | ✅ Shipped                                                                        |
+| Custom fonts + rarity/family icon art                  | ✅ Shipped                                                                        |
+| OAuth (Discord/GitHub)                                 | ✅ Wired — finish portal setup via [`docs/oauth-setup.md`](./docs/oauth-setup.md) |
+| Email verification + magic link (Resend)               | ✅ New signups must verify; OAuth preferred                                       |
+| Cloned-progress profile pills + sync integrity         | ✅ Best-roll ownership + EP/collection checks                                     |
+| Turnstile / EP velocity                                | 🔮 Later                                                                          |
+| Admin panel (role-gated)                               | ✅ Shipped (`/admin`)                                                             |
 
 Design docs:
 

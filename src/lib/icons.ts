@@ -12,16 +12,17 @@ export const RARITY_ICON: Record<RarityTier, string> = {
 };
 
 /** Custom category icons for codex filters (public/icons/family). */
-export const FAMILY_ICON: Partial<Record<BadgeFamily | 'secret' | 'all', string>> =
-  {
-    math: '/icons/family/math.jpg',
-    pattern: '/icons/family/pattern.jpg',
-    void: '/icons/family/void.jpg',
-    cultural: '/icons/family/cultural.jpg',
-    magnitude: '/icons/family/magnitude.jpg',
-    sequence: '/icons/family/sequence.jpg',
-    poker: '/icons/family/poker.jpg',
-    element: '/icons/family/element.jpg',
-    journey: '/icons/family/journey.jpg',
-    secret: '/secrets/omega.jpg',
-  };
+export const FAMILY_ICON: Partial<
+  Record<BadgeFamily | 'secret' | 'all', string>
+> = {
+  math: '/icons/family/math.jpg',
+  pattern: '/icons/family/pattern.jpg',
+  void: '/icons/family/void.jpg',
+  cultural: '/icons/family/cultural.jpg',
+  magnitude: '/icons/family/magnitude.jpg',
+  sequence: '/icons/family/sequence.jpg',
+  poker: '/icons/family/poker.jpg',
+  element: '/icons/family/element.jpg',
+  journey: '/icons/family/journey.jpg',
+  secret: '/secrets/omega.jpg',
+};

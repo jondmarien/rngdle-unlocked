@@ -73,7 +73,9 @@ export function FindPlayers({
   return (
     <div className="space-y-3 rounded-lg border border-[var(--outline)] bg-[var(--surface)] p-3">
       <div>
-        <h2 className="text-base font-bold text-[var(--prose)]">Find players</h2>
+        <h2 className="text-base font-bold text-[var(--prose)]">
+          Find players
+        </h2>
         <p className="text-sm text-[var(--prose-2)]">
           Search public @usernames (min 2 characters). Follow to see their rare
           rolls on the Feed.

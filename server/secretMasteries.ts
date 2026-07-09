@@ -107,10 +107,7 @@ const OMEGA: SecretSeal = {
   ep: 50_000,
 };
 
-function sectionComplete(
-  section: SectionKey,
-  unlocked: Set<string>,
-): boolean {
+function sectionComplete(section: SectionKey, unlocked: Set<string>): boolean {
   const need = [...sectionBadgeIds[section]];
   if (need.length === 0) return false;
   return need.every((id) => unlocked.has(id));
@@ -145,8 +142,7 @@ export function earnedSecretSeals(unlockedIds: Set<string>): SecretSeal[] {
 
   // Omega: every badge in every section + every section seal
   const allSections = SECTION_SEALS.every(
-    (s) =>
-      sectionComplete(s.section, unlockedIds) || unlockedIds.has(s.id),
+    (s) => sectionComplete(s.section, unlockedIds) || unlockedIds.has(s.id),
   );
   const allBadges = (Object.keys(sectionBadgeIds) as SectionKey[]).every(
     (sec) => sectionComplete(sec, unlockedIds),
@@ -155,10 +151,7 @@ export function earnedSecretSeals(unlockedIds: Set<string>): SecretSeal[] {
     (s) => earned.some((e) => e.id === s.id) || unlockedIds.has(s.id),
   );
 
-  if (
-    (allSections && allBadges && allSeals) ||
-    unlockedIds.has(OMEGA.id)
-  ) {
+  if ((allSections && allBadges && allSeals) || unlockedIds.has(OMEGA.id)) {
     earned.push(OMEGA);
   }
 

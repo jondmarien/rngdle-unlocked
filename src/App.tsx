@@ -118,8 +118,7 @@ function AppRoutes() {
   const profileActive =
     route.kind === 'profile' &&
     Boolean(
-      myUsername &&
-        route.username.toLowerCase() === myUsername.toLowerCase(),
+      myUsername && route.username.toLowerCase() === myUsername.toLowerCase(),
     );
 
   return (

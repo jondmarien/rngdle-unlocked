@@ -33,11 +33,11 @@ flowchart TB
 
 ## Roll modes
 
-| Mode | RNG | Persist | Competitive surfaces |
-| --- | --- | --- | --- |
-| **Free play** | Browser CSPRNG | localStorage → sync as `source=client` | **Leaderboard → Practice** only |
-| **Ranked** | Server CSPRNG | Neon `source=ranked` first; client merges history | **Leaderboard → Ranked**, community crowns, overtakes |
-| **Daily / Weekly** | Deterministic seed | sync as `source=challenge` | Optional challenge; not Ranked crowns |
+| Mode               | RNG                | Persist                                           | Competitive surfaces                                  |
+| ------------------ | ------------------ | ------------------------------------------------- | ----------------------------------------------------- |
+| **Free play**      | Browser CSPRNG     | localStorage → sync as `source=client`            | **Leaderboard → Practice** only                       |
+| **Ranked**         | Server CSPRNG      | Neon `source=ranked` first; client merges history | **Leaderboard → Ranked**, community crowns, overtakes |
+| **Daily / Weekly** | Deterministic seed | sync as `source=challenge`                        | Optional challenge; not Ranked crowns                 |
 
 Mode switch fully resets the home reel / session roll (and abandons in-flight Generate).
 
@@ -139,27 +139,27 @@ flowchart TB
 
 ## Key directories
 
-| Path | Responsibility |
-| --- | --- |
-| `src/game/` | Pure rules: RNG, badges, rarity, secrets, challenges, share text |
-| `src/state/` | Persistence, Free / Ranked / challenge orchestration, auto-sync |
-| `src/ui/` | Screens & motion (reel, cascade, codex, dual boards) |
-| `api/` | Vercel route entrypoints (`ranked-roll`, `leaderboard`, …) |
-| `server/` | Auth, DB, merge, ranked issue, rate limits, roll activity, OG HTML |
-| `public/` | Icons, avatars, secret art, Absolute Ceiling badge, PWA |
+| Path         | Responsibility                                                     |
+| ------------ | ------------------------------------------------------------------ |
+| `src/game/`  | Pure rules: RNG, badges, rarity, secrets, challenges, share text   |
+| `src/state/` | Persistence, Free / Ranked / challenge orchestration, auto-sync    |
+| `src/ui/`    | Screens & motion (reel, cascade, codex, dual boards)               |
+| `api/`       | Vercel route entrypoints (`ranked-roll`, `leaderboard`, …)         |
+| `server/`    | Auth, DB, merge, ranked issue, rate limits, roll activity, OG HTML |
+| `public/`    | Icons, avatars, secret art, Absolute Ceiling badge, PWA            |
 
 ## Trust model (honest)
 
-| Claim | Reality |
-| --- | --- |
-| Free-play randomness | Browser CSPRNG + entropy pool — **client-authoritative**; Practice board honor system |
-| Ranked free-play randomness | **Server CSPRNG** via `/api/ranked-roll`; scores server-side; `source=ranked` |
-| Challenge numbers | Deterministic from period seed + subject id |
-| Attestation seal | Server HMAC on a **claim** — not proof of honest client RNG |
-| Leaderboard Ranked | Fair competition baseline (server-issued only) |
-| Leaderboard Practice | Who **synced** free-play progress with a username |
-| Community crowns | Ranked rolls only |
-| Share links | Only after roll row exists in Neon |
+| Claim                       | Reality                                                                               |
+| --------------------------- | ------------------------------------------------------------------------------------- |
+| Free-play randomness        | Browser CSPRNG + entropy pool — **client-authoritative**; Practice board honor system |
+| Ranked free-play randomness | **Server CSPRNG** via `/api/ranked-roll`; scores server-side; `source=ranked`         |
+| Challenge numbers           | Deterministic from period seed + subject id                                           |
+| Attestation seal            | Server HMAC on a **claim** — not proof of honest client RNG                           |
+| Leaderboard Ranked          | Fair competition baseline (server-issued only)                                        |
+| Leaderboard Practice        | Who **synced** free-play progress with a username                                     |
+| Community crowns            | Ranked rolls only                                                                     |
+| Share links                 | Only after roll row exists in Neon                                                    |
 
 ## Related docs
 

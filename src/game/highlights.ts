@@ -23,7 +23,10 @@ export function maskIndices(n: number, indices: Iterable<number>): boolean[] {
   return m;
 }
 
-export function maskWhere(n: number, pred: (d: number, i: number, s: string) => boolean): boolean[] {
+export function maskWhere(
+  n: number,
+  pred: (d: number, i: number, s: string) => boolean,
+): boolean[] {
   const s = digitsStr(n);
   return Array.from(s, (ch, i) => pred(Number(ch), i, s));
 }

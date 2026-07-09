@@ -247,13 +247,12 @@ export function AccountScreen({
       });
       if (res.error) {
         const raw = res.error.message ?? 'Sign in failed';
-        const nicer =
-          /verif/i.test(raw)
-            ? 'Email not verified yet — check your inbox for the verification link (or use a magic link).'
-            : /user not found/i.test(raw) ||
-                /invalid email or password/i.test(raw)
-              ? 'No account for that email (or wrong password). Prefer Discord/GitHub, or request a magic link.'
-              : raw;
+        const nicer = /verif/i.test(raw)
+          ? 'Email not verified yet — check your inbox for the verification link (or use a magic link).'
+          : /user not found/i.test(raw) ||
+              /invalid email or password/i.test(raw)
+            ? 'No account for that email (or wrong password). Prefer Discord/GitHub, or request a magic link.'
+            : raw;
         throw new Error(nicer);
       }
       setStatus('Refreshing session…');
@@ -572,11 +571,7 @@ export function AccountScreen({
                   </p>
                 </form>
               ) : (
-                <form
-                  onSubmit={onAuth}
-                  className="space-y-3"
-                  autoComplete="on"
-                >
+                <form onSubmit={onAuth} className="space-y-3" autoComplete="on">
                   {mode === 'signup' && (
                     <input
                       className="w-full border border-[var(--outline)] bg-[var(--bg)] px-3 py-2 text-sm"
@@ -678,8 +673,7 @@ export function AccountScreen({
               const linked = linkedAccounts.find(
                 (a) => a.providerId === provider,
               );
-              const label =
-                provider === 'discord' ? 'Discord' : 'GitHub';
+              const label = provider === 'discord' ? 'Discord' : 'GitHub';
               return (
                 <div
                   key={provider}
@@ -690,9 +684,7 @@ export function AccountScreen({
                       {label}
                     </p>
                     <p className="truncate text-xs text-[var(--prose-3)]">
-                      {linked
-                        ? `Linked as ${linked.label}`
-                        : 'Not linked'}
+                      {linked ? `Linked as ${linked.label}` : 'Not linked'}
                     </p>
                   </div>
                   {linked ? (
@@ -762,7 +754,8 @@ export function AccountScreen({
                 Profile picture
               </p>
               <p className="mb-2 text-xs text-[var(--prose-3)]">
-                Pick a custom emblem, or None for initial / linked account photo.
+                Pick a custom emblem, or None for initial / linked account
+                photo.
               </p>
               <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
                 <button
@@ -875,7 +868,9 @@ export function AccountScreen({
                   onChange={(e) => setProfileShowCodex(e.target.checked)}
                 />
                 <span>
-                  <span className="font-semibold">Show codex on public profile</span>
+                  <span className="font-semibold">
+                    Show codex on public profile
+                  </span>
                   <span className="mt-0.5 block text-xs text-[var(--prose-3)]">
                     When on, visitors to{' '}
                     <code className="text-[11px]">/u/yourname</code> see your
@@ -899,8 +894,8 @@ export function AccountScreen({
               Cloud sync
             </h2>
             <p className="text-xs text-[var(--prose-3)]">
-              While signed in, every new roll is auto-pushed to the cloud (merge-safe).
-              Manual pull/push still available for catch-up.
+              While signed in, every new roll is auto-pushed to the cloud
+              (merge-safe). Manual pull/push still available for catch-up.
             </p>
             <div className="flex flex-wrap gap-2">
               <button
@@ -932,7 +927,9 @@ export function AccountScreen({
               </p>
             )}
             {syncError && (
-              <p className="text-xs text-red-600 dark:text-red-400">{syncError}</p>
+              <p className="text-xs text-red-600 dark:text-red-400">
+                {syncError}
+              </p>
             )}
           </div>
         </div>

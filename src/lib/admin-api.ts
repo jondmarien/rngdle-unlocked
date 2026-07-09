@@ -1,6 +1,6 @@
-import { createLogger } from "./logger";
+import { createLogger } from './logger';
 
-const log = createLogger("admin-api");
+const log = createLogger('admin-api');
 
 async function adminFetch<T>(
   path: string,
@@ -10,16 +10,16 @@ async function adminFetch<T>(
 > {
   try {
     const res = await fetch(path, {
-      credentials: "include",
+      credentials: 'include',
       ...init,
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
         ...(init?.headers ?? {}),
       },
     });
     const data = (await res.json().catch(() => ({}))) as T & { error?: string };
     if (!res.ok) {
-      log.warn("admin request failed", { path, status: res.status });
+      log.warn('admin request failed', { path, status: res.status });
       return {
         ok: false,
         error: data.error ?? `HTTP ${res.status}`,
@@ -65,35 +65,35 @@ export function searchAdminUsers(q: string) {
 }
 
 export function postBroadcast(title: string, body: string) {
-  return adminFetch<{ ok: boolean; id: string }>("/api/admin/broadcast", {
-    method: "POST",
+  return adminFetch<{ ok: boolean; id: string }>('/api/admin/broadcast', {
+    method: 'POST',
     body: JSON.stringify({ title, body }),
   });
 }
 
 export function wipeUser(userId: string) {
-  return adminFetch<{ ok: boolean }>("/api/admin/users/wipe", {
-    method: "POST",
-    body: JSON.stringify({ userId, confirm: "wipe" }),
+  return adminFetch<{ ok: boolean }>('/api/admin/users/wipe', {
+    method: 'POST',
+    body: JSON.stringify({ userId, confirm: 'wipe' }),
   });
 }
 
 export function banUser(userId: string, banned: boolean, reason?: string) {
-  return adminFetch<{ ok: boolean }>("/api/admin/users/ban", {
-    method: "POST",
+  return adminFetch<{ ok: boolean }>('/api/admin/users/ban', {
+    method: 'POST',
     body: JSON.stringify({ userId, banned, reason }),
   });
 }
 
-export function listReports(status = "open") {
+export function listReports(status = 'open') {
   return adminFetch<{ reports: AdminReportRow[] }>(
     `/api/admin/reports?status=${encodeURIComponent(status)}`,
   );
 }
 
-export function patchReport(id: string, status: "resolved" | "dismissed") {
-  return adminFetch<{ ok: boolean }>("/api/admin/reports", {
-    method: "PATCH",
+export function patchReport(id: string, status: 'resolved' | 'dismissed') {
+  return adminFetch<{ ok: boolean }>('/api/admin/reports', {
+    method: 'PATCH',
     body: JSON.stringify({ id, status }),
   });
 }
@@ -103,8 +103,8 @@ export function fileReport(input: {
   targetUsername?: string;
   reason: string;
 }) {
-  return adminFetch<{ ok: boolean; id: string }>("/api/reports", {
-    method: "POST",
+  return adminFetch<{ ok: boolean; id: string }>('/api/reports', {
+    method: 'POST',
     body: JSON.stringify(input),
   });
 }

@@ -11,7 +11,9 @@ eps.sort((a, b) => a - b);
 const q = (p) =>
   eps[Math.min(eps.length - 1, Math.floor((p / 100) * (eps.length - 1)))];
 
-const pts = [0, 2, 5, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 95, 97, 99, 99.5, 100];
+const pts = [
+  0, 2, 5, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 95, 97, 99, 99.5, 100,
+];
 console.log('quantiles');
 for (const p of pts) console.log(`  p${p}: ${q(p)}`);
 
@@ -67,7 +69,10 @@ for (const ep of eps) {
 console.log(
   'rates with nice thresholds',
   Object.fromEntries(
-    Object.entries(counts).map(([k, v]) => [k, ((100 * v) / N).toFixed(1) + '%']),
+    Object.entries(counts).map(([k, v]) => [
+      k,
+      ((100 * v) / N).toFixed(1) + '%',
+    ]),
   ),
 );
 

@@ -418,10 +418,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         history,
         lifetimeRollCount: nextCount,
         lifetimeEP:
-          state.lifetimeEP +
-          result.totalEP +
-          journeyEPGained +
-          secretsEPGained,
+          state.lifetimeEP + result.totalEP + journeyEPGained + secretsEPGained,
         journeyEP: state.journeyEP + journeyEPGained + secretsEPGained,
         collection,
         stats,
@@ -494,9 +491,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
           return null;
         }
         const sealed = { ...rollResult, attestationSeal: data.seal };
-        setLastRoll((prev) =>
-          prev?.id === rollResult.id ? sealed : prev,
-        );
+        setLastRoll((prev) => (prev?.id === rollResult.id ? sealed : prev));
         setState((prev) => {
           const history = prev.history.map((r) =>
             r.id === rollResult.id ? sealed : r,
@@ -710,10 +705,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
       for (let attempt = 0; attempt < 8; attempt++) {
         try {
-          const res = await fetch(
-            `/api/rolls/${encodeURIComponent(key)}`,
-            { credentials: 'include' },
-          );
+          const res = await fetch(`/api/rolls/${encodeURIComponent(key)}`, {
+            credentials: 'include',
+          });
           if (res.ok) {
             log.info('waitForCloudPublish:ok', { key, attempt });
             return 'ok';

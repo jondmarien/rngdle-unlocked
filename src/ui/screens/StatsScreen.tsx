@@ -90,7 +90,10 @@ export function StatsScreen() {
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Tile label="Lifetime EP" value={lifetimeEP.toLocaleString()} />
-        <Tile label="Lifetime rolls" value={lifetimeRollCount.toLocaleString()} />
+        <Tile
+          label="Lifetime rolls"
+          value={lifetimeRollCount.toLocaleString()}
+        />
         <Tile label="Journey EP" value={journeyEP.toLocaleString()} />
         <Tile
           label="EP / hour"

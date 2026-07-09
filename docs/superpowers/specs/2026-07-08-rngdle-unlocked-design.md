@@ -12,6 +12,7 @@
 **RNGdle Unlocked** is an **inspired** (not affiliated) web game that keeps the core fantasy—roll a number, discover badges, score EP, collect rarities—but **removes the 24-hour lock**. Players can roll anytime.
 
 ### Success criteria (v1)
+
 1. User can open the app and roll unlimited times with no countdown gate.
 2. Each roll shows number, badges, EP, rarity tier, and percentile.
 3. History and badge collection persist across reloads (localStorage).
@@ -20,6 +21,7 @@
 6. Game logic is unit-tested (Vitest) independent of UI.
 
 ### Non-goals (v1 / MVP part 1)
+
 - Accounts, OAuth, better-auth, cloud save
 - Global leaderboard / multiplayer
 - Pixel-perfect clone of rngdle.com branding or badge IP
@@ -27,8 +29,10 @@
 - Sound design (optional later)
 
 ### Deferred: MVP part 2 — social features (explicit future scope)
+
 User intent: **support social features eventually**, not in part 1.
 When we open part 2 (separate spec/plan), candidates include:
+
 - Accounts / auth (e.g. better-auth or similar)
 - Cloud-synced history, lifetime EP, collection
 - Global / friends leaderboards (all-time, weekly, badge counts)
@@ -41,21 +45,23 @@ When we open part 2 (separate spec/plan), candidates include:
 ## 2. Research notes (original product)
 
 ### Game loop (observed)
-1. GENERATE → random integer 0…1,000,000  
-2. Analyze for badges / patterns  
-3. Sum EP, map to rarity + percentile  
-4. (Original) Persist daily roll; countdown until next day  
-5. Social: auth, lifetime EP, leaderboard, share  
+
+1. GENERATE → random integer 0…1,000,000
+2. Analyze for badges / patterns
+3. Sum EP, map to rarity + percentile
+4. (Original) Persist daily roll; countdown until next day
+5. Social: auth, lifetime EP, leaderboard, share
 
 ### Observed stack (headers + JS fingerprints; BuiltWith SPA did not return data)
-| Layer | Detected |
-|-------|----------|
-| Framework | Next.js (RSC, Turbopack chunks, `X-Powered-By: Next.js`) |
-| UI | Tailwind, Lucide, Sonner, Inter + Space Mono |
-| Auth | better-auth (`/api/auth`) |
-| CDN | Cloudflare; origin via Caddy |
-| APIs | `/api/health`, `/api/home`, `/api/activity/*`, `/api/stats/global`, notifications |
-| PWA | `manifest.webmanifest` |
+
+| Layer     | Detected                                                                          |
+| --------- | --------------------------------------------------------------------------------- |
+| Framework | Next.js (RSC, Turbopack chunks, `X-Powered-By: Next.js`)                          |
+| UI        | Tailwind, Lucide, Sonner, Inter + Space Mono                                      |
+| Auth      | better-auth (`/api/auth`)                                                         |
+| CDN       | Cloudflare; origin via Caddy                                                      |
+| APIs      | `/api/health`, `/api/home`, `/api/activity/*`, `/api/stats/global`, notifications |
+| PWA       | `manifest.webmanifest`                                                            |
 
 **Our stack deliberately differs** (client-only Vite+ SPA) because v1 needs no server.
 
@@ -63,19 +69,19 @@ Rarity tiers observed in client bundles: `trash | common | uncommon | rare | epi
 
 ## 3. Product decisions (locked)
 
-| Topic | Decision |
-|-------|----------|
-| Experience | Solo infinite playground |
-| Scoring | Inspired original (our badge names & weights) |
-| Platform | Web app / PWA |
-| Deploy | Vercel (static) |
-| Toolchain | [Vite+](https://viteplus.dev/) (`vp`) + React + TypeScript |
-| Architecture | Pure TS game engine + thin React UI |
-| Visual | Same genre spirit, own skin |
-| Share | **In v1** — share card |
-| Name | RNGdle Unlocked |
-| RNG | **Fortified CSPRNG** (see §5.1) — not `Math.random`, not user-seedable |
-| Meta progression | **Play-count milestone badges** (5, 10, 15, 20, 50, … 10_000+) |
+| Topic            | Decision                                                               |
+| ---------------- | ---------------------------------------------------------------------- |
+| Experience       | Solo infinite playground                                               |
+| Scoring          | Inspired original (our badge names & weights)                          |
+| Platform         | Web app / PWA                                                          |
+| Deploy           | Vercel (static)                                                        |
+| Toolchain        | [Vite+](https://viteplus.dev/) (`vp`) + React + TypeScript             |
+| Architecture     | Pure TS game engine + thin React UI                                    |
+| Visual           | Same genre spirit, own skin                                            |
+| Share            | **In v1** — share card                                                 |
+| Name             | RNGdle Unlocked                                                        |
+| RNG              | **Fortified CSPRNG** (see §5.1) — not `Math.random`, not user-seedable |
+| Meta progression | **Play-count milestone badges** (5, 10, 15, 20, 50, … 10_000+)         |
 
 ## 4. Architecture
 
@@ -171,8 +177,13 @@ Rarity tiers observed in client bundles: `trash | common | uncommon | rare | epi
 // Conceptual — exact shapes locked in implementation plan
 
 type RarityTier =
-  | "trash" | "common" | "uncommon" | "rare"
-  | "epic" | "anomaly" | "mythic";
+  | 'trash'
+  | 'common'
+  | 'uncommon'
+  | 'rare'
+  | 'epic'
+  | 'anomaly'
+  | 'mythic';
 
 type BadgeHit = {
   id: string;
@@ -182,22 +193,26 @@ type BadgeHit = {
 };
 
 type RollResult = {
-  number: number;          // 0..1_000_000 inclusive
+  number: number; // 0..1_000_000 inclusive
   badges: BadgeHit[];
   totalEP: number;
   rarity: RarityTier;
-  percentile: number;      // 0..100, "top X%" display derived in UI
-  rolledAt: string;        // ISO timestamp
-  id: string;              // uuid for history/share
+  percentile: number; // 0..100, "top X%" display derived in UI
+  rolledAt: string; // ISO timestamp
+  id: string; // uuid for history/share
 };
 
 function performRoll(options?: { now?: Date }): RollResult;
-function evaluateNumber(n: number, options?: { now?: Date }): Omit<RollResult, "rolledAt" | "id">;
+function evaluateNumber(
+  n: number,
+  options?: { now?: Date },
+): Omit<RollResult, 'rolledAt' | 'id'>;
 ```
 
 ## 5. Game design
 
 ### 5.1 Number generation (fortified CSPRNG)
+
 - Inclusive range: **0 … 1_000_000** (1,000,001 possible values).
 - **Forbidden:** `Math.random`, any user-facing seed parameter, deterministic PRNG libraries with settable seeds in production paths.
 - **Required entropy path:**
@@ -208,6 +223,7 @@ function evaluateNumber(n: number, options?: { now?: Date }): Omit<RollResult, "
 - Document in About: rolls use fortified browser CSPRNG; not a hardware TRNG, not remote-attested randomness (v1).
 
 ### 5.2 Badge system (inspired, not copied)
+
 - Target catalog size: **~40–60 badges** for v1.
 - Families (illustrative, names ours):
   - **Math:** prime, perfect power, fibonacci-ish, harshad, palindrome
@@ -221,25 +237,26 @@ function evaluateNumber(n: number, options?: { now?: Date }): Omit<RollResult, "
 - Prefer non-overlapping family variants where original game uses exclusive tiers (document rules in catalog comments).
 
 ### 5.2b Play-count milestone badges (unlimited-play progression)
+
 Because play is unlocked/unlimited, **lifetime roll count** earns meta badges (separate from number-property badges):
 
-| Lifetime rolls | Example badge id | Intent |
-|----------------|------------------|--------|
-| 5 | `rolls-5` | First steps |
-| 10 | `rolls-10` | |
-| 15 | `rolls-15` | |
-| 20 | `rolls-20` | |
-| 50 | `rolls-50` | Regular |
-| 100 | `rolls-100` | Century |
-| 250 | `rolls-250` | |
-| 500 | `rolls-500` | |
-| 1000 | `rolls-1000` | Grinder |
-| 1500 | `rolls-1500` | |
-| 2000 | `rolls-2000` | |
-| 3000 | `rolls-3000` | |
-| 4000 | `rolls-4000` | |
-| 5000 | `rolls-5000` | Dedicated |
-| 10000 | `rolls-10000` | Legend |
+| Lifetime rolls | Example badge id | Intent      |
+| -------------- | ---------------- | ----------- |
+| 5              | `rolls-5`        | First steps |
+| 10             | `rolls-10`       |             |
+| 15             | `rolls-15`       |             |
+| 20             | `rolls-20`       |             |
+| 50             | `rolls-50`       | Regular     |
+| 100            | `rolls-100`      | Century     |
+| 250            | `rolls-250`      |             |
+| 500            | `rolls-500`      |             |
+| 1000           | `rolls-1000`     | Grinder     |
+| 1500           | `rolls-1500`     |             |
+| 2000           | `rolls-2000`     |             |
+| 3000           | `rolls-3000`     |             |
+| 4000           | `rolls-4000`     |             |
+| 5000           | `rolls-5000`     | Dedicated   |
+| 10000          | `rolls-10000`    | Legend      |
 
 - Persist **`lifetimeRollCount`** (monotonically increasing; not reduced when history trims).
 - On each roll: increment count → if any milestone thresholds are newly crossed:
@@ -251,6 +268,7 @@ Because play is unlocked/unlimited, **lifetime roll count** earns meta badges (s
 - Share card may show lifetime roll count optionally (settings toggle default off).
 
 ### 5.3 EP, rarity, percentile
+
 - **totalEP** = sum of badge EPs (0 if none).
 - **Rarity** from totalEP thresholds (tunable constants in `rarity.ts`), 7 tiers matching the genre:
   - trash → common → uncommon → rare → epic → anomaly → mythic
@@ -258,19 +276,20 @@ Because play is unlocked/unlimited, **lifetime roll count** earns meta badges (s
 - Thresholds and percentile curve must be **documented constants** and covered by tests.
 
 ### 5.4 Unlimited play
+
 - No daily lock, no “next roll in…” countdown.
 - Primary CTA always: **GENERATE** (first) / **ROLL AGAIN** (after a roll).
 - Soft anti-misclick: optional brief button cooldown (~300ms) only for UX, not game rules.
 
 ## 6. Persistence
 
-| Key | Contents |
-|-----|----------|
-| `rngdle-unlocked:history` | Array of `RollResult`, newest first, **max 500** (drop oldest) |
-| `rngdle-unlocked:lifetimeEP` | Running sum of all rolls’ totalEP (does not decrease when history trims) |
-| `rngdle-unlocked:lifetimeRollCount` | Monotonic total rolls performed |
-| `rngdle-unlocked:collection` | Set/map of badge ids ever earned + first earned timestamp (number badges + journey badges) |
-| `rngdle-unlocked:settings` | `{ theme: "light" \| "dark" \| "system", shareShowRollCount?: boolean }` |
+| Key                                 | Contents                                                                                   |
+| ----------------------------------- | ------------------------------------------------------------------------------------------ |
+| `rngdle-unlocked:history`           | Array of `RollResult`, newest first, **max 500** (drop oldest)                             |
+| `rngdle-unlocked:lifetimeEP`        | Running sum of all rolls’ totalEP (does not decrease when history trims)                   |
+| `rngdle-unlocked:lifetimeRollCount` | Monotonic total rolls performed                                                            |
+| `rngdle-unlocked:collection`        | Set/map of badge ids ever earned + first earned timestamp (number badges + journey badges) |
+| `rngdle-unlocked:settings`          | `{ theme: "light" \| "dark" \| "system", shareShowRollCount?: boolean }`                   |
 
 - Settings screen: **Clear all data** with confirm dialog.
 - No export/import in v1 (explicitly deferred).
@@ -279,6 +298,7 @@ Because play is unlocked/unlimited, **lifetime roll count** earns meta badges (s
 ## 7. UI / UX
 
 ### 7.1 Screens
+
 1. **Home / Roll** — number display (or `??????` pre-roll), GENERATE / ROLL AGAIN, latest rarity + EP summary.
 2. **Result detail** (can be same view post-roll) — full badge list with tooltips (name, description, EP).
 3. **History** — scrollable past rolls; tap to re-open detail; action to open share.
@@ -287,6 +307,7 @@ Because play is unlocked/unlimited, **lifetime roll count** earns meta badges (s
 6. **Settings** — theme, clear data, version.
 
 ### 7.2 Share card (v1)
+
 - From result or history: **Share** opens panel with:
   - **Text summary** (copy to clipboard): number, rarity, EP, top badges, app name.
   - **Visual card** (DOM or canvas): large number, rarity color, EP, badge names, “RNGdle Unlocked”.
@@ -294,6 +315,7 @@ Because play is unlocked/unlimited, **lifetime roll count** earns meta badges (s
 - No server-side OG image generation in v1.
 
 ### 7.3 Visual design
+
 - Own skin, genre-familiar:
   - Strong mono for the big number
   - Rarity color tokens per tier
@@ -302,6 +324,7 @@ Because play is unlocked/unlimited, **lifetime roll count** earns meta badges (s
 - Motion: short number reveal; stronger accent on epic+ (CSS only, reduced-motion respected).
 
 ### 7.4 Navigation
+
 - Simple header: brand, theme toggle, links/icons for History, Collection, About, Settings.
 - No auth chrome.
 
@@ -324,14 +347,14 @@ Because play is unlocked/unlimited, **lifetime roll count** earns meta badges (s
 
 ## 10. Testing strategy
 
-| Layer | What |
-|-------|------|
-| Unit | Badge matchers (known numbers → expected badges) |
-| Unit | EP sum, rarity thresholds, percentile monotonicity |
-| Unit | RNG range bounds, unbiased mapping, pool mix; evaluateNumber edge cases (0, 1e6, primes, palindromes) |
-| Unit | Milestone badges unlock exactly at thresholds; lifetimeRollCount monotonic |
-| Unit | History cap & lifetimeEP rules in storage helpers |
-| Manual | UI flow, share download, PWA install, theme, clear data |
+| Layer  | What                                                                                                  |
+| ------ | ----------------------------------------------------------------------------------------------------- |
+| Unit   | Badge matchers (known numbers → expected badges)                                                      |
+| Unit   | EP sum, rarity thresholds, percentile monotonicity                                                    |
+| Unit   | RNG range bounds, unbiased mapping, pool mix; evaluateNumber edge cases (0, 1e6, primes, palindromes) |
+| Unit   | Milestone badges unlock exactly at thresholds; lifetimeRollCount monotonic                            |
+| Unit   | History cap & lifetimeEP rules in storage helpers                                                     |
+| Manual | UI flow, share download, PWA install, theme, clear data                                               |
 
 TDD preference for engine: write failing tests for matchers/scoring before implementations.
 
@@ -343,25 +366,25 @@ TDD preference for engine: write failing tests for matchers/scoring before imple
 
 ## 12. Open items deferred (not v1)
 
-- Accounts / cloud sync  
-- Global leaderboard  
-- Export/import JSON  
-- Sound / haptics  
-- 80+ badge catalog  
-- Exact parity with original EP tables  
+- Accounts / cloud sync
+- Global leaderboard
+- Export/import JSON
+- Sound / haptics
+- 80+ badge catalog
+- Exact parity with original EP tables
 
 ## 13. Verification (acceptance)
 
-1. Fresh load → GENERATE → valid number + scoring UI.  
-2. ROLL AGAIN immediately works (no timer).  
-3. Reload → history and collection intact.  
-4. Earn a known badge with `evaluateNumber` fixture path (dev or test).  
-5. Share: copy text works; PNG downloads.  
-6. Theme toggles persist.  
-7. Clear data empties history/collection.  
-8. `vp test` and `vp build` succeed; Vercel deploy serves the app.  
-9. About page includes non-affiliation disclaimer.  
-10. After N rolls, journey badge for threshold N appears in collection.  
+1. Fresh load → GENERATE → valid number + scoring UI.
+2. ROLL AGAIN immediately works (no timer).
+3. Reload → history and collection intact.
+4. Earn a known badge with `evaluateNumber` fixture path (dev or test).
+5. Share: copy text works; PNG downloads.
+6. Theme toggles persist.
+7. Clear data empties history/collection.
+8. `vp test` and `vp build` succeed; Vercel deploy serves the app.
+9. About page includes non-affiliation disclaimer.
+10. After N rolls, journey badge for threshold N appears in collection.
 11. Production bundle has no seedable RNG API / no `Math.random` in roll path.
 
 ---

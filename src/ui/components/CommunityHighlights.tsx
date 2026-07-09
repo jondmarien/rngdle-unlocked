@@ -39,11 +39,10 @@ export function CommunityHighlights({
   onOpenProfile?: (username: string) => void;
   onOpenRoll?: (id: string, username?: string | null) => void;
 } = {}) {
-  const [data, setData] = useState<HighlightsPayload | null>(
-    () =>
-      highlightsCache && Date.now() - highlightsCache.at < CACHE_TTL_MS
-        ? highlightsCache.data
-        : null,
+  const [data, setData] = useState<HighlightsPayload | null>(() =>
+    highlightsCache && Date.now() - highlightsCache.at < CACHE_TTL_MS
+      ? highlightsCache.data
+      : null,
   );
   const [error, setError] = useState<string | null>(null);
   const fetchGen = useRef(0);

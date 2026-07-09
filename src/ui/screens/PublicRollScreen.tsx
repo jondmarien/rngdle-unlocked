@@ -45,9 +45,7 @@ export function PublicRollScreen({
     setRoll(null);
     log.info('load', { rollId, routeUser });
 
-    const q = routeUser
-      ? `?user=${encodeURIComponent(routeUser)}`
-      : '';
+    const q = routeUser ? `?user=${encodeURIComponent(routeUser)}` : '';
     fetch(`/api/rolls/${encodeURIComponent(rollId)}${q}`)
       .then(async (r) => {
         const data = (await r.json()) as {

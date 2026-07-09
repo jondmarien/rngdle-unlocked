@@ -35,7 +35,10 @@ function parseAdminIds(): Set<string> {
   );
 }
 
-export function isAdminRole(role: string | null | undefined, userId: string): boolean {
+export function isAdminRole(
+  role: string | null | undefined,
+  userId: string,
+): boolean {
   if (role === 'admin') return true;
   return parseAdminIds().has(userId);
 }

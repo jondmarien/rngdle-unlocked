@@ -16,11 +16,11 @@ Instructions for AI coding agents and humans working in this repository.
 
 ### Roll modes (do not collapse these)
 
-| Mode | RNG | Where it places | Crowns / overtake |
-| --- | --- | --- | --- |
-| **Free play** | Browser CSPRNG (`src/game/rng.ts`) | Leaderboard → **Practice** (synced progress) | No |
-| **Ranked** | Server CSPRNG (`POST /api/ranked-roll`) | Leaderboard → **Ranked** | Yes (today / week / all-time) |
-| **Daily / Weekly** | Deterministic seed + subject id | Challenge flavor; not Ranked crowns | No |
+| Mode               | RNG                                     | Where it places                              | Crowns / overtake             |
+| ------------------ | --------------------------------------- | -------------------------------------------- | ----------------------------- |
+| **Free play**      | Browser CSPRNG (`src/game/rng.ts`)      | Leaderboard → **Practice** (synced progress) | No                            |
+| **Ranked**         | Server CSPRNG (`POST /api/ranked-roll`) | Leaderboard → **Ranked**                     | Yes (today / week / all-time) |
+| **Daily / Weekly** | Deterministic seed + subject id         | Challenge flavor; not Ranked crowns          | No                            |
 
 - Free play stays unlimited and offline-capable.
 - Ranked requires **signed-in user + public `@username`**.
@@ -53,12 +53,12 @@ docs/                ARCHITECTURE.md + design specs/plans
 scripts/             Migrations, diagnostics (prefer additive SQL over destructive push)
 ```
 
-| Path | Rules |
-| --- | --- |
-| `src/game/` | Pure, testable, no React/DOM side effects at import time (except `fx.ts` intentionally uses Audio) |
-| `src/ui/` + `src/state/` | UI + persistence; call game engine, never reimplement scoring |
-| `api/*` | Thin handlers → `server/*`; use `defineHandler` from `server/vercel-adapter.ts` |
-| `server/db/schema.ts` | Source of truth for tables; deploy schema carefully (see §6) |
+| Path                     | Rules                                                                                              |
+| ------------------------ | -------------------------------------------------------------------------------------------------- |
+| `src/game/`              | Pure, testable, no React/DOM side effects at import time (except `fx.ts` intentionally uses Audio) |
+| `src/ui/` + `src/state/` | UI + persistence; call game engine, never reimplement scoring                                      |
+| `api/*`                  | Thin handlers → `server/*`; use `defineHandler` from `server/vercel-adapter.ts`                    |
+| `server/db/schema.ts`    | Source of truth for tables; deploy schema carefully (see §6)                                       |
 
 Deep diagrams: [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md).
 
@@ -96,19 +96,19 @@ Do **not** commit secrets, `.env`, `.env.local`, or one-off debug dumps (`script
 
 See [`.env.example`](./.env.example). Typical vars:
 
-| Variable | Purpose |
-| --- | --- |
-| `DATABASE_URL` | Neon Postgres (pooled OK for serverless) |
-| `BETTER_AUTH_SECRET` | Auth + HMAC attestations |
-| `BETTER_AUTH_URL` | Site origin (production must match real domain) |
-| `VITE_APP_URL` | Client trusted origin |
-| `RESEND_API_KEY` | Outbound mail (magic link + email verification) — see [`docs/email-auth.md`](./docs/email-auth.md) |
-| `EMAIL_FROM` | Optional; default `RNGdle Unlocked <noreply@outreach.chron0.tech>` |
-| `ADMIN_SECRET` | Optional; bootstrap only (`scripts/promote-admin.mjs`) — not for browser admin |
-| `ADMIN_USER_IDS` | Optional; comma-separated user ids treated as admin |
-| `DISCORD_CLIENT_ID` / `DISCORD_CLIENT_SECRET` | Discord OAuth (see [`docs/oauth-setup.md`](./docs/oauth-setup.md)) |
-| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | GitHub OAuth |
-| `LOG_LEVEL` | Optional server log level |
+| Variable                                      | Purpose                                                                                            |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                                | Neon Postgres (pooled OK for serverless)                                                           |
+| `BETTER_AUTH_SECRET`                          | Auth + HMAC attestations                                                                           |
+| `BETTER_AUTH_URL`                             | Site origin (production must match real domain)                                                    |
+| `VITE_APP_URL`                                | Client trusted origin                                                                              |
+| `RESEND_API_KEY`                              | Outbound mail (magic link + email verification) — see [`docs/email-auth.md`](./docs/email-auth.md) |
+| `EMAIL_FROM`                                  | Optional; default `RNGdle Unlocked <noreply@outreach.chron0.tech>`                                 |
+| `ADMIN_SECRET`                                | Optional; bootstrap only (`scripts/promote-admin.mjs`) — not for browser admin                     |
+| `ADMIN_USER_IDS`                              | Optional; comma-separated user ids treated as admin                                                |
+| `DISCORD_CLIENT_ID` / `DISCORD_CLIENT_SECRET` | Discord OAuth (see [`docs/oauth-setup.md`](./docs/oauth-setup.md))                                 |
+| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`   | GitHub OAuth                                                                                       |
+| `LOG_LEVEL`                                   | Optional server log level                                                                          |
 
 ---
 
@@ -207,24 +207,24 @@ Important tables: `user` (username, vanity profile fields), `user_progress`, `ro
 
 ## 7. API surface (agents)
 
-| Endpoint | Notes |
-| --- | --- |
-| `/api/auth/*` | Better Auth (rewrites with `__path` for multi-segment) |
-| `/api/sync` | GET/POST cloud merge; soft per-minute burst only |
-| `/api/ranked-roll` | POST Ranked free play (auth + username) |
-| `/api/leaderboard` | `?scope=ranked\|practice&period=all\|week&sort=...` |
-| `/api/highlights` | Community bests — **Ranked only** |
-| `/api/feed` | `?source=all\|ranked\|practice` — self + following |
-| `/api/follow` | Follow graph |
-| `/api/notifications` | Activity + system inbox |
-| `/api/system-messages` | GET list; POST **admin session** (role=admin) |
-| `/api/admin/*` | Admin: broadcast, users search/wipe/ban, reports |
-| `/api/reports` | Signed-in users file abuse / username reports |
-| `/api/challenge` | Period seeds metadata |
-| `/api/attest` | Optional HMAC seal on claim |
-| `/api/og`, `/api/share/*`, `/api/u/*` | OG / share / profile HTML for bots |
-| `/api/rolls/:id` | Public roll lookup for share gate |
-| `/api/health` | Liveness + env presence |
+| Endpoint                              | Notes                                                  |
+| ------------------------------------- | ------------------------------------------------------ |
+| `/api/auth/*`                         | Better Auth (rewrites with `__path` for multi-segment) |
+| `/api/sync`                           | GET/POST cloud merge; soft per-minute burst only       |
+| `/api/ranked-roll`                    | POST Ranked free play (auth + username)                |
+| `/api/leaderboard`                    | `?scope=ranked\|practice&period=all\|week&sort=...`    |
+| `/api/highlights`                     | Community bests — **Ranked only**                      |
+| `/api/feed`                           | `?source=all\|ranked\|practice` — self + following     |
+| `/api/follow`                         | Follow graph                                           |
+| `/api/notifications`                  | Activity + system inbox                                |
+| `/api/system-messages`                | GET list; POST **admin session** (role=admin)          |
+| `/api/admin/*`                        | Admin: broadcast, users search/wipe/ban, reports       |
+| `/api/reports`                        | Signed-in users file abuse / username reports          |
+| `/api/challenge`                      | Period seeds metadata                                  |
+| `/api/attest`                         | Optional HMAC seal on claim                            |
+| `/api/og`, `/api/share/*`, `/api/u/*` | OG / share / profile HTML for bots                     |
+| `/api/rolls/:id`                      | Public roll lookup for share gate                      |
+| `/api/health`                         | Liveness + env presence                                |
 
 SPA routes: History API in `src/lib/routes.ts`; Vercel rewrites non-`/api` to `index.html`. Bot UA rewrites for `/s/:user/:code` and `/u/:username`.
 
@@ -241,9 +241,9 @@ SPA routes: History API in `src/lib/routes.ts`; Vercel rewrites non-`/api` to `i
 
 When changing product behavior, update:
 
-1. In-app About / mode picker / leaderboard blurb  
-2. `README.md`  
-3. `docs/ARCHITECTURE.md` if trust model or flow diagrams change  
+1. In-app About / mode picker / leaderboard blurb
+2. `README.md`
+3. `docs/ARCHITECTURE.md` if trust model or flow diagrams change
 
 GitHub Mermaid: avoid `<br/>`, unicode middle-dots, and heavy path punctuation in node labels (GitHub’s renderer is strict).
 
@@ -258,9 +258,9 @@ GitHub Mermaid: avoid `<br/>`, unicode middle-dots, and heavy path punctuation i
 
 **Success criteria for roll modes after UI work:**
 
-1. Free → Generate settles digits.  
-2. Daily → Generate settles (deterministic).  
-3. Switch Free → Generate still settles (mode-switch reel remount).  
+1. Free → Generate settles digits.
+2. Daily → Generate settles (deterministic).
+3. Switch Free → Generate still settles (mode-switch reel remount).
 4. Ranked (signed in + username) → Generate settles and appears under History → Ranked.
 
 ---
@@ -277,46 +277,46 @@ GitHub Mermaid: avoid `<br/>`, unicode middle-dots, and heavy path punctuation i
 
 ## 11. Common failure modes (quick diagnosis)
 
-| Symptom | Likely cause | Fix direction |
-| --- | --- | --- |
-| Ranked `FUNCTION_INVOCATION_FAILED` / missing `rarity` module | ESM extensionless import in `src/game` | Add `.js` extensions on relative imports |
-| Ranked 500 after auth | Insert insert / missing `source` column | Run `scripts/add-roll-source.mjs` |
-| Free play sync `429` hourly upload | Old hourly cap | Removed — only soft per-minute sync burst remains |
-| Reel stuck on `?????` after Daily/Weekly | `lastRevealKey` collision | Remount reel + reset lastRevealKey (see §5.6) |
-| Feed only one user / rare only | Old rare+ filter + no self | Feed includes self; all rarities; source toggles |
-| Leaderboard empty | Wrong scope / no username / no Ranked rolls yet | Check scope toggle + `@username` + mode |
-| Share stuck “waiting for cloud” | Roll not in Neon | Sign in, sync; confirm `/api/rolls/:id` |
+| Symptom                                                       | Likely cause                                    | Fix direction                                     |
+| ------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------- |
+| Ranked `FUNCTION_INVOCATION_FAILED` / missing `rarity` module | ESM extensionless import in `src/game`          | Add `.js` extensions on relative imports          |
+| Ranked 500 after auth                                         | Insert insert / missing `source` column         | Run `scripts/add-roll-source.mjs`                 |
+| Free play sync `429` hourly upload                            | Old hourly cap                                  | Removed — only soft per-minute sync burst remains |
+| Reel stuck on `?????` after Daily/Weekly                      | `lastRevealKey` collision                       | Remount reel + reset lastRevealKey (see §5.6)     |
+| Feed only one user / rare only                                | Old rare+ filter + no self                      | Feed includes self; all rarities; source toggles  |
+| Leaderboard empty                                             | Wrong scope / no username / no Ranked rolls yet | Check scope toggle + `@username` + mode           |
+| Share stuck “waiting for cloud”                               | Roll not in Neon                                | Sign in, sync; confirm `/api/rolls/:id`           |
 
 ---
 
 ## 12. What “done” looks like for a feature PR
 
-1. Typecheck clean (`pnpm typecheck`).  
-2. Relevant tests pass (`pnpm test`).  
-3. Trust model preserved (no client forging Ranked).  
-4. Copy/docs updated if user-facing.  
-5. No secrets or local debug junk committed.  
-6. If schema changed: additive migration path documented or scripted.  
+1. Typecheck clean (`pnpm typecheck`).
+2. Relevant tests pass (`pnpm test`).
+3. Trust model preserved (no client forging Ranked).
+4. Copy/docs updated if user-facing.
+5. No secrets or local debug junk committed.
+6. If schema changed: additive migration path documented or scripted.
 7. Manual smoke of Free + Ranked + mode switch if roll UI touched.
 
 ---
 
 ## 13. Key files cheat sheet
 
-| Concern | Start here |
-| --- | --- |
-| Roll orchestration | `src/state/GameProvider.tsx` |
-| Reel animation | `src/ui/components/NumberDisplay.tsx`, `HomeScreen.tsx` |
-| Mode picker copy | `src/ui/components/RollModePicker.tsx` |
-| Badge catalog | `src/game/badges/catalog.ts` |
-| Ranked issue | `server/rankedRoll.ts`, `api/ranked-roll.ts` |
-| Crowns / overtake | `server/rollActivity.ts` |
-| Sync merge | `server/sync.ts`, `api/sync.ts` |
-| Leaderboards | `api/leaderboard.ts`, `LeaderboardScreen.tsx` |
-| Feed | `api/feed.ts` |
-| Schema | `server/db/schema.ts` |
-| Architecture | `docs/ARCHITECTURE.md` |
+| Concern            | Start here                                              |
+| ------------------ | ------------------------------------------------------- |
+| Roll orchestration | `src/state/GameProvider.tsx`                            |
+| Reel animation     | `src/ui/components/NumberDisplay.tsx`, `HomeScreen.tsx` |
+| Mode picker copy   | `src/ui/components/RollModePicker.tsx`                  |
+| Badge catalog      | `src/game/badges/catalog.ts`                            |
+| Ranked issue       | `server/rankedRoll.ts`, `api/ranked-roll.ts`            |
+| Crowns / overtake  | `server/rollActivity.ts`                                |
+| Sync merge         | `server/sync.ts`, `api/sync.ts`                         |
+| Leaderboards       | `api/leaderboard.ts`, `LeaderboardScreen.tsx`           |
+| Feed               | `api/feed.ts`                                           |
+| Schema             | `server/db/schema.ts`                                   |
+| Architecture       | `docs/ARCHITECTURE.md`                                  |
 
 ---
 
-*When instructions conflict: user request > this file > README > older design docs. Prefer the current dual-board Ranked/Practice model over any pre-Ranked “all synced rolls are competitive” wording in historical specs.*
+_When instructions conflict: user request > this file > README > older design docs. Prefer the current dual-board Ranked/Practice model over any pre-Ranked “all synced rolls are competitive” wording in historical specs._

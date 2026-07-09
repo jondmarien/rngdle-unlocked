@@ -366,34 +366,98 @@ html.celebrate-shake-mythic {
 /* Side blooms — rarity-colored gradients on the viewport edges */
 .celebrate-edge-rare {
   background:
-    radial-gradient(ellipse 55% 80% at 0% 50%, rgba(59, 130, 246, 0.35), transparent 70%),
-    radial-gradient(ellipse 55% 80% at 100% 50%, rgba(56, 189, 248, 0.28), transparent 70%),
-    radial-gradient(ellipse 70% 40% at 50% 0%, rgba(147, 197, 253, 0.2), transparent 65%);
+    radial-gradient(
+      ellipse 55% 80% at 0% 50%,
+      rgba(59, 130, 246, 0.35),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 55% 80% at 100% 50%,
+      rgba(56, 189, 248, 0.28),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 70% 40% at 50% 0%,
+      rgba(147, 197, 253, 0.2),
+      transparent 65%
+    );
 }
 
 .celebrate-edge-epic {
   background:
-    radial-gradient(ellipse 60% 90% at 0% 45%, rgba(124, 58, 237, 0.45), transparent 72%),
-    radial-gradient(ellipse 60% 90% at 100% 55%, rgba(167, 139, 250, 0.4), transparent 72%),
-    radial-gradient(ellipse 80% 45% at 50% 0%, rgba(139, 92, 246, 0.28), transparent 60%),
-    radial-gradient(ellipse 70% 35% at 50% 100%, rgba(196, 181, 253, 0.18), transparent 65%);
+    radial-gradient(
+      ellipse 60% 90% at 0% 45%,
+      rgba(124, 58, 237, 0.45),
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 60% 90% at 100% 55%,
+      rgba(167, 139, 250, 0.4),
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 80% 45% at 50% 0%,
+      rgba(139, 92, 246, 0.28),
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 70% 35% at 50% 100%,
+      rgba(196, 181, 253, 0.18),
+      transparent 65%
+    );
 }
 
 .celebrate-edge-anomaly {
   background:
-    radial-gradient(ellipse 65% 95% at 0% 40%, rgba(234, 88, 12, 0.5), transparent 70%),
-    radial-gradient(ellipse 65% 95% at 100% 60%, rgba(192, 38, 211, 0.42), transparent 70%),
-    radial-gradient(ellipse 85% 50% at 50% 0%, rgba(249, 115, 22, 0.32), transparent 58%),
-    radial-gradient(ellipse 75% 40% at 50% 100%, rgba(232, 121, 249, 0.22), transparent 62%);
+    radial-gradient(
+      ellipse 65% 95% at 0% 40%,
+      rgba(234, 88, 12, 0.5),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 65% 95% at 100% 60%,
+      rgba(192, 38, 211, 0.42),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 85% 50% at 50% 0%,
+      rgba(249, 115, 22, 0.32),
+      transparent 58%
+    ),
+    radial-gradient(
+      ellipse 75% 40% at 50% 100%,
+      rgba(232, 121, 249, 0.22),
+      transparent 62%
+    );
 }
 
 .celebrate-edge-mythic {
   background:
-    radial-gradient(ellipse 70% 100% at 0% 50%, rgba(219, 39, 119, 0.55), transparent 68%),
-    radial-gradient(ellipse 70% 100% at 100% 50%, rgba(251, 191, 36, 0.42), transparent 68%),
-    radial-gradient(ellipse 90% 55% at 50% -5%, rgba(244, 114, 182, 0.4), transparent 55%),
-    radial-gradient(ellipse 80% 45% at 50% 105%, rgba(168, 85, 247, 0.3), transparent 58%),
-    radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.08), transparent 45%);
+    radial-gradient(
+      ellipse 70% 100% at 0% 50%,
+      rgba(219, 39, 119, 0.55),
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 70% 100% at 100% 50%,
+      rgba(251, 191, 36, 0.42),
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 90% 55% at 50% -5%,
+      rgba(244, 114, 182, 0.4),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 80% 45% at 50% 105%,
+      rgba(168, 85, 247, 0.3),
+      transparent 58%
+    ),
+    radial-gradient(
+      circle at 50% 40%,
+      rgba(255, 255, 255, 0.08),
+      transparent 45%
+    );
 }
 
 @keyframes celebrate-flash-in {
@@ -486,12 +550,36 @@ html.celebrate-shake-mythic {
   position: absolute;
   inset: 0;
   background-image:
-    radial-gradient(1.5px 1.5px at 12% 22%, rgba(255, 255, 255, 0.9), transparent),
-    radial-gradient(1.5px 1.5px at 78% 18%, rgba(251, 191, 36, 0.95), transparent),
-    radial-gradient(1.5px 1.5px at 55% 70%, rgba(244, 114, 182, 0.9), transparent),
-    radial-gradient(1.5px 1.5px at 30% 80%, rgba(255, 255, 255, 0.7), transparent),
-    radial-gradient(1.5px 1.5px at 88% 62%, rgba(167, 139, 250, 0.9), transparent),
-    radial-gradient(1.5px 1.5px at 42% 35%, rgba(251, 191, 36, 0.8), transparent);
+    radial-gradient(
+      1.5px 1.5px at 12% 22%,
+      rgba(255, 255, 255, 0.9),
+      transparent
+    ),
+    radial-gradient(
+      1.5px 1.5px at 78% 18%,
+      rgba(251, 191, 36, 0.95),
+      transparent
+    ),
+    radial-gradient(
+      1.5px 1.5px at 55% 70%,
+      rgba(244, 114, 182, 0.9),
+      transparent
+    ),
+    radial-gradient(
+      1.5px 1.5px at 30% 80%,
+      rgba(255, 255, 255, 0.7),
+      transparent
+    ),
+    radial-gradient(
+      1.5px 1.5px at 88% 62%,
+      rgba(167, 139, 250, 0.9),
+      transparent
+    ),
+    radial-gradient(
+      1.5px 1.5px at 42% 35%,
+      rgba(251, 191, 36, 0.8),
+      transparent
+    );
   animation: celebrate-sparkle 2.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 

@@ -1,17 +1,17 @@
-import { desc, eq } from "drizzle-orm";
-import { alias } from "drizzle-orm/pg-core";
-import { requireAdmin, writeAdminAudit } from "../../server/admin.js";
-import { user, userReports } from "../../server/db/schema.js";
-import { createLogger } from "../../server/logger.js";
+import { desc, eq } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
+import { requireAdmin, writeAdminAudit } from '../../server/admin.js';
+import { user, userReports } from '../../server/db/schema.js';
+import { createLogger } from '../../server/logger.js';
 import {
   checkRateLimit,
   isRateLimited,
   LIMITS,
   rateLimitedResponse,
-} from "../../server/rateLimit.js";
-import { defineHandler } from "../../server/vercel-adapter.js";
+} from '../../server/rateLimit.js';
+import { defineHandler } from '../../server/vercel-adapter.js';
 
-const log = createLogger("api/admin/reports");
+const log = createLogger('api/admin/reports');
 
 /**
  * GET — list reports (optional ?status=open|resolved|dismissed|all)
@@ -22,11 +22,11 @@ export default defineHandler(async (request) => {
   if (!gate.ok) return gate.response;
   const { db, user: adminUser, ip } = gate;
 
-  if (request.method === "GET") {
+  if (request.method === 'GET') {
     const url = new URL(request.url);
-    const status = url.searchParams.get("status") ?? "open";
-    const reporter = alias(user, "reporter");
-    const target = alias(user, "target");
+    const status = url.searchParams.get('status') ?? 'open';
+    const reporter = alias(user, 'reporter');
+    const target = alias(user, 'target');
 
     const base = db
       .select({
@@ -46,7 +46,7 @@ export default defineHandler(async (request) => {
       .innerJoin(target, eq(target.id, userReports.targetUserId));
 
     const rows =
-      status === "all"
+      status === 'all'
         ? await base.orderBy(desc(userReports.createdAt)).limit(100)
         : await base
             .where(eq(userReports.status, status))
@@ -76,7 +76,7 @@ export default defineHandler(async (request) => {
     });
   }
 
-  if (request.method === "PATCH") {
+  if (request.method === 'PATCH') {
     const rl = await checkRateLimit(
       db,
       `user:${adminUser.id}:admin-reports`,
@@ -84,21 +84,21 @@ export default defineHandler(async (request) => {
       60_000,
     );
     if (isRateLimited(rl)) {
-      return rateLimitedResponse(rl, "Rate limited", true);
+      return rateLimitedResponse(rl, 'Rate limited', true);
     }
 
     let body: { id?: string; status?: string };
     try {
       body = (await request.json()) as typeof body;
     } catch {
-      return Response.json({ error: "Invalid JSON" }, { status: 400 });
+      return Response.json({ error: 'Invalid JSON' }, { status: 400 });
     }
 
     const id = body.id?.trim();
     const next = body.status?.trim();
-    if (!id || (next !== "resolved" && next !== "dismissed")) {
+    if (!id || (next !== 'resolved' && next !== 'dismissed')) {
       return Response.json(
-        { error: "id and status (resolved|dismissed) required" },
+        { error: 'id and status (resolved|dismissed) required' },
         { status: 400 },
       );
     }
@@ -115,14 +115,14 @@ export default defineHandler(async (request) => {
     await writeAdminAudit(db, {
       actorUserId: adminUser.id,
       action: `report_${next}`,
-      targetType: "user_report",
+      targetType: 'user_report',
       targetId: id,
       ip,
     });
 
-    log.info("report update", { id, status: next, by: adminUser.id });
+    log.info('report update', { id, status: next, by: adminUser.id });
     return Response.json({ ok: true });
   }
 
-  return Response.json({ error: "Method not allowed" }, { status: 405 });
+  return Response.json({ error: 'Method not allowed' }, { status: 405 });
 });

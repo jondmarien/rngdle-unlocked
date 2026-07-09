@@ -21,7 +21,9 @@ function arg(name) {
 
 const provided =
   process.env.PROMOTE_ADMIN_SECRET ||
-  process.argv.find((a) => a.startsWith('--secret='))?.slice('--secret='.length) ||
+  process.argv
+    .find((a) => a.startsWith('--secret='))
+    ?.slice('--secret='.length) ||
   null;
 
 const adminSecret = process.env.ADMIN_SECRET;

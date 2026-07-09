@@ -85,4 +85,3 @@ describe('badge fixtures', () => {
     expect(nice?.rarity).toBeTruthy();
   });
 });
-

@@ -1,5 +1,9 @@
 import { eq, inArray } from 'drizzle-orm';
-import type { CollectionEntry, PlayStats, RollResult } from '../src/game/types.js';
+import type {
+  CollectionEntry,
+  PlayStats,
+  RollResult,
+} from '../src/game/types.js';
 import type { Db } from './db/index.js';
 import { rolls } from './db/schema.js';
 import type { CloudSavePayload } from './sync.js';

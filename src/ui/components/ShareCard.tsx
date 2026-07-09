@@ -1,10 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { toPng } from 'html-to-image';
-import {
-  ensureShortCode,
-  topPercentFromEP,
-  type RollResult,
-} from '../../game';
+import { ensureShortCode, topPercentFromEP, type RollResult } from '../../game';
 import { buildRollShareUrl, buildShareText } from '../../game/shareText';
 import { useSession } from '../../lib/auth-client';
 import { createLogger } from '../../lib/logger';
@@ -129,10 +125,7 @@ export function SharePanel({
       const dataUrl = await renderPngDataUrl();
       if (!dataUrl) return;
       const blob = await dataUrlToPngBlob(dataUrl);
-      if (
-        typeof ClipboardItem === 'undefined' ||
-        !navigator.clipboard?.write
-      ) {
+      if (typeof ClipboardItem === 'undefined' || !navigator.clipboard?.write) {
         setStatus('Copy PNG not supported here — use Download PNG.');
         return;
       }
@@ -211,7 +204,9 @@ export function SharePanel({
 
         {includePublicLink && (
           <>
-            <p className="mb-2 text-xs text-[var(--prose-3)]">Public vanity link:</p>
+            <p className="mb-2 text-xs text-[var(--prose-3)]">
+              Public vanity link:
+            </p>
             <p className="mb-3 break-all font-mono text-[11px] text-[var(--prose)]">
               {fullUrl}
             </p>

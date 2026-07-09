@@ -9,11 +9,11 @@ You can complete this **before** the OAuth code ships: create the apps, upload t
 **Callbacks:** `/api/auth/callback/discord` · `/api/auth/callback/github`  
 **Legal (paste into Discord / GitHub app settings):**
 
-| Field | URL |
-| --- | --- |
-| Terms of Service | `https://rngdle-unlocked.chron0.tech/terms` |
-| Privacy Policy | `https://rngdle-unlocked.chron0.tech/privacy` |
-| Homepage | `https://rngdle-unlocked.chron0.tech` |
+| Field            | URL                                           |
+| ---------------- | --------------------------------------------- |
+| Terms of Service | `https://rngdle-unlocked.chron0.tech/terms`   |
+| Privacy Policy   | `https://rngdle-unlocked.chron0.tech/privacy` |
+| Homepage         | `https://rngdle-unlocked.chron0.tech`         |
 
 **Brand icon for portals:** [`public/brand/oauth-icon-512.png`](../public/brand/oauth-icon-512.png) (512×512 PNG from the site favicon).
 
@@ -21,10 +21,10 @@ You can complete this **before** the OAuth code ships: create the apps, upload t
 
 ## What you need
 
-| Provider | What to create | Bot required? |
-| --- | --- | --- |
-| **Discord** | Discord **Application** with OAuth2 redirects | **No** — a bot is optional and not used for login |
-| **GitHub** | **OAuth App** (simplest) or GitHub App with Email Read-only | N/A |
+| Provider    | What to create                                              | Bot required?                                     |
+| ----------- | ----------------------------------------------------------- | ------------------------------------------------- |
+| **Discord** | Discord **Application** with OAuth2 redirects               | **No** — a bot is optional and not used for login |
+| **GitHub**  | **OAuth App** (simplest) or GitHub App with Email Read-only | N/A                                               |
 
 Env vars (server only — never `VITE_`-prefix secrets):
 
@@ -52,20 +52,20 @@ DATABASE_URL=…          # existing
 2. **App Icon:** upload [`public/brand/oauth-icon-512.png`](../public/brand/oauth-icon-512.png).
 3. **General Information** (or the app’s legal / links fields): set
 
-   | Field | URL |
-   | --- | --- |
-   | Terms of Service URL | `https://rngdle-unlocked.chron0.tech/terms` |
-   | Privacy Policy URL | `https://rngdle-unlocked.chron0.tech/privacy` |
+   | Field                | URL                                           |
+   | -------------------- | --------------------------------------------- |
+   | Terms of Service URL | `https://rngdle-unlocked.chron0.tech/terms`   |
+   | Privacy Policy URL   | `https://rngdle-unlocked.chron0.tech/privacy` |
 
 4. Left nav → **OAuth2**.
 5. **Client information:** copy **Client ID** and **Client Secret** (Reset Secret if needed).
 6. **Redirects** → Add Redirect → save **both** (or the ones you use):
 
-   | Environment | Redirect URL |
-   | --- | --- |
-   | Production | `https://rngdle-unlocked.chron0.tech/api/auth/callback/discord` |
-   | Local (`npx vercel dev`, default port 3000) | `http://localhost:3000/api/auth/callback/discord` |
-   | Optional Vite-only proxy setups | Prefer `vercel dev` so `/api/auth` hits the same origin as cookies |
+   | Environment                                 | Redirect URL                                                       |
+   | ------------------------------------------- | ------------------------------------------------------------------ |
+   | Production                                  | `https://rngdle-unlocked.chron0.tech/api/auth/callback/discord`    |
+   | Local (`npx vercel dev`, default port 3000) | `http://localhost:3000/api/auth/callback/discord`                  |
+   | Optional Vite-only proxy setups             | Prefer `vercel dev` so `/api/auth` hits the same origin as cookies |
 
 7. Scopes used by Better Auth for sign-in are typically `identify` + `email`. You do **not** need the `bot` scope for Account login.
 8. Paste into `.env.local` / `.env` and **Vercel → Project → Settings → Environment Variables** (Production + Preview):
@@ -89,19 +89,19 @@ DATABASE_URL=…          # existing
 1. GitHub → profile menu → **Settings** → **Developer settings** → **OAuth Apps** → **New OAuth App**.
 2. Fill in:
 
-   | Field | Value |
-   | --- | --- |
-   | Application name | `RNGdle Unlocked` |
-   | Homepage URL | `https://rngdle-unlocked.chron0.tech` |
-   | Application description | (optional) Unlimited random-number game — badges, EP, Ranked |
+   | Field                      | Value                                                          |
+   | -------------------------- | -------------------------------------------------------------- |
+   | Application name           | `RNGdle Unlocked`                                              |
+   | Homepage URL               | `https://rngdle-unlocked.chron0.tech`                          |
+   | Application description    | (optional) Unlimited random-number game — badges, EP, Ranked   |
    | Authorization callback URL | `https://rngdle-unlocked.chron0.tech/api/auth/callback/github` |
 
    After create, if GitHub shows Terms / Privacy fields on the OAuth App, use:
 
-   | Field | URL |
-   | --- | --- |
-   | Terms of service URL | `https://rngdle-unlocked.chron0.tech/terms` |
-   | Privacy policy URL | `https://rngdle-unlocked.chron0.tech/privacy` |
+   | Field                | URL                                           |
+   | -------------------- | --------------------------------------------- |
+   | Terms of service URL | `https://rngdle-unlocked.chron0.tech/terms`   |
+   | Privacy policy URL   | `https://rngdle-unlocked.chron0.tech/privacy` |
 
 3. After create: **Upload logo** → use [`public/brand/oauth-icon-512.png`](../public/brand/oauth-icon-512.png).
 4. Copy **Client ID**. Generate a **Client secret** and copy it once.
@@ -185,14 +185,14 @@ Then sign out/in and open `/admin` (or Account → Admin panel).
 
 ## 6. Common failures
 
-| Symptom | Likely cause | Fix |
-| --- | --- | --- |
-| `redirect_uri` mismatch | Callback URL not exact (http vs https, port, trailing slash) | Match portal redirects to table above |
-| Works locally, fails on prod | Vercel missing env or `BETTER_AUTH_URL` still localhost | Set Production env; redeploy |
-| GitHub `email_not_found` | Private email / GitHub App missing Email Read-only | OAuth App + `user:email`, or fix GitHub App permission |
-| Cookies / session missing after redirect | Mixed origins (SPA on 5173, API on 3000) without proxy | Use `npx vercel dev` single origin |
-| Discord null email | Phone-only Discord account | Need code fallback; contact maintainer |
-| Buttons missing in UI | OAuth code not deployed yet, or env empty so providers not registered | Finish this guide; wait for deploy that adds `socialProviders` |
+| Symptom                                  | Likely cause                                                          | Fix                                                            |
+| ---------------------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `redirect_uri` mismatch                  | Callback URL not exact (http vs https, port, trailing slash)          | Match portal redirects to table above                          |
+| Works locally, fails on prod             | Vercel missing env or `BETTER_AUTH_URL` still localhost               | Set Production env; redeploy                                   |
+| GitHub `email_not_found`                 | Private email / GitHub App missing Email Read-only                    | OAuth App + `user:email`, or fix GitHub App permission         |
+| Cookies / session missing after redirect | Mixed origins (SPA on 5173, API on 3000) without proxy                | Use `npx vercel dev` single origin                             |
+| Discord null email                       | Phone-only Discord account                                            | Need code fallback; contact maintainer                         |
+| Buttons missing in UI                    | OAuth code not deployed yet, or env empty so providers not registered | Finish this guide; wait for deploy that adds `socialProviders` |
 
 ---
 

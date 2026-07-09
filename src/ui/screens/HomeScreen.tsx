@@ -76,7 +76,10 @@ export function HomeScreen({
       contributePointerEntropy(e.clientX, e.clientY, performance.now());
     };
     const onKey = (e: KeyboardEvent) => {
-      contributeKeyEntropy(e.keyCode || e.key.charCodeAt(0) || 0, performance.now());
+      contributeKeyEntropy(
+        e.keyCode || e.key.charCodeAt(0) || 0,
+        performance.now(),
+      );
     };
     window.addEventListener('pointermove', onMove, { passive: true });
     window.addEventListener('keydown', onKey, { passive: true });
@@ -239,9 +242,7 @@ export function HomeScreen({
                   onReplay={
                     bestFull ? () => setReplayRoll(bestFull) : undefined
                   }
-                  onShare={
-                    bestFull ? () => setShareRoll(bestFull) : undefined
-                  }
+                  onShare={bestFull ? () => setShareRoll(bestFull) : undefined}
                 />
               </div>
             )}
@@ -270,10 +271,7 @@ export function HomeScreen({
               <CountUpEP
                 value={lastRoll.totalEP}
                 runKey={revealKey}
-                durationMs={Math.min(
-                  1800,
-                  600 + lastRoll.badges.length * 100,
-                )}
+                durationMs={Math.min(1800, 600 + lastRoll.badges.length * 100)}
               />
             </div>
           )}
@@ -286,8 +284,8 @@ export function HomeScreen({
 
         {revealDone && lastJourneyUnlocks.length > 0 && (
           <div className="number-fade-in w-full max-w-md rounded-lg border border-[var(--accent)] bg-[var(--surface-raised)] px-3 py-2.5 text-sm leading-snug">
-            Journey unlocked:{' '}
-            {lastJourneyUnlocks.map((j) => j.name).join(', ')} (+
+            Journey unlocked: {lastJourneyUnlocks.map((j) => j.name).join(', ')}{' '}
+            (+
             {lastJourneyUnlocks
               .reduce((a, b) => a + b.ep, 0)
               .toLocaleString()}{' '}
@@ -325,9 +323,7 @@ export function HomeScreen({
             </div>
             <p className="mt-2 text-[var(--prose-2)]">
               +
-              {lastSecretUnlocks
-                .reduce((a, b) => a + b.ep, 0)
-                .toLocaleString()}{' '}
+              {lastSecretUnlocks.reduce((a, b) => a + b.ep, 0).toLocaleString()}{' '}
               lifetime EP · open Codex → Secret
             </p>
           </div>

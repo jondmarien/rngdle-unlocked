@@ -17,7 +17,9 @@ const log = createLogger('admin-ui');
 export function AdminScreen({ onBack }: { onBack: () => void }) {
   const { data: session, isPending } = useSession();
   const [allowed, setAllowed] = useState<boolean | null>(null);
-  const [tab, setTab] = useState<'broadcast' | 'users' | 'reports'>('broadcast');
+  const [tab, setTab] = useState<'broadcast' | 'users' | 'reports'>(
+    'broadcast',
+  );
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -71,8 +73,8 @@ export function AdminScreen({ onBack }: { onBack: () => void }) {
           Forbidden
         </h1>
         <p className="text-sm text-[var(--prose-2)]">
-          This area requires an admin session. If you just promoted your account,
-          sign out and back in.
+          This area requires an admin session. If you just promoted your
+          account, sign out and back in.
         </p>
         <button
           type="button"
@@ -128,7 +130,7 @@ export function AdminScreen({ onBack }: { onBack: () => void }) {
 
   const onBan = async (u: AdminUserRow, banned: boolean) => {
     const reason = banned
-      ? window.prompt('Ban reason (optional):') ?? undefined
+      ? (window.prompt('Ban reason (optional):') ?? undefined)
       : undefined;
     setBusy(true);
     const res = await banUser(u.id, banned, reason);

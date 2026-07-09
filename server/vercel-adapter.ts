@@ -122,9 +122,7 @@ export async function sendWebResponse(
   res.end(buf);
 }
 
-function headerValue(
-  value: string | string[] | undefined,
-): string | undefined {
+function headerValue(value: string | string[] | undefined): string | undefined {
   if (value === undefined) return undefined;
   return Array.isArray(value) ? value[0] : value;
 }

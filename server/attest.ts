@@ -45,9 +45,7 @@ export function attestMaterial(p: AttestPayload): string {
   ].join('|');
 }
 
-export async function createAttestationSeal(
-  p: AttestPayload,
-): Promise<string> {
+export async function createAttestationSeal(p: AttestPayload): Promise<string> {
   return hmacSha256Hex(secret(), attestMaterial(p));
 }
 

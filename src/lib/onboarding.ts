@@ -22,7 +22,9 @@ export function loadOnboarding(): OnboardingState {
   }
 }
 
-export function saveOnboarding(partial: Partial<OnboardingState>): OnboardingState {
+export function saveOnboarding(
+  partial: Partial<OnboardingState>,
+): OnboardingState {
   const next = { ...loadOnboarding(), ...partial };
   try {
     localStorage.setItem(KEY, JSON.stringify(next));

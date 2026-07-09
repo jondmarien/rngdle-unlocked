@@ -253,8 +253,7 @@ export function ProfileScreen({
         if (cancelled) return;
         const hit = (data.following ?? []).some(
           (f) =>
-            f.username &&
-            f.username.toLowerCase() === username.toLowerCase(),
+            f.username && f.username.toLowerCase() === username.toLowerCase(),
         );
         setFollowing(hit);
       })
@@ -507,13 +506,21 @@ export function ProfileScreen({
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <Stat label="Lifetime EP" value={profile.lifetimeEP.toLocaleString()} soft={theme.soft} />
+        <Stat
+          label="Lifetime EP"
+          value={profile.lifetimeEP.toLocaleString()}
+          soft={theme.soft}
+        />
         <Stat
           label="Rolls"
           value={profile.lifetimeRollCount.toLocaleString()}
           soft={theme.soft}
         />
-        <Stat label="Badges" value={String(profile.badgeCount)} soft={theme.soft} />
+        <Stat
+          label="Badges"
+          value={String(profile.badgeCount)}
+          soft={theme.soft}
+        />
         <Stat
           label="Journey EP"
           value={profile.journeyEP.toLocaleString()}

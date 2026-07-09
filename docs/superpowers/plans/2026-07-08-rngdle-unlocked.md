@@ -14,17 +14,17 @@
 
 ## Vite+ project conventions (locked)
 
-| Concern | Rule |
-|---------|------|
-| Global CLI | `vp` — Windows: `irm https://vite.plus/ps1 \| iex` then new terminal |
-| Scaffold | `vp create vite -- --template react-ts` into repo root (or temp + move) |
-| Config | Single `vite.config.ts` with `defineConfig` from **`vite-plus`** |
-| Tests | Import from **`vite-plus/test`** (not `vitest`) |
-| Day-to-day | `vp install` · `vp dev` · `vp check` · `vp test` · `vp build` |
-| package.json scripts | Prefer built-in `vp *`; custom scripts via `vp run <script>` |
-| PM | Vite+ default **pnpm** if unset; pin via `packageManager` if needed |
-| Type-aware check | `lint.options.typeAware` + `typeCheck: true` |
-| `vp test` | One-shot by default; watch = `vp test watch` |
+| Concern              | Rule                                                                    |
+| -------------------- | ----------------------------------------------------------------------- |
+| Global CLI           | `vp` — Windows: `irm https://vite.plus/ps1 \| iex` then new terminal    |
+| Scaffold             | `vp create vite -- --template react-ts` into repo root (or temp + move) |
+| Config               | Single `vite.config.ts` with `defineConfig` from **`vite-plus`**        |
+| Tests                | Import from **`vite-plus/test`** (not `vitest`)                         |
+| Day-to-day           | `vp install` · `vp dev` · `vp check` · `vp test` · `vp build`           |
+| package.json scripts | Prefer built-in `vp *`; custom scripts via `vp run <script>`            |
+| PM                   | Vite+ default **pnpm** if unset; pin via `packageManager` if needed     |
+| Type-aware check     | `lint.options.typeAware` + `typeCheck: true`                            |
+| `vp test`            | One-shot by default; watch = `vp test watch`                            |
 
 ---
 
@@ -150,6 +150,7 @@ git commit -m "chore: scaffold Vite+ React TypeScript app"
 ### Task 2: Types + fortified RNG (TDD)
 
 **Files:**
+
 - Create: `src/game/types.ts`, `src/game/entropyPool.ts`, `src/game/rng.ts`
 - Test: `src/game/rng.test.ts`
 
@@ -192,8 +193,13 @@ git commit -m "feat(game): fortified CSPRNG for 0..1e6 rolls"
 
 ```ts
 export type RarityTier =
-  | 'trash' | 'common' | 'uncommon' | 'rare'
-  | 'epic' | 'anomaly' | 'mythic';
+  | 'trash'
+  | 'common'
+  | 'uncommon'
+  | 'rare'
+  | 'epic'
+  | 'anomaly'
+  | 'mythic';
 
 // totalEP thresholds — tune later; start with geometric-ish ladder
 export const RARITY_THRESHOLDS: { tier: RarityTier; minEP: number }[] = [
@@ -208,7 +214,7 @@ export const RARITY_THRESHOLDS: { tier: RarityTier; minEP: number }[] = [
 ```
 
 - [ ] `percentileFromEP(ep)`: monotonic 0–100 “top X% of scores” (deterministic curve)
-- [ ] `sumEP(badges)` 
+- [ ] `sumEP(badges)`
 - [ ] Tests for boundary EPs and monotonic percentile
 - [ ] Commit: `feat(game): rarity and percentile scoring`
 
@@ -221,23 +227,23 @@ export const RARITY_THRESHOLDS: { tier: RarityTier; minEP: number }[] = [
 - [ ] **Step 4.1:** Define `BadgeDef { id, name, description, ep, family, matches(n: number): boolean }`
 - [ ] **Step 4.2:** Implement **first 15** high-value badges with fixtures:
 
-| id | example true | notes |
-|----|--------------|-------|
-| prime | 97 | sieve/trial |
-| palindrome | 12321 | digit string |
-| power-of-two | 65536 | |
-| round-thousand | 1000 | ends with 000 |
-| all-same-digits | 111111 | |
-| ascending | 123456 | |
-| nice-42 | 42 | cultural |
-| leet-1337 | 1337 | |
-| error-404 | 404 | |
-| low-ball | 7 | small magnitude |
-| high-roller | 999999 | near max |
-| zero | 0 | edge |
-| million | 1000000 | edge |
-| even | 8 | |
-| harshad | 18 | digit sum divides |
+| id              | example true | notes             |
+| --------------- | ------------ | ----------------- |
+| prime           | 97           | sieve/trial       |
+| palindrome      | 12321        | digit string      |
+| power-of-two    | 65536        |                   |
+| round-thousand  | 1000         | ends with 000     |
+| all-same-digits | 111111       |                   |
+| ascending       | 123456       |                   |
+| nice-42         | 42           | cultural          |
+| leet-1337       | 1337         |                   |
+| error-404       | 404          |                   |
+| low-ball        | 7            | small magnitude   |
+| high-roller     | 999999       | near max          |
+| zero            | 0            | edge              |
+| million         | 1000000      | edge              |
+| even            | 8            |                   |
+| harshad         | 18           | digit sum divides |
 
 - [ ] **Step 4.3:** Tests: known numbers → expected badge ids; non-matches negative cases
 - [ ] **Step 4.4:** Expand to **~40–60** badges in families (patterns, voids, poker-like digit hands, more cultural) — each with ≥1 fixture test or table-driven cases
@@ -282,12 +288,15 @@ export function evaluateNumber(n: number, at = new Date()): RollResult {
 
 ```ts
 export const JOURNEY_THRESHOLDS = [
-  5, 10, 15, 20, 50, 100, 250, 500,
-  1000, 1500, 2000, 3000, 4000, 5000, 10000,
+  5, 10, 15, 20, 50, 100, 250, 500, 1000, 1500, 2000, 3000, 4000, 5000, 10000,
 ] as const;
 
-export function journeyBadgesForCount(count: number): BadgeDef[] { /* all thresholds <= count */ }
-export function newlyUnlockedJourney(prev: number, next: number): BadgeDef[] { /* crossed */ }
+export function journeyBadgesForCount(count: number): BadgeDef[] {
+  /* all thresholds <= count */
+}
+export function newlyUnlockedJourney(prev: number, next: number): BadgeDef[] {
+  /* crossed */
+}
 // each has ep weight; apply to lifetimeEP only in state layer
 ```
 
@@ -301,6 +310,7 @@ export function newlyUnlockedJourney(prev: number, next: number): BadgeDef[] { /
 **Files:** `src/state/storage.ts` + `storage.test.ts` (mock localStorage)
 
 Keys:
+
 - `rngdle-unlocked:history` (max 500)
 - `rngdle-unlocked:lifetimeEP`
 - `rngdle-unlocked:lifetimeRollCount`
@@ -398,27 +408,27 @@ Keys:
 
 ## Execution checkpoints (user approval stages)
 
-| After | Demo / proof |
-|-------|----------------|
-| Tasks 0–1 | App scaffolds; `vp dev` blank React |
-| Tasks 2–6 | Engine fully tested; optional tiny CLI/debug page |
-| Tasks 7–8 | Roll in console/provider works + persists |
-| Tasks 9–11 | Full UI playable locally |
-| Tasks 12–14 | Share + PWA + build ready for Vercel |
+| After       | Demo / proof                                      |
+| ----------- | ------------------------------------------------- |
+| Tasks 0–1   | App scaffolds; `vp dev` blank React               |
+| Tasks 2–6   | Engine fully tested; optional tiny CLI/debug page |
+| Tasks 7–8   | Roll in console/provider works + persists         |
+| Tasks 9–11  | Full UI playable locally                          |
+| Tasks 12–14 | Share + PWA + build ready for Vercel              |
 
 ---
 
 ## Verification (end-to-end)
 
-1. `vp test` — all engine/storage tests pass  
-2. `vp check` — format/lint/types clean  
-3. `vp build` — succeeds  
-4. Manual: unlimited rolls, no countdown  
-5. Manual: reload keeps history/collection/lifetime counts  
-6. Manual: hit 5 rolls → journey badge + lifetime EP increases; roll rarity unchanged by journey EP  
-7. Manual: share copy + PNG  
-8. Manual: clear data  
-9. Optional: Vercel preview deploy  
+1. `vp test` — all engine/storage tests pass
+2. `vp check` — format/lint/types clean
+3. `vp build` — succeeds
+4. Manual: unlimited rolls, no countdown
+5. Manual: reload keeps history/collection/lifetime counts
+6. Manual: hit 5 rolls → journey badge + lifetime EP increases; roll rarity unchanged by journey EP
+7. Manual: share copy + PNG
+8. Manual: clear data
+9. Optional: Vercel preview deploy
 
 ---
 

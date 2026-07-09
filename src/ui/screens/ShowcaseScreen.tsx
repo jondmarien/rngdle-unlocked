@@ -18,8 +18,7 @@ export function ShowcaseScreen({
 }: {
   onGoAccount?: () => void;
 } = {}) {
-  const { stats, lifetimeRollCount, lifetimeEP, history, settings } =
-    useGame();
+  const { stats, lifetimeRollCount, lifetimeEP, history, settings } = useGame();
   const best = stats.bestRoll;
   const [shareRoll, setShareRoll] = useState<RollResult | null>(null);
   const [replayRoll, setReplayRoll] = useState<RollResult | null>(null);
@@ -69,9 +68,7 @@ export function ShowcaseScreen({
           <BestRollCard
             best={best}
             fullRoll={bestFull}
-            onReplay={
-              bestFull ? () => setReplayRoll(bestFull) : undefined
-            }
+            onReplay={bestFull ? () => setReplayRoll(bestFull) : undefined}
             onShare={bestFull ? () => setShareRoll(bestFull) : undefined}
           />
         )}
@@ -163,7 +160,9 @@ function StatCard({
     <div className="rounded-lg border border-[var(--outline)] bg-[var(--surface)] p-3">
       <div className="text-xs font-semibold text-[var(--prose-3)]">{label}</div>
       <div className="mono-number text-xl font-bold">{value}</div>
-      {sub && <div className="mt-0.5 text-[11px] text-[var(--prose-3)]">{sub}</div>}
+      {sub && (
+        <div className="mt-0.5 text-[11px] text-[var(--prose-3)]">{sub}</div>
+      )}
     </div>
   );
 }

@@ -112,4 +112,3 @@ export default defineHandler(async (request) => {
     return new Response('Server error', { status: 500 });
   }
 });
-

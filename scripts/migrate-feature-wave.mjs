@@ -70,10 +70,7 @@ const cols = await sql`
   WHERE table_name = 'rolls'
   ORDER BY ordinal_position
 `;
-console.log(
-  'rolls cols:',
-  cols.map((c) => c.column_name).join(', '),
-);
+console.log('rolls cols:', cols.map((c) => c.column_name).join(', '));
 
 const t = await sql`SELECT to_regclass('public.follows') as t`;
 console.log('follows table:', t[0]?.t);

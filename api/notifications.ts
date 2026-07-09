@@ -158,7 +158,9 @@ export default defineHandler(async (request) => {
           );
       }
       if (tab === 'system' || tab === 'all') {
-        const allSys = await db.select({ id: systemMessages.id }).from(systemMessages);
+        const allSys = await db
+          .select({ id: systemMessages.id })
+          .from(systemMessages);
         for (const m of allSys) {
           try {
             await db
@@ -175,7 +177,10 @@ export default defineHandler(async (request) => {
 
     const ids = body.ids ?? [];
     if (ids.length === 0) {
-      return Response.json({ error: 'ids or markAll required' }, { status: 400 });
+      return Response.json(
+        { error: 'ids or markAll required' },
+        { status: 400 },
+      );
     }
 
     // Activity ids are notification UUIDs; system ids are system_messages ids

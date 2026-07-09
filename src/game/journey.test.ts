@@ -5,7 +5,9 @@ describe('journey milestones', () => {
   it('unlocks exactly on threshold cross', () => {
     expect(newlyUnlockedJourney(4, 5).map((b) => b.id)).toEqual(['rolls-5']);
     expect(newlyUnlockedJourney(5, 5)).toEqual([]);
-    expect(newlyUnlockedJourney(99, 100).map((b) => b.id)).toEqual(['rolls-100']);
+    expect(newlyUnlockedJourney(99, 100).map((b) => b.id)).toEqual([
+      'rolls-100',
+    ]);
   });
 
   it('can unlock multiple when jumping', () => {

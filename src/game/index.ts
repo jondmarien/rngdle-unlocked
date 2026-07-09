@@ -41,12 +41,7 @@ export {
 export { sumEP } from './score.js';
 export { evaluateBadges, NUMBER_BADGES, badgeById } from './badges/index.js';
 export { evaluateNumber, performRoll, ensureShortCode } from './evaluate.js';
-export {
-  makeShortCode,
-  newRollId,
-  isUuid,
-  vanityUserSegment,
-} from './ids.js';
+export { makeShortCode, newRollId, isUuid, vanityUserSegment } from './ids.js';
 export {
   JOURNEY_THRESHOLDS,
   JOURNEY_BADGES,
@@ -62,11 +57,7 @@ export {
   isQualityRarity,
   localDateKey,
 } from './stats.js';
-export {
-  playRollSound,
-  shouldCelebrate,
-  celebrateIntensity,
-} from './fx.js';
+export { playRollSound, shouldCelebrate, celebrateIntensity } from './fx.js';
 export { buildShareText, buildFlavorQuote } from './shareText.js';
 export {
   buildPeriodSeed,

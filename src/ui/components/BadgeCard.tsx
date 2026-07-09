@@ -35,8 +35,7 @@ function slowScrollElementIntoView(
 
   // Skip if already comfortably on screen (except first pin)
   if (block !== 'start') {
-    const fullyVisible =
-      rect.top >= margin * 0.5 && rect.bottom <= vh - margin;
+    const fullyVisible = rect.top >= margin * 0.5 && rect.bottom <= vh - margin;
     if (fullyVisible) return () => {};
   }
 
@@ -63,8 +62,7 @@ function slowScrollElementIntoView(
     if (cancelled) return;
     const t = Math.min(1, (now - start) / durationMs);
     // ease-in-out: starts gently, no snap
-    const e =
-      t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
     window.scrollTo(0, startY + delta * e);
     if (t < 1) raf = requestAnimationFrame(tick);
   };
@@ -204,9 +202,7 @@ export function BadgeCard({
                 visible && on ? 'digit-chip-pulse' : '',
               ].join(' ')}
               style={
-                visible && on
-                  ? { animationDelay: `${i * 50}ms` }
-                  : undefined
+                visible && on ? { animationDelay: `${i * 50}ms` } : undefined
               }
             >
               {d}
@@ -233,7 +229,9 @@ export function BadgeBreakdown({
   animateCascade?: boolean;
   autoScroll?: boolean;
 }) {
-  const sorted = [...badges].sort((a, b) => b.ep - a.ep || a.name.localeCompare(b.name));
+  const sorted = [...badges].sort(
+    (a, b) => b.ep - a.ep || a.name.localeCompare(b.name),
+  );
   const newSet =
     newBadgeIds instanceof Set ? newBadgeIds : new Set(newBadgeIds ?? []);
   const newCount = sorted.filter((b) => newSet.has(b.id)).length;
@@ -277,8 +275,7 @@ export function BadgeBreakdown({
     let cancelScroll: (() => void) | undefined;
     // Let the card mount + fade start, then scroll over the rest of CASCADE_MS
     const delay = window.setTimeout(() => {
-      const el =
-        visibleCount === 1 ? rootRef.current : lastItemRef.current;
+      const el = visibleCount === 1 ? rootRef.current : lastItemRef.current;
       if (!el) return;
       cancelScroll = slowScrollElementIntoView(
         el,
@@ -324,10 +321,7 @@ export function BadgeBreakdown({
         {shown.map((b, i) => {
           const isLatest = i === shown.length - 1;
           return (
-            <li
-              key={b.id}
-              ref={isLatest ? lastItemRef : undefined}
-            >
+            <li key={b.id} ref={isLatest ? lastItemRef : undefined}>
               <BadgeCard
                 badge={b}
                 number={number}

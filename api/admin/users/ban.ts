@@ -1,25 +1,25 @@
-import { eq } from "drizzle-orm";
-import { createAuth } from "../../../server/auth.js";
-import { requireAdmin, writeAdminAudit } from "../../../server/admin.js";
-import { user } from "../../../server/db/schema.js";
-import { createLogger } from "../../../server/logger.js";
+import { eq } from 'drizzle-orm';
+import { createAuth } from '../../../server/auth.js';
+import { requireAdmin, writeAdminAudit } from '../../../server/admin.js';
+import { user } from '../../../server/db/schema.js';
+import { createLogger } from '../../../server/logger.js';
 import {
   checkRateLimit,
   isRateLimited,
   LIMITS,
   rateLimitedResponse,
-} from "../../../server/rateLimit.js";
-import { defineHandler } from "../../../server/vercel-adapter.js";
+} from '../../../server/rateLimit.js';
+import { defineHandler } from '../../../server/vercel-adapter.js';
 
-const log = createLogger("api/admin/users/ban");
+const log = createLogger('api/admin/users/ban');
 
 /**
  * POST — ban or unban a user (revokes sessions on ban via Better Auth admin API when available).
  * Body: { userId, banned: boolean, reason?: string }
  */
 export default defineHandler(async (request) => {
-  if (request.method !== "POST") {
-    return Response.json({ error: "Method not allowed" }, { status: 405 });
+  if (request.method !== 'POST') {
+    return Response.json({ error: 'Method not allowed' }, { status: 405 });
   }
 
   const gate = await requireAdmin(request);
@@ -33,26 +33,26 @@ export default defineHandler(async (request) => {
     60_000,
   );
   if (isRateLimited(rl)) {
-    return rateLimitedResponse(rl, "Rate limited", true);
+    return rateLimitedResponse(rl, 'Rate limited', true);
   }
 
   let body: { userId?: string; banned?: boolean; reason?: string };
   try {
     body = (await request.json()) as typeof body;
   } catch {
-    return Response.json({ error: "Invalid JSON" }, { status: 400 });
+    return Response.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
   const targetId = body.userId?.trim();
-  if (!targetId || typeof body.banned !== "boolean") {
+  if (!targetId || typeof body.banned !== 'boolean') {
     return Response.json(
-      { error: "userId and banned (boolean) required" },
+      { error: 'userId and banned (boolean) required' },
       { status: 400 },
     );
   }
 
   if (targetId === adminUser.id) {
-    return Response.json({ error: "Cannot ban yourself" }, { status: 400 });
+    return Response.json({ error: 'Cannot ban yourself' }, { status: 400 });
   }
 
   const [target] = await db
@@ -62,12 +62,12 @@ export default defineHandler(async (request) => {
     .limit(1);
 
   if (!target) {
-    return Response.json({ error: "User not found" }, { status: 404 });
+    return Response.json({ error: 'User not found' }, { status: 404 });
   }
 
-  if (target.role === "admin") {
+  if (target.role === 'admin') {
     return Response.json(
-      { error: "Refusing to ban an admin account" },
+      { error: 'Refusing to ban an admin account' },
       { status: 403 },
     );
   }
@@ -80,20 +80,20 @@ export default defineHandler(async (request) => {
       await auth.api.banUser({
         body: {
           userId: targetId,
-          banReason: reason ?? "Banned by admin",
+          banReason: reason ?? 'Banned by admin',
         },
         headers: request.headers,
       });
     } catch (e) {
       // Fallback: direct column update if plugin API fails
-      log.warn("banUser API failed, falling back to columns", {
+      log.warn('banUser API failed, falling back to columns', {
         message: e instanceof Error ? e.message : String(e),
       });
       await db
         .update(user)
         .set({
           banned: true,
-          banReason: reason ?? "Banned by admin",
+          banReason: reason ?? 'Banned by admin',
           updatedAt: new Date(),
         })
         .where(eq(user.id, targetId));
@@ -106,7 +106,7 @@ export default defineHandler(async (request) => {
         headers: request.headers,
       });
     } catch (e) {
-      log.warn("unbanUser API failed, falling back to columns", {
+      log.warn('unbanUser API failed, falling back to columns', {
         message: e instanceof Error ? e.message : String(e),
       });
       await db
@@ -123,13 +123,13 @@ export default defineHandler(async (request) => {
 
   await writeAdminAudit(db, {
     actorUserId: adminUser.id,
-    action: body.banned ? "ban" : "unban",
-    targetType: "user",
+    action: body.banned ? 'ban' : 'unban',
+    targetType: 'user',
     targetId,
     meta: { username: target.username, reason },
     ip,
   });
 
-  log.info(body.banned ? "ban" : "unban", { targetId, by: adminUser.id });
+  log.info(body.banned ? 'ban' : 'unban', { targetId, by: adminUser.id });
   return Response.json({ ok: true });
 });

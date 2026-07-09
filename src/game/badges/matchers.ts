@@ -5,7 +5,9 @@ export function digitsOf(n: number): string {
 }
 
 export function digitArray(n: number): number[] {
-  return digitsOf(n).split('').map((c) => Number(c));
+  return digitsOf(n)
+    .split('')
+    .map((c) => Number(c));
 }
 
 export function digitLength(n: number): number {
@@ -184,7 +186,15 @@ export function uniqueDigitCount(n: number): number {
 
 export function pokerHand(
   n: number,
-): 'pair' | 'two-pair' | 'trips' | 'full-house' | 'quads' | 'five' | 'six' | null {
+):
+  | 'pair'
+  | 'two-pair'
+  | 'trips'
+  | 'full-house'
+  | 'quads'
+  | 'five'
+  | 'six'
+  | null {
   const counts = [...digitCounts(n).values()].sort((a, b) => b - a);
   if (counts[0] === 6) return 'six';
   if (counts[0] === 5) return 'five';
@@ -225,7 +235,11 @@ export function isMirroredHalves(n: number): boolean {
   if (s.length < 4) return false;
   const mid = Math.floor(s.length / 2);
   const left = s.slice(0, mid);
-  const right = s.slice(s.length - mid).split('').reverse().join('');
+  const right = s
+    .slice(s.length - mid)
+    .split('')
+    .reverse()
+    .join('');
   return left === right;
 }
 

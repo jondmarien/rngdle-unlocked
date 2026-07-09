@@ -7,13 +7,7 @@ import type {
 } from './types.js';
 import { rollToHighlight } from './types.js';
 
-const QUALITY: RarityTier[] = [
-  'uncommon',
-  'rare',
-  'epic',
-  'anomaly',
-  'mythic',
-];
+const QUALITY: RarityTier[] = ['uncommon', 'rare', 'epic', 'anomaly', 'mythic'];
 
 const WINDOWS = [3, 5, 10] as const;
 
@@ -47,14 +41,21 @@ function dayDiff(a: string, b: string): number {
 }
 
 /** Update quality + day streaks after a roll. */
-export function applyStreaks(stats: PlayStats, roll: RollResult, now = new Date()): PlayStats {
+export function applyStreaks(
+  stats: PlayStats,
+  roll: RollResult,
+  now = new Date(),
+): PlayStats {
   const next = { ...stats };
   const today = localDateKey(now);
 
   // Quality streak
   if (isQualityRarity(roll.rarity)) {
     next.qualityStreak = stats.qualityStreak + 1;
-    next.bestQualityStreak = Math.max(stats.bestQualityStreak, next.qualityStreak);
+    next.bestQualityStreak = Math.max(
+      stats.bestQualityStreak,
+      next.qualityStreak,
+    );
   } else {
     next.qualityStreak = 0;
   }
@@ -137,7 +138,10 @@ export function mergeBestRoll(
   if (!current) return incoming;
   if (!incoming) return current;
   if (incoming.totalEP > current.totalEP) return incoming;
-  if (incoming.totalEP === current.totalEP && incoming.percentile > current.percentile) {
+  if (
+    incoming.totalEP === current.totalEP &&
+    incoming.percentile > current.percentile
+  ) {
     return incoming;
   }
   return current;

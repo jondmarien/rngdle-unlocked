@@ -85,8 +85,7 @@ function emit(
   if (!shouldLog(level)) return;
 
   const prefix = `[rngdle:${scope}]`;
-  const args =
-    data !== undefined ? [prefix, msg, data] : [prefix, msg];
+  const args = data !== undefined ? [prefix, msg, data] : [prefix, msg];
 
   switch (level) {
     case 'debug':

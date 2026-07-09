@@ -100,17 +100,27 @@ console.log(JSON.stringify(accounts, null, 2));
 // Compare collection badge sets if present
 for (const p of progress) {
   try {
-    const col = JSON.parse(await (async () => {
-      const full = await sql`
+    const col = JSON.parse(
+      await (async () => {
+        const full = await sql`
         SELECT collection_json, stats_json FROM user_progress WHERE user_id = ${p.user_id}
       `;
-      return full[0].collection_json;
-    })());
+        return full[0].collection_json;
+      })(),
+    );
     const idsSet = Array.isArray(col)
-      ? col.map((c) => c.badgeId ?? c.id).filter(Boolean).sort()
+      ? col
+          .map((c) => c.badgeId ?? c.id)
+          .filter(Boolean)
+          .sort()
       : [];
-    console.log(`\n=== collection badge ids for ${p.user_id.slice(0, 8)} (${idsSet.length}) ===`);
-    console.log(idsSet.slice(0, 40).join(', '), idsSet.length > 40 ? `... +${idsSet.length - 40}` : '');
+    console.log(
+      `\n=== collection badge ids for ${p.user_id.slice(0, 8)} (${idsSet.length}) ===`,
+    );
+    console.log(
+      idsSet.slice(0, 40).join(', '),
+      idsSet.length > 40 ? `... +${idsSet.length - 40}` : '',
+    );
   } catch (e) {
     console.log('collection parse fail', e.message);
   }
@@ -122,8 +132,12 @@ const fullCols = await sql`
 if (fullCols.length === 2) {
   const a = JSON.parse(fullCols[0].collection_json);
   const b = JSON.parse(fullCols[1].collection_json);
-  const setA = new Set((Array.isArray(a) ? a : []).map((c) => c.badgeId ?? c.id));
-  const setB = new Set((Array.isArray(b) ? b : []).map((c) => c.badgeId ?? c.id));
+  const setA = new Set(
+    (Array.isArray(a) ? a : []).map((c) => c.badgeId ?? c.id),
+  );
+  const setB = new Set(
+    (Array.isArray(b) ? b : []).map((c) => c.badgeId ?? c.id),
+  );
   const onlyA = [...setA].filter((x) => !setB.has(x));
   const onlyB = [...setB].filter((x) => !setA.has(x));
   const both = [...setA].filter((x) => setB.has(x));
@@ -141,9 +155,14 @@ if (fullCols.length === 2) {
     identicalJson: fullCols[0].collection_json === fullCols[1].collection_json,
   });
 
-  const statsA = await sql`SELECT stats_json FROM user_progress WHERE user_id = ${fullCols[0].user_id}`;
-  const statsB = await sql`SELECT stats_json FROM user_progress WHERE user_id = ${fullCols[1].user_id}`;
-  console.log('\n=== stats_json identical? ===', statsA[0].stats_json === statsB[0].stats_json);
+  const statsA =
+    await sql`SELECT stats_json FROM user_progress WHERE user_id = ${fullCols[0].user_id}`;
+  const statsB =
+    await sql`SELECT stats_json FROM user_progress WHERE user_id = ${fullCols[1].user_id}`;
+  console.log(
+    '\n=== stats_json identical? ===',
+    statsA[0].stats_json === statsB[0].stats_json,
+  );
   console.log('stats A:', statsA[0].stats_json.slice(0, 500));
   console.log('stats B:', statsB[0].stats_json.slice(0, 500));
 }

@@ -26,7 +26,11 @@ export function contributeEntropy(value: number): void {
   }
 }
 
-export function contributePointerEntropy(x: number, y: number, t: number): void {
+export function contributePointerEntropy(
+  x: number,
+  y: number,
+  t: number,
+): void {
   contributeEntropy(x * 1.0000001 + y * 1.0000003 + t);
 }
 

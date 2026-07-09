@@ -12,10 +12,11 @@ export const PROFILE_ACCENTS = [
 
 export type ProfileAccent = (typeof PROFILE_ACCENTS)[number];
 
-export function isProfileAccent(v: string | null | undefined): v is ProfileAccent {
+export function isProfileAccent(
+  v: string | null | undefined,
+): v is ProfileAccent {
   return (
-    typeof v === 'string' &&
-    (PROFILE_ACCENTS as readonly string[]).includes(v)
+    typeof v === 'string' && (PROFILE_ACCENTS as readonly string[]).includes(v)
   );
 }
 

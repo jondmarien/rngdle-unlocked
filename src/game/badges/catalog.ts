@@ -111,28 +111,30 @@ const ELEMENT_META: { digit: number; name: string; emoji: string }[] = [
   { digit: 9, name: 'Fluorine (9)', emoji: '🦷' },
 ];
 
-const elementBadges: BadgeDef[] = ELEMENT_META.flatMap(({ digit, name, emoji }) => [
-  {
-    id: `element-one-${digit}`,
-    name,
-    description: `Contains exactly one digit ${digit}.`,
-    ep: 280,
-    family: 'element' as const,
-    emoji,
-    matches: (n) => countDigit(n, digit) === 1,
-    highlight: (n) => maskDigit(n, digit),
-  },
-  {
-    id: `element-many-${digit}`,
-    name: `${name.split(' ')[0]} Swarm`,
-    description: `Contains three or more digit ${digit}s.`,
-    ep: 900,
-    family: 'element' as const,
-    emoji,
-    matches: (n) => countDigit(n, digit) >= 3,
-    highlight: (n) => maskDigit(n, digit),
-  },
-]);
+const elementBadges: BadgeDef[] = ELEMENT_META.flatMap(
+  ({ digit, name, emoji }) => [
+    {
+      id: `element-one-${digit}`,
+      name,
+      description: `Contains exactly one digit ${digit}.`,
+      ep: 280,
+      family: 'element' as const,
+      emoji,
+      matches: (n) => countDigit(n, digit) === 1,
+      highlight: (n) => maskDigit(n, digit),
+    },
+    {
+      id: `element-many-${digit}`,
+      name: `${name.split(' ')[0]} Swarm`,
+      description: `Contains three or more digit ${digit}s.`,
+      ep: 900,
+      family: 'element' as const,
+      emoji,
+      matches: (n) => countDigit(n, digit) >= 3,
+      highlight: (n) => maskDigit(n, digit),
+    },
+  ],
+);
 
 /** Inspired original number badges — not a copy of RNGdle IP. */
 export const NUMBER_BADGES: BadgeDef[] = [
@@ -578,7 +580,14 @@ export const NUMBER_BADGES: BadgeDef[] = [
   exact('leet-speak', 'Leetspeak Lite', 133, 1_500, '🤓'),
   exact('boobies', 'Calculator Classic II', 58008, 7_000, '📱'),
 
-  containsSub('beast-666', 'Beast', '666', 1_800, '😈', 'Contains the run "666".'),
+  containsSub(
+    'beast-666',
+    'Beast',
+    '666',
+    1_800,
+    '😈',
+    'Contains the run "666".',
+  ),
   containsSub('six-seven', 'Six-Seven', '67', 2_024, '🤙'),
   containsSub('angel-run', 'Heavenly Run', '777', 2_200, '😇'),
   containsSub('fortune-run', 'Fortune Run', '888', 2_200, '💰'),
@@ -699,7 +708,10 @@ export const NUMBER_BADGES: BadgeDef[] = [
       const s = digitsOf(n);
       if (s.length < 3) return false;
       if (s[0] !== s[s.length - 1]) return false;
-      return s.slice(1, -1).split('').some((c) => c !== s[0]);
+      return s
+        .slice(1, -1)
+        .split('')
+        .some((c) => c !== s[0]);
     },
     highlight: maskBookends,
   },
@@ -1136,7 +1148,8 @@ export const NUMBER_BADGES: BadgeDef[] = [
   {
     id: 'royal-flush-digits',
     name: 'Royal Digits',
-    description: 'Contains 10, J-ish 11 run feel — has both 10 and 11 as substrings.',
+    description:
+      'Contains 10, J-ish 11 run feel — has both 10 and 11 as substrings.',
     ep: 3_200,
     family: 'cultural',
     emoji: '🃏',

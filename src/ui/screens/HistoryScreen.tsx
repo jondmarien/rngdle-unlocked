@@ -1,9 +1,5 @@
 import { useMemo, useState } from 'react';
-import {
-  topPercentFromEP,
-  type RarityTier,
-  type RollResult,
-} from '../../game';
+import { topPercentFromEP, type RarityTier, type RollResult } from '../../game';
 import { useGame } from '../../state/GameProvider';
 import { BadgePill } from '../components/BadgePill';
 import { BestRollCard } from '../components/BestRollCard';
@@ -86,13 +82,9 @@ function sortHistory(list: RollResult[], sort: HistorySort): RollResult[] {
     case 'oldest':
       return copy.sort((a, b) => -byTime(a, b));
     case 'best_ep':
-      return copy.sort(
-        (a, b) => b.totalEP - a.totalEP || byTime(a, b),
-      );
+      return copy.sort((a, b) => b.totalEP - a.totalEP || byTime(a, b));
     case 'worst_ep':
-      return copy.sort(
-        (a, b) => a.totalEP - b.totalEP || byTime(a, b),
-      );
+      return copy.sort((a, b) => a.totalEP - b.totalEP || byTime(a, b));
     case 'rarest':
       return copy.sort(
         (a, b) =>
@@ -139,15 +131,9 @@ export function HistoryScreen({
     return history.find((r) => r.id === best.id) ?? null;
   }, [history, best]);
 
-  const filtered = useMemo(
-    () => filterByLane(history, lane),
-    [history, lane],
-  );
+  const filtered = useMemo(() => filterByLane(history, lane), [history, lane]);
 
-  const sorted = useMemo(
-    () => sortHistory(filtered, sort),
-    [filtered, sort],
-  );
+  const sorted = useMemo(() => sortHistory(filtered, sort), [filtered, sort]);
 
   const laneCounts = useMemo(() => {
     let free = 0;
@@ -184,9 +170,7 @@ export function HistoryScreen({
         <BestRollCard
           best={best}
           fullRoll={bestFull}
-          onReplay={
-            bestFull ? () => setReplayRoll(bestFull) : undefined
-          }
+          onReplay={bestFull ? () => setReplayRoll(bestFull) : undefined}
           onShare={bestFull ? () => setShareRoll(bestFull) : undefined}
         />
       )}
@@ -289,9 +273,7 @@ export function HistoryScreen({
 
         <ul className="divide-y divide-[var(--outline)] border border-[var(--outline)]">
           {sorted.map((r, idx) => {
-            const top = [...r.badges]
-              .sort((a, b) => b.ep - a.ep)
-              .slice(0, 4);
+            const top = [...r.badges].sort((a, b) => b.ep - a.ep).slice(0, 4);
             const extra = Math.max(0, r.badges.length - top.length);
             const isBest = best?.id === r.id;
             const showRank =
@@ -352,9 +334,7 @@ export function HistoryScreen({
                     <span className="font-semibold text-amber-700 dark:text-amber-400">
                       {r.totalEP.toLocaleString()} EP
                     </span>
-                    <span>
-                      Top {topPercentFromEP(r.totalEP)}%
-                    </span>
+                    <span>Top {topPercentFromEP(r.totalEP)}%</span>
                     <span>
                       {r.badges.length} badge
                       {r.badges.length === 1 ? '' : 's'}
