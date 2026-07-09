@@ -24,6 +24,8 @@ export type SecretBadgeDef = {
   ep: number;
   family: 'secret';
   emoji: string;
+  /** Public path to custom Grok Imagine art under /public/secrets */
+  image: string;
   /** Codex section this secret completes; omega completes all sections. */
   section: SectionFamily | 'omega';
   /** Fancy tier for UI chrome */
@@ -32,7 +34,14 @@ export type SecretBadgeDef = {
 
 const SECTION_META: Record<
   SectionFamily,
-  { id: string; name: string; emoji: string; ep: number; blurb: string }
+  {
+    id: string;
+    name: string;
+    emoji: string;
+    ep: number;
+    blurb: string;
+    image: string;
+  }
 > = {
   math: {
     id: 'secret-master-math',
@@ -40,6 +49,7 @@ const SECTION_META: Record<
     emoji: '📐',
     ep: 2_500,
     blurb: 'Every mathematical property in the codex is yours.',
+    image: '/secrets/math.jpg',
   },
   pattern: {
     id: 'secret-master-pattern',
@@ -47,6 +57,7 @@ const SECTION_META: Record<
     emoji: '🧩',
     ep: 2_500,
     blurb: 'Every digit pattern has revealed itself to you.',
+    image: '/secrets/pattern.jpg',
   },
   void: {
     id: 'secret-master-void',
@@ -54,6 +65,7 @@ const SECTION_META: Record<
     emoji: '🕳️',
     ep: 2_000,
     blurb: 'You catalogued the emptiness between the digits.',
+    image: '/secrets/void.jpg',
   },
   cultural: {
     id: 'secret-master-cultural',
@@ -61,6 +73,7 @@ const SECTION_META: Record<
     emoji: '📜',
     ep: 3_000,
     blurb: 'Every storied number in the codex is collected.',
+    image: '/secrets/cultural.jpg',
   },
   magnitude: {
     id: 'secret-master-magnitude',
@@ -68,6 +81,7 @@ const SECTION_META: Record<
     emoji: '📏',
     ep: 2_000,
     blurb: 'From dust to dominion, every magnitude badge is yours.',
+    image: '/secrets/magnitude.jpg',
   },
   sequence: {
     id: 'secret-master-sequence',
@@ -75,6 +89,7 @@ const SECTION_META: Record<
     emoji: '🔢',
     ep: 2_000,
     blurb: 'Runs, steps, and ordered digits bow to your collection.',
+    image: '/secrets/sequence.jpg',
   },
   poker: {
     id: 'secret-master-poker',
@@ -82,6 +97,7 @@ const SECTION_META: Record<
     emoji: '🃏',
     ep: 2_500,
     blurb: 'Every poker hand in the digit deck is claimed.',
+    image: '/secrets/poker.jpg',
   },
   element: {
     id: 'secret-master-element',
@@ -89,6 +105,7 @@ const SECTION_META: Record<
     emoji: '⚛️',
     ep: 2_500,
     blurb: 'The full table of element badges is complete.',
+    image: '/secrets/element.jpg',
   },
   journey: {
     id: 'secret-master-journey',
@@ -96,6 +113,7 @@ const SECTION_META: Record<
     emoji: '🛤️',
     ep: 5_000,
     blurb: 'Every lifetime journey milestone has been walked.',
+    image: '/secrets/journey.jpg',
   },
 };
 
@@ -107,6 +125,7 @@ export const OMEGA_SECRET: SecretBadgeDef = {
   ep: 50_000,
   family: 'secret',
   emoji: '✨',
+  image: '/secrets/omega.jpg',
   section: 'omega',
   tier: 'omega',
 };
@@ -122,6 +141,7 @@ export const SECTION_SECRETS: SecretBadgeDef[] = (
     ep: m.ep,
     family: 'secret' as const,
     emoji: m.emoji,
+    image: m.image,
     section,
     tier: 'section' as const,
   };

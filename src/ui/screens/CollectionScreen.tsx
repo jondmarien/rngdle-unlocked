@@ -269,46 +269,51 @@ function SecretCard({
   if (isOmega) {
     return (
       <article
-        className={`relative overflow-hidden rounded-xl border-2 p-5 text-left ${
+        className={`relative overflow-hidden rounded-xl border-2 p-4 text-left sm:p-5 ${
           has
             ? 'border-amber-400 bg-gradient-to-br from-amber-500/20 via-violet-500/15 to-teal-500/20 shadow-[0_0_40px_rgba(251,191,36,0.25)]'
             : 'border-amber-500/20 bg-[var(--bg)] opacity-80'
         }`}
       >
-        <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-amber-400/20 blur-2xl" />
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">
-          Final seal
-        </p>
-        <div className="mt-1 flex items-center gap-2 text-xl font-bold tracking-tight sm:text-2xl">
-          {has ? (
-            <>
-              <span className="text-3xl" aria-hidden>
-                {secret.emoji}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div
+            className={`relative mx-auto h-28 w-28 shrink-0 overflow-hidden rounded-xl border-2 sm:mx-0 sm:h-32 sm:w-32 ${
+              has
+                ? 'border-amber-400/80 shadow-[0_0_24px_rgba(251,191,36,0.35)]'
+                : 'border-[var(--outline)] grayscale'
+            }`}
+          >
+            <img
+              src={secret.image}
+              alt={has ? secret.name : 'Locked final seal'}
+              className={`h-full w-full object-cover ${has ? '' : 'opacity-40 blur-[1px]'}`}
+            />
+            {!has && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-2xl">
+                🔒
+              </div>
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">
+              Final seal
+            </p>
+            <div className="mt-1 text-xl font-bold tracking-tight sm:text-2xl">
+              {has ? secret.name : '???? · ????'}
+            </div>
+            <p className="mt-2 text-sm leading-relaxed text-[var(--prose-2)]">
+              {has
+                ? secret.description
+                : 'Unlock every number badge, every journey mark, and every section mastery. Then this appears.'}
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
+              <span className="font-semibold text-amber-800 dark:text-amber-300">
+                {has
+                  ? `+${secret.ep.toLocaleString()} life EP`
+                  : `${progress.have}/${progress.total} section secrets`}
               </span>
-              {secret.name}
-            </>
-          ) : (
-            <>
-              <span aria-hidden>✧</span> ???? · ????
-            </>
-          )}
-        </div>
-        <p className="mt-2 text-sm leading-relaxed text-[var(--prose-2)]">
-          {has
-            ? secret.description
-            : 'Unlock every number badge, every journey mark, and every section mastery. Then this appears.'}
-        </p>
-        <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
-          <span className="font-semibold text-amber-800 dark:text-amber-300">
-            {has
-              ? `+${secret.ep.toLocaleString()} life EP`
-              : `${progress.have}/${progress.total} section secrets`}
-          </span>
-          {!has && (
-            <span className="text-[var(--prose-2)]">
-              Number + journey also required
-            </span>
-          )}
+            </div>
+          </div>
         </div>
       </article>
     );
@@ -316,60 +321,57 @@ function SecretCard({
 
   return (
     <article
-      className={`rounded-xl border p-4 text-left ${
+      className={`flex gap-3 rounded-xl border p-3 text-left sm:p-4 ${
         has
           ? 'border-violet-400/50 bg-gradient-to-br from-violet-500/10 to-transparent shadow-sm'
           : 'border-[var(--outline)] bg-[var(--surface)] opacity-75'
       }`}
     >
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
-            Section mastery
-          </p>
-          <div className="mt-0.5 text-lg font-bold tracking-tight">
-            {has ? (
-              <>
-                <span className="mr-1" aria-hidden>
-                  {secret.emoji}
-                </span>
-                {secret.name}
-              </>
-            ) : (
-              <>
-                <span className="mr-1" aria-hidden>
-                  🔒
-                </span>
-                Hidden mastery
-              </>
-            )}
-          </div>
-        </div>
-        <span className="rounded-full border border-violet-500/30 px-2 py-0.5 text-xs font-semibold capitalize text-violet-800 dark:text-violet-200">
-          {secret.section}
-        </span>
-      </div>
-      <p className="mt-2 text-sm text-[var(--prose-2)]">
-        {has
-          ? secret.description
-          : 'Collect every badge in this codex section to reveal the seal.'}
-      </p>
-      <div className="mt-2 flex flex-wrap gap-3 text-sm">
-        <span className="font-semibold text-[var(--prose)]">
-          {has
-            ? `+${secret.ep.toLocaleString()} life EP`
-            : `${progress.have} / ${progress.total} badges`}
-        </span>
-        {!has && progress.total > 0 && (
-          <div className="h-2 min-w-[6rem] flex-1 overflow-hidden rounded-full bg-[var(--surface-raised)]">
-            <div
-              className="h-full rounded-full bg-violet-500/70"
-              style={{
-                width: `${Math.round((progress.have / progress.total) * 100)}%`,
-              }}
-            />
+      <div
+        className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border sm:h-24 sm:w-24 ${
+          has ? 'border-violet-400/60' : 'border-[var(--outline)] grayscale'
+        }`}
+      >
+        <img
+          src={secret.image}
+          alt={has ? secret.name : 'Locked section mastery'}
+          className={`h-full w-full object-cover ${has ? '' : 'opacity-35 blur-[1px]'}`}
+        />
+        {!has && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/35 text-lg">
+            🔒
           </div>
         )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+          Section mastery · {secret.section}
+        </p>
+        <div className="mt-0.5 text-lg font-bold tracking-tight">
+          {has ? secret.name : 'Hidden mastery'}
+        </div>
+        <p className="mt-1 text-sm text-[var(--prose-2)]">
+          {has
+            ? secret.description
+            : 'Collect every badge in this codex section to reveal the seal.'}
+        </p>
+        <div className="mt-2 flex flex-wrap gap-3 text-sm">
+          <span className="font-semibold text-[var(--prose)]">
+            {has
+              ? `+${secret.ep.toLocaleString()} life EP`
+              : `${progress.have} / ${progress.total} badges`}
+          </span>
+          {!has && progress.total > 0 && (
+            <div className="h-2 min-w-[5rem] flex-1 overflow-hidden rounded-full bg-[var(--surface-raised)]">
+              <div
+                className="h-full rounded-full bg-violet-500/70"
+                style={{
+                  width: `${Math.round((progress.have / progress.total) * 100)}%`,
+                }}
+              />
+            </div>
+          )}
+        </div>
       </div>
     </article>
   );

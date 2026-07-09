@@ -172,10 +172,31 @@ export function HomeScreen({
             <p className="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300">
               Secret mastery
             </p>
-            <p className="mt-1 font-semibold text-[var(--prose)]">
-              {lastSecretUnlocks.map((s) => `${s.emoji} ${s.name}`).join(' · ')}
-            </p>
-            <p className="mt-1 text-[var(--prose-2)]">
+            <div className="mt-2 flex flex-wrap gap-2">
+              {lastSecretUnlocks.map((s) => {
+                // Secrets store image on def; BadgeHit may only have emoji — look up path
+                const img =
+                  s.id === 'secret-omega-codex'
+                    ? '/secrets/omega.jpg'
+                    : `/secrets/${s.id.replace('secret-master-', '')}.jpg`;
+                return (
+                  <div
+                    key={s.id}
+                    className="flex items-center gap-2 rounded-lg border border-amber-400/30 bg-black/20 p-1.5 pr-2"
+                  >
+                    <img
+                      src={img}
+                      alt=""
+                      className="h-10 w-10 rounded-md object-cover"
+                    />
+                    <span className="font-semibold text-[var(--prose)]">
+                      {s.name}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-[var(--prose-2)]">
               +
               {lastSecretUnlocks
                 .reduce((a, b) => a + b.ep, 0)

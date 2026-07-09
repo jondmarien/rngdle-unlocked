@@ -29,6 +29,7 @@ type Profile = {
     id: string;
     name: string;
     emoji: string;
+    image?: string;
     tier: 'section' | 'omega';
     section: string;
     ep: number;
@@ -344,41 +345,52 @@ export function ProfileScreen({
           </p>
 
           {hasOmega && (
-            <div className="rounded-xl border-2 border-amber-400/70 bg-gradient-to-br from-amber-500/20 via-violet-500/15 to-teal-500/20 p-4 shadow-[0_0_32px_rgba(251,191,36,0.2)]">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">
-                Final seal
-              </p>
-              <p className="mt-1 text-xl font-bold tracking-tight">
-                {OMEGA_SECRET.emoji} {OMEGA_SECRET.name}
-              </p>
-              <p className="mt-1 text-sm text-[var(--prose-2)]">
-                {OMEGA_SECRET.description}
-              </p>
-              <p className="mt-2 text-sm font-semibold text-amber-800 dark:text-amber-300">
-                +{OMEGA_SECRET.ep.toLocaleString()} life EP
-              </p>
+            <div className="flex flex-col gap-3 rounded-xl border-2 border-amber-400/70 bg-gradient-to-br from-amber-500/20 via-violet-500/15 to-teal-500/20 p-4 shadow-[0_0_32px_rgba(251,191,36,0.2)] sm:flex-row sm:items-center">
+              <img
+                src={OMEGA_SECRET.image}
+                alt={OMEGA_SECRET.name}
+                className="mx-auto h-28 w-28 rounded-xl border-2 border-amber-400/80 object-cover shadow-[0_0_20px_rgba(251,191,36,0.35)] sm:mx-0 sm:h-32 sm:w-32"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">
+                  Final seal
+                </p>
+                <p className="mt-1 text-xl font-bold tracking-tight">
+                  {OMEGA_SECRET.name}
+                </p>
+                <p className="mt-1 text-sm text-[var(--prose-2)]">
+                  {OMEGA_SECRET.description}
+                </p>
+                <p className="mt-2 text-sm font-semibold text-amber-800 dark:text-amber-300">
+                  +{OMEGA_SECRET.ep.toLocaleString()} life EP
+                </p>
+              </div>
             </div>
           )}
 
           {sectionSecrets.length > 0 && (
-            <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {sectionSecrets.map((s) => (
                 <li
                   key={s.id}
-                  className="rounded-xl border border-violet-400/50 bg-gradient-to-br from-violet-500/15 to-transparent p-3"
+                  className="flex gap-3 rounded-xl border border-violet-400/50 bg-gradient-to-br from-violet-500/15 to-transparent p-3"
                 >
-                  <p className="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
-                    {s.section}
-                  </p>
-                  <p className="font-bold tracking-tight">
-                    <span className="mr-1" aria-hidden>
-                      {s.emoji}
-                    </span>
-                    {s.name}
-                  </p>
-                  <p className="text-sm text-amber-800 dark:text-amber-300">
-                    +{s.ep.toLocaleString()} life EP
-                  </p>
+                  {s.image && (
+                    <img
+                      src={s.image}
+                      alt={s.name}
+                      className="h-20 w-20 shrink-0 rounded-lg border border-violet-400/50 object-cover"
+                    />
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+                      {s.section}
+                    </p>
+                    <p className="font-bold tracking-tight">{s.name}</p>
+                    <p className="text-sm text-amber-800 dark:text-amber-300">
+                      +{s.ep.toLocaleString()} life EP
+                    </p>
+                  </div>
                 </li>
               ))}
             </ul>

@@ -9,6 +9,7 @@ export type SecretSeal = {
   id: string;
   name: string;
   emoji: string;
+  image: string;
   tier: 'section' | 'omega';
   section: string;
   ep: number;
@@ -19,6 +20,7 @@ const SECTION_SEALS: {
   id: string;
   name: string;
   emoji: string;
+  image: string;
   ep: number;
 }[] = [
   {
@@ -26,6 +28,7 @@ const SECTION_SEALS: {
     id: 'secret-master-math',
     name: 'Theorem Complete',
     emoji: '📐',
+    image: '/secrets/math.jpg',
     ep: 2_500,
   },
   {
@@ -33,6 +36,7 @@ const SECTION_SEALS: {
     id: 'secret-master-pattern',
     name: 'Pattern Weaver',
     emoji: '🧩',
+    image: '/secrets/pattern.jpg',
     ep: 2_500,
   },
   {
@@ -40,6 +44,7 @@ const SECTION_SEALS: {
     id: 'secret-master-void',
     name: 'Voidwalker',
     emoji: '🕳️',
+    image: '/secrets/void.jpg',
     ep: 2_000,
   },
   {
@@ -47,6 +52,7 @@ const SECTION_SEALS: {
     id: 'secret-master-cultural',
     name: 'Lorekeeper',
     emoji: '📜',
+    image: '/secrets/cultural.jpg',
     ep: 3_000,
   },
   {
@@ -54,6 +60,7 @@ const SECTION_SEALS: {
     id: 'secret-master-magnitude',
     name: 'Scale Breaker',
     emoji: '📏',
+    image: '/secrets/magnitude.jpg',
     ep: 2_000,
   },
   {
@@ -61,6 +68,7 @@ const SECTION_SEALS: {
     id: 'secret-master-sequence',
     name: 'Sequence Sovereign',
     emoji: '🔢',
+    image: '/secrets/sequence.jpg',
     ep: 2_000,
   },
   {
@@ -68,6 +76,7 @@ const SECTION_SEALS: {
     id: 'secret-master-poker',
     name: 'Full House Master',
     emoji: '🃏',
+    image: '/secrets/poker.jpg',
     ep: 2_500,
   },
   {
@@ -75,6 +84,7 @@ const SECTION_SEALS: {
     id: 'secret-master-element',
     name: 'Periodic Crown',
     emoji: '⚛️',
+    image: '/secrets/element.jpg',
     ep: 2_500,
   },
   {
@@ -82,6 +92,7 @@ const SECTION_SEALS: {
     id: 'secret-master-journey',
     name: 'Path Eternal',
     emoji: '🛤️',
+    image: '/secrets/journey.jpg',
     ep: 5_000,
   },
 ];
@@ -90,6 +101,7 @@ const OMEGA: SecretSeal = {
   id: 'secret-omega-codex',
   name: 'Codex Absolute',
   emoji: '✨',
+  image: '/secrets/omega.jpg',
   tier: 'omega',
   section: 'omega',
   ep: 50_000,
@@ -123,6 +135,7 @@ export function earnedSecretSeals(unlockedIds: Set<string>): SecretSeal[] {
         id: s.id,
         name: s.name,
         emoji: s.emoji,
+        image: s.image,
         tier: 'section',
         section: s.section,
         ep: s.ep,
