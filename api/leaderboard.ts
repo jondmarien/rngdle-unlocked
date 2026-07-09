@@ -61,14 +61,15 @@ export default defineHandler(async (request) => {
       const auth = createAuth();
       const session = await auth.api.getSession({ headers: request.headers });
       if (session?.user) {
-        meUserId = session.user.id;
+        const uid = session.user.id;
+        meUserId = uid;
         meUsername =
           (session.user as { username?: string | null }).username ?? null;
         if (!meUsername) {
           const [u] = await db
             .select({ username: user.username })
             .from(user)
-            .where(eq(user.id, meUserId))
+            .where(eq(user.id, uid))
             .limit(1);
           meUsername = u?.username ?? null;
         }
