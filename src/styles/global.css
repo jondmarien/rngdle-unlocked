@@ -225,3 +225,36 @@ p {
 .number-fade-in {
   animation: fade-in-up 0.35s ease-out;
 }
+
+@keyframes number-reel-pulse {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.08);
+  }
+}
+
+.number-reel-pulse {
+  animation: number-reel-pulse 0.55s ease-in-out infinite;
+}
+
+@keyframes digit-chip-in {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.4;
+  }
+  60% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.digit-chip-pulse {
+  animation: digit-chip-in 0.4s ease-out both;
+}

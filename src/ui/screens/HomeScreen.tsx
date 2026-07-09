@@ -7,9 +7,8 @@ import {
 import { playRollSound, shouldCelebrate } from '../../game/fx';
 import { useGame } from '../../state/GameProvider';
 import { BadgeBreakdown } from '../components/BadgeCard';
-import { BadgePill } from '../components/BadgePill';
 import { CommunityHighlights } from '../components/CommunityHighlights';
-import { EPPill } from '../components/EPPill';
+import { CountUpEP } from '../components/CountUpEP';
 import { GenerateButton } from '../components/GenerateButton';
 import { NumberDisplay } from '../components/NumberDisplay';
 import { OnboardingTip } from '../components/OnboardingTip';
@@ -48,6 +47,10 @@ export function HomeScreen({
   const [slotValue, setSlotValue] = useState<number | null>(null);
   const [revealKey, setRevealKey] = useState(0);
   const [revealDone, setRevealDone] = useState(false);
+  const [cascadeEp, setCascadeEp] = useState(0);
+  const [cascadeKey, setCascadeKey] = useState(0);
+  /** True from Generate until roll() returns a number (pre-reel scramble). */
+  const [awaitingResult, setAwaitingResult] = useState(false);
   const pendingFx = useRef(false);
 
   useEffect(() => {
@@ -71,35 +74,49 @@ export function HomeScreen({
 
   const handleRoll = async () => {
     setRevealDone(false);
+    setCascadeEp(0);
+    setAwaitingResult(true);
     pendingFx.current = true;
     setAttestMsg(null);
-    const outcome = await roll();
-    if (!outcome) {
-      setRevealDone(true);
-      pendingFx.current = false;
-      return;
+    // Scramble immediately while roll() resolves
+    setSlotValue(null);
+    try {
+      const outcome = await roll();
+      if (!outcome) {
+        setRevealDone(true);
+        pendingFx.current = false;
+        setAwaitingResult(false);
+        return;
+      }
+      setSlotValue(outcome.roll.number);
+      setRevealKey((k) => k + 1);
+    } finally {
+      setAwaitingResult(false);
     }
-    setSlotValue(outcome.roll.number);
-    setRevealKey((k) => k + 1);
   };
 
   const onRevealComplete = () => {
     setRevealDone(true);
+    setCascadeKey((k) => k + 1);
     if (pendingFx.current && lastRoll) {
       playRollSound(lastRoll.rarity, settings.soundEnabled);
       if (settings.confettiEnabled && shouldCelebrate(lastRoll.rarity)) {
         fireCelebration();
       }
       if (lastRoll.rarity === 'mythic' || lastRoll.rarity === 'anomaly') {
-        setShareOpen(true);
+        // Defer share until badges cascade a bit
+        window.setTimeout(() => setShareOpen(true), 900);
       }
       pendingFx.current = false;
     }
   };
 
-  const busy = rolling || (revealKey > 0 && !revealDone);
+  const numberSettling = revealKey > 0 && !revealDone;
+  const busy = rolling || awaitingResult || numberSettling;
   // Community bests only on an idle fresh board (no active/finished session roll).
   const showCommunityBest = !rolling && !lastRoll && !busy;
+  const showPendingEp = awaitingResult || numberSettling;
+  const showMeta = lastRoll && revealDone;
 
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col">
@@ -108,35 +125,39 @@ export function HomeScreen({
 
         <RollModePicker value={rollMode} onChange={setRollMode} />
 
-        {(stats.dayStreak > 0 || stats.qualityStreak > 0 || stats.bestRoll) && (
-          <div className="flex flex-wrap justify-center gap-2 text-sm text-[var(--prose-2)]">
-            {stats.dayStreak > 0 && (
-              <span className="rounded-md border border-[var(--outline)] px-2.5 py-1">
-                {stats.dayStreak}d streak
-              </span>
-            )}
-            {stats.qualityStreak > 0 && (
-              <span className="rounded-md border border-[var(--outline)] px-2.5 py-1">
-                {stats.qualityStreak} quality
-              </span>
-            )}
-            {stats.bestRoll && (
-              <span className="rounded-md border border-[var(--outline)] px-2.5 py-1">
-                Best {stats.bestRoll.totalEP.toLocaleString()} EP
-              </span>
-            )}
-          </div>
-        )}
+        {(stats.dayStreak > 0 || stats.qualityStreak > 0 || stats.bestRoll) &&
+          !busy &&
+          !lastRoll && (
+            <div className="flex flex-wrap justify-center gap-2 text-sm text-[var(--prose-2)]">
+              {stats.dayStreak > 0 && (
+                <span className="rounded-md border border-[var(--outline)] px-2.5 py-1">
+                  {stats.dayStreak}d streak
+                </span>
+              )}
+              {stats.qualityStreak > 0 && (
+                <span className="rounded-md border border-[var(--outline)] px-2.5 py-1">
+                  {stats.qualityStreak} quality
+                </span>
+              )}
+              {stats.bestRoll && (
+                <span className="rounded-md border border-[var(--outline)] px-2.5 py-1">
+                  Best {stats.bestRoll.totalEP.toLocaleString()} EP
+                </span>
+              )}
+            </div>
+          )}
 
         <NumberDisplay
           value={slotValue}
           rarity={revealDone ? lastRoll?.rarity : undefined}
           revealKey={revealKey}
           onRevealComplete={onRevealComplete}
+          spinning={awaitingResult}
         />
 
-        <div className="flex min-h-[5rem] flex-col items-center justify-center gap-2">
-          {lastRoll && revealDone ? (
+        <div className="flex min-h-[4.5rem] flex-col items-center justify-center gap-2">
+          {showPendingEp && <CountUpEP value={0} pending />}
+          {showMeta && (
             <div className="number-fade-in flex flex-col items-center gap-2">
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <RarityBadge rarity={lastRoll.rarity} />
@@ -144,25 +165,10 @@ export function HomeScreen({
                   Top {topPercentFromPercentile(lastRoll.percentile)}%
                 </span>
               </div>
-              <EPPill ep={lastRoll.totalEP} />
-              {lastRoll.badges.length > 0 && (
-                <div className="mt-1 flex max-w-md flex-wrap items-center justify-center gap-1.5">
-                  {lastRoll.badges.slice(0, 8).map((b) => (
-                    <BadgePill key={b.id} badge={b} compact />
-                  ))}
-                  {lastRoll.badges.length > 8 && (
-                    <span className="rounded-full border border-[var(--outline)] bg-[var(--bg)] px-2 py-0.5 text-[11px] font-semibold text-[var(--prose-2)]">
-                      +{lastRoll.badges.length - 8} more
-                    </span>
-                  )}
-                </div>
-              )}
+              <CountUpEP value={cascadeEp || lastRoll.totalEP} />
             </div>
-          ) : lastRoll && !revealDone ? (
-            <p className="text-sm font-semibold text-[var(--prose-2)]">
-              Rolling…
-            </p>
-          ) : (
+          )}
+          {!lastRoll && !busy && (
             <p className="text-sm text-[var(--prose-2)]">
               Press Generate to roll
             </p>
@@ -187,7 +193,6 @@ export function HomeScreen({
             </p>
             <div className="mt-2 flex flex-wrap gap-2">
               {lastSecretUnlocks.map((s) => {
-                // Secrets store image on def; BadgeHit may only have emoji — look up path
                 const img =
                   s.id === 'secret-omega-codex'
                     ? '/secrets/omega.jpg'
@@ -296,11 +301,16 @@ export function HomeScreen({
       </div>
 
       {lastRoll && revealDone && (
-        <div className="number-fade-in mt-8 min-h-0 flex-1 overflow-y-auto pb-4">
+        <div
+          key={cascadeKey}
+          className="mt-8 min-h-0 flex-1 overflow-y-auto pb-4"
+        >
           <BadgeBreakdown
             badges={lastRoll.badges}
             number={lastRoll.number}
             newBadgeIds={lastNewBadgeIds}
+            animateCascade
+            onCascadeEp={setCascadeEp}
           />
         </div>
       )}

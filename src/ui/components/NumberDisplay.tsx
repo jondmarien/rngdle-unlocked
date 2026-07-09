@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import type { RarityTier } from '../../game';
 import { formatRollDigits } from '../../game/digits';
 
-const SPIN_INTERVAL_MS = 45;
-const REVEAL_STAGGER_MS = 140;
-const PRE_REVEAL_SPIN_MS = 320;
+/** Full-reel scramble like rngdle.com before the number locks. */
+const SPIN_INTERVAL_MS = 42;
+const SPIN_DURATION_MS = 1400;
+const SPIN_DURATION_SHORT_MS = 900;
 
 function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined') return false;
@@ -20,10 +21,19 @@ function randomDigit(): string {
   return String(((Date.now() / 7) | 0) % 10);
 }
 
-/** Natural digits only — zeros that belong to the number are kept; no pad. */
 function toDigits(n: number): string[] {
   return formatRollDigits(n).split('');
 }
+
+const RARITY_GLOW: Record<RarityTier, string> = {
+  trash: 'shadow-[0_0_28px_rgba(110,106,98,0.35)] ring-zinc-500/40',
+  common: 'shadow-[0_0_36px_rgba(61,122,74,0.45)] ring-emerald-400/50',
+  uncommon: 'shadow-[0_0_40px_rgba(45,212,191,0.5)] ring-teal-400/55',
+  rare: 'shadow-[0_0_44px_rgba(59,130,246,0.55)] ring-blue-400/60',
+  epic: 'shadow-[0_0_48px_rgba(167,139,250,0.55)] ring-violet-400/60',
+  anomaly: 'shadow-[0_0_52px_rgba(232,121,249,0.55)] ring-fuchsia-400/65',
+  mythic: 'shadow-[0_0_56px_rgba(251,191,36,0.55)] ring-amber-400/70',
+};
 
 export function NumberDisplay({
   value,
@@ -31,155 +41,178 @@ export function NumberDisplay({
   /** Bumps when a new roll should animate in (0 = snap / idle). */
   revealKey = 0,
   onRevealComplete,
+  spinning = false,
 }: {
   value: number | null;
   rarity?: RarityTier;
   revealKey?: number;
   onRevealComplete?: () => void;
+  /** True while the roll request is in flight (pre-result scramble). */
+  spinning?: boolean;
 }) {
-  const [display, setDisplay] = useState<string[]>(() => ['?']);
-  const [revealedCount, setRevealedCount] = useState(0);
-  const [settled, setSettled] = useState<Set<number>>(() => new Set());
+  const [display, setDisplay] = useState<string[]>(() =>
+    Array.from({ length: 6 }, () => '?'),
+  );
   const [isAnimating, setIsAnimating] = useState(false);
-  const [width, setWidth] = useState(1);
+  const [locked, setLocked] = useState(false);
+  const [pop, setPop] = useState(false);
 
   const targetRef = useRef<string[] | null>(null);
-  const revealedRef = useRef(0);
   const completeRef = useRef(onRevealComplete);
   completeRef.current = onRevealComplete;
   const lastSnapValue = useRef<number | null>(null);
+  const lastRevealKey = useRef(0);
 
-  // Idle / history: snap to natural digit length
+  // Idle snap (history / no animation)
   useEffect(() => {
     if (value == null) {
       targetRef.current = null;
-      revealedRef.current = 0;
-      setWidth(1);
-      setDisplay(['?']);
-      setRevealedCount(0);
-      setSettled(new Set());
+      setDisplay(Array.from({ length: 6 }, () => '?'));
       setIsAnimating(false);
+      setLocked(false);
+      setPop(false);
       lastSnapValue.current = null;
       return;
     }
 
-    if (revealKey > 0) return;
+    if (revealKey > 0 || spinning) return;
 
     if (lastSnapValue.current === value && !isAnimating) return;
     lastSnapValue.current = value;
     const digits = toDigits(value);
-    const w = digits.length;
     targetRef.current = digits;
-    setWidth(w);
-    revealedRef.current = w;
     setDisplay([...digits]);
-    setRevealedCount(w);
-    setSettled(new Set(Array.from({ length: w }, (_, i) => i)));
     setIsAnimating(false);
-    completeRef.current?.();
-  }, [value, revealKey, isAnimating]);
+    setLocked(true);
+    setPop(false);
+  }, [value, revealKey, spinning, isAnimating]);
 
-  // Slot reveal at the number's true digit length
+  // Pre-result scramble while waiting for roll()
+  useEffect(() => {
+    if (!spinning || revealKey > 0) return;
+    if (prefersReducedMotion()) return;
+
+    setIsAnimating(true);
+    setLocked(false);
+    setPop(false);
+    const w = value != null ? toDigits(value).length : 6;
+    setDisplay(Array.from({ length: w }, () => randomDigit()));
+
+    const spinLoop = window.setInterval(() => {
+      setDisplay((prev) => prev.map(() => randomDigit()));
+    }, SPIN_INTERVAL_MS);
+
+    return () => window.clearInterval(spinLoop);
+  }, [spinning, revealKey, value]);
+
+  // Full scramble then lock entire number at once (rngdle-style)
   useEffect(() => {
     if (value == null || revealKey === 0) return;
+    if (revealKey === lastRevealKey.current) return;
+    lastRevealKey.current = revealKey;
 
     const digits = toDigits(value);
     const w = digits.length;
     targetRef.current = digits;
     lastSnapValue.current = value;
-    revealedRef.current = 0;
-    setWidth(w);
 
     const timers: number[] = [];
+    let spinLoop = 0;
+
     const clearAll = () => {
+      window.clearInterval(spinLoop);
       for (const id of timers) window.clearTimeout(id);
     };
 
     if (prefersReducedMotion()) {
       setDisplay([...digits]);
-      setRevealedCount(w);
-      setSettled(new Set(Array.from({ length: w }, (_, i) => i)));
       setIsAnimating(false);
-      revealedRef.current = w;
+      setLocked(true);
+      setPop(false);
       completeRef.current?.();
-      return;
+      return clearAll;
     }
 
     setIsAnimating(true);
-    setRevealedCount(0);
-    setSettled(new Set());
+    setLocked(false);
+    setPop(false);
     setDisplay(Array.from({ length: w }, () => randomDigit()));
 
-    const spinLoop = window.setInterval(() => {
-      const locked = revealedRef.current;
-      setDisplay((prev) =>
-        prev.map((_, i) => {
-          if (i < locked) {
-            // Keep locked digit exactly (including real '0's in the number)
-            return targetRef.current?.[i] ?? '0';
-          }
-          return randomDigit();
-        }),
-      );
+    spinLoop = window.setInterval(() => {
+      setDisplay(Array.from({ length: w }, () => randomDigit()));
     }, SPIN_INTERVAL_MS);
-    timers.push(spinLoop);
 
-    for (let i = 0; i < w; i++) {
-      const delay = PRE_REVEAL_SPIN_MS + i * REVEAL_STAGGER_MS;
-      timers.push(
-        window.setTimeout(() => {
-          revealedRef.current = i + 1;
-          setRevealedCount(i + 1);
-          setSettled((prev) => new Set(prev).add(i));
-          setDisplay((prev) => {
-            const next = [...prev];
-            // Explicit assign — middle/trailing/solo '0' are never dropped
-            next[i] = digits[i]!;
-            return next;
-          });
-          if (i === w - 1) {
-            window.clearInterval(spinLoop);
-            setIsAnimating(false);
+    const duration =
+      w <= 4 ? SPIN_DURATION_SHORT_MS : SPIN_DURATION_MS;
+
+    timers.push(
+      window.setTimeout(() => {
+        window.clearInterval(spinLoop);
+        setDisplay([...digits]);
+        setIsAnimating(false);
+        setLocked(true);
+        setPop(true);
+        timers.push(
+          window.setTimeout(() => {
+            setPop(false);
             completeRef.current?.();
-          }
-        }, delay),
-      );
-    }
+          }, 280),
+        );
+      }, duration),
+    );
 
     return clearAll;
   }, [revealKey, value]);
 
+  const settled = locked && !isAnimating;
+  const glow =
+    settled && rarity
+      ? RARITY_GLOW[rarity]
+      : isAnimating
+        ? 'shadow-[0_0_32px_rgba(255,255,255,0.12)] ring-white/15'
+        : 'shadow-sm ring-[var(--outline)]';
+
   const colorClass =
-    rarity && !isAnimating && revealedCount >= width
+    settled && rarity
       ? `rarity-${rarity}`
-      : 'text-[var(--prose)]';
+      : isAnimating
+        ? 'text-[var(--prose-2)]'
+        : 'text-[var(--prose)]';
 
   return (
     <div
-      className={`mono-number inline-flex justify-center gap-[0.06em] rounded-xl border border-[var(--outline)] bg-[var(--surface)] px-5 py-3 text-5xl font-bold shadow-sm sm:text-7xl ${colorClass}`}
-      aria-label={value == null ? 'No roll yet' : `Rolled ${formatRollDigits(value)}`}
+      className={[
+        'mono-number relative inline-flex justify-center gap-[0.08em] rounded-2xl border border-transparent bg-[var(--surface)] px-6 py-4 text-5xl font-bold tracking-tight ring-2 transition-[box-shadow,transform,color] duration-300 sm:px-8 sm:py-5 sm:text-7xl',
+        glow,
+        colorClass,
+        pop ? 'scale-[1.04]' : 'scale-100',
+        isAnimating ? 'number-reel-pulse' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      aria-label={
+        value == null
+          ? 'No roll yet'
+          : isAnimating
+            ? 'Rolling'
+            : `Rolled ${formatRollDigits(value)}`
+      }
       aria-live="polite"
     >
-      {display.map((char, i) => {
-        const isRevealed = i < revealedCount;
-        const isSpinning = isAnimating && !isRevealed;
-        const isSettled = settled.has(i);
-
-        return (
-          <span
-            key={`${width}-${i}`}
-            className={[
-              'inline-block min-w-[0.62em] text-center tabular-nums',
-              isSpinning ? 'digit-spin text-[var(--prose-3)]' : '',
-              isSettled ? 'digit-settle' : '',
-            ]
-              .filter(Boolean)
-              .join(' ')}
-          >
-            {char}
-          </span>
-        );
-      })}
+      {display.map((char, i) => (
+        <span
+          key={`${display.length}-${i}`}
+          className={[
+            'inline-block min-w-[0.62em] text-center tabular-nums',
+            isAnimating ? 'digit-spin opacity-90' : '',
+            pop ? 'digit-settle' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+        >
+          {char}
+        </span>
+      ))}
     </div>
   );
 }
