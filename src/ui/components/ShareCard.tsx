@@ -227,31 +227,31 @@ export function SharePanel({
           {text}
         </pre>
 
-        <div className="mb-4 flex flex-wrap gap-2">
+        <div className="mb-4 grid grid-cols-4 gap-1.5">
           <button
             type="button"
-            className="border-2 border-[var(--prose)] bg-[var(--prose)] px-4 py-2 text-xs font-bold uppercase text-[var(--bg)]"
+            className="border-2 border-[var(--prose)] bg-[var(--prose)] px-1.5 py-2 text-[10px] font-bold uppercase leading-tight text-[var(--bg)] sm:text-xs"
             onClick={() => void copyText()}
           >
             Copy for Discord
           </button>
           <button
             type="button"
-            className="border border-[var(--prose)] px-3 py-2 text-xs font-bold uppercase"
+            className="border border-[var(--prose)] px-1.5 py-2 text-[10px] font-bold uppercase leading-tight sm:text-xs"
             onClick={() => void nativeShare()}
           >
             Share…
           </button>
           <button
             type="button"
-            className="border border-[var(--prose)] px-3 py-2 text-xs font-bold uppercase"
+            className="border border-[var(--prose)] px-1.5 py-2 text-[10px] font-bold uppercase leading-tight sm:text-xs"
             onClick={() => void copyPng()}
           >
             Copy PNG
           </button>
           <button
             type="button"
-            className="border border-[var(--prose)] px-3 py-2 text-xs font-bold uppercase"
+            className="border border-[var(--prose)] px-1.5 py-2 text-[10px] font-bold uppercase leading-tight sm:text-xs"
             onClick={() => void downloadPng()}
           >
             Download PNG
