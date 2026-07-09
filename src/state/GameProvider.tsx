@@ -20,6 +20,7 @@ import {
   type ThemeMode,
 } from '../game';
 import { applyStreaks, recomputeBestConsecutive } from '../game/stats';
+import { createLogger } from '../lib/logger';
 import { fetchCloudSave, pushCloudSave } from '../lib/sync-api';
 import {
   buildExportPayload,
@@ -32,6 +33,8 @@ import {
   saveState,
   type PersistedState,
 } from './storage';
+
+const log = createLogger('game');
 
 export type RollOutcome = {
   roll: RollResult;
@@ -108,6 +111,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const roll = useCallback(async (): Promise<RollOutcome | null> => {
     if (rolling) return null;
     setRolling(true);
+    log.debug('roll:start', { lifetimeRollCount: state.lifetimeRollCount });
     try {
       const result = await performRoll();
       const prevCount = state.lifetimeRollCount;
@@ -146,7 +150,19 @@ export function GameProvider({ children }: { children: ReactNode }) {
       });
       setLastRoll(result);
       setLastJourneyUnlocks(journeyUnlocked);
+      log.info('roll:ok', {
+        number: result.number,
+        totalEP: result.totalEP,
+        rarity: result.rarity,
+        badges: result.badges.length,
+        journeyUnlocked: journeyUnlocked.length,
+      });
       return { roll: result, journeyUnlocked, journeyEPGained };
+    } catch (err) {
+      log.error('roll:fail', {
+        err: err instanceof Error ? err.message : String(err),
+      });
+      throw err;
     } finally {
       setRolling(false);
     }
@@ -268,6 +284,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const syncToCloud = useCallback(async () => {
     setSyncing(true);
     setSyncError(null);
+    log.info('syncToCloud:start', {
+      rolls: state.lifetimeRollCount,
+      ep: state.lifetimeEP,
+    });
     try {
       const merged = await pushCloudSave({
         lifetimeEP: state.lifetimeEP,
@@ -278,8 +298,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
         history: state.history,
       });
       applyCloudPayload(merged);
+      log.info('syncToCloud:ok', { rolls: merged.lifetimeRollCount });
     } catch (e) {
-      setSyncError(e instanceof Error ? e.message : 'Sync failed');
+      const message = e instanceof Error ? e.message : 'Sync failed';
+      log.error('syncToCloud:fail', { message });
+      setSyncError(message);
     } finally {
       setSyncing(false);
     }
@@ -288,9 +311,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const pullFromCloud = useCallback(async () => {
     setSyncing(true);
     setSyncError(null);
+    log.info('pullFromCloud:start');
     try {
       const cloud = await fetchCloudSave();
       if (!cloud) {
+        log.warn('pullFromCloud:empty');
         setSyncError('Nothing in the cloud yet — push first.');
         return;
       }
@@ -304,8 +329,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
         history: state.history,
       });
       applyCloudPayload(merged);
+      log.info('pullFromCloud:ok', { rolls: merged.lifetimeRollCount });
     } catch (e) {
-      setSyncError(e instanceof Error ? e.message : 'Pull failed');
+      const message = e instanceof Error ? e.message : 'Pull failed';
+      log.error('pullFromCloud:fail', { message });
+      setSyncError(message);
     } finally {
       setSyncing(false);
     }

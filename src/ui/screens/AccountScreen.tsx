@@ -1,9 +1,14 @@
 import { useEffect, useState } from 'react';
 import { authClient, useSession } from '../../lib/auth-client';
+import { createLogger, withTimeout } from '../../lib/logger';
 import { useGame } from '../../state/GameProvider';
+
+const log = createLogger('account');
 
 /** Cap how long we show “Loading session…” if getSession hangs/fails. */
 const SESSION_WAIT_MS = 4000;
+/** Sign-up / sign-in must not hang the UI forever. */
+const AUTH_TIMEOUT_MS = 25_000;
 
 export function AccountScreen() {
   const { data: session, isPending, error, refetch } = useSession();
@@ -16,14 +21,34 @@ export function AccountScreen() {
   const [username, setUsername] = useState('');
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
   const [waitTimedOut, setWaitTimedOut] = useState(false);
+
+  useEffect(() => {
+    log.debug('mount', {
+      isPending,
+      hasUser: Boolean(session?.user),
+      error: error?.message,
+    });
+  }, []);
+
+  useEffect(() => {
+    log.debug('session state', {
+      isPending,
+      hasUser: Boolean(session?.user),
+      error: error?.message ?? null,
+    });
+  }, [isPending, session?.user, error]);
 
   useEffect(() => {
     if (!isPending) {
       setWaitTimedOut(false);
       return;
     }
-    const t = window.setTimeout(() => setWaitTimedOut(true), SESSION_WAIT_MS);
+    const t = window.setTimeout(() => {
+      log.warn('session wait timed out');
+      setWaitTimedOut(true);
+    }, SESSION_WAIT_MS);
     return () => window.clearTimeout(t);
   }, [isPending]);
 
@@ -33,49 +58,124 @@ export function AccountScreen() {
     e.preventDefault();
     setBusy(true);
     setMsg(null);
+    setStatus(null);
+
+    const action = mode === 'signup' ? 'sign-up' : 'sign-in';
+    log.info(`${action}:start`, {
+      email: email.replace(/(.{2}).+(@.+)/, '$1***$2'),
+      hasName: Boolean(name),
+    });
+
     try {
       if (mode === 'signup') {
-        const res = await authClient.signUp.email({
-          email,
-          password,
-          name: name || email.split('@')[0] || 'Player',
+        setStatus('Creating account…');
+        const res = await withTimeout(
+          authClient.signUp.email({
+            email,
+            password,
+            name: name || email.split('@')[0] || 'Player',
+          }),
+          AUTH_TIMEOUT_MS,
+          'signUp.email',
+        );
+        log.info('sign-up:response', {
+          hasError: Boolean(res.error),
+          error: res.error?.message,
+          hasData: Boolean(res.data),
         });
-        if (res.error) throw new Error(res.error.message ?? 'Sign up failed');
+        if (res.error) {
+          throw new Error(res.error.message ?? 'Sign up failed');
+        }
+        setStatus('Refreshing session…');
         setMsg('Account created — signed in.');
       } else {
-        const res = await authClient.signIn.email({ email, password });
-        if (res.error) throw new Error(res.error.message ?? 'Sign in failed');
+        setStatus('Signing in…');
+        const res = await withTimeout(
+          authClient.signIn.email({ email, password }),
+          AUTH_TIMEOUT_MS,
+          'signIn.email',
+        );
+        log.info('sign-in:response', {
+          hasError: Boolean(res.error),
+          error: res.error?.message,
+          hasData: Boolean(res.data),
+        });
+        if (res.error) {
+          throw new Error(res.error.message ?? 'Sign in failed');
+        }
+        setStatus('Refreshing session…');
         setMsg('Signed in.');
       }
-      await refetch();
+
+      try {
+        await withTimeout(refetch(), 10_000, 'session.refetch');
+        log.info('session refetch ok');
+      } catch (refetchErr) {
+        log.warn('session refetch failed (auth may still have succeeded)', {
+          err:
+            refetchErr instanceof Error
+              ? refetchErr.message
+              : String(refetchErr),
+        });
+        setMsg((m) =>
+          m
+            ? `${m} (session refresh slow — try reloading)`
+            : 'Signed in, but session refresh timed out — reload the page.',
+        );
+      }
+      setStatus(null);
     } catch (err) {
-      setMsg(err instanceof Error ? err.message : 'Auth failed');
+      const message = err instanceof Error ? err.message : 'Auth failed';
+      log.error(`${action}:fail`, { message });
+      setMsg(message);
+      setStatus(null);
     } finally {
       setBusy(false);
     }
   };
 
   const onSignOut = async () => {
-    await authClient.signOut();
-    await refetch();
-    setMsg('Signed out.');
+    log.info('sign-out:start');
+    setBusy(true);
+    try {
+      await withTimeout(authClient.signOut(), 10_000, 'signOut');
+      await withTimeout(refetch(), 10_000, 'session.refetch').catch(() => {});
+      setMsg('Signed out.');
+      log.info('sign-out:ok');
+    } catch (err) {
+      log.error('sign-out:fail', {
+        err: err instanceof Error ? err.message : String(err),
+      });
+      setMsg(err instanceof Error ? err.message : 'Sign out failed');
+    } finally {
+      setBusy(false);
+    }
   };
 
   const saveUsername = async () => {
     setBusy(true);
     setMsg(null);
+    log.info('username:save', { username });
     try {
-      const res = await fetch('/api/me', {
-        method: 'PATCH',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username }),
-      });
+      const res = await withTimeout(
+        fetch('/api/me', {
+          method: 'PATCH',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username }),
+        }),
+        15_000,
+        'PATCH /api/me',
+      );
       const data = (await res.json()) as { error?: string; username?: string };
       if (!res.ok) throw new Error(data.error ?? 'Failed');
+      log.info('username:ok', { username: data.username });
       setMsg(`Username set to @${data.username}`);
-      await refetch();
+      await refetch().catch(() => {});
     } catch (err) {
+      log.error('username:fail', {
+        err: err instanceof Error ? err.message : String(err),
+      });
       setMsg(err instanceof Error ? err.message : 'Failed');
     } finally {
       setBusy(false);
@@ -155,8 +255,15 @@ export function AccountScreen() {
             disabled={busy}
             className="border-2 border-[var(--prose)] bg-[var(--prose)] px-4 py-2 text-xs font-bold uppercase text-[var(--bg)] disabled:opacity-50"
           >
-            {busy ? '…' : mode === 'signup' ? 'Create account' : 'Sign in'}
+            {busy
+              ? status ?? 'Working…'
+              : mode === 'signup'
+                ? 'Create account'
+                : 'Sign in'}
           </button>
+          {status && busy && (
+            <p className="text-xs text-[var(--prose-3)]">{status}</p>
+          )}
         </form>
       ) : (
         <div className="space-y-4">
@@ -172,7 +279,7 @@ export function AccountScreen() {
             <button
               type="button"
               className="mt-2 text-xs font-bold uppercase underline"
-              onClick={onSignOut}
+              onClick={() => void onSignOut()}
             >
               Sign out
             </button>
@@ -191,7 +298,7 @@ export function AccountScreen() {
               type="button"
               disabled={busy}
               className="border border-[var(--prose)] px-3 py-2 text-xs font-bold uppercase"
-              onClick={saveUsername}
+              onClick={() => void saveUsername()}
             >
               Save username
             </button>
@@ -209,7 +316,10 @@ export function AccountScreen() {
                 type="button"
                 disabled={syncing}
                 className="border border-[var(--prose)] px-3 py-2 text-xs font-bold uppercase"
-                onClick={() => void pullFromCloud()}
+                onClick={() => {
+                  log.info('pull clicked');
+                  void pullFromCloud();
+                }}
               >
                 Pull from cloud
               </button>
@@ -217,7 +327,10 @@ export function AccountScreen() {
                 type="button"
                 disabled={syncing}
                 className="border-2 border-[var(--prose)] bg-[var(--prose)] px-3 py-2 text-xs font-bold uppercase text-[var(--bg)]"
-                onClick={() => void syncToCloud()}
+                onClick={() => {
+                  log.info('push clicked');
+                  void syncToCloud();
+                }}
               >
                 Push / merge to cloud
               </button>
@@ -234,7 +347,25 @@ export function AccountScreen() {
         </div>
       )}
 
-      {msg && <p className="text-sm text-[var(--prose-2)]">{msg}</p>}
+      {msg && (
+        <p
+          className={`text-sm ${
+            msg.toLowerCase().includes('fail') ||
+            msg.toLowerCase().includes('error') ||
+            msg.toLowerCase().includes('timeout')
+              ? 'text-red-600 dark:text-red-400'
+              : 'text-[var(--prose-2)]'
+          }`}
+        >
+          {msg}
+        </p>
+      )}
+
+      <p className="text-[10px] text-[var(--prose-3)]">
+        Debug: open console for <code>[rngdle:*]</code> logs ·{' '}
+        <code>__rngdleLog.dump()</code> ·{' '}
+        <code>__rngdleLog.setLevel(&apos;debug&apos;)</code>
+      </p>
     </div>
   );
 }

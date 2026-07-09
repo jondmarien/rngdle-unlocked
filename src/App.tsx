@@ -1,5 +1,6 @@
 import { Analytics } from '@vercel/analytics/react';
 import { useCallback, useEffect, useState } from 'react';
+import { createLogger } from './lib/logger';
 import { parsePath, tabPath, type AppRoute, type TabId } from './lib/routes';
 import { GameProvider } from './state/GameProvider';
 import { CelebrationLayer } from './ui/components/Celebration';
@@ -15,6 +16,8 @@ import { PublicRollScreen } from './ui/screens/PublicRollScreen';
 import { SettingsScreen } from './ui/screens/SettingsScreen';
 import { ShowcaseScreen } from './ui/screens/ShowcaseScreen';
 
+const log = createLogger('router');
+
 function AppRoutes() {
   const [route, setRoute] = useState<AppRoute>(() =>
     typeof window !== 'undefined'
@@ -23,7 +26,12 @@ function AppRoutes() {
   );
 
   useEffect(() => {
-    const onPop = () => setRoute(parsePath(window.location.pathname));
+    log.info('initial route', { route, path: window.location.pathname });
+    const onPop = () => {
+      const next = parsePath(window.location.pathname);
+      log.debug('popstate', { path: window.location.pathname, next });
+      setRoute(next);
+    };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
   }, []);
@@ -32,6 +40,7 @@ function AppRoutes() {
     if (window.location.pathname !== path) {
       window.history.pushState({}, '', path);
     }
+    log.info('navigate', { path, next });
     setRoute(next);
   }, []);
 

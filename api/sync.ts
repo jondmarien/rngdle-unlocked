@@ -1,6 +1,7 @@
 import { createAuth } from '../server/auth.js';
 import { createDb } from '../server/db/index.js';
 import type { ApiRequest } from '../server/http.js';
+import { createLogger } from '../server/logger.js';
 import {
   checkRateLimit,
   isRateLimited,
@@ -13,6 +14,8 @@ import {
   type CloudSavePayload,
 } from '../server/sync.js';
 
+const log = createLogger('api/sync');
+
 async function requireUserId(request: ApiRequest): Promise<string | null> {
   const auth = createAuth();
   const session = await auth.api.getSession({
@@ -23,10 +26,13 @@ async function requireUserId(request: ApiRequest): Promise<string | null> {
 
 export default async function handler(request: ApiRequest): Promise<Response> {
   try {
+    log.info('request', { method: request.method });
     const userId = await requireUserId(request);
     if (!userId) {
+      log.warn('unauthorized');
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    log.debug('user', { userId });
     const db = createDb();
 
     if (request.method === 'GET') {
@@ -92,7 +98,9 @@ export default async function handler(request: ApiRequest): Promise<Response> {
 
     return Response.json({ error: 'Method not allowed' }, { status: 405 });
   } catch (err) {
-    console.error('[api/sync]', err);
+    log.error('handler threw', {
+      err: err instanceof Error ? err.message : String(err),
+    });
     return Response.json(
       { error: err instanceof Error ? err.message : 'Server error' },
       { status: 500 },

@@ -2,6 +2,7 @@ import { and, desc, eq, gte, isNotNull, sql } from 'drizzle-orm';
 import { createDb } from '../server/db/index.js';
 import { rolls, user, userProgress } from '../server/db/schema.js';
 import type { ApiRequest } from '../server/http.js';
+import { createLogger } from '../server/logger.js';
 import {
   checkRateLimit,
   clientIp,
@@ -10,11 +11,14 @@ import {
   rateLimitedResponse,
 } from '../server/rateLimit.js';
 
+const log = createLogger('api/leaderboard');
+
 export default async function handler(request: ApiRequest): Promise<Response> {
   if (request.method !== 'GET') {
     return Response.json({ error: 'Method not allowed' }, { status: 405 });
   }
 
+  const started = Date.now();
   try {
     const db = createDb();
     const ip = clientIp(request);
@@ -25,12 +29,14 @@ export default async function handler(request: ApiRequest): Promise<Response> {
       60_000,
     );
     if (isRateLimited(rl)) {
+      log.warn('rate limited', { ip });
       return rateLimitedResponse(rl, 'Rate limited', true);
     }
 
     const url = new URL(request.url);
     const period = url.searchParams.get('period') === 'week' ? 'week' : 'all';
     const sort = url.searchParams.get('sort') ?? 'ep';
+    log.info('query', { period, sort, ip });
     const limit = Math.min(
       100,
       Math.max(1, Number(url.searchParams.get('limit') ?? 50) || 50),
@@ -118,9 +124,18 @@ export default async function handler(request: ApiRequest): Promise<Response> {
       .slice(0, limit)
       .map((e, i) => ({ rank: i + 1, ...e }));
 
+    log.info('ok', {
+      period: 'all',
+      sort,
+      count: entries.length,
+      ms: Date.now() - started,
+    });
     return Response.json({ period: 'all', sort, entries });
   } catch (err) {
-    console.error('[api/leaderboard]', err);
+    log.error('handler threw', {
+      ms: Date.now() - started,
+      err: err instanceof Error ? err.message : String(err),
+    });
     return Response.json(
       { error: err instanceof Error ? err.message : 'Server error' },
       { status: 500 },

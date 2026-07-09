@@ -1,8 +1,11 @@
+import { eq } from 'drizzle-orm';
 import { createAuth } from '../server/auth.js';
 import { createDb } from '../server/db/index.js';
 import { user } from '../server/db/schema.js';
 import type { ApiRequest } from '../server/http.js';
-import { eq } from 'drizzle-orm';
+import { createLogger } from '../server/logger.js';
+
+const log = createLogger('api/me');
 
 async function getSession(request: ApiRequest) {
   const auth = createAuth();
@@ -12,11 +15,14 @@ async function getSession(request: ApiRequest) {
 
 export default async function handler(request: ApiRequest): Promise<Response> {
   try {
+    log.info('request', { method: request.method });
     if (request.method === 'GET') {
       const session = await getSession(request);
       if (!session) {
+        log.debug('no session');
         return Response.json({ user: null }, { status: 200 });
       }
+      log.debug('session ok', { userId: session.user.id });
       return Response.json({ user: session.user, session: session.session });
     }
 
@@ -27,6 +33,7 @@ export default async function handler(request: ApiRequest): Promise<Response> {
       }
       const body = (await request.json()) as { username?: string };
       const username = body.username?.trim().toLowerCase();
+      log.info('username patch', { userId: session.user.id, username });
       if (!username || !/^[a-z0-9_]{3,24}$/.test(username)) {
         return Response.json(
           { error: 'Username must be 3–24 chars: a-z, 0-9, _' },
@@ -50,7 +57,9 @@ export default async function handler(request: ApiRequest): Promise<Response> {
 
     return Response.json({ error: 'Method not allowed' }, { status: 405 });
   } catch (err) {
-    console.error('[api/me]', err);
+    log.error('handler threw', {
+      err: err instanceof Error ? err.message : String(err),
+    });
     return Response.json(
       { error: err instanceof Error ? err.message : 'Server error' },
       { status: 500 },

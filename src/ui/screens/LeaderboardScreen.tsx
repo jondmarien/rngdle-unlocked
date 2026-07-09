@@ -1,4 +1,7 @@
 import { useEffect, useState } from 'react';
+import { createLogger, withTimeout } from '../../lib/logger';
+
+const log = createLogger('leaderboard');
 
 type Entry = {
   rank: number;
@@ -22,23 +25,46 @@ export function LeaderboardScreen({
 
   useEffect(() => {
     let cancelled = false;
+    const ac = new AbortController();
     setLoading(true);
     setError(null);
     const q = new URLSearchParams({ period, sort, limit: '50' });
-    fetch(`/api/leaderboard?${q}`)
+    const url = `/api/leaderboard?${q}`;
+    log.info('fetch:start', { period, sort });
+
+    withTimeout(
+      fetch(url, { signal: ac.signal }),
+      15_000,
+      'leaderboard fetch',
+    )
       .then(async (r) => {
-        const data = await r.json();
+        const data = (await r.json()) as {
+          error?: string;
+          entries?: Entry[];
+        };
+        log.info('fetch:response', {
+          status: r.status,
+          count: data.entries?.length ?? 0,
+        });
         if (!r.ok) throw new Error(data.error ?? 'Failed to load');
         if (!cancelled) setEntries(data.entries ?? []);
       })
       .catch((e) => {
+        if (cancelled || (e instanceof DOMException && e.name === 'AbortError')) {
+          return;
+        }
+        log.error('fetch:fail', {
+          err: e instanceof Error ? e.message : String(e),
+        });
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
+
     return () => {
       cancelled = true;
+      ac.abort();
     };
   }, [period, sort]);
 
