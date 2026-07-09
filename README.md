@@ -54,7 +54,7 @@ Unlike a classic daily lock, you can roll **unlimited** times. Progress defaults
 ## 🔭 How it works
 
 ```mermaid
-flowchart TB
+flowchart LR
   subgraph Client["Browser SPA"]
     UI[React UI]
     FREE[Free play CSPRNG]
@@ -76,10 +76,10 @@ flowchart TB
   end
 
   STATIC --> UI
-  UI -->|Free play sync Practice board| API
-  UI -->|Ranked Generate| RANK
-  RANK --> NEON
+  UI -->|Practice sync| API
+  UI -->|Ranked| RANK
   API --> NEON
+  RANK --> NEON
 ```
 
 Deeper diagrams (roll lifecycle, Ranked vs Free, notifications, OG): **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)**.
