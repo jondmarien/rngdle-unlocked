@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSession } from '../../lib/auth-client';
+import { formatDateTime } from '../../lib/format';
 import {
   ensureNotificationPermission,
   fetchNotifications,
@@ -8,6 +9,7 @@ import {
   saveWebNotifyPref,
   type InboxItem,
 } from '../../lib/notifications-api';
+import { SegmentedToggle } from '../components/SegmentedToggle';
 
 type Tab = 'activity' | 'system';
 
@@ -186,30 +188,22 @@ export function NotificationsScreen({
       </label>
 
       <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => setTab('activity')}
-          className={`rounded-md border px-3 py-2 text-sm font-semibold ${
-            tab === 'activity'
-              ? 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
-              : 'border-[var(--outline)] text-[var(--prose-2)]'
-          }`}
-        >
-          Activity
-          {unread.activity > 0 ? ` (${unread.activity})` : ''}
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab('system')}
-          className={`rounded-md border px-3 py-2 text-sm font-semibold ${
-            tab === 'system'
-              ? 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
-              : 'border-[var(--outline)] text-[var(--prose-2)]'
-          }`}
-        >
-          System messages
-          {unread.system > 0 ? ` (${unread.system})` : ''}
-        </button>
+        <SegmentedToggle
+          className="contents"
+          chipClassName="rounded-md border px-3 py-2 text-sm font-semibold"
+          options={[
+            {
+              id: 'activity',
+              label: `Activity${unread.activity > 0 ? ` (${unread.activity})` : ''}`,
+            },
+            {
+              id: 'system',
+              label: `System messages${unread.system > 0 ? ` (${unread.system})` : ''}`,
+            },
+          ]}
+          value={tab}
+          onChange={setTab}
+        />
       </div>
 
       {loading && <p className="text-sm text-[var(--prose-2)]">Loading…</p>}
@@ -249,7 +243,7 @@ export function NotificationsScreen({
                   {item.title}
                 </p>
                 <time className="shrink-0 text-xs text-[var(--prose-2)]">
-                  {formatWhen(item.createdAt)}
+                  {formatDateTime(item.createdAt)}
                 </time>
               </div>
               {item.body && (
@@ -263,12 +257,4 @@ export function NotificationsScreen({
       </ul>
     </div>
   );
-}
-
-function formatWhen(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString();
-  } catch {
-    return iso;
-  }
 }

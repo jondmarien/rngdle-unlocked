@@ -81,16 +81,49 @@ export const RARITY_DIGIT_ON: Record<RarityTier, string> = {
 export const RARITY_DIGIT_OFF =
   'border-[var(--outline)] bg-[var(--bg)] text-[var(--prose-3)] ring-1 ring-[var(--outline)]';
 
+/** Reel glow ring + shadow per settled rarity (NumberDisplay). */
+export const RARITY_GLOW: Record<RarityTier, string> = {
+  trash: 'shadow-[0_0_28px_rgba(110,106,98,0.35)] ring-zinc-500/40',
+  common: 'shadow-[0_0_36px_rgba(61,122,74,0.45)] ring-emerald-400/50',
+  uncommon: 'shadow-[0_0_40px_rgba(45,212,191,0.5)] ring-teal-400/55',
+  rare: 'shadow-[0_0_44px_rgba(59,130,246,0.55)] ring-blue-400/60',
+  epic: 'shadow-[0_0_48px_rgba(167,139,250,0.55)] ring-violet-400/60',
+  anomaly: 'shadow-[0_0_52px_rgba(234,88,12,0.55)] ring-orange-400/65',
+  mythic: 'shadow-[0_0_56px_rgba(219,39,119,0.55)] ring-pink-400/70',
+};
+
+/** Histogram bar fill per rarity (Stats). */
+export const RARITY_BAR: Record<RarityTier, string> = {
+  trash: 'bg-zinc-500',
+  common: 'bg-slate-400',
+  uncommon: 'bg-emerald-500',
+  rare: 'bg-sky-500',
+  epic: 'bg-violet-500',
+  anomaly: 'bg-orange-500',
+  mythic: 'bg-amber-400',
+};
+
+/** Border ring for highlight tiles (Community bests). */
+export function rarityRing(r: RarityTier): string {
+  switch (r) {
+    case 'mythic':
+      return 'border-amber-400/70';
+    case 'anomaly':
+      return 'border-fuchsia-400/70';
+    case 'epic':
+      return 'border-violet-400/60';
+    case 'rare':
+      return 'border-blue-400/55';
+    case 'uncommon':
+      return 'border-teal-400/50';
+    default:
+      return 'border-[var(--outline)]';
+  }
+}
+
 export function familyPillClass(family: string | null | undefined): string {
   if (family && family in FAMILY_PILL) {
     return FAMILY_PILL[family as BadgeFamily].chip;
-  }
-  return 'border-[var(--outline)] bg-[var(--surface-raised)] text-[var(--prose)]';
-}
-
-export function rarityPillClass(rarity: string | null | undefined): string {
-  if (rarity && rarity in RARITY_PILL) {
-    return RARITY_PILL[rarity as RarityTier];
   }
   return 'border-[var(--outline)] bg-[var(--surface-raised)] text-[var(--prose)]';
 }

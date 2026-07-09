@@ -58,3 +58,26 @@ export const RARITY_LABELS: Record<RarityTier, string> = {
   anomaly: 'Anomaly',
   mythic: 'Mythic',
 };
+
+/** Canonical low→high tier order (single source for sorting/ranking). */
+export const RARITY_ORDER: readonly RarityTier[] = [
+  'trash',
+  'common',
+  'uncommon',
+  'rare',
+  'epic',
+  'anomaly',
+  'mythic',
+];
+
+/** Rank for sorting: trash = 0 … mythic = 6 (-1 never occurs for valid tiers). */
+export function rarityRank(tier: RarityTier): number {
+  return RARITY_ORDER.indexOf(tier);
+}
+
+/** Coerce an untrusted string to a tier (network payloads); default common. */
+export function coerceRarity(r: string): RarityTier {
+  return (RARITY_ORDER as readonly string[]).includes(r)
+    ? (r as RarityTier)
+    : 'common';
+}

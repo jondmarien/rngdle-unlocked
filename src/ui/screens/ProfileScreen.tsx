@@ -1,92 +1,29 @@
+import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import {
   badgeRarityFromEP,
+  coerceRarity,
   JOURNEY_BADGES,
   NUMBER_BADGES,
   OMEGA_SECRET,
   topPercentFromEP,
   type BadgeFamily,
-  type RarityTier,
 } from '../../game';
 import { fileReport } from '../../lib/admin-api';
 import { useSession } from '../../lib/auth-client';
 import { FAMILY_PILL } from '../../lib/badge-theme';
-import { profileAvatarSrc } from '../../lib/profile-avatars';
+import { formatDateTime } from '../../lib/format';
 import {
-  accentStyles,
-  normalizeAccent,
-  type ProfileAccent,
-} from '../../lib/profile-theme';
+  fetchFollowingUsernames,
+  followUser,
+  unfollowUser,
+} from '../../lib/notifications-api';
+import { fetchProfile } from '../../lib/profile-api';
+import { profileAvatarSrc } from '../../lib/profile-avatars';
+import { accentStyles, normalizeAccent } from '../../lib/profile-theme';
 import { RarityBadge } from '../components/RarityBadge';
 import { EPPill } from '../components/EPPill';
-
-type CollectionEntryDto = {
-  badgeId: string;
-  family: string;
-  firstEarnedAt: string;
-};
-
-type Profile = {
-  username: string;
-  name: string;
-  image: string | null;
-  memberSince: string;
-  profileAccent?: string;
-  profileBio?: string;
-  profileFlair?: string;
-  profileAvatar?: string;
-  /** When false, owner hid public codex (default true). */
-  profileShowCodex?: boolean;
-  lifetimeEP: number;
-  lifetimeRollCount: number;
-  journeyEP: number;
-  badgeCount: number;
-  /** Server classification of progress ownership. */
-  progressProvenance?:
-    | 'cloud_sync'
-    | 'cloned_local'
-    | 'local_progress'
-    | 'unknown';
-  progressProvenanceLabel?: string;
-  collection?: CollectionEntryDto[];
-  secrets?: {
-    id: string;
-    name: string;
-    emoji: string;
-    image?: string;
-    tier: 'section' | 'omega';
-    section: string;
-    ep: number;
-    unlocked?: boolean;
-  }[];
-  stats: {
-    bestRoll?: {
-      id?: string;
-      number: number;
-      totalEP: number;
-      rarity: string;
-      percentile?: number;
-      badgeCount?: number;
-      rolledAt?: string;
-      topBadges?: string[];
-    } | null;
-    bestQualityStreak?: number;
-    bestDayStreak?: number;
-  };
-  recentRolls: {
-    id: string;
-    shortCode?: string | null;
-    number: number;
-    totalEP: number;
-    rarity: string;
-    percentile?: number;
-    badgeCount: number;
-    topBadges?: string[];
-    attested?: boolean;
-    challengeKey?: string | null;
-    rolledAt: string;
-  }[];
-};
+import { StatTile } from '../components/StatTile';
 
 const BADGE_CATALOG = (() => {
   const m = new Map<
@@ -136,27 +73,6 @@ const CODEX_FAMILY_FILTERS: { id: BadgeFamily | 'all'; label: string }[] = [
   { id: 'journey', label: 'Journey' },
 ];
 
-function fmtDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString();
-  } catch {
-    return iso;
-  }
-}
-
-function asRarity(r: string): RarityTier {
-  const ok: RarityTier[] = [
-    'trash',
-    'common',
-    'uncommon',
-    'rare',
-    'epic',
-    'anomaly',
-    'mythic',
-  ];
-  return (ok.includes(r as RarityTier) ? r : 'common') as RarityTier;
-}
-
 const PREVIEW_LIMIT = 10;
 
 function SectionHeader({
@@ -200,10 +116,7 @@ export function ProfileScreen({
   onBack?: () => void;
 }) {
   const { data: session } = useSession();
-  const myUsername =
-    (session?.user as { username?: string | null } | undefined)?.username ??
-    null;
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const myUsername = session?.user.username ?? null;
   const [codexFilter, setCodexFilter] = useState<BadgeFamily | 'all'>('all');
   const [openSecrets, setOpenSecrets] = useState(true);
   const [openCodex, setOpenCodex] = useState(true);
@@ -211,32 +124,21 @@ export function ProfileScreen({
   const [openRecent, setOpenRecent] = useState(true);
   const [codexExpanded, setCodexExpanded] = useState(false);
   const [recentExpanded, setRecentExpanded] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
   const [following, setFollowing] = useState(false);
   const [followBusy, setFollowBusy] = useState(false);
   const [followMsg, setFollowMsg] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    fetch(`/api/profile/${encodeURIComponent(username)}`)
-      .then(async (r) => {
-        const data = await r.json();
-        if (!r.ok) throw new Error(data.error ?? 'Not found');
-        if (!cancelled) setProfile(data.profile);
-      })
-      .catch((e) => {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Failed');
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [username]);
+  const profileQuery = useQuery({
+    queryKey: ['profile', username.toLowerCase()],
+    queryFn: () => fetchProfile(username),
+  });
+  const profile = profileQuery.data ?? null;
+  const loading = profileQuery.isPending;
+  const error = profileQuery.error
+    ? profileQuery.error instanceof Error
+      ? profileQuery.error.message
+      : 'Failed'
+    : null;
 
   useEffect(() => {
     if (!session?.user) {
@@ -244,18 +146,9 @@ export function ProfileScreen({
       return;
     }
     let cancelled = false;
-    fetch('/api/follow', { credentials: 'include' })
-      .then(async (r) => {
-        if (!r.ok) return;
-        const data = (await r.json()) as {
-          following?: { username: string | null }[];
-        };
-        if (cancelled) return;
-        const hit = (data.following ?? []).some(
-          (f) =>
-            f.username && f.username.toLowerCase() === username.toLowerCase(),
-        );
-        setFollowing(hit);
+    fetchFollowingUsernames()
+      .then((set) => {
+        if (!cancelled) setFollowing(set.has(username.toLowerCase()));
       })
       .catch(() => {
         /* ignore */
@@ -316,22 +209,10 @@ export function ProfileScreen({
     setFollowMsg(null);
     try {
       if (following) {
-        const r = await fetch(
-          `/api/follow?username=${encodeURIComponent(username)}`,
-          { method: 'DELETE', credentials: 'include' },
-        );
-        const data = (await r.json()) as { error?: string };
-        if (!r.ok) throw new Error(data.error ?? 'Unfollow failed');
+        await unfollowUser(username);
         setFollowing(false);
       } else {
-        const r = await fetch('/api/follow', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username }),
-        });
-        const data = (await r.json()) as { error?: string };
-        if (!r.ok) throw new Error(data.error ?? 'Follow failed');
+        await followUser(username);
         setFollowing(true);
       }
     } catch (e) {
@@ -454,7 +335,7 @@ export function ProfileScreen({
                 </p>
               )}
               <p className="mt-2 text-sm text-[var(--prose-2)]">
-                Member since {fmtDate(String(profile.memberSince))}
+                Member since {formatDateTime(String(profile.memberSince))}
               </p>
             </div>
           </div>
@@ -506,25 +387,25 @@ export function ProfileScreen({
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <Stat
+        <StatTile
           label="Lifetime EP"
           value={profile.lifetimeEP.toLocaleString()}
-          soft={theme.soft}
+          className={theme.soft}
         />
-        <Stat
+        <StatTile
           label="Rolls"
           value={profile.lifetimeRollCount.toLocaleString()}
-          soft={theme.soft}
+          className={theme.soft}
         />
-        <Stat
+        <StatTile
           label="Badges"
           value={String(profile.badgeCount)}
-          soft={theme.soft}
+          className={theme.soft}
         />
-        <Stat
+        <StatTile
           label="Journey EP"
           value={profile.journeyEP.toLocaleString()}
-          soft={theme.soft}
+          className={theme.soft}
         />
       </div>
 
@@ -774,7 +655,7 @@ export function ProfileScreen({
                 {best.number.toLocaleString()}
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <RarityBadge rarity={asRarity(best.rarity)} />
+                <RarityBadge rarity={coerceRarity(best.rarity)} />
                 <EPPill ep={best.totalEP} />
                 <span className="text-sm text-[var(--prose-2)]">
                   Top {topPercentFromEP(best.totalEP)}%
@@ -825,7 +706,7 @@ export function ProfileScreen({
                               {r.number.toLocaleString()}
                             </div>
                             <div className="mt-2 flex flex-wrap items-center gap-2">
-                              <RarityBadge rarity={asRarity(r.rarity)} />
+                              <RarityBadge rarity={coerceRarity(r.rarity)} />
                               <span className="text-sm font-semibold text-amber-700 dark:text-amber-400">
                                 {r.totalEP.toLocaleString()} EP
                               </span>
@@ -855,7 +736,7 @@ export function ProfileScreen({
                             )}
                           </div>
                           <time className="shrink-0 text-sm text-[var(--prose-2)]">
-                            {fmtDate(r.rolledAt)}
+                            {formatDateTime(r.rolledAt)}
                           </time>
                         </div>
                       </button>
@@ -881,23 +762,3 @@ export function ProfileScreen({
     </div>
   );
 }
-
-function Stat({
-  label,
-  value,
-  soft,
-}: {
-  label: string;
-  value: string;
-  soft: string;
-}) {
-  return (
-    <div className={`rounded-lg border p-3 ${soft}`}>
-      <div className="text-sm font-semibold text-[var(--prose-2)]">{label}</div>
-      <div className="mono-number text-xl font-bold">{value}</div>
-    </div>
-  );
-}
-
-// silence unused type export if needed
-export type { ProfileAccent };

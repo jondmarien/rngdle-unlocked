@@ -1,29 +1,18 @@
 import { useMemo, useState } from 'react';
-import { topPercentFromEP, type RarityTier, type RollResult } from '../../game';
-import { useGame } from '../../state/GameProvider';
+import { rarityRank, topPercentFromEP, type RollResult } from '../../game';
+import { formatDateTime } from '../../lib/format';
+import { useGame, useGameSettings } from '../../state/GameProvider';
 import { BadgePill } from '../components/BadgePill';
 import { BestRollCard } from '../components/BestRollCard';
 import { RollReplayModal } from '../components/RollReplayModal';
 import { RarityBadge } from '../components/RarityBadge';
+import { SegmentedToggle } from '../components/SegmentedToggle';
 import { SharePanel } from '../components/ShareCard';
 
-function fmtDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString();
-  } catch {
-    return iso;
-  }
-}
-
-const RARITY_RANK: Record<RarityTier, number> = {
-  trash: 0,
-  common: 1,
-  uncommon: 2,
-  rare: 3,
-  epic: 4,
-  anomaly: 5,
-  mythic: 6,
-};
+const CHIP_CLASS =
+  'rounded-full border px-2.5 py-1 text-[11px] font-semibold sm:text-xs';
+const CHIP_INACTIVE =
+  'border-[var(--outline)] text-[var(--prose-2)] hover:bg-[var(--surface-raised)]';
 
 type HistorySort =
   | 'newest'
@@ -88,14 +77,12 @@ function sortHistory(list: RollResult[], sort: HistorySort): RollResult[] {
     case 'rarest':
       return copy.sort(
         (a, b) =>
-          RARITY_RANK[b.rarity] - RARITY_RANK[a.rarity] ||
-          b.totalEP - a.totalEP,
+          rarityRank(b.rarity) - rarityRank(a.rarity) || b.totalEP - a.totalEP,
       );
     case 'commonest':
       return copy.sort(
         (a, b) =>
-          RARITY_RANK[a.rarity] - RARITY_RANK[b.rarity] ||
-          a.totalEP - b.totalEP,
+          rarityRank(a.rarity) - rarityRank(b.rarity) || a.totalEP - b.totalEP,
       );
     case 'most_badges':
       return copy.sort(
@@ -119,7 +106,8 @@ export function HistoryScreen({
 }: {
   onGoAccount?: () => void;
 } = {}) {
-  const { history, lifetimeRollCount, settings, stats } = useGame();
+  const { history, lifetimeRollCount, stats } = useGame();
+  const { settings } = useGameSettings();
   const [shareRoll, setShareRoll] = useState<RollResult | null>(null);
   const [replayRoll, setReplayRoll] = useState<RollResult | null>(null);
   const [sort, setSort] = useState<HistorySort>('newest');
@@ -209,9 +197,11 @@ export function HistoryScreen({
           </label>
         </div>
 
-        <div className="mb-2 flex flex-wrap gap-1.5">
-          {LANE_OPTIONS.map((o) => {
-            const selected = lane === o.id;
+        <SegmentedToggle
+          className="mb-2 flex flex-wrap gap-1.5"
+          chipClassName={CHIP_CLASS}
+          inactiveClassName={CHIP_INACTIVE}
+          options={LANE_OPTIONS.map((o) => {
             const count =
               o.id === 'all'
                 ? laneCounts.all
@@ -220,45 +210,29 @@ export function HistoryScreen({
                   : o.id === 'ranked'
                     ? laneCounts.ranked
                     : laneCounts.challenge;
-            return (
-              <button
-                key={o.id}
-                type="button"
-                onClick={() => setLane(o.id)}
-                className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold sm:text-xs ${
-                  selected
-                    ? o.id === 'ranked'
-                      ? 'border-amber-500 bg-amber-500 text-black'
-                      : 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
-                    : 'border-[var(--outline)] text-[var(--prose-2)] hover:bg-[var(--surface-raised)]'
-                }`}
-              >
-                {o.label}
-                <span className="ml-1 opacity-80">({count})</span>
-              </button>
-            );
+            return {
+              id: o.id,
+              accent: o.id === 'ranked' ? ('amber' as const) : undefined,
+              label: (
+                <>
+                  {o.label}
+                  <span className="ml-1 opacity-80">({count})</span>
+                </>
+              ),
+            };
           })}
-        </div>
+          value={lane}
+          onChange={setLane}
+        />
 
-        <div className="mb-2 flex flex-wrap gap-1.5">
-          {SORT_OPTIONS.map((o) => {
-            const selected = sort === o.id;
-            return (
-              <button
-                key={o.id}
-                type="button"
-                onClick={() => setSort(o.id)}
-                className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold sm:text-xs ${
-                  selected
-                    ? 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
-                    : 'border-[var(--outline)] text-[var(--prose-2)] hover:bg-[var(--surface-raised)]'
-                }`}
-              >
-                {o.label}
-              </button>
-            );
-          })}
-        </div>
+        <SegmentedToggle
+          className="mb-2 flex flex-wrap gap-1.5"
+          chipClassName={CHIP_CLASS}
+          inactiveClassName={CHIP_INACTIVE}
+          options={SORT_OPTIONS}
+          value={sort}
+          onChange={setSort}
+        />
 
         {sorted.length === 0 ? (
           <p className="rounded-lg border border-dashed border-[var(--outline)] px-3 py-6 text-center text-sm text-[var(--prose-2)]">
@@ -326,7 +300,7 @@ export function HistoryScreen({
                       );
                     })()}
                     <time className="text-xs text-[var(--prose-3)]">
-                      {fmtDate(r.rolledAt)}
+                      {formatDateTime(r.rolledAt)}
                     </time>
                   </div>
                   <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-[var(--prose-3)]">

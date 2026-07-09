@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { RollResult } from '../../game';
+import { formatDateTimeCompact } from '../../lib/format';
 import { RarityBadge } from './RarityBadge';
 
 type Lane = 'free' | 'ranked' | 'challenge';
@@ -16,19 +17,6 @@ function rollLane(r: RollResult): Lane {
   if (r.source === 'ranked') return 'ranked';
   if (r.source === 'challenge' || r.challengeKey) return 'challenge';
   return 'free';
-}
-
-function fmtWhen(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    });
-  } catch {
-    return iso;
-  }
 }
 
 /**
@@ -209,7 +197,7 @@ export function LatestRunsPanel({
                         </span>
                       </div>
                       <p className="mt-0.5 text-[10px] text-[var(--prose-3)]">
-                        {fmtWhen(r.rolledAt)}
+                        {formatDateTimeCompact(r.rolledAt)}
                         {' · '}
                         {r.badges.length} badge
                         {r.badges.length === 1 ? '' : 's'}

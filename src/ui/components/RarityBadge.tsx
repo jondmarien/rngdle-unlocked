@@ -1,15 +1,6 @@
 import type { RarityTier } from '../../game';
+import { RARITY_LABELS } from '../../game';
 import { RARITY_ICON } from '../../lib/icons';
-
-const LABELS: Record<RarityTier, string> = {
-  trash: 'Trash',
-  common: 'Common',
-  uncommon: 'Uncommon',
-  rare: 'Rare',
-  epic: 'Epic',
-  anomaly: 'Anomaly',
-  mythic: 'Mythic',
-};
 
 export function RarityBadge({
   rarity,
@@ -27,7 +18,7 @@ export function RarityBadge({
           <img src={RARITY_ICON[rarity]} alt="" aria-hidden />
         </span>
       )}
-      {LABELS[rarity]}
+      {RARITY_LABELS[rarity]}
     </span>
   );
 }

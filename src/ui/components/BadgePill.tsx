@@ -1,4 +1,4 @@
-import type { BadgeFamily, BadgeHit, RarityTier } from '../../game';
+import type { BadgeFamily, BadgeHit } from '../../game';
 import { familyPillClass } from '../../lib/badge-theme';
 
 export type BadgePillData = {
@@ -51,11 +51,3 @@ export function BadgePill({
     </span>
   );
 }
-
-/** Rarity-tinted fallback when family is unknown (e.g. raw snippets). */
-export function rarityTintedPillClass(rarity?: string | null): string {
-  void rarity;
-  return familyPillClass(undefined);
-}
-
-export type { RarityTier };

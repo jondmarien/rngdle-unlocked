@@ -7,7 +7,7 @@ import {
 } from '../../game';
 import { playRollSound, shouldCelebrate } from '../../game/fx';
 import { createLogger } from '../../lib/logger';
-import { useGame } from '../../state/GameProvider';
+import { useGame, useGameSettings } from '../../state/GameProvider';
 import { BadgeBreakdown } from '../components/BadgeCard';
 import { BestRollCard } from '../components/BestRollCard';
 import { CommunityHighlights } from '../components/CommunityHighlights';
@@ -41,7 +41,6 @@ export function HomeScreen({
     lastSecretUnlocks,
     lastNewBadgeIds,
     lifetimeRollCount,
-    settings,
     stats,
     history,
     fireCelebration,
@@ -49,6 +48,7 @@ export function HomeScreen({
     setRollMode,
     attestRoll,
   } = useGame();
+  const { settings } = useGameSettings();
   const [shareRoll, setShareRoll] = useState<RollResult | null>(null);
   const [replayRoll, setReplayRoll] = useState<RollResult | null>(null);
   const [attestMsg, setAttestMsg] = useState<string | null>(null);

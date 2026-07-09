@@ -5,7 +5,7 @@ import { buildRollShareUrl, buildShareText } from '../../game/shareText';
 import { useSession } from '../../lib/auth-client';
 import { createLogger } from '../../lib/logger';
 import { vanityRollPath } from '../../lib/routes';
-import { useGame } from '../../state/GameProvider';
+import { useCloudSync } from '../../state/GameProvider';
 import { RarityBadge } from './RarityBadge';
 import { EPPill } from './EPPill';
 
@@ -29,10 +29,8 @@ export function SharePanel({
   onGoAccount?: () => void;
 }) {
   const { data: session } = useSession();
-  const { waitForCloudPublish, syncing } = useGame();
-  const username =
-    (session?.user as { username?: string | null } | undefined)?.username ??
-    null;
+  const { waitForCloudPublish, syncing } = useCloudSync();
+  const username = session?.user.username ?? null;
   const loggedIn = Boolean(session?.user);
   const cardRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<string | null>(null);

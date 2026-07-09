@@ -3,16 +3,9 @@ import {
   type RollHighlight,
   type RollResult,
 } from '../../game';
+import { formatDateTime } from '../../lib/format';
 import { EPPill } from './EPPill';
 import { RarityBadge } from './RarityBadge';
-
-function fmtDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString();
-  } catch {
-    return iso;
-  }
-}
 
 /**
  * Pinned best-roll summary (History / Showcase / Home).
@@ -83,7 +76,7 @@ export function BestRollCard({
       </div>
       <p className="mt-1.5 text-xs text-[var(--prose-3)]">
         {best.badgeCount} badge{best.badgeCount === 1 ? '' : 's'} ·{' '}
-        {fmtDate(best.rolledAt)}
+        {formatDateTime(best.rolledAt)}
       </p>
       {best.topBadges.length > 0 && (
         <p className="mt-2 text-sm leading-snug text-[var(--prose-2)]">

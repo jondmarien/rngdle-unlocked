@@ -1,24 +1,21 @@
 import { useMemo, useState } from 'react';
 import type { RollResult } from '../../game';
-import { useGame } from '../../state/GameProvider';
+import { formatDateTime } from '../../lib/format';
+import { useGame, useGameSettings } from '../../state/GameProvider';
 import { BestRollCard } from '../components/BestRollCard';
 import { RollReplayModal } from '../components/RollReplayModal';
 import { SharePanel } from '../components/ShareCard';
+import { StatTile } from '../components/StatTile';
 
-function fmtDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString();
-  } catch {
-    return iso;
-  }
-}
+const SHOWCASE_LABEL = 'text-xs font-semibold text-[var(--prose-3)]';
 
 export function ShowcaseScreen({
   onGoAccount,
 }: {
   onGoAccount?: () => void;
 } = {}) {
-  const { stats, lifetimeRollCount, lifetimeEP, history, settings } = useGame();
+  const { stats, lifetimeRollCount, lifetimeEP, history } = useGame();
+  const { settings } = useGameSettings();
   const best = stats.bestRoll;
   const [shareRoll, setShareRoll] = useState<RollResult | null>(null);
   const [replayRoll, setReplayRoll] = useState<RollResult | null>(null);
@@ -39,21 +36,28 @@ export function ShowcaseScreen({
       </div>
 
       <section className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <StatCard
+        <StatTile
           label="Day streak"
           value={String(stats.dayStreak)}
           sub={`Best ${stats.bestDayStreak}`}
+          labelClassName={SHOWCASE_LABEL}
         />
-        <StatCard
+        <StatTile
           label="Quality streak"
           value={String(stats.qualityStreak)}
           sub={`Best ${stats.bestQualityStreak} (uncommon+)`}
+          labelClassName={SHOWCASE_LABEL}
         />
-        <StatCard
+        <StatTile
           label="Lifetime rolls"
           value={lifetimeRollCount.toLocaleString()}
+          labelClassName={SHOWCASE_LABEL}
         />
-        <StatCard label="Lifetime EP" value={lifetimeEP.toLocaleString()} />
+        <StatTile
+          label="Lifetime EP"
+          value={lifetimeEP.toLocaleString()}
+          labelClassName={SHOWCASE_LABEL}
+        />
       </section>
 
       <section className="space-y-2">
@@ -100,8 +104,8 @@ export function ShowcaseScreen({
                 </span>
               </div>
               <p className="text-xs text-[var(--prose-3)]">
-                Avg {c.avgEP.toLocaleString()} EP · {fmtDate(c.fromAt)} →{' '}
-                {fmtDate(c.toAt)}
+                Avg {c.avgEP.toLocaleString()} EP · {formatDateTime(c.fromAt)} →{' '}
+                {formatDateTime(c.toAt)}
               </p>
               <ul className="mt-2 flex flex-wrap gap-2">
                 {c.rolls.map((r) => (
@@ -142,26 +146,6 @@ export function ShowcaseScreen({
             setReplayRoll(null);
           }}
         />
-      )}
-    </div>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  sub,
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-}) {
-  return (
-    <div className="rounded-lg border border-[var(--outline)] bg-[var(--surface)] p-3">
-      <div className="text-xs font-semibold text-[var(--prose-3)]">{label}</div>
-      <div className="mono-number text-xl font-bold">{value}</div>
-      {sub && (
-        <div className="mt-0.5 text-[11px] text-[var(--prose-3)]">{sub}</div>
       )}
     </div>
   );

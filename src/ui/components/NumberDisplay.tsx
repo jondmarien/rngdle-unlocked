@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { RarityTier } from '../../game';
 import { formatRollDigits } from '../../game/digits';
+import { RARITY_GLOW } from '../../lib/badge-theme';
 
 const SPIN_INTERVAL_MS = 42;
 /** Spin all digits before first lock */
@@ -25,16 +26,6 @@ function randomDigit(): string {
 function toDigits(n: number): string[] {
   return formatRollDigits(n).split('');
 }
-
-const RARITY_GLOW: Record<RarityTier, string> = {
-  trash: 'shadow-[0_0_28px_rgba(110,106,98,0.35)] ring-zinc-500/40',
-  common: 'shadow-[0_0_36px_rgba(61,122,74,0.45)] ring-emerald-400/50',
-  uncommon: 'shadow-[0_0_40px_rgba(45,212,191,0.5)] ring-teal-400/55',
-  rare: 'shadow-[0_0_44px_rgba(59,130,246,0.55)] ring-blue-400/60',
-  epic: 'shadow-[0_0_48px_rgba(167,139,250,0.55)] ring-violet-400/60',
-  anomaly: 'shadow-[0_0_52px_rgba(234,88,12,0.55)] ring-orange-400/65',
-  mythic: 'shadow-[0_0_56px_rgba(219,39,119,0.55)] ring-pink-400/70',
-};
 
 export function NumberDisplay({
   value,

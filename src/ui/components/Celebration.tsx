@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import Confetti from 'react-confetti';
 import type { RarityTier } from '../../game';
 import { celebrateIntensity } from '../../game/fx';
-import { useGame } from '../../state/GameProvider';
+import { useGame, useGameSettings } from '../../state/GameProvider';
 
 type Burst = {
   id: number;
@@ -31,7 +31,8 @@ const PALETTES: Record<'rare' | 'epic' | 'anomaly' | 'mythic', string[]> = {
  * GPU-friendly (transform/opacity only). Respects reduced-motion + settings.
  */
 export function CelebrationLayer() {
-  const { confettiToken, celebrateRarity, settings } = useGame();
+  const { confettiToken, celebrateRarity } = useGame();
+  const { settings } = useGameSettings();
   const [burst, setBurst] = useState<Burst | null>(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [reduced, setReduced] = useState(false);

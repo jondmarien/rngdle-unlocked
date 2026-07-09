@@ -8,6 +8,7 @@ import {
   type BadgeFamily,
   type SecretBadgeDef,
 } from '../../game';
+import { formatDateTimeMedium, formatRelative } from '../../lib/format';
 import { FAMILY_ICON } from '../../lib/icons';
 import { useGame } from '../../state/GameProvider';
 
@@ -43,36 +44,12 @@ const FAMILY_HINT: Record<Exclude<BadgeFamily, 'secret'>, string> = {
   journey: 'Lifetime milestone — keep rolling.',
 };
 
-function formatUnlockedAt(iso: string | undefined): string | null {
-  if (!iso) return null;
-  try {
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return null;
-    return d.toLocaleString(undefined, {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    });
-  } catch {
-    return null;
-  }
-}
-
 function isRecentUnlock(iso: string | undefined, now: number): boolean {
   if (!iso) return false;
   const t = Date.parse(iso);
   if (!Number.isFinite(t)) return false;
   const age = now - t;
   return age >= 0 && age <= NEW_WINDOW_MS;
-}
-
-function formatAgeMs(iso: string | undefined, now: number): string | null {
-  if (!iso) return null;
-  const t = Date.parse(iso);
-  if (!Number.isFinite(t)) return null;
-  const sec = Math.max(0, Math.floor((now - t) / 1000));
-  if (sec < 60) return `${sec}s ago`;
-  const min = Math.floor(sec / 60);
-  return `${min}m ago`;
 }
 
 /** Badge encyclopedia — locked vs unlocked with spoiler-safe copy + secret tab. */
@@ -290,8 +267,8 @@ export function CollectionScreen() {
             {numberList.map((b) => {
               const has = unlocked.has(b.id);
               const at = unlockedAt.get(b.id);
-              const when = has ? formatUnlockedAt(at) : null;
-              const age = filter === 'new' ? formatAgeMs(at, now) : null;
+              const when = has ? formatDateTimeMedium(at) : null;
+              const age = filter === 'new' ? formatRelative(at, now) : null;
               const fresh = has && recentIds.has(b.id);
               return (
                 <article
@@ -403,8 +380,8 @@ export function CollectionScreen() {
             {journeyList.map((b) => {
               const has = unlocked.has(b.id);
               const at = unlockedAt.get(b.id);
-              const when = has ? formatUnlockedAt(at) : null;
-              const age = filter === 'new' ? formatAgeMs(at, now) : null;
+              const when = has ? formatDateTimeMedium(at) : null;
+              const age = filter === 'new' ? formatRelative(at, now) : null;
               const fresh = has && recentIds.has(b.id);
               return (
                 <article
@@ -475,7 +452,7 @@ export function CollectionScreen() {
                 isFresh={recentIds.has(s.id)}
                 ageLabel={
                   filter === 'new'
-                    ? formatAgeMs(unlockedAt.get(s.id), now)
+                    ? formatRelative(unlockedAt.get(s.id), now)
                     : null
                 }
               />
@@ -512,7 +489,7 @@ function SecretCard({
 }) {
   const has = unlocked.has(secret.id);
   const isOmega = secret.tier === 'omega';
-  const when = has ? formatUnlockedAt(unlockedAt) : null;
+  const when = has ? formatDateTimeMedium(unlockedAt) : null;
   const progress =
     secret.section !== 'omega'
       ? sectionProgress(secret.section, unlocked)

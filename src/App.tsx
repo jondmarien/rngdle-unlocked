@@ -25,9 +25,7 @@ const log = createLogger('router');
 
 function AppRoutes() {
   const { data: session } = useSession();
-  const myUsername =
-    (session?.user as { username?: string | null } | undefined)?.username ??
-    null;
+  const myUsername = session?.user.username ?? null;
 
   const [route, setRoute] = useState<AppRoute>(() =>
     typeof window !== 'undefined'

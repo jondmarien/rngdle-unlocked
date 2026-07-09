@@ -1,27 +1,9 @@
 import { useMemo } from 'react';
 import type { RarityTier } from '../../game';
-import { RARITY_LABELS, localDateKey } from '../../game';
+import { RARITY_LABELS, RARITY_ORDER, localDateKey } from '../../game';
+import { RARITY_BAR } from '../../lib/badge-theme';
 import { useGame } from '../../state/GameProvider';
-
-const RARITY_ORDER: RarityTier[] = [
-  'trash',
-  'common',
-  'uncommon',
-  'rare',
-  'epic',
-  'anomaly',
-  'mythic',
-];
-
-const RARITY_BAR: Record<RarityTier, string> = {
-  trash: 'bg-zinc-500',
-  common: 'bg-slate-400',
-  uncommon: 'bg-emerald-500',
-  rare: 'bg-sky-500',
-  epic: 'bg-violet-500',
-  anomaly: 'bg-orange-500',
-  mythic: 'bg-amber-400',
-};
+import { StatTile } from '../components/StatTile';
 
 /** Feature 8 — rarity histogram, EP/hour, streak calendar. */
 export function StatsScreen() {
@@ -89,13 +71,13 @@ export function StatsScreen() {
       </div>
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <Tile label="Lifetime EP" value={lifetimeEP.toLocaleString()} />
-        <Tile
+        <StatTile label="Lifetime EP" value={lifetimeEP.toLocaleString()} />
+        <StatTile
           label="Lifetime rolls"
           value={lifetimeRollCount.toLocaleString()}
         />
-        <Tile label="Journey EP" value={journeyEP.toLocaleString()} />
-        <Tile
+        <StatTile label="Journey EP" value={journeyEP.toLocaleString()} />
+        <StatTile
           label="EP / hour"
           value={
             epPerHour == null
@@ -196,15 +178,6 @@ export function StatsScreen() {
           <span>{calendar.days[calendar.days.length - 1]?.key}</span>
         </div>
       </section>
-    </div>
-  );
-}
-
-function Tile({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-[var(--outline)] bg-[var(--surface)] p-3">
-      <div className="text-sm font-semibold text-[var(--prose-2)]">{label}</div>
-      <div className="mono-number text-xl font-bold">{value}</div>
     </div>
   );
 }

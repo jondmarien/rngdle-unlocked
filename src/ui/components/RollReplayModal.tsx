@@ -1,15 +1,8 @@
 import { topPercentFromEP, type RollResult } from '../../game';
+import { formatDateTime } from '../../lib/format';
 import { BadgeBreakdown } from './BadgeCard';
 import { EPPill } from './EPPill';
 import { RarityBadge } from './RarityBadge';
-
-function fmtDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString();
-  } catch {
-    return iso;
-  }
-}
 
 /** Full badge breakdown for a past roll (History / Showcase / best pin). */
 export function RollReplayModal({
@@ -50,7 +43,7 @@ export function RollReplayModal({
               </span>
             </div>
             <p className="mt-2 text-xs text-[var(--prose-3)]">
-              {fmtDate(roll.rolledAt)}
+              {formatDateTime(roll.rolledAt)}
               {roll.challengeKey ? ` · ${roll.challengeKey}` : ''}
               {roll.attestationSeal ? ' · sealed' : ''}
             </p>

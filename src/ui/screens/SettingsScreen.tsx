@@ -1,8 +1,17 @@
 import { useRef, useState } from 'react';
-import { useGame } from '../../state/GameProvider';
+import { useGame, useGameSettings } from '../../state/GameProvider';
 import { ThemeToggle } from '../layout/ThemeToggle';
 
 export function SettingsScreen() {
+  const {
+    clearAll,
+    exportSave,
+    importSave,
+    lifetimeEP,
+    lifetimeRollCount,
+    journeyEP,
+    stats,
+  } = useGame();
   const {
     settings,
     setTheme,
@@ -12,14 +21,7 @@ export function SettingsScreen() {
     setAutoScrollBadges,
     setAutoShareHighRarity,
     setShowLatestRuns,
-    clearAll,
-    exportSave,
-    importSave,
-    lifetimeEP,
-    lifetimeRollCount,
-    journeyEP,
-    stats,
-  } = useGame();
+  } = useGameSettings();
   const [confirm, setConfirm] = useState(false);
   const [importMsg, setImportMsg] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
