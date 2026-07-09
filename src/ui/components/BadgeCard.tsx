@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { BadgeHit } from '../../game';
 import { formatRollDigits } from '../../game/digits';
 import { RARITY_LABELS } from '../../game/rarity';
@@ -160,6 +160,8 @@ export function BadgeBreakdown({
   const [visibleCount, setVisibleCount] = useState(
     animateCascade && !prefersReducedMotion() ? 0 : sorted.length,
   );
+  const lastItemRef = useRef<HTMLLIElement | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
 
   const badgeSig = sorted.map((b) => b.id).join('|');
 
@@ -185,6 +187,37 @@ export function BadgeBreakdown({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animateCascade, badgeSig]);
 
+  // Keep the newest cascading badge in view (window + nested overflow)
+  useEffect(() => {
+    if (!animateCascade || visibleCount < 1) return;
+    if (prefersReducedMotion()) return;
+
+    const smooth = { behavior: 'smooth' as const };
+    // First badge: bring the breakdown section into view
+    if (visibleCount === 1) {
+      rootRef.current?.scrollIntoView({ ...smooth, block: 'start' });
+    }
+
+    // After paint, follow the latest card so the user doesn't scroll manually
+    const id = window.requestAnimationFrame(() => {
+      lastItemRef.current?.scrollIntoView({
+        ...smooth,
+        block: 'nearest',
+        inline: 'nearest',
+      });
+      // Prefer pinning the latest card toward the lower third of the viewport
+      // when the list is growing long
+      if (visibleCount > 2) {
+        lastItemRef.current?.scrollIntoView({
+          ...smooth,
+          block: 'end',
+          inline: 'nearest',
+        });
+      }
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [visibleCount, animateCascade]);
+
   if (badges.length === 0) {
     return (
       <p className="py-6 text-center text-base text-[var(--prose-2)]">
@@ -196,7 +229,7 @@ export function BadgeBreakdown({
   const shown = sorted.slice(0, Math.max(visibleCount, 0));
 
   return (
-    <div className="space-y-3">
+    <div ref={rootRef} className="space-y-3">
       <div className="flex items-baseline justify-between gap-2 px-0.5">
         <h2 className="text-base font-bold uppercase tracking-wider text-[var(--prose)]">
           Badge breakdown
@@ -213,18 +246,28 @@ export function BadgeBreakdown({
         </span>
       </div>
       <ul className="space-y-2.5">
-        {shown.map((b, i) => (
-          <li key={b.id}>
-            <BadgeCard
-              badge={b}
-              number={number}
-              isNew={newSet.has(b.id)}
-              cascadeIndex={i}
-              animateIn={animateCascade}
-            />
-          </li>
-        ))}
+        {shown.map((b, i) => {
+          const isLatest = i === shown.length - 1;
+          return (
+            <li
+              key={b.id}
+              ref={isLatest ? lastItemRef : undefined}
+            >
+              <BadgeCard
+                badge={b}
+                number={number}
+                isNew={newSet.has(b.id)}
+                cascadeIndex={i}
+                animateIn={animateCascade}
+              />
+            </li>
+          );
+        })}
       </ul>
+      {/* Spacer so the last card can scroll above the fold / bottom nav */}
+      {animateCascade && visibleCount > 0 && (
+        <div className="h-16 shrink-0" aria-hidden />
+      )}
     </div>
   );
 }

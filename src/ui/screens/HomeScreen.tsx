@@ -306,10 +306,7 @@ export function HomeScreen({
       </div>
 
       {lastRoll && revealDone && (
-        <div
-          key={cascadeKey}
-          className="mt-8 min-h-0 flex-1 overflow-y-auto pb-4"
-        >
+        <div key={cascadeKey} className="mt-8 min-h-0 flex-1 pb-8">
           <BadgeBreakdown
             badges={lastRoll.badges}
             number={lastRoll.number}
