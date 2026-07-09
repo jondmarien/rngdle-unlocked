@@ -33,7 +33,7 @@
     "dotenv": "^17.4.2",
     "drizzle-kit": "^0.31.10",
     "tailwindcss": "^4.3.2",
-    "typescript": "~5.8.3",
+    "typescript": "~7.0.2",
     "vite": "^6.3.5",
     "vite-plus": "^0.2.4"
   }

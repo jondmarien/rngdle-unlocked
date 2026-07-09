@@ -11,10 +11,11 @@ export const ROLL_RANGE = ROLL_MAX + 1; // 1_000_001
 export const REJECT_THRESHOLD = Math.floor(0x1_0000_0000 / ROLL_RANGE) * ROLL_RANGE;
 
 function getCrypto(): Crypto {
-  if (typeof globalThis.crypto !== 'undefined' && globalThis.crypto.getRandomValues) {
-    return globalThis.crypto;
+  const c = globalThis.crypto;
+  if (typeof c === 'undefined' || typeof c.getRandomValues !== 'function') {
+    throw new Error('Web Crypto API is required for fortified rolls');
   }
-  throw new Error('Web Crypto API is required for fortified rolls');
+  return c;
 }
 
 /** Fill buffer with CSPRNG bytes (not Math.random, not seedable). */
