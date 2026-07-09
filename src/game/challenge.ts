@@ -1,4 +1,4 @@
-import { mapBytesToInclusiveRange, REJECT_THRESHOLD } from './rng';
+import { mapBytesToInclusiveRange, REJECT_THRESHOLD } from './rng.js';
 
 export type ChallengeKind = 'daily' | 'weekly';
 

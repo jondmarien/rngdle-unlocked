@@ -1,6 +1,6 @@
-import { ensureShortCode } from './evaluate';
-import { vanityUserSegment } from './ids';
-import type { BadgeHit, RarityTier, RollResult } from './types';
+import { ensureShortCode } from './evaluate.js';
+import { vanityUserSegment } from './ids.js';
+import type { BadgeHit, RarityTier, RollResult } from './types.js';
 
 const RARITY_SQUARE: Record<RarityTier, string> = {
   trash: '⬛',

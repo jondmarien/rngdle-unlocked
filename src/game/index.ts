@@ -10,8 +10,8 @@ export type {
   RollHighlight,
   RollResult,
   ThemeMode,
-} from './types';
-export { rollToHighlight } from './types';
+} from './types.js';
+export { rollToHighlight } from './types.js';
 
 export {
   ROLL_MAX,
@@ -19,34 +19,34 @@ export {
   CEILING_JACKPOT_ODDS,
   rollNumber,
   assertValidRollNumber,
-} from './rng';
-export { DISPLAY_WIDTH, formatRollDigits, naturalDigits } from './digits';
+} from './rng.js';
+export { DISPLAY_WIDTH, formatRollDigits, naturalDigits } from './digits.js';
 export {
   contributeEntropy,
   contributeKeyEntropy,
   contributePointerEntropy,
   mixPoolInto,
-} from './entropyPool';
+} from './entropyPool.js';
 export {
   rarityFromEP,
   badgeRarityFromEP,
   RARITY_THRESHOLDS,
   RARITY_LABELS,
-} from './rarity';
+} from './rarity.js';
 export {
   percentileFromEP,
   topPercentFromPercentile,
   topPercentFromEP,
-} from './percentile';
-export { sumEP } from './score';
-export { evaluateBadges, NUMBER_BADGES, badgeById } from './badges';
-export { evaluateNumber, performRoll, ensureShortCode } from './evaluate';
+} from './percentile.js';
+export { sumEP } from './score.js';
+export { evaluateBadges, NUMBER_BADGES, badgeById } from './badges/index.js';
+export { evaluateNumber, performRoll, ensureShortCode } from './evaluate.js';
 export {
   makeShortCode,
   newRollId,
   isUuid,
   vanityUserSegment,
-} from './ids';
+} from './ids.js';
 export {
   JOURNEY_THRESHOLDS,
   JOURNEY_BADGES,
@@ -54,16 +54,16 @@ export {
   newlyUnlockedJourney,
   journeyHits,
   sumJourneyEP,
-} from './journey';
+} from './journey.js';
 export {
   applyStreaks,
   recomputeBestConsecutive,
   defaultPlayStats,
   isQualityRarity,
   localDateKey,
-} from './stats';
-export { playRollSound, shouldCelebrate } from './fx';
-export { buildShareText, buildFlavorQuote } from './shareText';
+} from './stats.js';
+export { playRollSound, shouldCelebrate } from './fx.js';
+export { buildShareText, buildFlavorQuote } from './shareText.js';
 export {
   buildPeriodSeed,
   challengeNumber,
@@ -71,7 +71,7 @@ export {
   utcWeekKey,
   type ChallengeInfo,
   type ChallengeKind,
-} from './challenge';
+} from './challenge.js';
 export {
   SECRET_BADGES,
   SECTION_SECRETS,
@@ -87,5 +87,4 @@ export {
   mergeSecretUnlocks,
   type SecretBadgeDef,
   type SectionFamily,
-} from './secrets';
-
+} from './secrets.js';

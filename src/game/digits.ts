@@ -1,4 +1,4 @@
-import { ROLL_MAX } from './rng';
+import { ROLL_MAX } from './rng.js';
 
 /** Max possible digit count for a roll (1_000_000 → 7). */
 export const DISPLAY_WIDTH = String(ROLL_MAX).length;

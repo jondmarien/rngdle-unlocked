@@ -1,7 +1,7 @@
-import { NUMBER_BADGES } from './badges/catalog';
-import { JOURNEY_BADGES } from './journey';
-import { badgeRarityFromEP } from './rarity';
-import type { BadgeFamily, BadgeHit, CollectionEntry } from './types';
+import { NUMBER_BADGES } from './badges/catalog.js';
+import { JOURNEY_BADGES } from './journey.js';
+import { badgeRarityFromEP } from './rarity.js';
+import type { BadgeFamily, BadgeHit, CollectionEntry } from './types.js';
 
 /** Number families that grant a section mastery secret when fully collected. */
 export const SECTION_FAMILIES = [

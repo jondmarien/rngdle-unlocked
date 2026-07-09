@@ -1,4 +1,4 @@
-import { ROLL_MAX } from '../rng';
+import { ROLL_MAX } from '../rng.js';
 
 export function digitsOf(n: number): string {
   return String(n);

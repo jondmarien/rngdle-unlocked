@@ -1,4 +1,4 @@
-import type { RarityTier } from './types';
+import type { RarityTier } from './types.js';
 
 /** Soft Web Audio blip — no asset files required. */
 export function playRollSound(rarity: RarityTier, enabled: boolean): void {

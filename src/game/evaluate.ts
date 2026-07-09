@@ -1,10 +1,10 @@
-import { evaluateBadges } from './badges/index';
-import { makeShortCode, newRollId } from './ids';
-import { percentileFromEP } from './percentile';
-import { rarityFromEP } from './rarity';
-import { assertValidRollNumber, rollNumber } from './rng';
-import { sumEP } from './score';
-import type { RollResult } from './types';
+import { evaluateBadges } from './badges/index.js';
+import { makeShortCode, newRollId } from './ids.js';
+import { percentileFromEP } from './percentile.js';
+import { rarityFromEP } from './rarity.js';
+import { assertValidRollNumber, rollNumber } from './rng.js';
+import { sumEP } from './score.js';
+import type { RollResult } from './types.js';
 
 export function evaluateNumber(
   n: number,

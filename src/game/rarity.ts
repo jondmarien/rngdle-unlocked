@@ -1,4 +1,4 @@
-import type { RarityTier } from './types';
+import type { RarityTier } from './types.js';
 
 /**
  * Full-roll rarity from total EP.

@@ -1,5 +1,5 @@
-import { badgeRarityFromEP } from './rarity';
-import type { BadgeDef, BadgeHit } from './types';
+import { badgeRarityFromEP } from './rarity.js';
+import type { BadgeDef, BadgeHit } from './types.js';
 
 export const JOURNEY_THRESHOLDS = [
   5, 10, 15, 20, 50, 100, 250, 500, 1000, 1500, 2000, 3000, 4000, 5000, 10_000,

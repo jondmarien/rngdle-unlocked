@@ -1,4 +1,4 @@
-import { mixPoolInto } from './entropyPool';
+import { mixPoolInto } from './entropyPool.js';
 
 /** Inclusive maximum roll value (0 … ROLL_MAX). Absolute Ceiling = 1_000_000. */
 export const ROLL_MAX = 1_000_000;

@@ -1,9 +1,9 @@
-import { badgeRarityFromEP } from '../rarity';
-import { maskAll } from '../highlights';
-import type { BadgeHit } from '../types';
-import { NUMBER_BADGES } from './catalog';
+import { badgeRarityFromEP } from '../rarity.js';
+import { maskAll } from '../highlights.js';
+import type { BadgeHit } from '../types.js';
+import { NUMBER_BADGES } from './catalog.js';
 
-export { NUMBER_BADGES, badgeById } from './catalog';
+export { NUMBER_BADGES, badgeById } from './catalog.js';
 
 export function evaluateBadges(n: number): BadgeHit[] {
   const hits: BadgeHit[] = [];

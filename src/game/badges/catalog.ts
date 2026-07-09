@@ -1,4 +1,4 @@
-import type { BadgeDef } from '../types';
+import type { BadgeDef } from '../types.js';
 import {
   hasConsecutiveSequence,
   maskAll,
@@ -10,7 +10,7 @@ import {
   maskSubstring,
   maskWhere,
   uniqueDigitCount,
-} from '../highlights';
+} from '../highlights.js';
 import {
   allEvenDigits,
   allOddDigits,
@@ -57,7 +57,7 @@ import {
   pokerHand,
   startsWith,
   zeroCount,
-} from './matchers';
+} from './matchers.js';
 
 function exact(
   id: string,

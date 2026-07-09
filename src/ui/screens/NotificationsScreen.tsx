@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSession } from '../../lib/auth-client';
 import {
   ensureNotificationPermission,
@@ -27,6 +27,8 @@ export function NotificationsScreen({
   const [loading, setLoading] = useState(true);
   const [webNotify, setWebNotify] = useState(() => loadWebNotifyPref());
   const [busy, setBusy] = useState(false);
+  /** Prevent concurrent auto-clear of system inbox. */
+  const clearingSystem = useRef(false);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -36,8 +38,10 @@ export function NotificationsScreen({
       setActivity(data.activity);
       setSystem(data.system);
       setUnread(data.unread);
+      return data;
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed');
+      return null;
     } finally {
       setLoading(false);
     }
@@ -50,6 +54,38 @@ export function NotificationsScreen({
     }
     void reload();
   }, [session?.user, reload]);
+
+  /**
+   * Viewing System messages marks the whole system inbox read —
+   * no need to click each crown notice.
+   */
+  const clearSystemOnView = useCallback(async () => {
+    if (clearingSystem.current) return;
+    if (unread.system <= 0 && system.every((s) => s.read)) return;
+    clearingSystem.current = true;
+    try {
+      await markNotificationsRead({ markAll: true, tab: 'system' });
+      // Optimistic UI + badge
+      setSystem((prev) => prev.map((s) => ({ ...s, read: true })));
+      setUnread((u) => ({
+        activity: u.activity,
+        system: 0,
+        total: u.activity,
+      }));
+      // Refresh so shell poll / server state stay aligned
+      await reload();
+    } catch {
+      /* keep unread if mark failed */
+    } finally {
+      clearingSystem.current = false;
+    }
+  }, [reload, system, unread.system]);
+
+  useEffect(() => {
+    if (!session?.user || tab !== 'system' || loading) return;
+    if (unread.system <= 0) return;
+    void clearSystemOnView();
+  }, [session?.user, tab, loading, unread.system, clearSystemOnView]);
 
   const items = tab === 'activity' ? activity : system;
 
@@ -104,17 +140,20 @@ export function NotificationsScreen({
           <p className="text-sm text-[var(--prose-2)]">
             Activity is personal (follows, unlocks, when someone overtakes your
             daily / weekly / all-time crown). System messages are broadcasts —
-            including community crown notices — to everyone.
+            including community crown notices — to everyone. Opening System
+            messages marks them all read.
           </p>
         </div>
-        <button
-          type="button"
-          disabled={busy || items.every((i) => i.read)}
-          onClick={() => void markAll()}
-          className="rounded-md border border-[var(--outline)] px-3 py-2 text-sm font-semibold disabled:opacity-40"
-        >
-          Mark {tab} read
-        </button>
+        {tab === 'activity' && (
+          <button
+            type="button"
+            disabled={busy || items.every((i) => i.read)}
+            onClick={() => void markAll()}
+            className="rounded-md border border-[var(--outline)] px-3 py-2 text-sm font-semibold disabled:opacity-40"
+          >
+            Mark activity read
+          </button>
+        )}
       </div>
 
       <label className="flex cursor-pointer items-start gap-2 text-sm text-[var(--prose-2)]">
