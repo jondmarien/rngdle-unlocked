@@ -75,6 +75,16 @@ export function AboutScreen() {
             and profile pages at <code className="text-xs">/u/you</code>.
           </li>
           <li>
+            <strong className="text-[var(--prose)]">You on the board</strong> —
+            your rank is highlighted after sync; follow friends for a rare-roll
+            feed.
+          </li>
+          <li>
+            Optional <strong className="text-[var(--prose)]">daily/weekly challenge</strong>{' '}
+            seeds and <strong className="text-[var(--prose)]">Prove this roll</strong>{' '}
+            server seals for competitive bragging (RNG is still client-side).
+          </li>
+          <li>
             Share links look like{' '}
             <code className="text-xs">/s/yourname/xK9m2pQ3</code> (short code,
             no <code className="text-xs">/api</code>). They work for others after

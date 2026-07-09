@@ -56,6 +56,8 @@ export type ShareTextOptions = {
   username?: string | null;
   showRollCount?: boolean;
   rollCount?: number;
+  /** When false, omit public URL (logged-out or not yet cloud-published). */
+  includePublicLink?: boolean;
 };
 
 /** Vanity share URL: https://host/s/username/shortCode (no /api, no UUID). */
@@ -118,14 +120,15 @@ export function buildShareText(
   const quote = buildFlavorQuote(sorted);
   const ep = roll.totalEP.toLocaleString('en-US');
 
-  // Vanity path /s/user/code — Discord crawlers hit OG via Vercel rewrite;
-  // humans load the SPA. Requires cloud sync for other devices.
-  const link =
-    opts.rollShareUrl ??
-    buildRollShareUrl(roll, {
-      siteUrl: opts.siteUrl,
-      username: opts.username,
-    });
+  const includeLink = opts.includePublicLink !== false;
+  // Vanity path /s/user/code — requires cloud sync + account for public use.
+  const link = includeLink
+    ? (opts.rollShareUrl ??
+      buildRollShareUrl(roll, {
+        siteUrl: opts.siteUrl,
+        username: opts.username,
+      }))
+    : null;
 
   const lines = [
     `RNGdle Unlocked 🎲 ${numberPlain}`,
@@ -143,7 +146,9 @@ export function buildShareText(
     lines.push(`${opts.rollCount.toLocaleString('en-US')} lifetime rolls`);
   }
 
-  lines.push(link);
+  if (link) {
+    lines.push(link);
+  }
 
   return lines.join('\n');
 }

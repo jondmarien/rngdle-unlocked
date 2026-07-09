@@ -8,8 +8,9 @@ export type { TabId };
 const TABS: { id: TabId; label: string }[] = [
   { id: 'home', label: 'Roll' },
   { id: 'history', label: 'History' },
-  { id: 'collection', label: 'Collection' },
+  { id: 'collection', label: 'Codex' },
   { id: 'showcase', label: 'Showcase' },
+  { id: 'stats', label: 'Stats' },
   { id: 'leaderboard', label: 'Board' },
   { id: 'account', label: 'Account' },
   { id: 'about', label: 'About' },

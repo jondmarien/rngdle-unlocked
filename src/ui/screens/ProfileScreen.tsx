@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSession } from '../../lib/auth-client';
 
 type Profile = {
   username: string;
@@ -34,9 +35,16 @@ export function ProfileScreen({
   onOpenRoll: (id: string, username?: string | null) => void;
   onBack?: () => void;
 }) {
+  const { data: session } = useSession();
+  const myUsername =
+    (session?.user as { username?: string | null } | undefined)?.username ??
+    null;
   const [profile, setProfile] = useState<Profile | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [following, setFollowing] = useState(false);
+  const [followBusy, setFollowBusy] = useState(false);
+  const [followMsg, setFollowMsg] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -58,6 +66,72 @@ export function ProfileScreen({
       cancelled = true;
     };
   }, [username]);
+
+  useEffect(() => {
+    if (!session?.user) {
+      setFollowing(false);
+      return;
+    }
+    let cancelled = false;
+    fetch('/api/follow', { credentials: 'include' })
+      .then(async (r) => {
+        if (!r.ok) return;
+        const data = (await r.json()) as {
+          following?: { username: string | null }[];
+        };
+        if (cancelled) return;
+        const hit = (data.following ?? []).some(
+          (f) =>
+            f.username &&
+            f.username.toLowerCase() === username.toLowerCase(),
+        );
+        setFollowing(hit);
+      })
+      .catch(() => {
+        /* ignore */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.user, username]);
+
+  const isSelf =
+    myUsername &&
+    myUsername.toLowerCase() === username.toLowerCase();
+
+  const toggleFollow = async () => {
+    if (!session?.user) {
+      setFollowMsg('Sign in to follow players.');
+      return;
+    }
+    setFollowBusy(true);
+    setFollowMsg(null);
+    try {
+      if (following) {
+        const r = await fetch(
+          `/api/follow?username=${encodeURIComponent(username)}`,
+          { method: 'DELETE', credentials: 'include' },
+        );
+        const data = (await r.json()) as { error?: string };
+        if (!r.ok) throw new Error(data.error ?? 'Unfollow failed');
+        setFollowing(false);
+      } else {
+        const r = await fetch('/api/follow', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username }),
+        });
+        const data = (await r.json()) as { error?: string };
+        if (!r.ok) throw new Error(data.error ?? 'Follow failed');
+        setFollowing(true);
+      }
+    } catch (e) {
+      setFollowMsg(e instanceof Error ? e.message : 'Failed');
+    } finally {
+      setFollowBusy(false);
+    }
+  };
 
   if (loading) {
     return <p className="text-sm text-[var(--prose-3)]">Loading profile…</p>;
@@ -84,10 +158,29 @@ export function ProfileScreen({
           ← Back
         </button>
       )}
-      <div>
-        <h1 className="text-2xl font-bold">@{profile.username}</h1>
-        <p className="text-sm text-[var(--prose-3)]">{profile.name}</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">@{profile.username}</h1>
+          <p className="text-sm text-[var(--prose-3)]">{profile.name}</p>
+        </div>
+        {!isSelf && (
+          <button
+            type="button"
+            disabled={followBusy}
+            onClick={() => void toggleFollow()}
+            className={`border-2 px-3 py-1.5 text-xs font-bold uppercase ${
+              following
+                ? 'border-[var(--outline)] text-[var(--prose-3)]'
+                : 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
+            }`}
+          >
+            {following ? 'Following' : 'Follow'}
+          </button>
+        )}
       </div>
+      {followMsg && (
+        <p className="text-xs text-[var(--prose-3)]">{followMsg}</p>
+      )}
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Stat label="Lifetime EP" value={profile.lifetimeEP.toLocaleString()} />

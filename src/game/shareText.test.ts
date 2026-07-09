@@ -50,6 +50,15 @@ describe('buildShareText', () => {
     const text = buildShareText({ ...sample, badges: [] }, { siteUrl: 'https://x.test' });
     expect(text).toContain('⬜ (no badges)');
   });
+
+  it('omits public link when includePublicLink is false', () => {
+    const text = buildShareText(sample, {
+      siteUrl: 'https://example.com',
+      includePublicLink: false,
+    });
+    expect(text).not.toMatch(/https:\/\//);
+    expect(text).toContain('3,179 EP');
+  });
 });
 
 describe('buildFlavorQuote', () => {

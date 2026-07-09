@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toPng } from 'html-to-image';
 import {
   ensureShortCode,
@@ -9,6 +9,7 @@ import { buildRollShareUrl, buildShareText } from '../../game/shareText';
 import { useSession } from '../../lib/auth-client';
 import { createLogger } from '../../lib/logger';
 import { vanityRollPath } from '../../lib/routes';
+import { useGame } from '../../state/GameProvider';
 import { RarityBadge } from './RarityBadge';
 import { EPPill } from './EPPill';
 
@@ -16,40 +17,76 @@ export { buildShareText } from '../../game/shareText';
 
 const log = createLogger('share-panel');
 
+type PublishState = 'checking' | 'ready' | 'error' | 'logged-out';
+
 export function SharePanel({
   roll,
   rollCount,
   showRollCount,
   onClose,
+  onGoAccount,
 }: {
   roll: RollResult;
   rollCount: number;
   showRollCount: boolean;
   onClose: () => void;
+  onGoAccount?: () => void;
 }) {
   const { data: session } = useSession();
+  const { waitForCloudPublish, syncing } = useGame();
   const username =
     (session?.user as { username?: string | null } | undefined)?.username ??
     null;
+  const loggedIn = Boolean(session?.user);
   const cardRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<string | null>(null);
+  const [publish, setPublish] = useState<PublishState>(
+    loggedIn ? 'checking' : 'logged-out',
+  );
+
   const rollWithCode = ensureShortCode(roll);
+  const publicPath = vanityRollPath(username, rollWithCode.shortCode!);
+  const fullUrl = buildRollShareUrl(rollWithCode, { username });
+
+  const includePublicLink = loggedIn && publish === 'ready';
   const text = buildShareText(rollWithCode, {
     showRollCount,
     rollCount,
     username,
+    includePublicLink,
   });
-  const publicPath = vanityRollPath(username, rollWithCode.shortCode!);
-  const fullUrl = buildRollShareUrl(rollWithCode, { username });
+
+  useEffect(() => {
+    if (!loggedIn) {
+      setPublish('logged-out');
+      return;
+    }
+    let cancelled = false;
+    setPublish('checking');
+    log.info('publish:wait', { rollId: roll.id });
+    void waitForCloudPublish(rollWithCode).then((result) => {
+      if (cancelled) return;
+      if (result === 'ok') setPublish('ready');
+      else if (result === 'logged-out') setPublish('logged-out');
+      else setPublish('error');
+      log.info('publish:result', { result });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [loggedIn, roll.id, rollWithCode.shortCode, waitForCloudPublish]);
 
   const copyText = async () => {
     try {
       await navigator.clipboard.writeText(text);
-      log.info('copied share text', { rollId: roll.id });
+      log.info('copied share text', {
+        rollId: roll.id,
+        includePublicLink,
+      });
       setStatus(
-        username
-          ? 'Copied! Link looks like /s/you/shortCode (auto-syncs when signed in).'
-          : 'Copied! Set a username on Account for prettier /s/you/… links.',
+        includePublicLink
+          ? 'Copied for Discord!'
+          : 'Copied roll text (no public link).',
       );
     } catch {
       setStatus('Could not copy — select the text manually.');
@@ -103,19 +140,62 @@ export function SharePanel({
           </button>
         </div>
 
-        <p className="mb-2 text-xs text-[var(--prose-3)]">
-          Discord-style text — copy and paste into a chat. Vanity link (no{' '}
-          <code className="text-[10px]">/api</code>, short code):
-        </p>
-        <p className="mb-3 break-all font-mono text-[11px] text-[var(--prose)]">
-          {fullUrl}
-        </p>
-        <p className="mb-2 text-[10px] text-[var(--prose-3)]">
-          Path: <code>{publicPath}</code>
-          {!username && ' · set @username for your handle in the URL'}
-        </p>
+        {publish === 'logged-out' && (
+          <div className="mb-4 space-y-2 rounded-lg border border-[var(--outline)] bg-[var(--bg)] p-3 text-sm">
+            <p className="text-[var(--prose)]">
+              If you would like a <strong>public share link</strong>, please
+              create an account so rolls sync to the cloud.
+            </p>
+            <p className="text-xs text-[var(--prose-3)]">
+              You can still copy Discord-style roll text below (without a URL).
+            </p>
+            {onGoAccount && (
+              <button
+                type="button"
+                className="border-2 border-[var(--prose)] bg-[var(--prose)] px-3 py-1.5 text-xs font-bold uppercase text-[var(--bg)]"
+                onClick={() => {
+                  onClose();
+                  onGoAccount();
+                }}
+              >
+                Create account / sign in
+              </button>
+            )}
+          </div>
+        )}
 
-        {/* Primary: Discord paste block */}
+        {publish === 'checking' && (
+          <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[var(--prose-3)]">
+            {syncing ? 'Publishing to cloud…' : 'Waiting for cloud…'}
+          </p>
+        )}
+
+        {publish === 'error' && (
+          <p className="mb-3 text-xs text-red-600 dark:text-red-400">
+            Could not confirm cloud publish yet. Try Account → Push, then share
+            again.
+          </p>
+        )}
+
+        {includePublicLink && (
+          <>
+            <p className="mb-2 text-xs text-[var(--prose-3)]">Public vanity link:</p>
+            <p className="mb-3 break-all font-mono text-[11px] text-[var(--prose)]">
+              {fullUrl}
+            </p>
+            <p className="mb-2 text-[10px] text-[var(--prose-3)]">
+              Path: <code>{publicPath}</code>
+              {!username && ' · set @username for your handle in the URL'}
+            </p>
+          </>
+        )}
+
+        {publish === 'checking' && loggedIn && (
+          <p className="mb-3 break-all font-mono text-[11px] text-[var(--prose-3)] opacity-50">
+            {fullUrl}
+          </p>
+        )}
+
         <pre className="mb-3 overflow-x-auto whitespace-pre-wrap rounded-lg border border-[var(--outline)] bg-[#1e1f22] p-4 text-left font-mono text-[13px] leading-relaxed text-[#dbdee1]">
           {text}
         </pre>
@@ -124,27 +204,26 @@ export function SharePanel({
           <button
             type="button"
             className="border-2 border-[var(--prose)] bg-[var(--prose)] px-4 py-2 text-xs font-bold uppercase text-[var(--bg)]"
-            onClick={copyText}
+            onClick={() => void copyText()}
           >
             Copy for Discord
           </button>
           <button
             type="button"
             className="border border-[var(--prose)] px-3 py-2 text-xs font-bold uppercase"
-            onClick={nativeShare}
+            onClick={() => void nativeShare()}
           >
             Share…
           </button>
           <button
             type="button"
             className="border border-[var(--prose)] px-3 py-2 text-xs font-bold uppercase"
-            onClick={downloadPng}
+            onClick={() => void downloadPng()}
           >
             Download PNG
           </button>
         </div>
 
-        {/* Secondary: visual card for PNG */}
         <div
           ref={cardRef}
           className="space-y-2 rounded-lg border border-[var(--outline)] bg-[var(--bg)] p-6 text-center"

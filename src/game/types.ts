@@ -51,6 +51,10 @@ export type RollResult = {
   rarity: RarityTier;
   percentile: number;
   rolledAt: string;
+  /** When set, roll came from daily/weekly challenge seed. */
+  challengeKey?: string;
+  /** Server HMAC seal after POST /api/attest. */
+  attestationSeal?: string;
 };
 
 export type ThemeMode = 'light' | 'dark' | 'system';

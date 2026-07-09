@@ -54,4 +54,12 @@ export {
 } from './stats';
 export { playRollSound, shouldCelebrate } from './fx';
 export { buildShareText, buildFlavorQuote } from './shareText';
+export {
+  buildPeriodSeed,
+  challengeNumber,
+  utcDateKey,
+  utcWeekKey,
+  type ChallengeInfo,
+  type ChallengeKind,
+} from './challenge';
 

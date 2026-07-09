@@ -15,6 +15,7 @@ import { ProfileScreen } from './ui/screens/ProfileScreen';
 import { PublicRollScreen } from './ui/screens/PublicRollScreen';
 import { SettingsScreen } from './ui/screens/SettingsScreen';
 import { ShowcaseScreen } from './ui/screens/ShowcaseScreen';
+import { StatsScreen } from './ui/screens/StatsScreen';
 
 const log = createLogger('router');
 
@@ -95,10 +96,15 @@ function AppRoutes() {
           onBack={() => goTab('home')}
         />
       )}
-      {route.kind === 'tab' && tab === 'home' && <HomeScreen />}
-      {route.kind === 'tab' && tab === 'history' && <HistoryScreen />}
+      {route.kind === 'tab' && tab === 'home' && (
+        <HomeScreen onGoAccount={() => goTab('account')} />
+      )}
+      {route.kind === 'tab' && tab === 'history' && (
+        <HistoryScreen onGoAccount={() => goTab('account')} />
+      )}
       {route.kind === 'tab' && tab === 'collection' && <CollectionScreen />}
       {route.kind === 'tab' && tab === 'showcase' && <ShowcaseScreen />}
+      {route.kind === 'tab' && tab === 'stats' && <StatsScreen />}
       {route.kind === 'tab' && tab === 'leaderboard' && (
         <LeaderboardScreen onOpenProfile={goProfile} />
       )}

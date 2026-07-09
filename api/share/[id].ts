@@ -92,8 +92,9 @@ export default defineHandler(async (request) => {
     const code = row.shortCode || row.id;
     const handle = row.username || userHint || 'player';
     const spaUrl = `${origin}/s/${encodeURIComponent(handle)}/${encodeURIComponent(code)}`;
+    const ogImage = `${origin}/api/og?code=${encodeURIComponent(code)}&user=${encodeURIComponent(handle)}&n=${encodeURIComponent(String(row.number))}&r=${encodeURIComponent(String(row.rarity))}&ep=${encodeURIComponent(String(row.totalEp))}&u=${encodeURIComponent(handle)}`;
 
-    return htmlPage({ title, desc, spaUrl, status: 200 });
+    return htmlPage({ title, desc, spaUrl, ogImage, status: 200 });
   } catch (err) {
     log.error('handler threw', {
       err: err instanceof Error ? err.message : String(err),
@@ -107,8 +108,19 @@ function htmlPage(opts: {
   desc: string;
   spaUrl: string;
   status: number;
+  ogImage?: string;
 }): Response {
-  const { title, desc, spaUrl, status } = opts;
+  const { title, desc, spaUrl, status, ogImage } = opts;
+  const imageMeta = ogImage
+    ? `
+  <meta property="og:image" content="${escapeHtml(ogImage)}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="${escapeHtml(ogImage)}" />`
+    : `
+  <meta name="twitter:card" content="summary" />`;
+
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -120,8 +132,7 @@ function htmlPage(opts: {
   <meta property="og:title" content="${escapeHtml(title)}" />
   <meta property="og:description" content="${escapeHtml(desc)}" />
   <meta property="og:url" content="${escapeHtml(spaUrl)}" />
-  <meta property="og:site_name" content="RNGdle Unlocked" />
-  <meta name="twitter:card" content="summary" />
+  <meta property="og:site_name" content="RNGdle Unlocked" />${imageMeta}
   <meta name="twitter:title" content="${escapeHtml(title)}" />
   <meta name="twitter:description" content="${escapeHtml(desc)}" />
   <meta http-equiv="refresh" content="0;url=${escapeHtml(spaUrl)}" />

@@ -105,6 +105,8 @@ export async function loadCloudSave(
           ? r.rolledAt.toISOString()
           : String(r.rolledAt),
       badges: JSON.parse(r.badgesJson || '[]'),
+      challengeKey: r.challengeKey ?? undefined,
+      attestationSeal: r.attestationSeal ?? undefined,
     }))
     .sort((a, b) => (a.rolledAt < b.rolledAt ? 1 : -1))
     .slice(0, HISTORY_CAP);
@@ -191,6 +193,9 @@ export async function saveCloudMerge(
       createdAt: now,
       isPublic: true as const,
       shortCode,
+      challengeKey: r.challengeKey ?? null,
+      // Preserve existing seal on conflict; only set if client already has one
+      attestationSeal: r.attestationSeal ?? null,
     };
 
     if (shortCode) {
@@ -199,7 +204,11 @@ export async function saveCloudMerge(
         .values(values)
         .onConflictDoUpdate({
           target: rolls.id,
-          set: { isPublic: true, shortCode },
+          set: {
+            isPublic: true,
+            shortCode,
+            challengeKey: r.challengeKey ?? null,
+          },
         });
     } else {
       await db.insert(rolls).values(values).onConflictDoNothing();

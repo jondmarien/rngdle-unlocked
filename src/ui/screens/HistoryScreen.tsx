@@ -5,7 +5,11 @@ import { RarityBadge } from '../components/RarityBadge';
 import { SharePanel } from '../components/ShareCard';
 import type { RollResult } from '../../game';
 
-export function HistoryScreen() {
+export function HistoryScreen({
+  onGoAccount,
+}: {
+  onGoAccount?: () => void;
+} = {}) {
   const {
     history,
     selectRoll,
@@ -64,6 +68,7 @@ export function HistoryScreen() {
           rollCount={lifetimeRollCount}
           showRollCount={settings.shareShowRollCount}
           onClose={() => setShareRoll(null)}
+          onGoAccount={onGoAccount}
         />
       )}
     </div>

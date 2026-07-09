@@ -86,4 +86,9 @@ export const LIMITS = {
   rollsUploadPerHour: 120,
   leaderboardPerMinute: 60,
   profilePerMinute: 60,
+  followPerMinute: 30,
+  feedPerMinute: 60,
+  attestPerMinute: 20,
+  challengePerMinute: 60,
+  ogPerMinute: 120,
 } as const;

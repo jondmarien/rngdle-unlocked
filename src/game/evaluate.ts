@@ -6,7 +6,11 @@ import { assertValidRollNumber, rollNumber } from './rng';
 import { sumEP } from './score';
 import type { RollResult } from './types';
 
-export function evaluateNumber(n: number, at: Date = new Date()): RollResult {
+export function evaluateNumber(
+  n: number,
+  at: Date = new Date(),
+  extra?: { challengeKey?: string },
+): RollResult {
   assertValidRollNumber(n);
   const badges = evaluateBadges(n);
   const totalEP = sumEP(badges);
@@ -19,6 +23,7 @@ export function evaluateNumber(n: number, at: Date = new Date()): RollResult {
     rarity: rarityFromEP(totalEP),
     percentile: percentileFromEP(totalEP),
     rolledAt: at.toISOString(),
+    challengeKey: extra?.challengeKey,
   };
 }
 

@@ -5,15 +5,20 @@ import {
   topPercentFromPercentile,
 } from '../../game';
 import { playRollSound, shouldCelebrate } from '../../game/fx';
-import { useGame } from '../../state/GameProvider';
+import { useGame, type RollMode } from '../../state/GameProvider';
 import { BadgeBreakdown } from '../components/BadgeCard';
 import { EPPill } from '../components/EPPill';
 import { GenerateButton } from '../components/GenerateButton';
 import { NumberDisplay } from '../components/NumberDisplay';
+import { OnboardingTip } from '../components/OnboardingTip';
 import { RarityBadge } from '../components/RarityBadge';
 import { SharePanel } from '../components/ShareCard';
 
-export function HomeScreen() {
+export function HomeScreen({
+  onGoAccount,
+}: {
+  onGoAccount?: () => void;
+} = {}) {
   const {
     lastRoll,
     rolling,
@@ -24,8 +29,12 @@ export function HomeScreen() {
     settings,
     stats,
     fireCelebration,
+    rollMode,
+    setRollMode,
+    attestRoll,
   } = useGame();
   const [shareOpen, setShareOpen] = useState(false);
+  const [attestMsg, setAttestMsg] = useState<string | null>(null);
   const [slotValue, setSlotValue] = useState<number | null>(
     () => lastRoll?.number ?? null,
   );
@@ -75,6 +84,13 @@ export function HomeScreen() {
       if (settings.confettiEnabled && shouldCelebrate(lastRoll.rarity)) {
         fireCelebration();
       }
+      // Auto-open share on mythic / anomaly (feature 10)
+      if (
+        lastRoll.rarity === 'mythic' ||
+        lastRoll.rarity === 'anomaly'
+      ) {
+        setShareOpen(true);
+      }
       pendingFx.current = false;
     }
   };
@@ -85,9 +101,41 @@ export function HomeScreen() {
     <div className="flex min-h-0 w-full flex-1 flex-col">
       {/* Fixed action column — button never jumps when badges load */}
       <div className="flex shrink-0 flex-col items-center gap-4 text-center">
+        <OnboardingTip onGoAccount={onGoAccount} />
+
         <p className="max-w-sm text-sm text-[var(--prose-3)]">
           Unlimited rolls. No daily lock. Fortified browser CSPRNG.
         </p>
+
+        {/* Feature 5 — optional challenge mode */}
+        <div className="flex flex-wrap justify-center gap-1.5 text-[10px] font-bold uppercase">
+          {(
+            [
+              ['free', 'Free play'],
+              ['daily', 'Daily'],
+              ['weekly', 'Weekly'],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setRollMode(id as RollMode)}
+              className={`rounded border px-2 py-1 ${
+                rollMode === id
+                  ? 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
+                  : 'border-[var(--outline)] text-[var(--prose-3)]'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        {rollMode !== 'free' && (
+          <p className="max-w-sm text-[10px] text-[var(--prose-3)]">
+            Challenge mode: personal number from shared {rollMode} seed + your
+            account (verifiable). Free play stays unlimited CSPRNG.
+          </p>
+        )}
 
         {(stats.dayStreak > 0 || stats.qualityStreak > 0 || stats.bestRoll) && (
           <div className="flex flex-wrap justify-center gap-2 text-[10px] font-bold uppercase tracking-wider text-[var(--prose-3)]">
@@ -147,13 +195,46 @@ export function HomeScreen() {
         />
 
         {lastRoll && revealDone && (
-          <button
-            type="button"
-            className="text-xs font-bold uppercase tracking-wider text-[var(--prose-2)] underline-offset-2 hover:underline"
-            onClick={() => setShareOpen(true)}
-          >
-            Share this roll
-          </button>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <button
+              type="button"
+              className="text-xs font-bold uppercase tracking-wider text-[var(--prose-2)] underline-offset-2 hover:underline"
+              onClick={() => setShareOpen(true)}
+            >
+              Share this roll
+            </button>
+            {!lastRoll.attestationSeal && (
+              <button
+                type="button"
+                className="text-xs font-bold uppercase tracking-wider text-[var(--prose-3)] underline-offset-2 hover:underline"
+                onClick={() => {
+                  setAttestMsg(null);
+                  void attestRoll(lastRoll).then((r) => {
+                    setAttestMsg(
+                      r
+                        ? 'Server seal attached ✓'
+                        : 'Seal failed — sign in and sync first',
+                    );
+                  });
+                }}
+              >
+                Prove this roll
+              </button>
+            )}
+            {lastRoll.attestationSeal && (
+              <span className="text-[10px] font-bold uppercase text-emerald-600 dark:text-emerald-400">
+                ✓ Sealed
+              </span>
+            )}
+            {lastRoll.challengeKey && (
+              <span className="text-[10px] font-bold uppercase text-[var(--prose-3)]">
+                {lastRoll.challengeKey}
+              </span>
+            )}
+          </div>
+        )}
+        {attestMsg && (
+          <p className="text-xs text-[var(--prose-3)]">{attestMsg}</p>
         )}
 
         {saveError && (
@@ -174,6 +255,7 @@ export function HomeScreen() {
           rollCount={lifetimeRollCount}
           showRollCount={settings.shareShowRollCount}
           onClose={() => setShareOpen(false)}
+          onGoAccount={onGoAccount}
         />
       )}
     </div>

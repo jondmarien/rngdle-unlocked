@@ -3,6 +3,7 @@ export type TabId =
   | 'history'
   | 'collection'
   | 'showcase'
+  | 'stats'
   | 'leaderboard'
   | 'account'
   | 'about'
@@ -14,6 +15,7 @@ export const TAB_PATH: Record<TabId, string> = {
   history: '/history',
   collection: '/collection',
   showcase: '/showcase',
+  stats: '/stats',
   leaderboard: '/leaderboard',
   account: '/account',
   about: '/about',
@@ -26,6 +28,7 @@ const PATH_TO_TAB: Record<string, TabId> = {
   history: 'history',
   collection: 'collection',
   showcase: 'showcase',
+  stats: 'stats',
   leaderboard: 'leaderboard',
   board: 'leaderboard',
   account: 'account',

@@ -2,6 +2,7 @@ import {
   boolean,
   integer,
   pgTable,
+  primaryKey,
   real,
   text,
   timestamp,
@@ -91,7 +92,27 @@ export const rolls = pgTable('rolls', {
   isPublic: boolean('is_public').notNull().default(true),
   /** Short vanity code for /s/:user/:code */
   shortCode: text('short_code').unique(),
+  /** Optional HMAC seal from POST /api/attest */
+  attestationSeal: text('attestation_seal'),
+  attestedAt: timestamp('attested_at'),
+  /** Challenge period key when rolled in challenge mode (e.g. daily:2026-07-08) */
+  challengeKey: text('challenge_key'),
 });
+
+/** Social graph — follower follows following */
+export const follows = pgTable(
+  'follows',
+  {
+    followerId: text('follower_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    followingId: text('following_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.followerId, t.followingId] })],
+);
 
 /** Fixed-window rate limit counters (serverless-safe). */
 export const rateLimits = pgTable('rate_limits', {

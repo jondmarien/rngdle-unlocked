@@ -9,12 +9,16 @@ import {
   type ReactNode,
 } from 'react';
 import {
+  buildPeriodSeed,
+  challengeNumber,
+  evaluateNumber,
   performRoll,
   journeyHits,
   newlyUnlockedJourney,
   sumJourneyEP,
   type AppSettings,
   type BadgeHit,
+  type ChallengeKind,
   type CollectionEntry,
   type PlayStats,
   type RollResult,
@@ -39,6 +43,8 @@ import {
   saveState,
   type PersistedState,
 } from './storage';
+
+export type RollMode = 'free' | ChallengeKind;
 
 const log = createLogger('game');
 
@@ -72,7 +78,12 @@ type GameContextValue = {
   saveError: string | null;
   lastJourneyUnlocks: BadgeHit[];
   confettiToken: number;
+  /** free = unlimited CSPRNG; daily/weekly = optional challenge seed */
+  rollMode: RollMode;
+  setRollMode: (m: RollMode) => void;
   roll: () => Promise<RollOutcome | null>;
+  /** Optional server seal for competitive bragging (feature 4). */
+  attestRoll: (roll: RollResult) => Promise<{ seal: string } | null>;
   clearAll: () => void;
   setTheme: (theme: ThemeMode) => void;
   setShareShowRollCount: (v: boolean) => void;
@@ -87,6 +98,10 @@ type GameContextValue = {
   syncing: boolean;
   lastSyncAt: string | null;
   syncError: string | null;
+  /** Wait until roll is visible via public API (or fail). Logged-out → 'logged-out'. */
+  waitForCloudPublish: (
+    roll: RollResult,
+  ) => Promise<'ok' | 'error' | 'logged-out'>;
 };
 
 const GameContext = createContext<GameContextValue | null>(null);
@@ -115,6 +130,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [syncing, setSyncing] = useState(false);
   const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [rollMode, setRollMode] = useState<RollMode>('free');
 
   /** Coalesce rapid auto-syncs so spam-rolling doesn't race the server. */
   const autoSyncChain = useRef(Promise.resolve());
@@ -202,9 +218,37 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const roll = useCallback(async (): Promise<RollOutcome | null> => {
     if (rolling) return null;
     setRolling(true);
-    log.debug('roll:start', { lifetimeRollCount: state.lifetimeRollCount });
+    log.debug('roll:start', {
+      lifetimeRollCount: state.lifetimeRollCount,
+      rollMode,
+    });
     try {
-      const result = await performRoll();
+      let result: RollResult;
+      if (rollMode === 'free') {
+        result = await performRoll();
+      } else {
+        // Optional challenge: personal number from shared period seed + subject
+        const info = buildPeriodSeed(rollMode);
+        const userId = session?.user?.id;
+        let subject = userId ?? 'guest:anon';
+        if (!userId && typeof localStorage !== 'undefined') {
+          const key = 'rngdle-unlocked:v1:guest';
+          let g = localStorage.getItem(key);
+          if (!g) {
+            g = crypto.randomUUID();
+            try {
+              localStorage.setItem(key, g);
+            } catch {
+              /* ignore */
+            }
+          }
+          subject = `guest:${g}`;
+        }
+        const n = await challengeNumber(info.seed, subject);
+        result = evaluateNumber(n, new Date(), {
+          challengeKey: `${rollMode}:${info.periodKey}`,
+        });
+      }
       const prevCount = state.lifetimeRollCount;
       const nextCount = prevCount + 1;
       const unlockedDefs = newlyUnlockedJourney(prevCount, nextCount);
@@ -246,6 +290,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         rarity: result.rarity,
         badges: result.badges.length,
         journeyUnlocked: journeyUnlocked.length,
+        challengeKey: result.challengeKey,
         willAutoSync: loggedInRef.current,
       });
 
@@ -261,7 +306,55 @@ export function GameProvider({ children }: { children: ReactNode }) {
     } finally {
       setRolling(false);
     }
-  }, [enqueueAutoSync, persist, rolling, state]);
+  }, [enqueueAutoSync, persist, rolling, rollMode, session?.user, state]);
+
+  const attestRoll = useCallback(
+    async (rollResult: RollResult): Promise<{ seal: string } | null> => {
+      if (!loggedInRef.current) return null;
+      try {
+        const res = await fetch('/api/attest', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: rollResult.id,
+            number: rollResult.number,
+            totalEP: rollResult.totalEP,
+            rolledAt: rollResult.rolledAt,
+            shortCode: rollResult.shortCode,
+          }),
+        });
+        const data = (await res.json()) as {
+          error?: string;
+          seal?: string;
+        };
+        if (!res.ok || !data.seal) {
+          log.warn('attest:fail', { error: data.error, status: res.status });
+          return null;
+        }
+        const sealed = { ...rollResult, attestationSeal: data.seal };
+        setLastRoll((prev) =>
+          prev?.id === rollResult.id ? sealed : prev,
+        );
+        setState((prev) => {
+          const history = prev.history.map((r) =>
+            r.id === rollResult.id ? sealed : r,
+          );
+          const next = { ...prev, history };
+          persist(next);
+          return next;
+        });
+        log.info('attest:ok', { id: rollResult.id });
+        return { seal: data.seal };
+      } catch (e) {
+        log.error('attest:error', {
+          err: e instanceof Error ? e.message : String(e),
+        });
+        return null;
+      }
+    },
+    [persist],
+  );
 
   const clearAll = useCallback(() => {
     clearState();
@@ -392,6 +485,46 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }
   }, [applyCloudPayload, state]);
 
+  const waitForCloudPublish = useCallback(
+    async (roll: RollResult): Promise<'ok' | 'error' | 'logged-out'> => {
+      if (!loggedInRef.current) return 'logged-out';
+      // Drain auto-sync queue first
+      await autoSyncChain.current.catch(() => {});
+      const key = roll.shortCode || roll.id;
+      for (let attempt = 0; attempt < 10; attempt++) {
+        try {
+          const res = await fetch(
+            `/api/rolls/${encodeURIComponent(key)}`,
+            { credentials: 'include' },
+          );
+          if (res.ok) {
+            log.info('waitForCloudPublish:ok', { key, attempt });
+            return 'ok';
+          }
+        } catch {
+          /* retry */
+        }
+        await new Promise((r) => setTimeout(r, 350 + attempt * 100));
+      }
+      // Last chance: force push current state
+      try {
+        setSyncing(true);
+        const merged = await pushCloudSave(toCloudPayload(state));
+        applyCloudPayload(merged);
+        const res = await fetch(`/api/rolls/${encodeURIComponent(key)}`);
+        if (res.ok) return 'ok';
+      } catch (e) {
+        log.error('waitForCloudPublish:force fail', {
+          err: e instanceof Error ? e.message : String(e),
+        });
+      } finally {
+        setSyncing(false);
+      }
+      return 'error';
+    },
+    [applyCloudPayload, state],
+  );
+
   const value = useMemo<GameContextValue>(
     () => ({
       lastRoll,
@@ -406,7 +539,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
       saveError,
       lastJourneyUnlocks,
       confettiToken,
+      rollMode,
+      setRollMode,
       roll,
+      attestRoll,
       clearAll,
       setTheme,
       setShareShowRollCount,
@@ -421,6 +557,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       syncing,
       lastSyncAt,
       syncError,
+      waitForCloudPublish,
     }),
     [
       lastRoll,
@@ -429,7 +566,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
       saveError,
       lastJourneyUnlocks,
       confettiToken,
+      rollMode,
       roll,
+      attestRoll,
       clearAll,
       setTheme,
       setShareShowRollCount,
@@ -444,6 +583,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       syncing,
       lastSyncAt,
       syncError,
+      waitForCloudPublish,
     ],
   );
 
