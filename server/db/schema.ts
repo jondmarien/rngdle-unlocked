@@ -25,6 +25,8 @@ export const user = pgTable('user', {
   profileBio: text('profile_bio').notNull().default(''),
   /** Optional flair line under display name */
   profileFlair: text('profile_flair').notNull().default(''),
+  /** Preset avatar id from catalog (empty = letter / OAuth image) */
+  profileAvatar: text('profile_avatar').notNull().default(''),
 });
 
 export const session = pgTable('session', {

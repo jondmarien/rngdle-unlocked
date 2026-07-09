@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react';
 import { authClient, useSession } from '../../lib/auth-client';
 import { createLogger, withTimeout } from '../../lib/logger';
 import {
+  PROFILE_AVATARS,
+  normalizeProfileAvatar,
+} from '../../lib/profile-avatars';
+import {
   PROFILE_ACCENTS,
   accentStyles,
   normalizeAccent,
@@ -28,6 +32,7 @@ export function AccountScreen() {
   const [profileAccent, setProfileAccent] = useState<ProfileAccent>('teal');
   const [profileBio, setProfileBio] = useState('');
   const [profileFlair, setProfileFlair] = useState('');
+  const [profileAvatar, setProfileAvatar] = useState('');
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
@@ -61,6 +66,7 @@ export function AccountScreen() {
             profileAccent?: string;
             profileBio?: string;
             profileFlair?: string;
+            profileAvatar?: string;
           } | null;
         };
         if (cancelled || !data.user) return;
@@ -68,6 +74,7 @@ export function AccountScreen() {
         setProfileAccent(normalizeAccent(data.user.profileAccent));
         setProfileBio(data.user.profileBio ?? '');
         setProfileFlair(data.user.profileFlair ?? '');
+        setProfileAvatar(normalizeProfileAvatar(data.user.profileAvatar));
       })
       .catch(() => {
         /* ignore */
@@ -232,6 +239,7 @@ export function AccountScreen() {
             profileAccent,
             profileBio,
             profileFlair,
+            profileAvatar,
           }),
         }),
         15_000,
@@ -376,10 +384,66 @@ export function AccountScreen() {
                 Public profile look
               </h2>
               <p className="text-sm text-[var(--prose-2)]">
-                Accent, flair, and bio on{' '}
+                Picture, accent, flair, and bio on{' '}
                 <code className="text-xs">/u/yourname</code>. Requires a
                 username.
               </p>
+            </div>
+            <div>
+              <p className="mb-1.5 text-sm font-semibold text-[var(--prose-2)]">
+                Profile picture
+              </p>
+              <p className="mb-2 text-xs text-[var(--prose-3)]">
+                Pick a custom emblem, or None for initial / linked account photo.
+              </p>
+              <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
+                <button
+                  type="button"
+                  onClick={() => setProfileAvatar('')}
+                  title="None"
+                  className={`flex aspect-square flex-col items-center justify-center rounded-xl border-2 text-xs font-semibold ${
+                    profileAvatar === ''
+                      ? 'border-[var(--prose)] bg-[var(--surface-raised)] ring-2 ring-[var(--accent)]/40'
+                      : 'border-[var(--outline)] bg-[var(--bg)] text-[var(--prose-2)]'
+                  }`}
+                >
+                  <span className="text-lg font-bold" aria-hidden>
+                    A
+                  </span>
+                  <span className="mt-0.5 text-[10px]">None</span>
+                </button>
+                {PROFILE_AVATARS.map((av) => {
+                  const selected = profileAvatar === av.id;
+                  return (
+                    <button
+                      key={av.id}
+                      type="button"
+                      onClick={() => setProfileAvatar(av.id)}
+                      title={av.label}
+                      className={`aspect-square overflow-hidden rounded-xl border-2 p-0.5 ${
+                        selected
+                          ? 'border-[var(--prose)] ring-2 ring-[var(--accent)]/50'
+                          : 'border-[var(--outline)] opacity-90 hover:opacity-100'
+                      }`}
+                    >
+                      <img
+                        src={av.src}
+                        alt={av.label}
+                        className="h-full w-full rounded-[0.6rem] object-cover"
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+              {profileAvatar !== '' && (
+                <p className="mt-1.5 text-xs text-[var(--prose-2)]">
+                  Selected:{' '}
+                  <span className="font-semibold">
+                    {PROFILE_AVATARS.find((a) => a.id === profileAvatar)
+                      ?.label ?? profileAvatar}
+                  </span>
+                </p>
+              )}
             </div>
             <div>
               <p className="mb-1.5 text-sm font-semibold text-[var(--prose-2)]">

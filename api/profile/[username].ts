@@ -58,6 +58,7 @@ export default defineHandler(async (request) => {
         profileAccent: user.profileAccent,
         profileBio: user.profileBio,
         profileFlair: user.profileFlair,
+        profileAvatar: user.profileAvatar,
       })
       .from(user)
       .where(eq(user.username, username))
@@ -128,6 +129,7 @@ export default defineHandler(async (request) => {
         profileAccent: u.profileAccent || 'teal',
         profileBio: u.profileBio || '',
         profileFlair: u.profileFlair || '',
+        profileAvatar: u.profileAvatar || '',
         lifetimeEP: progress?.lifetimeEp ?? 0,
         lifetimeRollCount: progress?.lifetimeRollCount ?? 0,
         journeyEP: progress?.journeyEp ?? 0,

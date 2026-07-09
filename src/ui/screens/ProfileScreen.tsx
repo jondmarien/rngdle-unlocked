@@ -5,6 +5,7 @@ import {
   type RarityTier,
 } from '../../game';
 import { useSession } from '../../lib/auth-client';
+import { profileAvatarSrc } from '../../lib/profile-avatars';
 import {
   accentStyles,
   normalizeAccent,
@@ -21,6 +22,7 @@ type Profile = {
   profileAccent?: string;
   profileBio?: string;
   profileFlair?: string;
+  profileAvatar?: string;
   lifetimeEP: number;
   lifetimeRollCount: number;
   journeyEP: number;
@@ -211,6 +213,8 @@ export function ProfileScreen({
   const accent = normalizeAccent(profile.profileAccent);
   const theme = accentStyles(accent);
   const initial = (profile.username?.[0] ?? '?').toUpperCase();
+  const avatarSrc =
+    profileAvatarSrc(profile.profileAvatar) ?? profile.image ?? null;
   const best = profile.stats?.bestRoll;
   // Only completed secret section seals (API already filters; keep unlocked-only here)
   const unlockedSecrets = (profile.secrets ?? []).filter(
@@ -239,12 +243,12 @@ export function ProfileScreen({
         <div className="relative flex flex-wrap items-start justify-between gap-4">
           <div className="flex min-w-0 items-start gap-4">
             <div
-              className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 border-[var(--outline)] bg-[var(--surface)] text-2xl font-bold ring-2 ${theme.ring}`}
+              className={`flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[var(--outline)] bg-[var(--surface)] text-2xl font-bold ring-2 ${theme.ring}`}
               aria-hidden
             >
-              {profile.image ? (
+              {avatarSrc ? (
                 <img
-                  src={profile.image}
+                  src={avatarSrc}
                   alt=""
                   className="h-full w-full rounded-full object-cover"
                 />

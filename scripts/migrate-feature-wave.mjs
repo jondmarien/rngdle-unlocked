@@ -50,6 +50,7 @@ const stmts = [
   `ALTER TABLE "user" ADD COLUMN IF NOT EXISTS profile_accent text NOT NULL DEFAULT 'teal'`,
   `ALTER TABLE "user" ADD COLUMN IF NOT EXISTS profile_bio text NOT NULL DEFAULT ''`,
   `ALTER TABLE "user" ADD COLUMN IF NOT EXISTS profile_flair text NOT NULL DEFAULT ''`,
+  `ALTER TABLE "user" ADD COLUMN IF NOT EXISTS profile_avatar text NOT NULL DEFAULT ''`,
 ];
 
 for (const s of stmts) {

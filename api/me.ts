@@ -17,6 +17,22 @@ const ACCENTS = new Set([
   'mono',
 ]);
 
+/** Keep in sync with src/lib/profile-avatars.ts */
+const AVATARS = new Set([
+  'dice-oracle',
+  'void-eye',
+  'mythic-flame',
+  'anomaly-crystal',
+  'prime-sigil',
+  'star-hex',
+  'neon-rune',
+  'midnight-coin',
+  'cosmic-spiral',
+  'emerald-lattice',
+  'amber-reliquary',
+  'violet-orb',
+]);
+
 async function getSession(request: Request) {
   const auth = createAuth();
   return auth.api.getSession({ headers: request.headers });
@@ -40,6 +56,7 @@ export default defineHandler(async (request) => {
           profileAccent: user.profileAccent,
           profileBio: user.profileBio,
           profileFlair: user.profileFlair,
+          profileAvatar: user.profileAvatar,
         })
         .from(user)
         .where(eq(user.id, session.user.id))
@@ -51,6 +68,7 @@ export default defineHandler(async (request) => {
           profileAccent: row?.profileAccent ?? 'teal',
           profileBio: row?.profileBio ?? '',
           profileFlair: row?.profileFlair ?? '',
+          profileAvatar: row?.profileAvatar ?? '',
         },
         session: session.session,
       });
@@ -69,6 +87,7 @@ export default defineHandler(async (request) => {
       profileAccent?: string;
       profileBio?: string;
       profileFlair?: string;
+      profileAvatar?: string;
     };
 
     const db = createDb();
@@ -77,6 +96,7 @@ export default defineHandler(async (request) => {
       profileAccent?: string;
       profileBio?: string;
       profileFlair?: string;
+      profileAvatar?: string;
       updatedAt: Date;
     } = { updatedAt: new Date() };
 
@@ -111,11 +131,24 @@ export default defineHandler(async (request) => {
       patch.profileFlair = body.profileFlair.trim().slice(0, 48);
     }
 
+    if (body.profileAvatar !== undefined) {
+      const a = body.profileAvatar.trim().toLowerCase();
+      // Empty clears preset (letter / OAuth fallback)
+      if (a !== '' && !AVATARS.has(a)) {
+        return Response.json(
+          { error: 'Invalid profile picture selection.' },
+          { status: 400 },
+        );
+      }
+      patch.profileAvatar = a;
+    }
+
     if (
       patch.username === undefined &&
       patch.profileAccent === undefined &&
       patch.profileBio === undefined &&
-      patch.profileFlair === undefined
+      patch.profileFlair === undefined &&
+      patch.profileAvatar === undefined
     ) {
       return Response.json({ error: 'Nothing to update' }, { status: 400 });
     }
@@ -135,6 +168,7 @@ export default defineHandler(async (request) => {
         profileAccent: user.profileAccent,
         profileBio: user.profileBio,
         profileFlair: user.profileFlair,
+        profileAvatar: user.profileAvatar,
       })
       .from(user)
       .where(eq(user.id, session.user.id))
@@ -146,6 +180,7 @@ export default defineHandler(async (request) => {
       profileAccent: row?.profileAccent ?? 'teal',
       profileBio: row?.profileBio ?? '',
       profileFlair: row?.profileFlair ?? '',
+      profileAvatar: row?.profileAvatar ?? '',
     });
   }
 
