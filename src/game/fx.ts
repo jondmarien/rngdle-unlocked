@@ -1,6 +1,6 @@
 import type { RarityTier } from './types.js';
 
-/** Soft Web Audio blip — no asset files required. */
+/** Soft Web Audio blip — no asset files required. Escalates for epic+. */
 export function playRollSound(rarity: RarityTier, enabled: boolean): void {
   if (!enabled || typeof window === 'undefined') return;
   try {
@@ -10,10 +10,50 @@ export function playRollSound(rarity: RarityTier, enabled: boolean): void {
         .webkitAudioContext;
     if (!Ctx) return;
     const ctx = new Ctx();
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
-    o.connect(g);
-    g.connect(ctx.destination);
+    const t0 = ctx.currentTime;
+
+    const blip = (
+      freq: number,
+      type: OscillatorType,
+      start: number,
+      dur: number,
+      peak: number,
+    ) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = type;
+      o.frequency.value = freq;
+      o.connect(g);
+      g.connect(ctx.destination);
+      g.gain.value = 0.0001;
+      g.gain.exponentialRampToValueAtTime(peak, start + 0.015);
+      g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+      o.start(start);
+      o.stop(start + dur + 0.02);
+    };
+
+    if (rarity === 'mythic') {
+      // Rising triad + shimmer
+      blip(523, 'triangle', t0, 0.22, 0.07);
+      blip(659, 'triangle', t0 + 0.08, 0.28, 0.09);
+      blip(784, 'sine', t0 + 0.16, 0.35, 0.1);
+      blip(1046, 'sine', t0 + 0.28, 0.45, 0.08);
+      window.setTimeout(() => void ctx.close(), 900);
+      return;
+    }
+    if (rarity === 'anomaly') {
+      blip(440, 'sawtooth', t0, 0.12, 0.05);
+      blip(660, 'triangle', t0 + 0.07, 0.28, 0.09);
+      blip(880, 'triangle', t0 + 0.18, 0.38, 0.07);
+      window.setTimeout(() => void ctx.close(), 700);
+      return;
+    }
+    if (rarity === 'epic') {
+      blip(523, 'sine', t0, 0.2, 0.07);
+      blip(698, 'triangle', t0 + 0.1, 0.32, 0.08);
+      window.setTimeout(() => void ctx.close(), 600);
+      return;
+    }
 
     const tierFreq: Record<RarityTier, number> = {
       trash: 220,
@@ -24,14 +64,7 @@ export function playRollSound(rarity: RarityTier, enabled: boolean): void {
       anomaly: 784,
       mythic: 988,
     };
-    o.type = rarity === 'mythic' || rarity === 'anomaly' ? 'triangle' : 'sine';
-    o.frequency.value = tierFreq[rarity];
-    g.gain.value = 0.0001;
-    const t = ctx.currentTime;
-    g.gain.exponentialRampToValueAtTime(0.08, t + 0.02);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
-    o.start(t);
-    o.stop(t + 0.4);
+    blip(tierFreq[rarity], 'sine', t0, 0.35, 0.08);
     window.setTimeout(() => void ctx.close(), 500);
   } catch {
     // ignore autoplay / missing audio
@@ -45,4 +78,20 @@ export function shouldCelebrate(rarity: RarityTier): boolean {
     rarity === 'anomaly' ||
     rarity === 'mythic'
   );
+}
+
+/** Intensity ladder for screen FX (0 = none). */
+export function celebrateIntensity(rarity: RarityTier): 0 | 1 | 2 | 3 | 4 {
+  switch (rarity) {
+    case 'rare':
+      return 1;
+    case 'epic':
+      return 2;
+    case 'anomaly':
+      return 3;
+    case 'mythic':
+      return 4;
+    default:
+      return 0;
+  }
 }

@@ -154,7 +154,7 @@ export function HomeScreen({
     if (pendingFx.current && settled) {
       playRollSound(settled.rarity, settings.soundEnabled);
       if (settings.confettiEnabled && shouldCelebrate(settled.rarity)) {
-        fireCelebration();
+        fireCelebration(settled.rarity);
       }
       if (
         settings.autoShareHighRarity &&

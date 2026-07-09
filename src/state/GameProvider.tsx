@@ -87,6 +87,8 @@ type GameContextValue = {
   /** Badge ids first-time unlocked on the most recent roll (for NEW labels). */
   lastNewBadgeIds: string[];
   confettiToken: number;
+  /** Rarity for the active celebration burst (tiered FX). */
+  celebrateRarity: import('../game/types').RarityTier | null;
   /** free = local CSPRNG; ranked = server free play; daily/weekly = challenges */
   rollMode: RollMode;
   setRollMode: (m: RollMode) => void;
@@ -103,7 +105,7 @@ type GameContextValue = {
   selectRoll: (roll: RollResult | null) => void;
   exportSave: () => void;
   importSave: (file: File) => Promise<void>;
-  fireCelebration: () => void;
+  fireCelebration: (rarity?: import('../game/types').RarityTier) => void;
   syncToCloud: () => Promise<void>;
   pullFromCloud: () => Promise<void>;
   syncing: boolean;
@@ -139,6 +141,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [lastSecretUnlocks, setLastSecretUnlocks] = useState<BadgeHit[]>([]);
   const [lastNewBadgeIds, setLastNewBadgeIds] = useState<string[]>([]);
   const [confettiToken, setConfettiToken] = useState(0);
+  const [celebrateRarity, setCelebrateRarity] = useState<
+    import('../game/types').RarityTier | null
+  >(null);
   const [syncing, setSyncing] = useState(false);
   const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
@@ -427,6 +432,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setLastSecretUnlocks(secretsUnlocked);
       setLastNewBadgeIds(newBadgeIds);
       if (secretsUnlocked.length > 0) {
+        setCelebrateRarity('mythic');
         setConfettiToken((t) => t + 1);
       }
       log.info('roll:ok', {
@@ -616,9 +622,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
     [persist],
   );
 
-  const fireCelebration = useCallback(() => {
-    setConfettiToken((t) => t + 1);
-  }, []);
+  const fireCelebration = useCallback(
+    (rarity?: import('../game/types').RarityTier) => {
+      setCelebrateRarity(rarity ?? 'rare');
+      setConfettiToken((t) => t + 1);
+    },
+    [],
+  );
 
   const syncToCloud = useCallback(async () => {
     setSyncing(true);
@@ -738,6 +748,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       lastSecretUnlocks,
       lastNewBadgeIds,
       confettiToken,
+      celebrateRarity,
       rollMode,
       setRollMode,
       roll,
@@ -769,6 +780,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       lastSecretUnlocks,
       lastNewBadgeIds,
       confettiToken,
+      celebrateRarity,
       rollMode,
       setRollMode,
       roll,

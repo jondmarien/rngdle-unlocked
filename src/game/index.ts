@@ -62,7 +62,11 @@ export {
   isQualityRarity,
   localDateKey,
 } from './stats.js';
-export { playRollSound, shouldCelebrate } from './fx.js';
+export {
+  playRollSound,
+  shouldCelebrate,
+  celebrateIntensity,
+} from './fx.js';
 export { buildShareText, buildFlavorQuote } from './shareText.js';
 export {
   buildPeriodSeed,
