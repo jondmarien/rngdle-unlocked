@@ -1,13 +1,9 @@
-import { createAuth } from '../server/auth.js';
+import { rateGuard, readJson, requireUser } from '../server/apiGuards.js';
 import { createDb } from '../server/db/index.js';
 import { createLogger } from '../server/logger.js';
+import { LIMITS } from '../server/rateLimit.js';
 import {
-  checkRateLimit,
-  isRateLimited,
-  LIMITS,
-  rateLimitedResponse,
-} from '../server/rateLimit.js';
-import {
+  cloudSavePayloadSchema,
   loadCloudSave,
   saveCloudMerge,
   type CloudSavePayload,
@@ -17,36 +13,28 @@ import { defineHandler } from '../server/vercel-adapter.js';
 
 const log = createLogger('api/sync');
 
-async function requireUserId(request: Request): Promise<string | null> {
-  const auth = createAuth();
-  const session = await auth.api.getSession({
-    headers: request.headers,
-  });
-  return session?.user?.id ?? null;
-}
-
 export default defineHandler(async (request) => {
   log.info('request', { method: request.method });
 
   try {
-    const userId = await requireUserId(request);
-    if (!userId) {
+    const gate = await requireUser(request);
+    if (!gate.ok) {
       log.warn('unauthorized');
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+      return gate.response;
     }
+    const userId = gate.user.id;
     log.debug('user', { userId });
     const db = createDb();
 
     if (request.method === 'GET') {
-      const rl = await checkRateLimit(
+      const limited = await rateGuard(
         db,
         `user:${userId}:sync-get`,
         LIMITS.syncPerMinute,
         60_000,
+        { withRetryAfterHeader: false },
       );
-      if (isRateLimited(rl)) {
-        return rateLimitedResponse(rl);
-      }
+      if (limited) return limited;
       const cloud = await loadCloudSave(db, userId);
       return Response.json({ cloud });
     }
@@ -54,33 +42,31 @@ export default defineHandler(async (request) => {
     if (request.method === 'POST') {
       // Soft burst guard only (per minute). No hourly roll-upload cap —
       // free play is unlimited and auto-sync should keep up.
-      const rl = await checkRateLimit(
+      const limited = await rateGuard(
         db,
         `user:${userId}:sync-post`,
         LIMITS.syncPerMinute,
         60_000,
+        {
+          error: (rl) => `Slow down — try again in ${rl.retryAfterSec}s`,
+          withRetryAfterHeader: false,
+        },
       );
-      if (isRateLimited(rl)) {
-        return rateLimitedResponse(
-          rl,
-          `Slow down — try again in ${rl.retryAfterSec}s`,
-        );
-      }
+      if (limited) return limited;
 
-      let body: CloudSavePayload;
-      try {
-        body = (await request.json()) as CloudSavePayload;
-      } catch {
-        return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
-      }
+      const parsed = await readJson<unknown>(request, 'Invalid JSON body');
+      if (!parsed.ok) return parsed.response;
 
-      if (
-        typeof body.lifetimeEP !== 'number' ||
-        typeof body.lifetimeRollCount !== 'number' ||
-        !Array.isArray(body.history)
-      ) {
+      const validated = cloudSavePayloadSchema.safeParse(parsed.body);
+      if (!validated.success) {
+        log.warn('payload rejected', {
+          userId,
+          issues: validated.error.issues.slice(0, 3),
+        });
         return Response.json({ error: 'Invalid payload' }, { status: 400 });
       }
+      // Zod gates the shape; merge keeps its existing normalization/clamps.
+      const body = parsed.body as CloudSavePayload;
 
       try {
         const merged = await saveCloudMerge(db, userId, {

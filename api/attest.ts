@@ -1,15 +1,10 @@
 import { eq } from 'drizzle-orm';
+import { rateGuard, readJson, requireUser } from '../server/apiGuards.js';
 import { createAttestationSeal } from '../server/attest.js';
-import { createAuth } from '../server/auth.js';
 import { createDb } from '../server/db/index.js';
 import { rolls } from '../server/db/schema.js';
 import { createLogger } from '../server/logger.js';
-import {
-  checkRateLimit,
-  isRateLimited,
-  LIMITS,
-  rateLimitedResponse,
-} from '../server/rateLimit.js';
+import { LIMITS } from '../server/rateLimit.js';
 import { defineHandler } from '../server/vercel-adapter.js';
 
 const log = createLogger('api/attest');
@@ -23,35 +18,28 @@ export default defineHandler(async (request) => {
     return Response.json({ error: 'Method not allowed' }, { status: 405 });
   }
 
-  const auth = createAuth();
-  const session = await auth.api.getSession({ headers: request.headers });
-  if (!session?.user) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const gate = await requireUser(request);
+  if (!gate.ok) return gate.response;
+  const me = gate.user;
 
   const db = createDb();
-  const rl = await checkRateLimit(
+  const limited = await rateGuard(
     db,
-    `user:${session.user.id}:attest`,
+    `user:${me.id}:attest`,
     LIMITS.attestPerMinute,
     60_000,
   );
-  if (isRateLimited(rl)) {
-    return rateLimitedResponse(rl, 'Rate limited', true);
-  }
+  if (limited) return limited;
 
-  let body: {
+  const parsed = await readJson<{
     id?: string;
     number?: number;
     totalEP?: number;
     rolledAt?: string;
     shortCode?: string;
-  };
-  try {
-    body = (await request.json()) as typeof body;
-  } catch {
-    return Response.json({ error: 'Invalid JSON' }, { status: 400 });
-  }
+  }>(request);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.body;
 
   const id = body.id?.trim();
   const number = body.number;
@@ -71,7 +59,7 @@ export default defineHandler(async (request) => {
   }
 
   const seal = await createAttestationSeal({
-    userId: session.user.id,
+    userId: me.id,
     rollId: id,
     number,
     totalEp: totalEP,
@@ -86,7 +74,7 @@ export default defineHandler(async (request) => {
     .limit(1);
 
   if (existing) {
-    if (existing.userId !== session.user.id) {
+    if (existing.userId !== me.id) {
       return Response.json({ error: 'Not your roll' }, { status: 403 });
     }
     await db
@@ -100,7 +88,7 @@ export default defineHandler(async (request) => {
     // Seal can be requested before full sync — create a minimal public row
     await db.insert(rolls).values({
       id,
-      userId: session.user.id,
+      userId: me.id,
       number,
       totalEp: totalEP,
       rarity: 'common',
@@ -114,7 +102,7 @@ export default defineHandler(async (request) => {
     });
   }
 
-  log.info('sealed', { userId: session.user.id, rollId: id });
+  log.info('sealed', { userId: me.id, rollId: id });
   return Response.json({
     ok: true,
     seal,

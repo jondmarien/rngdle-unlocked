@@ -1,13 +1,8 @@
+import { rateGuard } from '../../server/apiGuards.js';
 import { createDb } from '../../server/db/index.js';
 import { requestUrl } from '../../server/http.js';
 import { createLogger } from '../../server/logger.js';
-import {
-  checkRateLimit,
-  clientIp,
-  isRateLimited,
-  LIMITS,
-  rateLimitedResponse,
-} from '../../server/rateLimit.js';
+import { clientIp, LIMITS } from '../../server/rateLimit.js';
 import { findPublicRoll } from '../../server/rollLookup.js';
 import { defineHandler } from '../../server/vercel-adapter.js';
 
@@ -21,15 +16,14 @@ export default defineHandler(async (request) => {
   try {
     const db = createDb();
     const ip = clientIp(request);
-    const rl = await checkRateLimit(
+    const limited = await rateGuard(
       db,
       `ip:${ip}:roll`,
       LIMITS.profilePerMinute,
       60_000,
+      { withRetryAfterHeader: false },
     );
-    if (isRateLimited(rl)) {
-      return rateLimitedResponse(rl);
-    }
+    if (limited) return limited;
 
     const url = requestUrl(request);
     const parts = url.pathname.split('/').filter(Boolean);

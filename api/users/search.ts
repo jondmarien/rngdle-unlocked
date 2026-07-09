@@ -1,16 +1,11 @@
 import { and, ilike, isNotNull, ne, sql } from 'drizzle-orm';
+import { rateGuard } from '../../server/apiGuards.js';
 import { createAuth } from '../../server/auth.js';
 import { createDb } from '../../server/db/index.js';
 import { user } from '../../server/db/schema.js';
 import { requestUrl } from '../../server/http.js';
 import { createLogger } from '../../server/logger.js';
-import {
-  checkRateLimit,
-  clientIp,
-  isRateLimited,
-  LIMITS,
-  rateLimitedResponse,
-} from '../../server/rateLimit.js';
+import { clientIp, LIMITS } from '../../server/rateLimit.js';
 import { defineHandler } from '../../server/vercel-adapter.js';
 
 const log = createLogger('api/users/search');
@@ -23,15 +18,13 @@ export default defineHandler(async (request) => {
 
   const db = createDb();
   const ip = clientIp(request);
-  const rl = await checkRateLimit(
+  const limited = await rateGuard(
     db,
     `ip:${ip}:users-search`,
     LIMITS.usersSearchPerMinute,
     60_000,
   );
-  if (isRateLimited(rl)) {
-    return rateLimitedResponse(rl, 'Rate limited', true);
-  }
+  if (limited) return limited;
 
   const url = requestUrl(request);
   const q = (url.searchParams.get('q') ?? '').trim().toLowerCase();
@@ -40,9 +33,6 @@ export default defineHandler(async (request) => {
       users: [],
       message: 'Type at least 2 characters',
     });
-  }
-  if (!/^[a-z0-9_]{1,24}$/.test(q.replace(/%/g, ''))) {
-    // allow partial; strip unsafe for like
   }
   const safe = q.replace(/[%_\\]/g, '');
   if (safe.length < 2) {

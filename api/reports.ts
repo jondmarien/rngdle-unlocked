@@ -1,15 +1,9 @@
 import { eq } from 'drizzle-orm';
-import { createAuth } from '../server/auth.js';
+import { rateGuard, readJson, requireUser } from '../server/apiGuards.js';
 import { createDb } from '../server/db/index.js';
 import { user, userReports } from '../server/db/schema.js';
 import { createLogger } from '../server/logger.js';
-import {
-  checkRateLimit,
-  clientIp,
-  isRateLimited,
-  LIMITS,
-  rateLimitedResponse,
-} from '../server/rateLimit.js';
+import { clientIp, LIMITS } from '../server/rateLimit.js';
 import { defineHandler } from '../server/vercel-adapter.js';
 
 const log = createLogger('api/reports');
@@ -23,34 +17,27 @@ export default defineHandler(async (request) => {
     return Response.json({ error: 'Method not allowed' }, { status: 405 });
   }
 
-  const auth = createAuth();
-  const session = await auth.api.getSession({ headers: request.headers });
-  if (!session?.user?.id) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const gate = await requireUser(request);
+  if (!gate.ok) return gate.response;
+  const me = gate.user;
 
   const db = createDb();
   const ip = clientIp(request);
-  const rl = await checkRateLimit(
+  const limited = await rateGuard(
     db,
-    `user:${session.user.id}:report`,
+    `user:${me.id}:report`,
     LIMITS.reportPerMinute,
     60_000,
   );
-  if (isRateLimited(rl)) {
-    return rateLimitedResponse(rl, 'Rate limited', true);
-  }
+  if (limited) return limited;
 
-  let body: {
+  const parsed = await readJson<{
     targetUserId?: string;
     targetUsername?: string;
     reason?: string;
-  };
-  try {
-    body = (await request.json()) as typeof body;
-  } catch {
-    return Response.json({ error: 'Invalid JSON' }, { status: 400 });
-  }
+  }>(request);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.body;
 
   const reason = body.reason?.trim();
   if (!reason || reason.length < 8) {
@@ -75,14 +62,14 @@ export default defineHandler(async (request) => {
     return Response.json({ error: 'Target user not found' }, { status: 404 });
   }
 
-  if (targetId === session.user.id) {
+  if (targetId === me.id) {
     return Response.json({ error: 'Cannot report yourself' }, { status: 400 });
   }
 
   const id = crypto.randomUUID();
   await db.insert(userReports).values({
     id,
-    reporterId: session.user.id,
+    reporterId: me.id,
     targetUserId: targetId,
     reason: reason.slice(0, 2000),
     status: 'open',
@@ -90,7 +77,7 @@ export default defineHandler(async (request) => {
 
   log.info('report filed', {
     id,
-    reporter: session.user.id,
+    reporter: me.id,
     target: targetId,
     ip,
   });

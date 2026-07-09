@@ -1,12 +1,7 @@
 import { buildPeriodSeed } from '../src/game/challenge.js';
+import { rateGuard } from '../server/apiGuards.js';
 import { createLogger } from '../server/logger.js';
-import {
-  checkRateLimit,
-  clientIp,
-  isRateLimited,
-  LIMITS,
-  rateLimitedResponse,
-} from '../server/rateLimit.js';
+import { clientIp, LIMITS } from '../server/rateLimit.js';
 import { createDb } from '../server/db/index.js';
 import { defineHandler } from '../server/vercel-adapter.js';
 
@@ -21,15 +16,13 @@ export default defineHandler(async (request) => {
   try {
     const db = createDb();
     const ip = clientIp(request);
-    const rl = await checkRateLimit(
+    const limited = await rateGuard(
       db,
       `ip:${ip}:challenge`,
       LIMITS.challengePerMinute,
       60_000,
     );
-    if (isRateLimited(rl)) {
-      return rateLimitedResponse(rl, 'Rate limited', true);
-    }
+    if (limited) return limited;
 
     const now = new Date();
     const daily = buildPeriodSeed('daily', now);

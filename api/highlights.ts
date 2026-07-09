@@ -1,15 +1,10 @@
 import { and, desc, eq, gte, isNotNull, sql } from 'drizzle-orm';
+import { rateGuard } from '../server/apiGuards.js';
 import { createDb } from '../server/db/index.js';
 import { rolls, user } from '../server/db/schema.js';
 import { requestUrl } from '../server/http.js';
 import { createLogger } from '../server/logger.js';
-import {
-  checkRateLimit,
-  clientIp,
-  isRateLimited,
-  LIMITS,
-  rateLimitedResponse,
-} from '../server/rateLimit.js';
+import { clientIp, LIMITS } from '../server/rateLimit.js';
 import { defineHandler } from '../server/vercel-adapter.js';
 
 const log = createLogger('api/highlights');
@@ -46,15 +41,13 @@ export default defineHandler(async (request) => {
   try {
     const db = createDb();
     const ip = clientIp(request);
-    const rl = await checkRateLimit(
+    const limited = await rateGuard(
       db,
       `ip:${ip}:highlights`,
       LIMITS.leaderboardPerMinute,
       60_000,
     );
-    if (isRateLimited(rl)) {
-      return rateLimitedResponse(rl, 'Rate limited', true);
-    }
+    if (limited) return limited;
 
     const url = requestUrl(request);
     // Date.getTimezoneOffset(): minutes *behind* UTC (EST = 300)

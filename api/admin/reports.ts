@@ -1,14 +1,10 @@
 import { desc, eq } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { requireAdmin, writeAdminAudit } from '../../server/admin.js';
+import { rateGuard, readJson } from '../../server/apiGuards.js';
 import { user, userReports } from '../../server/db/schema.js';
 import { createLogger } from '../../server/logger.js';
-import {
-  checkRateLimit,
-  isRateLimited,
-  LIMITS,
-  rateLimitedResponse,
-} from '../../server/rateLimit.js';
+import { LIMITS } from '../../server/rateLimit.js';
 import { defineHandler } from '../../server/vercel-adapter.js';
 
 const log = createLogger('api/admin/reports');
@@ -77,25 +73,19 @@ export default defineHandler(async (request) => {
   }
 
   if (request.method === 'PATCH') {
-    const rl = await checkRateLimit(
+    const limited = await rateGuard(
       db,
       `user:${adminUser.id}:admin-reports`,
       LIMITS.adminMutatePerMinute,
       60_000,
     );
-    if (isRateLimited(rl)) {
-      return rateLimitedResponse(rl, 'Rate limited', true);
-    }
+    if (limited) return limited;
 
-    let body: { id?: string; status?: string };
-    try {
-      body = (await request.json()) as typeof body;
-    } catch {
-      return Response.json({ error: 'Invalid JSON' }, { status: 400 });
-    }
+    const parsed = await readJson<{ id?: string; status?: string }>(request);
+    if (!parsed.ok) return parsed.response;
 
-    const id = body.id?.trim();
-    const next = body.status?.trim();
+    const id = parsed.body.id?.trim();
+    const next = parsed.body.status?.trim();
     if (!id || (next !== 'resolved' && next !== 'dismissed')) {
       return Response.json(
         { error: 'id and status (resolved|dismissed) required' },

@@ -1,14 +1,10 @@
 import { eq } from 'drizzle-orm';
 import { createAuth } from '../../../server/auth.js';
 import { requireAdmin, writeAdminAudit } from '../../../server/admin.js';
+import { rateGuard, readJson } from '../../../server/apiGuards.js';
 import { user } from '../../../server/db/schema.js';
 import { createLogger } from '../../../server/logger.js';
-import {
-  checkRateLimit,
-  isRateLimited,
-  LIMITS,
-  rateLimitedResponse,
-} from '../../../server/rateLimit.js';
+import { LIMITS } from '../../../server/rateLimit.js';
 import { defineHandler } from '../../../server/vercel-adapter.js';
 
 const log = createLogger('api/admin/users/ban');
@@ -26,22 +22,21 @@ export default defineHandler(async (request) => {
   if (!gate.ok) return gate.response;
   const { db, user: adminUser, ip } = gate;
 
-  const rl = await checkRateLimit(
+  const limited = await rateGuard(
     db,
     `user:${adminUser.id}:admin-ban`,
     LIMITS.adminMutatePerMinute,
     60_000,
   );
-  if (isRateLimited(rl)) {
-    return rateLimitedResponse(rl, 'Rate limited', true);
-  }
+  if (limited) return limited;
 
-  let body: { userId?: string; banned?: boolean; reason?: string };
-  try {
-    body = (await request.json()) as typeof body;
-  } catch {
-    return Response.json({ error: 'Invalid JSON' }, { status: 400 });
-  }
+  const parsed = await readJson<{
+    userId?: string;
+    banned?: boolean;
+    reason?: string;
+  }>(request);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.body;
 
   const targetId = body.userId?.trim();
   if (!targetId || typeof body.banned !== 'boolean') {

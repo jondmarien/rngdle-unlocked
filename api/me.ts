@@ -1,4 +1,5 @@
 import { eq } from 'drizzle-orm';
+import { readJson, requireUser } from '../server/apiGuards.js';
 import { createAuth } from '../server/auth.js';
 import { createDb } from '../server/db/index.js';
 import { user } from '../server/db/schema.js';
@@ -68,8 +69,7 @@ export default defineHandler(async (request) => {
       return Response.json({
         user: {
           ...session.user,
-          username:
-            row?.username ?? (session.user as { username?: string }).username,
+          username: row?.username ?? session.user.username,
           profileAccent: row?.profileAccent ?? 'teal',
           profileBio: row?.profileBio ?? '',
           profileFlair: row?.profileFlair ?? '',
@@ -89,18 +89,19 @@ export default defineHandler(async (request) => {
   }
 
   if (request.method === 'PATCH') {
-    const session = await getSession(request);
-    if (!session?.user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    const body = (await request.json()) as {
+    const gate = await requireUser(request);
+    if (!gate.ok) return gate.response;
+    const me = gate.user;
+    const parsed = await readJson<{
       username?: string;
       profileAccent?: string;
       profileBio?: string;
       profileFlair?: string;
       profileAvatar?: string;
       profileShowCodex?: boolean;
-    };
+    }>(request);
+    if (!parsed.ok) return parsed.response;
+    const body = parsed.body;
 
     const db = createDb();
     const patch: {
@@ -115,7 +116,7 @@ export default defineHandler(async (request) => {
 
     if (body.username !== undefined) {
       const username = body.username?.trim().toLowerCase();
-      log.info('username patch', { userId: session.user.id, username });
+      log.info('username patch', { userId: me.id, username });
       if (!username || !/^[a-z0-9_]{3,24}$/.test(username)) {
         return Response.json(
           { error: 'Username must be 3–24 chars: a-z, 0-9, _' },
@@ -174,7 +175,7 @@ export default defineHandler(async (request) => {
     }
 
     try {
-      await db.update(user).set(patch).where(eq(user.id, session.user.id));
+      await db.update(user).set(patch).where(eq(user.id, me.id));
     } catch {
       return Response.json(
         { error: 'Username taken or invalid' },
@@ -185,7 +186,7 @@ export default defineHandler(async (request) => {
     const [row] = await db
       .select(VANITY_SELECT)
       .from(user)
-      .where(eq(user.id, session.user.id))
+      .where(eq(user.id, me.id))
       .limit(1);
 
     return Response.json({

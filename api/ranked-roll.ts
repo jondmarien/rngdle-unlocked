@@ -1,12 +1,7 @@
-import { createAuth } from '../server/auth.js';
+import { rateGuard, requireUser } from '../server/apiGuards.js';
 import { createDb } from '../server/db/index.js';
 import { createLogger } from '../server/logger.js';
-import {
-  checkRateLimit,
-  isRateLimited,
-  LIMITS,
-  rateLimitedResponse,
-} from '../server/rateLimit.js';
+import { LIMITS } from '../server/rateLimit.js';
 import { defineHandler } from '../server/vercel-adapter.js';
 
 const log = createLogger('api/ranked-roll');
@@ -28,32 +23,23 @@ export default defineHandler(async (request) => {
 
   let userIdForLog: string | null = null;
   try {
-    const auth = createAuth();
-    const session = await auth.api.getSession({ headers: request.headers });
-    if (!session?.user) {
-      return Response.json(
-        { error: 'Sign in to play Ranked free play' },
-        { status: 401 },
-      );
-    }
-    const userId = session.user.id;
+    const gate = await requireUser(request, 'Sign in to play Ranked free play');
+    if (!gate.ok) return gate.response;
+    const userId = gate.user.id;
     userIdForLog = userId;
 
     const db = createDb();
 
-    const rl = await checkRateLimit(
+    const limited = await rateGuard(
       db,
       `user:${userId}:ranked-roll`,
       LIMITS.rankedRollsPerHour,
       3_600_000,
+      { error: 'Ranked roll rate limit — try again later' },
     );
-    if (isRateLimited(rl)) {
+    if (limited) {
       log.warn('rate limited', { userId });
-      return rateLimitedResponse(
-        rl,
-        'Ranked roll rate limit — try again later',
-        true,
-      );
+      return limited;
     }
 
     // Lazy-load heavy game + roll logic so auth/rate-limit errors still work

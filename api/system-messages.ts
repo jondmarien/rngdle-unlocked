@@ -1,15 +1,10 @@
 import { desc } from 'drizzle-orm';
 import { requireAdmin, writeAdminAudit } from '../server/admin.js';
-import { createAuth } from '../server/auth.js';
+import { rateGuard, readJson, requireUser } from '../server/apiGuards.js';
 import { createDb } from '../server/db/index.js';
 import { systemMessages } from '../server/db/schema.js';
 import { createLogger } from '../server/logger.js';
-import {
-  checkRateLimit,
-  isRateLimited,
-  LIMITS,
-  rateLimitedResponse,
-} from '../server/rateLimit.js';
+import { LIMITS } from '../server/rateLimit.js';
 import { defineHandler } from '../server/vercel-adapter.js';
 
 const log = createLogger('api/system-messages');
@@ -22,11 +17,8 @@ const log = createLogger('api/system-messages');
 export default defineHandler(async (request) => {
   if (request.method === 'GET') {
     const db = createDb();
-    const auth = createAuth();
-    const session = await auth.api.getSession({ headers: request.headers });
-    if (!session?.user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const gate = await requireUser(request);
+    if (!gate.ok) return gate.response;
     const rows = await db
       .select()
       .from(systemMessages)
@@ -50,25 +42,19 @@ export default defineHandler(async (request) => {
     if (!gate.ok) return gate.response;
     const { db, user: adminUser, ip } = gate;
 
-    const rl = await checkRateLimit(
+    const limited = await rateGuard(
       db,
       `user:${adminUser.id}:system-msg-post`,
       LIMITS.systemMessagePostPerMinute,
       60_000,
     );
-    if (isRateLimited(rl)) {
-      return rateLimitedResponse(rl, 'Rate limited', true);
-    }
+    if (limited) return limited;
 
-    let body: { title?: string; body?: string };
-    try {
-      body = (await request.json()) as typeof body;
-    } catch {
-      return Response.json({ error: 'Invalid JSON' }, { status: 400 });
-    }
+    const parsed = await readJson<{ title?: string; body?: string }>(request);
+    if (!parsed.ok) return parsed.response;
 
-    const title = body.title?.trim();
-    const text = body.body?.trim();
+    const title = parsed.body.title?.trim();
+    const text = parsed.body.body?.trim();
     if (!title || !text) {
       return Response.json(
         { error: 'title and body required' },

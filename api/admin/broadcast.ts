@@ -1,13 +1,9 @@
 import { desc } from 'drizzle-orm';
 import { requireAdmin, writeAdminAudit } from '../../server/admin.js';
+import { rateGuard, readJson } from '../../server/apiGuards.js';
 import { systemMessages } from '../../server/db/schema.js';
 import { createLogger } from '../../server/logger.js';
-import {
-  checkRateLimit,
-  isRateLimited,
-  LIMITS,
-  rateLimitedResponse,
-} from '../../server/rateLimit.js';
+import { LIMITS } from '../../server/rateLimit.js';
 import { defineHandler } from '../../server/vercel-adapter.js';
 
 const log = createLogger('api/admin/broadcast');
@@ -41,25 +37,19 @@ export default defineHandler(async (request) => {
   }
 
   if (request.method === 'POST') {
-    const rl = await checkRateLimit(
+    const limited = await rateGuard(
       db,
       `user:${adminUser.id}:admin-broadcast`,
       LIMITS.adminMutatePerMinute,
       60_000,
     );
-    if (isRateLimited(rl)) {
-      return rateLimitedResponse(rl, 'Rate limited', true);
-    }
+    if (limited) return limited;
 
-    let body: { title?: string; body?: string };
-    try {
-      body = (await request.json()) as typeof body;
-    } catch {
-      return Response.json({ error: 'Invalid JSON' }, { status: 400 });
-    }
+    const parsed = await readJson<{ title?: string; body?: string }>(request);
+    if (!parsed.ok) return parsed.response;
 
-    const title = body.title?.trim();
-    const text = body.body?.trim();
+    const title = parsed.body.title?.trim();
+    const text = parsed.body.body?.trim();
     if (!title || !text) {
       return Response.json(
         { error: 'title and body required' },

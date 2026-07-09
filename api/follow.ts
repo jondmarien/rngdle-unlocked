@@ -1,16 +1,11 @@
 import { and, eq } from 'drizzle-orm';
-import { createAuth } from '../server/auth.js';
+import { rateGuard, readJson, requireUser } from '../server/apiGuards.js';
 import { createDb } from '../server/db/index.js';
 import { follows, user } from '../server/db/schema.js';
 import { requestUrl } from '../server/http.js';
 import { createLogger } from '../server/logger.js';
 import { notifyFollow } from '../server/notifications.js';
-import {
-  checkRateLimit,
-  isRateLimited,
-  LIMITS,
-  rateLimitedResponse,
-} from '../server/rateLimit.js';
+import { LIMITS } from '../server/rateLimit.js';
 import { defineHandler } from '../server/vercel-adapter.js';
 
 const log = createLogger('api/follow');
@@ -22,22 +17,18 @@ const log = createLogger('api/follow');
  * GET — list who I follow
  */
 export default defineHandler(async (request) => {
-  const auth = createAuth();
-  const session = await auth.api.getSession({ headers: request.headers });
-  if (!session?.user) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const gate = await requireUser(request);
+  if (!gate.ok) return gate.response;
+  const me = gate.user;
 
   const db = createDb();
-  const rl = await checkRateLimit(
+  const limited = await rateGuard(
     db,
-    `user:${session.user.id}:follow`,
+    `user:${me.id}:follow`,
     LIMITS.followPerMinute,
     60_000,
   );
-  if (isRateLimited(rl)) {
-    return rateLimitedResponse(rl, 'Rate limited', true);
-  }
+  if (limited) return limited;
 
   if (request.method === 'GET') {
     const rows = await db
@@ -49,7 +40,7 @@ export default defineHandler(async (request) => {
       })
       .from(follows)
       .innerJoin(user, eq(user.id, follows.followingId))
-      .where(eq(follows.followerId, session.user.id));
+      .where(eq(follows.followerId, me.id));
 
     return Response.json({
       following: rows.map((r) => ({
@@ -62,13 +53,9 @@ export default defineHandler(async (request) => {
   }
 
   if (request.method === 'POST') {
-    let body: { username?: string };
-    try {
-      body = (await request.json()) as { username?: string };
-    } catch {
-      return Response.json({ error: 'Invalid JSON' }, { status: 400 });
-    }
-    const username = body.username?.trim().toLowerCase();
+    const parsed = await readJson<{ username?: string }>(request);
+    if (!parsed.ok) return parsed.response;
+    const username = parsed.body.username?.trim().toLowerCase();
     if (!username) {
       return Response.json({ error: 'username required' }, { status: 400 });
     }
@@ -80,20 +67,19 @@ export default defineHandler(async (request) => {
     if (!target) {
       return Response.json({ error: 'User not found' }, { status: 404 });
     }
-    if (target.id === session.user.id) {
+    if (target.id === me.id) {
       return Response.json(
         { error: 'Cannot follow yourself' },
         { status: 400 },
       );
     }
 
-    const actorUsername =
-      (session.user as { username?: string | null }).username ?? null;
+    const actorUsername = me.username ?? null;
 
     let created = false;
     try {
       await db.insert(follows).values({
-        followerId: session.user.id,
+        followerId: me.id,
         followingId: target.id,
       });
       created = true;
@@ -105,7 +91,7 @@ export default defineHandler(async (request) => {
       try {
         await notifyFollow(db, {
           targetUserId: target.id,
-          actorUserId: session.user.id,
+          actorUserId: me.id,
           actorUsername,
         });
       } catch (e) {
@@ -116,7 +102,7 @@ export default defineHandler(async (request) => {
     }
 
     log.info('follow', {
-      from: session.user.id,
+      from: me.id,
       to: target.id,
       username,
       created,
@@ -141,12 +127,9 @@ export default defineHandler(async (request) => {
     await db
       .delete(follows)
       .where(
-        and(
-          eq(follows.followerId, session.user.id),
-          eq(follows.followingId, target.id),
-        ),
+        and(eq(follows.followerId, me.id), eq(follows.followingId, target.id)),
       );
-    log.info('unfollow', { from: session.user.id, username });
+    log.info('unfollow', { from: me.id, username });
     return Response.json({ ok: true, unfollowed: username });
   }
 
