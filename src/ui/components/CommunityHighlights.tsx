@@ -121,13 +121,15 @@ export function CommunityHighlights({
 
   if (error && !data) {
     return (
-      <p className="text-center text-xs text-[var(--prose-3)]">{error}</p>
+      <p className="mx-auto w-full max-w-md text-center text-xs text-[var(--prose-3)]">
+        {error}
+      </p>
     );
   }
 
   if (!data) {
     return (
-      <p className="text-center text-xs text-[var(--prose-3)]">
+      <p className="mx-auto w-full max-w-md text-center text-xs text-[var(--prose-3)]">
         Loading community rolls…
       </p>
     );
@@ -136,11 +138,11 @@ export function CommunityHighlights({
   const empty = !data.today && !data.week;
   if (empty) {
     return (
-      <div className="w-full max-w-md rounded-xl border border-dashed border-[var(--outline)] bg-[var(--surface)]/60 px-4 py-5 text-center">
+      <div className="mx-auto w-full max-w-md rounded-xl border border-dashed border-[var(--outline)] bg-[var(--surface)]/60 px-4 py-5 text-center">
         <p className="text-sm font-semibold text-[var(--prose-2)]">
           No Ranked rolls on the board yet
         </p>
-        <p className="mt-1 text-xs text-[var(--prose-3)]">
+        <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-[var(--prose-3)]">
           Sign in, claim @username, and use Ranked free play — only server rolls
           claim today&apos;s / this week&apos;s crowns.
         </p>
@@ -152,7 +154,7 @@ export function CommunityHighlights({
 
   return (
     <div
-      className={`grid w-full max-w-2xl gap-3 ${
+      className={`mx-auto grid w-full max-w-2xl gap-3 ${
         both ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'
       }`}
     >

@@ -371,7 +371,9 @@ export function HomeScreen({
 
         {/* Keep mounted so fetch state isn't torn down (avoids racey empty flashes). */}
         <div
-          className={`w-full max-w-2xl pt-2 ${showCommunityBest ? '' : 'hidden'}`}
+          className={`flex w-full max-w-2xl justify-center pt-2 ${
+            showCommunityBest ? '' : 'hidden'
+          }`}
           aria-hidden={!showCommunityBest}
         >
           <CommunityHighlights
