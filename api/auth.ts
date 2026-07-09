@@ -1,9 +1,9 @@
-import { createAuth } from '../../server/auth.js';
-import { asFetchRequest, type ApiRequest } from '../../server/http.js';
+import { createAuth } from '../server/auth.js';
+import { asFetchRequest, type ApiRequest } from '../server/http.js';
 
 /**
- * Better Auth catch-all on Vercel serverless (Web Request/Response).
- * Path: /api/auth/*
+ * Better Auth handler for all /api/auth/* routes.
+ * Nested paths are rewritten here via vercel.json (Vite has no Next-style catch-all).
  */
 export default async function handler(request: ApiRequest): Promise<Response> {
   try {

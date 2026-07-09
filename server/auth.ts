@@ -8,7 +8,14 @@ function getDb() {
 
 export function createAuth() {
   const db = getDb();
+  const baseURL =
+    process.env.BETTER_AUTH_URL ||
+    process.env.VITE_APP_URL ||
+    'http://localhost:5173';
+
   return betterAuth({
+    baseURL,
+    basePath: '/api/auth',
     database: drizzleAdapter(db, {
       provider: 'pg',
       schema: {
@@ -32,7 +39,7 @@ export function createAuth() {
       },
     },
     trustedOrigins: [
-      process.env.BETTER_AUTH_URL,
+      baseURL,
       process.env.VITE_APP_URL,
       'http://localhost:5173',
       'http://localhost:3000',
