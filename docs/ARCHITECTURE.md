@@ -105,6 +105,8 @@ flowchart LR
 - **Practice week** — public rolls with `source != ranked`.
 - **Ranked all-time / week** — sum of public `source=ranked` rolls only.
 - Client sync **cannot** set `source=ranked` (server preserves ranked on conflict).
+- Sync **rejects** payloads that claim another user’s roll ids or inflate EP/collection without matching rolls (`SyncIntegrityError` → 409).
+- Public profiles expose progress provenance pills (`cloud_sync` / `cloned_local` / `local_progress`) from best-roll ownership.
 
 ## Badge unlock & notifications
 

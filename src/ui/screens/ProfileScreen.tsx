@@ -41,6 +41,13 @@ type Profile = {
   lifetimeRollCount: number;
   journeyEP: number;
   badgeCount: number;
+  /** Server classification of progress ownership. */
+  progressProvenance?:
+    | 'cloud_sync'
+    | 'cloned_local'
+    | 'local_progress'
+    | 'unknown';
+  progressProvenanceLabel?: string;
   collection?: CollectionEntryDto[];
   secrets?: {
     id: string;
@@ -54,6 +61,7 @@ type Profile = {
   }[];
   stats: {
     bestRoll?: {
+      id?: string;
       number: number;
       totalEP: number;
       rarity: string;
@@ -410,6 +418,35 @@ export function ProfileScreen({
                   className={`mt-1 inline-block rounded-full border px-2.5 py-0.5 text-sm font-medium ${theme.chip}`}
                 >
                   {profile.profileFlair}
+                </p>
+              )}
+              {(profile.progressProvenance === 'cloud_sync' ||
+                profile.progressProvenance === 'cloned_local' ||
+                profile.progressProvenance === 'local_progress') && (
+                <p className="mt-2 flex flex-wrap gap-1.5">
+                  <span
+                    className={`inline-block rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${
+                      profile.progressProvenance === 'cloned_local'
+                        ? 'border-amber-500/50 bg-amber-500/15 text-amber-800 dark:text-amber-200'
+                        : profile.progressProvenance === 'cloud_sync'
+                          ? 'border-teal-500/40 bg-teal-500/10 text-teal-800 dark:text-teal-200'
+                          : 'border-[var(--outline)] bg-[var(--surface)] text-[var(--prose-2)]'
+                    }`}
+                    title={
+                      profile.progressProvenance === 'cloned_local'
+                        ? 'Best roll id points at another account’s roll — likely copied localStorage progress'
+                        : profile.progressProvenance === 'cloud_sync'
+                          ? 'Best roll is owned by this account in the cloud'
+                          : 'Progress present without a cloud-owned best roll'
+                    }
+                  >
+                    {profile.progressProvenanceLabel ??
+                      (profile.progressProvenance === 'cloned_local'
+                        ? 'Cloned local progress'
+                        : profile.progressProvenance === 'cloud_sync'
+                          ? 'Cloud sync'
+                          : 'Local progress')}
+                  </span>
                 </p>
               )}
               {profile.profileBio && (

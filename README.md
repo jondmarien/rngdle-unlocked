@@ -379,6 +379,8 @@ The Account screen times out after a few seconds and shows the sign-in form. Che
 | Daily/weekly challenge + attestation | ✅ Shipped |
 | Custom fonts + rarity/family icon art | ✅ Shipped |
 | OAuth (Discord/GitHub) | ✅ Wired — finish portal setup via [`docs/oauth-setup.md`](./docs/oauth-setup.md) |
+| Email verification + magic link (Resend) | ✅ New signups must verify; OAuth preferred |
+| Cloned-progress profile pills + sync integrity | ✅ Best-roll ownership + EP/collection checks |
 | Turnstile / EP velocity | 🔮 Later |
 | Admin panel (role-gated) | ✅ Shipped (`/admin`) |
 

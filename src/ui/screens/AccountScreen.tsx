@@ -29,6 +29,9 @@ export function AccountScreen({
   const { syncToCloud, pullFromCloud, lastSyncAt, syncError, syncing } =
     useGame();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+  const [emailAuthTab, setEmailAuthTab] = useState<'magic' | 'password'>(
+    'magic',
+  );
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -136,6 +139,43 @@ export function AccountScreen({
 
   const sessionLoading = isPending && !error && !waitTimedOut;
 
+  const onMagicLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setMsg(null);
+    setStatus(null);
+    log.info('magic-link:start', {
+      email: email.replace(/(.{2}).+(@.+)/, '$1***$2'),
+    });
+    try {
+      setStatus('Sending magic link…');
+      const res = await withTimeout(
+        authClient.signIn.magicLink({
+          email,
+          name: name || email.split('@')[0] || 'Player',
+          callbackURL: '/account',
+          newUserCallbackURL: '/account',
+        }),
+        AUTH_TIMEOUT_MS,
+        'signIn.magicLink',
+      );
+      if (res.error) {
+        throw new Error(res.error.message ?? 'Could not send magic link');
+      }
+      setMsg(
+        'Check your inbox for a sign-in link (expires in ~10 minutes). Fake addresses will never get the email.',
+      );
+      setStatus(null);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Magic link failed';
+      log.error('magic-link:fail', { message });
+      setMsg(message);
+      setStatus(null);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const onAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
@@ -168,31 +208,39 @@ export function AccountScreen({
         if (res.error) {
           throw new Error(res.error.message ?? 'Sign up failed');
         }
-        setStatus('Refreshing session…');
-        setMsg('Account created — signed in.');
-      } else {
-        setStatus('Signing in…');
-        const res = await withTimeout(
-          authClient.signIn.email({ email, password }),
-          AUTH_TIMEOUT_MS,
-          'signIn.email',
+        setStatus(null);
+        setMsg(
+          'Account created — check your email for a verification link before signing in. Discord/GitHub skip this step.',
         );
-        log.info('sign-in:response', {
-          hasError: Boolean(res.error),
-          error: res.error?.message,
-          hasData: Boolean(res.data),
-        });
-        if (res.error) {
-          const raw = res.error.message ?? 'Sign in failed';
-          const nicer =
-            /user not found/i.test(raw) || /invalid email or password/i.test(raw)
-              ? 'No account for that email (or wrong password). Use the exact address you signed up with, or Continue with Discord/GitHub.'
-              : raw;
-          throw new Error(nicer);
-        }
-        setStatus('Refreshing session…');
-        setMsg('Signed in.');
+        setMode('signin');
+        setEmailAuthTab('magic');
+        return;
       }
+
+      setStatus('Signing in…');
+      const res = await withTimeout(
+        authClient.signIn.email({ email, password }),
+        AUTH_TIMEOUT_MS,
+        'signIn.email',
+      );
+      log.info('sign-in:response', {
+        hasError: Boolean(res.error),
+        error: res.error?.message,
+        hasData: Boolean(res.data),
+      });
+      if (res.error) {
+        const raw = res.error.message ?? 'Sign in failed';
+        const nicer =
+          /verif/i.test(raw)
+            ? 'Email not verified yet — check your inbox for the verification link (or use a magic link).'
+            : /user not found/i.test(raw) ||
+                /invalid email or password/i.test(raw)
+              ? 'No account for that email (or wrong password). Prefer Discord/GitHub, or request a magic link.'
+              : raw;
+        throw new Error(nicer);
+      }
+      setStatus('Refreshing session…');
+      setMsg('Signed in.');
 
       try {
         await withTimeout(refetch(), 10_000, 'session.refetch');
@@ -418,80 +466,156 @@ export function AccountScreen({
               Continue with GitHub
             </button>
             <p className="text-[11px] text-[var(--prose-3)]">
-              Prefer Discord/GitHub. Email is optional below.
+              Recommended. Email below requires a real inbox (magic link or
+              verification).
             </p>
           </div>
           <details className="rounded-lg border border-[var(--outline)] bg-[var(--surface)] p-3">
             <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-[var(--prose-3)]">
-              Or use email / password
+              Or use email
             </summary>
-            <form
-              onSubmit={onAuth}
-              className="mt-3 space-y-3"
-              autoComplete="on"
-            >
-          <div className="flex gap-2 text-xs font-bold uppercase">
-            <button
-              type="button"
-              className={mode === 'signin' ? 'underline' : 'text-[var(--prose-3)]'}
-              onClick={() => setMode('signin')}
-            >
-              Sign in
-            </button>
-            <button
-              type="button"
-              className={mode === 'signup' ? 'underline' : 'text-[var(--prose-3)]'}
-              onClick={() => setMode('signup')}
-            >
-              Sign up
-            </button>
-          </div>
-          {mode === 'signup' && (
-            <input
-              className="w-full border border-[var(--outline)] bg-[var(--bg)] px-3 py-2 text-sm"
-              placeholder="Display name"
-              name="name"
-              autoComplete="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          )}
-          <input
-            type="email"
-            name="email"
-            required
-            autoComplete="email"
-            className="w-full border border-[var(--outline)] bg-[var(--bg)] px-3 py-2 text-sm"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <input
-            type="password"
-            name="password"
-            required
-            minLength={8}
-            autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-            className="w-full border border-[var(--outline)] bg-[var(--bg)] px-3 py-2 text-sm"
-            placeholder="Password (8+)"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <button
-            type="submit"
-            disabled={busy}
-            className="border-2 border-[var(--prose)] bg-[var(--prose)] px-4 py-2 text-xs font-bold uppercase text-[var(--bg)] disabled:opacity-50"
-          >
-            {busy
-              ? status ?? 'Working…'
-              : mode === 'signup'
-                ? 'Create account'
-                : 'Sign in'}
-          </button>
-          {status && busy && (
-            <p className="text-xs text-[var(--prose-3)]">{status}</p>
-          )}
-        </form>
+            <div className="mt-3 space-y-3">
+              <div className="flex gap-2 text-xs font-bold uppercase">
+                <button
+                  type="button"
+                  className={
+                    mode === 'signin' ? 'underline' : 'text-[var(--prose-3)]'
+                  }
+                  onClick={() => {
+                    setMode('signin');
+                    setEmailAuthTab('magic');
+                  }}
+                >
+                  Sign in
+                </button>
+                <button
+                  type="button"
+                  className={
+                    mode === 'signup' ? 'underline' : 'text-[var(--prose-3)]'
+                  }
+                  onClick={() => setMode('signup')}
+                >
+                  Sign up
+                </button>
+              </div>
+
+              {mode === 'signin' && (
+                <div className="flex gap-2 text-[11px] font-semibold">
+                  <button
+                    type="button"
+                    className={
+                      emailAuthTab === 'magic'
+                        ? 'underline'
+                        : 'text-[var(--prose-3)]'
+                    }
+                    onClick={() => setEmailAuthTab('magic')}
+                  >
+                    Magic link
+                  </button>
+                  <button
+                    type="button"
+                    className={
+                      emailAuthTab === 'password'
+                        ? 'underline'
+                        : 'text-[var(--prose-3)]'
+                    }
+                    onClick={() => setEmailAuthTab('password')}
+                  >
+                    Password
+                  </button>
+                </div>
+              )}
+
+              {mode === 'signin' && emailAuthTab === 'magic' ? (
+                <form
+                  onSubmit={onMagicLink}
+                  className="space-y-3"
+                  autoComplete="on"
+                >
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    autoComplete="email"
+                    className="w-full border border-[var(--outline)] bg-[var(--bg)] px-3 py-2 text-sm"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                  <button
+                    type="submit"
+                    disabled={busy}
+                    className="border-2 border-[var(--prose)] bg-[var(--prose)] px-4 py-2 text-xs font-bold uppercase text-[var(--bg)] disabled:opacity-50"
+                  >
+                    {busy ? (status ?? 'Working…') : 'Email me a sign-in link'}
+                  </button>
+                  <p className="text-[11px] text-[var(--prose-3)]">
+                    Works for new and existing accounts. You must be able to
+                    open the inbox.
+                  </p>
+                </form>
+              ) : (
+                <form
+                  onSubmit={onAuth}
+                  className="space-y-3"
+                  autoComplete="on"
+                >
+                  {mode === 'signup' && (
+                    <input
+                      className="w-full border border-[var(--outline)] bg-[var(--bg)] px-3 py-2 text-sm"
+                      placeholder="Display name"
+                      name="name"
+                      autoComplete="name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                  )}
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    autoComplete="email"
+                    className="w-full border border-[var(--outline)] bg-[var(--bg)] px-3 py-2 text-sm"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                  <input
+                    type="password"
+                    name="password"
+                    required
+                    minLength={8}
+                    autoComplete={
+                      mode === 'signup' ? 'new-password' : 'current-password'
+                    }
+                    className="w-full border border-[var(--outline)] bg-[var(--bg)] px-3 py-2 text-sm"
+                    placeholder="Password (8+)"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <button
+                    type="submit"
+                    disabled={busy}
+                    className="border-2 border-[var(--prose)] bg-[var(--prose)] px-4 py-2 text-xs font-bold uppercase text-[var(--bg)] disabled:opacity-50"
+                  >
+                    {busy
+                      ? (status ?? 'Working…')
+                      : mode === 'signup'
+                        ? 'Create account'
+                        : 'Sign in with password'}
+                  </button>
+                  {mode === 'signup' && (
+                    <p className="text-[11px] text-[var(--prose-3)]">
+                      New email accounts must verify via the link we send.
+                      Spoofed domains (e.g. fake @chron0.tech) will not work.
+                    </p>
+                  )}
+                </form>
+              )}
+              {status && busy && (
+                <p className="text-xs text-[var(--prose-3)]">{status}</p>
+              )}
+            </div>
           </details>
         </div>
       ) : (

@@ -98,6 +98,8 @@ See [`.env.example`](./.env.example). Typical vars:
 | `BETTER_AUTH_SECRET` | Auth + HMAC attestations |
 | `BETTER_AUTH_URL` | Site origin (production must match real domain) |
 | `VITE_APP_URL` | Client trusted origin |
+| `RESEND_API_KEY` | Outbound mail (magic link + email verification) — see [`docs/email-auth.md`](./docs/email-auth.md) |
+| `EMAIL_FROM` | Optional; default `RNGdle Unlocked <noreply@outreach.chron0.tech>` |
 | `ADMIN_SECRET` | Optional; bootstrap only (`scripts/promote-admin.mjs`) — not for browser admin |
 | `ADMIN_USER_IDS` | Optional; comma-separated user ids treated as admin |
 | `DISCORD_CLIENT_ID` / `DISCORD_CLIENT_SECRET` | Discord OAuth (see [`docs/oauth-setup.md`](./docs/oauth-setup.md)) |
@@ -148,6 +150,18 @@ Vite resolves `.js` → `.ts` fine. Keep this pattern when adding game modules u
 - Collection: union by badge id; keep **earliest** `firstEarnedAt`.
 - History: merge by roll id (cap writes per request — `UPSERT_CAP`).
 - Side effects (`processRollActivity`) must be **non-fatal** to sync success.
+- **Integrity gate** (`server/syncIntegrity.ts`): reject (HTTP 409) when history/best-roll ids belong to another user, or EP/collection growth cannot be explained by that user’s rolls (stops localStorage clone dumps).
+
+### 5.5b Auth identity
+
+- Prefer Discord/GitHub OAuth for new accounts.
+- Email/password: `requireEmailVerification` + Resend from `outreach.chron0.tech`.
+- Magic link plugin for passwordless email sign-in (inbox ownership).
+- Grandfather existing users: `node --env-file=.env.local scripts/grandfather-email-verified.mjs`.
+
+### 5.5c Progress provenance (profiles)
+
+`classifyProgressProvenance` labels public profiles **Cloud sync** vs **Cloned local progress** (best-roll id owned by someone else / missing) vs **Local progress**.
 
 ### 5.6 Roll UI (Home reel)
 

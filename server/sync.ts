@@ -4,6 +4,7 @@ import { defaultPlayStats } from '../src/game/stats.js';
 import type { Db } from './db/index.js';
 import { rolls, userProgress } from './db/schema.js';
 import { createLogger } from './logger.js';
+import { assertSyncIntegrity } from './syncIntegrity.js';
 
 const log = createLogger('sync');
 
@@ -255,6 +256,8 @@ export async function saveCloudMerge(
   local: CloudSavePayload,
 ): Promise<CloudSavePayload> {
   const cloud = await loadCloudSave(db, userId);
+  await assertSyncIntegrity(db, userId, local, cloud);
+
   const prevCollection = cloud?.collection ?? [];
   const prevRollIds = new Set((cloud?.history ?? []).map((r) => r.id));
   const cloudById = new Map((cloud?.history ?? []).map((r) => [r.id, r]));

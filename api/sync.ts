@@ -12,6 +12,7 @@ import {
   saveCloudMerge,
   type CloudSavePayload,
 } from '../server/sync.js';
+import { SyncIntegrityError } from '../server/syncIntegrity.js';
 import { defineHandler } from '../server/vercel-adapter.js';
 
 const log = createLogger('api/sync');
@@ -81,21 +82,32 @@ export default defineHandler(async (request) => {
         return Response.json({ error: 'Invalid payload' }, { status: 400 });
       }
 
-      const merged = await saveCloudMerge(db, userId, {
-        lifetimeEP: body.lifetimeEP,
-        lifetimeRollCount: body.lifetimeRollCount,
-        journeyEP: body.journeyEP ?? 0,
-        collection: Array.isArray(body.collection) ? body.collection : [],
-        stats: body.stats,
-        history: body.history ?? [],
-      });
-      log.info('merged', {
-        userId,
-        rolls: merged.lifetimeRollCount,
-        ep: merged.lifetimeEP,
-        history: merged.history.length,
-      });
-      return Response.json({ cloud: merged });
+      try {
+        const merged = await saveCloudMerge(db, userId, {
+          lifetimeEP: body.lifetimeEP,
+          lifetimeRollCount: body.lifetimeRollCount,
+          journeyEP: body.journeyEP ?? 0,
+          collection: Array.isArray(body.collection) ? body.collection : [],
+          stats: body.stats,
+          history: body.history ?? [],
+        });
+        log.info('merged', {
+          userId,
+          rolls: merged.lifetimeRollCount,
+          ep: merged.lifetimeEP,
+          history: merged.history.length,
+        });
+        return Response.json({ cloud: merged });
+      } catch (err) {
+        if (err instanceof SyncIntegrityError) {
+          log.warn('integrity reject', { userId, message: err.message });
+          return Response.json(
+            { error: err.message, code: err.code },
+            { status: 409 },
+          );
+        }
+        throw err;
+      }
     }
 
     return Response.json({ error: 'Method not allowed' }, { status: 405 });

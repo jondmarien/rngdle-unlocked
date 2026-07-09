@@ -1,7 +1,8 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from '@better-auth/drizzle-adapter';
-import { admin } from 'better-auth/plugins';
+import { admin, magicLink } from 'better-auth/plugins';
 import { createDb, schema } from './db/index.js';
+import { sendEmail } from './email.js';
 
 function getDb() {
   return createDb(process.env.DATABASE_URL);
@@ -74,6 +75,20 @@ export function createAuth() {
     emailAndPassword: {
       enabled: true,
       minPasswordLength: 8,
+      requireEmailVerification: true,
+    },
+    emailVerification: {
+      sendOnSignUp: true,
+      sendOnSignIn: true,
+      autoSignInAfterVerification: true,
+      sendVerificationEmail: async ({ user, url }) => {
+        void sendEmail({
+          to: user.email,
+          subject: 'Verify your RNGdle Unlocked email',
+          text: `Verify your email for RNGdle Unlocked:\n\n${url}\n\nIf you did not create an account, ignore this message.`,
+          html: `<p>Verify your email for <strong>RNGdle Unlocked</strong>.</p><p><a href="${url}">Click here to verify</a></p><p>If you did not create an account, ignore this message.</p>`,
+        });
+      },
     },
     ...(Object.keys(social).length > 0
       ? {
@@ -102,6 +117,17 @@ export function createAuth() {
       },
     },
     plugins: [
+      magicLink({
+        expiresIn: 60 * 10,
+        sendMagicLink: async ({ email, url }) => {
+          void sendEmail({
+            to: email,
+            subject: 'Your RNGdle Unlocked sign-in link',
+            text: `Sign in to RNGdle Unlocked:\n\n${url}\n\nThis link expires in 10 minutes. If you did not request it, ignore this message.`,
+            html: `<p>Sign in to <strong>RNGdle Unlocked</strong>.</p><p><a href="${url}">Click here to sign in</a></p><p>This link expires in 10 minutes. If you did not request it, ignore this message.</p>`,
+          });
+        },
+      }),
       admin({
         defaultRole: 'user',
         adminRoles: ['admin'],

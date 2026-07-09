@@ -1,4 +1,4 @@
-import { and, desc, eq } from 'drizzle-orm';
+import { and, count, desc, eq } from 'drizzle-orm';
 import { createDb } from '../../server/db/index.js';
 import { rolls, user, userProgress } from '../../server/db/schema.js';
 import { requestUrl } from '../../server/http.js';
@@ -10,6 +10,7 @@ import {
   LIMITS,
   rateLimitedResponse,
 } from '../../server/rateLimit.js';
+import { classifyProgressProvenance } from '../../server/progressProvenance.js';
 import {
   earnedSecretSeals,
   parseCollectionIds,
@@ -146,11 +147,23 @@ export default defineHandler(async (request) => {
       unlocked: true as const,
     }));
 
+    const [ownedCountRow] = await db
+      .select({ n: count() })
+      .from(rolls)
+      .where(eq(rolls.userId, u.id));
+    const ownedPublicRollCount = Number(ownedCountRow?.n ?? 0);
+
+    const provenance = await classifyProgressProvenance(db, u.id, stats, {
+      lifetimeRollCount: progress?.lifetimeRollCount ?? 0,
+      ownedPublicRollCount,
+    });
+
     log.info('secrets', {
       username,
       collectionSize: unlockedIds.size,
       secrets: secrets.map((s) => s.id),
       element: sectionProgress('element', unlockedIds),
+      provenance: provenance.provenance,
     });
 
     return Response.json({
@@ -168,6 +181,8 @@ export default defineHandler(async (request) => {
         lifetimeRollCount: progress?.lifetimeRollCount ?? 0,
         journeyEP: progress?.journeyEp ?? 0,
         badgeCount: unlockedIds.size,
+        progressProvenance: provenance.provenance,
+        progressProvenanceLabel: provenance.label,
         /** Unlocked codex entries when profileShowCodex. Client enriches names. */
         collection,
         secrets,

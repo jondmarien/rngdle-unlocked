@@ -28,7 +28,8 @@
     "html-to-image": "^1.11.13",
     "react": "^19.2.7",
     "react-confetti": "^6.4.0",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "resend": "^6.17.2"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.2",
