@@ -20,6 +20,7 @@ import {
   type ThemeMode,
 } from '../game';
 import { applyStreaks, recomputeBestConsecutive } from '../game/stats';
+import { fetchCloudSave, pushCloudSave } from '../lib/sync-api';
 import {
   buildExportPayload,
   clearState,
@@ -61,6 +62,11 @@ type GameContextValue = {
   exportSave: () => void;
   importSave: (file: File) => Promise<void>;
   fireCelebration: () => void;
+  syncToCloud: () => Promise<void>;
+  pullFromCloud: () => Promise<void>;
+  syncing: boolean;
+  lastSyncAt: string | null;
+  syncError: string | null;
 };
 
 const GameContext = createContext<GameContextValue | null>(null);
@@ -82,6 +88,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [lastJourneyUnlocks, setLastJourneyUnlocks] = useState<BadgeHit[]>([]);
   const [confettiToken, setConfettiToken] = useState(0);
+  const [syncing, setSyncing] = useState(false);
+  const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
 
   useEffect(() => {
     applyTheme(state.settings.theme);
@@ -228,6 +237,80 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setConfettiToken((t) => t + 1);
   }, []);
 
+  const applyCloudPayload = useCallback(
+    (cloud: {
+      lifetimeEP: number;
+      lifetimeRollCount: number;
+      journeyEP: number;
+      collection: CollectionEntry[];
+      stats: PlayStats;
+      history: RollResult[];
+    }) => {
+      setState((prev) => {
+        const next: PersistedState = {
+          ...prev,
+          lifetimeEP: cloud.lifetimeEP,
+          lifetimeRollCount: cloud.lifetimeRollCount,
+          journeyEP: cloud.journeyEP,
+          collection: cloud.collection,
+          stats: cloud.stats,
+          history: cloud.history,
+        };
+        persist(next);
+        return next;
+      });
+      setLastRoll(cloud.history[0] ?? null);
+      setLastSyncAt(new Date().toISOString());
+    },
+    [persist],
+  );
+
+  const syncToCloud = useCallback(async () => {
+    setSyncing(true);
+    setSyncError(null);
+    try {
+      const merged = await pushCloudSave({
+        lifetimeEP: state.lifetimeEP,
+        lifetimeRollCount: state.lifetimeRollCount,
+        journeyEP: state.journeyEP,
+        collection: state.collection,
+        stats: state.stats,
+        history: state.history,
+      });
+      applyCloudPayload(merged);
+    } catch (e) {
+      setSyncError(e instanceof Error ? e.message : 'Sync failed');
+    } finally {
+      setSyncing(false);
+    }
+  }, [applyCloudPayload, state]);
+
+  const pullFromCloud = useCallback(async () => {
+    setSyncing(true);
+    setSyncError(null);
+    try {
+      const cloud = await fetchCloudSave();
+      if (!cloud) {
+        setSyncError('Nothing in the cloud yet — push first.');
+        return;
+      }
+      // Merge pull with local then save
+      const merged = await pushCloudSave({
+        lifetimeEP: state.lifetimeEP,
+        lifetimeRollCount: state.lifetimeRollCount,
+        journeyEP: state.journeyEP,
+        collection: state.collection,
+        stats: state.stats,
+        history: state.history,
+      });
+      applyCloudPayload(merged);
+    } catch (e) {
+      setSyncError(e instanceof Error ? e.message : 'Pull failed');
+    } finally {
+      setSyncing(false);
+    }
+  }, [applyCloudPayload, state]);
+
   const value = useMemo<GameContextValue>(
     () => ({
       lastRoll,
@@ -252,6 +335,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
       exportSave,
       importSave,
       fireCelebration,
+      syncToCloud,
+      pullFromCloud,
+      syncing,
+      lastSyncAt,
+      syncError,
     }),
     [
       lastRoll,
@@ -270,6 +358,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
       exportSave,
       importSave,
       fireCelebration,
+      syncToCloud,
+      pullFromCloud,
+      syncing,
+      lastSyncAt,
+      syncError,
     ],
   );
 

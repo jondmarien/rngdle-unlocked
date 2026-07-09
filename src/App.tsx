@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { GameProvider } from './state/GameProvider';
 import { CelebrationLayer } from './ui/components/Celebration';
 import { AppShell, type TabId } from './ui/layout/AppShell';
+import { AccountScreen } from './ui/screens/AccountScreen';
 import { AboutScreen } from './ui/screens/AboutScreen';
 import { CollectionScreen } from './ui/screens/CollectionScreen';
 import { HistoryScreen } from './ui/screens/HistoryScreen';
@@ -19,6 +20,7 @@ function AppRoutes() {
       {tab === 'history' && <HistoryScreen />}
       {tab === 'collection' && <CollectionScreen />}
       {tab === 'showcase' && <ShowcaseScreen />}
+      {tab === 'account' && <AccountScreen />}
       {tab === 'about' && <AboutScreen />}
       {tab === 'settings' && <SettingsScreen />}
     </AppShell>

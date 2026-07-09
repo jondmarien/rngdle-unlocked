@@ -44,3 +44,22 @@ $env:CI = "true"; $env:VP_NODE_MANAGER = "yes"; irm https://vite.plus/ps1 | iex
 
 - Spec: `docs/superpowers/specs/2026-07-08-rngdle-unlocked-design.md`
 - Plan: `docs/superpowers/plans/2026-07-08-rngdle-unlocked.md`
+- **Part 2 social:** `docs/superpowers/specs/2026-07-09-mvp-part2-social-design.md`
+
+## Part 2 — Social (Vercel + Neon)
+
+Stack: **Better Auth** + **Drizzle** + **Neon Postgres** on Vercel serverless `/api/*`.
+
+1. Copy `.env.example` → `.env.local` and set `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`
+2. `pnpm db:push` to apply schema
+3. Local full stack: `npx vercel dev` (API + SPA) or configure Vite proxy to serverless
+4. Vercel: enable Neon integration + set env vars; redeploy
+
+### Account tab
+- Sign up / sign in (email + password)
+- Optional username
+- **Push / merge to cloud** and **Pull from cloud** (merge-safe)
+
+### Schema
+- Auth tables: `user`, `session`, `account`, `verification`
+- App: `user_progress`, `rolls`

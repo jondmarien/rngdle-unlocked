@@ -5,14 +5,19 @@
   "type": "module",
   "packageManager": "pnpm@9.15.9",
   "scripts": {
-    "dev": "vp dev",
+    "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "vp lint",
     "preview": "vite preview",
-    "test": "vp test"
+    "test": "vp test",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
     "@vercel/analytics": "^2.0.1",
+    "better-auth": "^1.6.23",
+    "drizzle-orm": "^0.45.2",
     "html-to-image": "^1.11.13",
     "react": "^19.2.7",
     "react-confetti": "^6.4.0",
@@ -24,6 +29,8 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.5.2",
+    "dotenv": "^17.4.2",
+    "drizzle-kit": "^0.31.10",
     "tailwindcss": "^4.3.2",
     "typescript": "~5.8.3",
     "vite": "^6.3.5",

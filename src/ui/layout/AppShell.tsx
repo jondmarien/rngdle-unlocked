@@ -7,6 +7,7 @@ export type TabId =
   | 'history'
   | 'collection'
   | 'showcase'
+  | 'account'
   | 'about'
   | 'settings';
 
@@ -15,6 +16,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'history', label: 'History' },
   { id: 'collection', label: 'Collection' },
   { id: 'showcase', label: 'Showcase' },
+  { id: 'account', label: 'Account' },
   { id: 'about', label: 'About' },
   { id: 'settings', label: 'Settings' },
 ];

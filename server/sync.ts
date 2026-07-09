@@ -1,0 +1,189 @@
+import { eq } from 'drizzle-orm';
+import type { CollectionEntry, PlayStats, RollResult } from '../src/game/types';
+import { defaultPlayStats } from '../src/game/stats';
+import type { Db } from './db';
+import { rolls, userProgress } from './db/schema';
+
+export type CloudSavePayload = {
+  lifetimeEP: number;
+  lifetimeRollCount: number;
+  journeyEP: number;
+  collection: CollectionEntry[];
+  stats: PlayStats;
+  history: RollResult[];
+};
+
+const HISTORY_CAP = 500;
+
+function maxNum(a: number, b: number): number {
+  return Math.max(Number(a) || 0, Number(b) || 0);
+}
+
+export function mergeCollection(
+  a: CollectionEntry[],
+  b: CollectionEntry[],
+): CollectionEntry[] {
+  const map = new Map<string, CollectionEntry>();
+  for (const e of [...a, ...b]) {
+    const prev = map.get(e.badgeId);
+    if (!prev) {
+      map.set(e.badgeId, e);
+      continue;
+    }
+    // Earliest firstEarnedAt wins
+    if (e.firstEarnedAt < prev.firstEarnedAt) {
+      map.set(e.badgeId, e);
+    }
+  }
+  return [...map.values()];
+}
+
+export function mergeStats(a: PlayStats, b: PlayStats): PlayStats {
+  const bestRoll =
+    !a.bestRoll
+      ? b.bestRoll
+      : !b.bestRoll
+        ? a.bestRoll
+        : b.bestRoll.totalEP > a.bestRoll.totalEP
+          ? b.bestRoll
+          : a.bestRoll;
+
+  return {
+    qualityStreak: Math.max(a.qualityStreak, b.qualityStreak),
+    bestQualityStreak: Math.max(a.bestQualityStreak, b.bestQualityStreak),
+    dayStreak: Math.max(a.dayStreak, b.dayStreak),
+    bestDayStreak: Math.max(a.bestDayStreak, b.bestDayStreak),
+    lastPlayDate:
+      (a.lastPlayDate ?? '') > (b.lastPlayDate ?? '')
+        ? a.lastPlayDate
+        : b.lastPlayDate,
+    bestRoll,
+    bestConsecutive:
+      a.bestConsecutive.length >= b.bestConsecutive.length
+        ? a.bestConsecutive
+        : b.bestConsecutive,
+  };
+}
+
+export function mergeHistory(a: RollResult[], b: RollResult[]): RollResult[] {
+  const map = new Map<string, RollResult>();
+  for (const r of [...a, ...b]) {
+    if (!map.has(r.id)) map.set(r.id, r);
+  }
+  return [...map.values()]
+    .sort((x, y) => (x.rolledAt < y.rolledAt ? 1 : -1))
+    .slice(0, HISTORY_CAP);
+}
+
+export async function loadCloudSave(
+  db: Db,
+  userId: string,
+): Promise<CloudSavePayload | null> {
+  const [row] = await db
+    .select()
+    .from(userProgress)
+    .where(eq(userProgress.userId, userId))
+    .limit(1);
+
+  if (!row) return null;
+
+  const historyRows = await db
+    .select()
+    .from(rolls)
+    .where(eq(rolls.userId, userId));
+
+  const history: RollResult[] = historyRows
+    .map((r) => ({
+      id: r.id,
+      number: r.number,
+      totalEP: r.totalEp,
+      rarity: r.rarity as RollResult['rarity'],
+      percentile: r.percentile,
+      rolledAt:
+        r.rolledAt instanceof Date
+          ? r.rolledAt.toISOString()
+          : String(r.rolledAt),
+      badges: JSON.parse(r.badgesJson || '[]'),
+    }))
+    .sort((a, b) => (a.rolledAt < b.rolledAt ? 1 : -1))
+    .slice(0, HISTORY_CAP);
+
+  return {
+    lifetimeEP: row.lifetimeEp,
+    lifetimeRollCount: row.lifetimeRollCount,
+    journeyEP: row.journeyEp,
+    collection: JSON.parse(row.collectionJson || '[]'),
+    stats: { ...defaultPlayStats(), ...JSON.parse(row.statsJson || '{}') },
+    history,
+  };
+}
+
+export async function saveCloudMerge(
+  db: Db,
+  userId: string,
+  local: CloudSavePayload,
+): Promise<CloudSavePayload> {
+  const cloud = await loadCloudSave(db, userId);
+
+  const merged: CloudSavePayload = cloud
+    ? {
+        lifetimeEP: maxNum(local.lifetimeEP, cloud.lifetimeEP),
+        lifetimeRollCount: maxNum(
+          local.lifetimeRollCount,
+          cloud.lifetimeRollCount,
+        ),
+        journeyEP: maxNum(local.journeyEP, cloud.journeyEP),
+        collection: mergeCollection(local.collection, cloud.collection),
+        stats: mergeStats(local.stats, cloud.stats),
+        history: mergeHistory(local.history, cloud.history),
+      }
+    : {
+        ...local,
+        history: local.history.slice(0, HISTORY_CAP),
+      };
+
+  const now = new Date();
+  await db
+    .insert(userProgress)
+    .values({
+      userId,
+      lifetimeEp: merged.lifetimeEP,
+      lifetimeRollCount: merged.lifetimeRollCount,
+      journeyEp: merged.journeyEP,
+      collectionJson: JSON.stringify(merged.collection),
+      statsJson: JSON.stringify(merged.stats),
+      settingsJson: '{}',
+      updatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: userProgress.userId,
+      set: {
+        lifetimeEp: merged.lifetimeEP,
+        lifetimeRollCount: merged.lifetimeRollCount,
+        journeyEp: merged.journeyEP,
+        collectionJson: JSON.stringify(merged.collection),
+        statsJson: JSON.stringify(merged.stats),
+        updatedAt: now,
+      },
+    });
+
+  // Upsert rolls (ignore conflicts)
+  for (const r of merged.history) {
+    await db
+      .insert(rolls)
+      .values({
+        id: r.id,
+        userId,
+        number: r.number,
+        totalEp: r.totalEP,
+        rarity: r.rarity,
+        percentile: r.percentile,
+        badgesJson: JSON.stringify(r.badges),
+        rolledAt: new Date(r.rolledAt),
+        createdAt: now,
+      })
+      .onConflictDoNothing();
+  }
+
+  return merged;
+}
