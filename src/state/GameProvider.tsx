@@ -125,9 +125,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
   loggedInRef.current = Boolean(session?.user);
 
   const [state, setState] = useState<PersistedState>(() => loadState());
-  const [lastRoll, setLastRoll] = useState<RollResult | null>(
-    () => loadState().history[0] ?? null,
-  );
+  /** Session-only “current roll” on Home — not restored on refresh (history still persists). */
+  const [lastRoll, setLastRoll] = useState<RollResult | null>(null);
   const [rolling, setRolling] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [lastJourneyUnlocks, setLastJourneyUnlocks] = useState<BadgeHit[]>([]);
@@ -184,7 +183,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       if (secretMerge.unlocked.length > 0) {
         setLastSecretUnlocks(secretHits(secretMerge.unlocked));
       }
-      setLastRoll(cloud.history[0] ?? null);
+      // Do not restore lastRoll from cloud — home stays a fresh slot until the
+      // player rolls this session (history/stats still update).
       setLastSyncAt(new Date().toISOString());
     },
     [persist],

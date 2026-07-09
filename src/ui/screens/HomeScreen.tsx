@@ -43,19 +43,11 @@ export function HomeScreen({
   } = useGame();
   const [shareOpen, setShareOpen] = useState(false);
   const [attestMsg, setAttestMsg] = useState<string | null>(null);
-  const [slotValue, setSlotValue] = useState<number | null>(
-    () => lastRoll?.number ?? null,
-  );
+  // Fresh home each load: empty reel until this session’s first Generate.
+  const [slotValue, setSlotValue] = useState<number | null>(null);
   const [revealKey, setRevealKey] = useState(0);
-  const [revealDone, setRevealDone] = useState(() => lastRoll != null);
+  const [revealDone, setRevealDone] = useState(false);
   const pendingFx = useRef(false);
-
-  useEffect(() => {
-    if (revealKey === 0 && lastRoll != null && slotValue == null) {
-      setSlotValue(lastRoll.number);
-      setRevealDone(true);
-    }
-  }, [lastRoll, revealKey, slotValue]);
 
   useEffect(() => {
     const onMove = (e: PointerEvent) => {
@@ -105,6 +97,8 @@ export function HomeScreen({
   };
 
   const busy = rolling || (revealKey > 0 && !revealDone);
+  // Community bests only on an idle fresh board (no active/finished session roll).
+  const showCommunityBest = !rolling && !lastRoll && !busy;
 
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col">
@@ -290,12 +284,14 @@ export function HomeScreen({
           <p className="text-sm text-red-700 dark:text-red-400">{saveError}</p>
         )}
 
-        <div className="w-full max-w-2xl pt-2">
-          <CommunityHighlights
-            onOpenProfile={onOpenProfile}
-            onOpenRoll={onOpenRoll}
-          />
-        </div>
+        {showCommunityBest && (
+          <div className="w-full max-w-2xl pt-2">
+            <CommunityHighlights
+              onOpenProfile={onOpenProfile}
+              onOpenRoll={onOpenRoll}
+            />
+          </div>
+        )}
       </div>
 
       {lastRoll && revealDone && (
