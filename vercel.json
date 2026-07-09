@@ -5,6 +5,14 @@
   "installCommand": "pnpm install --frozen-lockfile",
   "rewrites": [
     {
+      "source": "/api/auth",
+      "destination": "/api/auth"
+    },
+    {
+      "source": "/api/auth/(.*)",
+      "destination": "/api/auth?__path=$1"
+    },
+    {
       "source": "/api/share/r/(.*)",
       "destination": "/api/share/$1"
     },

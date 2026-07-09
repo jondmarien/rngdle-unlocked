@@ -64,6 +64,24 @@ export async function toWebRequest(req: NodeReq): Promise<Request> {
     pathAndQuery = `/${pathAndQuery}`;
   }
 
+  // vercel.json rewrites /api/auth/* → /api/auth?__path=sign-up/email
+  // Expand that back so better-auth sees the real route.
+  try {
+    const tmp = new URL(pathAndQuery, 'http://placeholder.local');
+    const ba = tmp.searchParams.get('__path');
+    if (
+      ba != null &&
+      (tmp.pathname === '/api/auth' || tmp.pathname === '/api/auth/')
+    ) {
+      const sub = ba.replace(/^\/+/, '');
+      tmp.pathname = sub ? `/api/auth/${sub}` : '/api/auth';
+      tmp.searchParams.delete('__path');
+      pathAndQuery = `${tmp.pathname}${tmp.search}`;
+    }
+  } catch {
+    /* keep original */
+  }
+
   const absoluteUrl = `${proto}://${host}${pathAndQuery}`;
 
   const headers = new Headers();

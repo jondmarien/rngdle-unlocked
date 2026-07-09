@@ -1,18 +1,28 @@
-import { createAuth } from '../../server/auth.js';
-import { createLogger } from '../../server/logger.js';
-import { requestUrl } from '../../server/http.js';
-import { defineHandler } from '../../server/vercel-adapter.js';
+import { createAuth } from '../server/auth.js';
+import { createLogger } from '../server/logger.js';
+import { defineHandler } from '../server/vercel-adapter.js';
 
 const log = createLogger('api/auth');
 
 /**
- * Better Auth catch-all — /api/auth/*
- * Must use Node (req,res) via defineHandler; Vercel does not pass Web Request.
+ * Better Auth mount for all /api/auth/* routes.
+ *
+ * Nested paths are rewritten by vercel.json to /api/auth?__path=… and expanded
+ * back to a full pathname in vercel-adapter (absolute URL for better-call).
  */
 export default defineHandler(async (request) => {
   const started = Date.now();
-  const url = requestUrl(request, '/api/auth');
-  log.info('request', { method: request.method, url: url.href });
+  let pathname = '/api/auth';
+  try {
+    pathname = new URL(request.url).pathname;
+  } catch {
+    /* ignore */
+  }
+  log.info('request', {
+    method: request.method,
+    pathname,
+    url: request.url,
+  });
 
   const missing = ['DATABASE_URL', 'BETTER_AUTH_SECRET'].filter(
     (k) => !process.env[k],
@@ -29,14 +39,14 @@ export default defineHandler(async (request) => {
     const auth = createAuth();
     const res = await auth.handler(request);
     log.info('response', {
-      pathname: url.pathname,
+      pathname,
       status: res.status,
       ms: Date.now() - started,
     });
     return res;
   } catch (err) {
     log.error('handler threw', {
-      pathname: url.pathname,
+      pathname,
       ms: Date.now() - started,
       err: err instanceof Error ? err.message : String(err),
       stack: err instanceof Error ? err.stack : undefined,

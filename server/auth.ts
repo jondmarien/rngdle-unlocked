@@ -8,9 +8,15 @@ function getDb() {
 
 /** Production base URL for cookies + CSRF. Prefer explicit env, then Vercel. */
 function resolveBaseURL(): string {
-  if (process.env.BETTER_AUTH_URL) return process.env.BETTER_AUTH_URL;
-  if (process.env.VITE_APP_URL) return process.env.VITE_APP_URL;
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  // Prefer production app URL when set; never leave localhost on Vercel.
+  const explicit = process.env.BETTER_AUTH_URL || process.env.VITE_APP_URL;
+  if (explicit && !explicit.includes('localhost') && !explicit.includes('127.0.0.1')) {
+    return explicit.replace(/\/$/, '');
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`.replace(/\/$/, '');
+  }
+  if (explicit) return explicit.replace(/\/$/, '');
   return 'http://localhost:5173';
 }
 
