@@ -54,7 +54,7 @@ export function SettingsScreen() {
             checked={settings.confettiEnabled}
             onChange={(e) => setConfettiEnabled(e.target.checked)}
           />
-          Confetti on rare+ rolls
+          Celebrate rare+ (confetti, edge glow, screen shake on epic+)
         </label>
         <label className="flex items-center gap-2 text-sm">
           <input
