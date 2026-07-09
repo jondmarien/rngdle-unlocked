@@ -1,5 +1,8 @@
 import { createAuthClient } from 'better-auth/react';
-import { magicLinkClient } from 'better-auth/client/plugins';
+import {
+  inferAdditionalFields,
+  magicLinkClient,
+} from 'better-auth/client/plugins';
 import { createLogger } from './logger';
 
 const log = createLogger('auth-client');
@@ -7,7 +10,17 @@ const log = createLogger('auth-client');
 export const authClient = createAuthClient({
   baseURL: typeof window !== 'undefined' ? window.location.origin : '',
   basePath: '/api/auth',
-  plugins: [magicLinkClient()],
+  plugins: [
+    magicLinkClient(),
+    // Mirrors server/auth.ts `user.additionalFields` so `session.user.username`
+    // is typed once here instead of `as { username?: ... }` casts at call sites.
+    inferAdditionalFields({
+      user: {
+        username: { type: 'string', required: false },
+        role: { type: 'string', required: false },
+      },
+    }),
+  ],
   fetchOptions: {
     onRequest(ctx) {
       log.debug('request', {
