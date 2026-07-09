@@ -42,7 +42,7 @@ describe("buildShareText", () => {
     expect(lines[0]).toBe("RNGdle Unlocked 🎲 473389");
     expect(lines).toContain("⬜ COMMON");
     expect(text).toContain("⬜ 🎰 Lucky Seven");
-    expect(text).not.toContain("+2 more");
+    expect(text).toContain("+2 more");
     expect(text).toMatch(/^".+"$/m);
     expect(text).toContain("3,179 EP");
     expect(text).toMatch(/\/s\/[a-z0-9_]+\/[A-Za-z0-9]+/);
