@@ -47,3 +47,5 @@ export {
   localDateKey,
 } from './stats';
 export { playRollSound, shouldCelebrate } from './fx';
+export { buildShareText, buildFlavorQuote } from './shareText';
+

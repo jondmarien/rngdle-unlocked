@@ -1,29 +1,11 @@
 import { useRef, useState } from 'react';
 import { toPng } from 'html-to-image';
 import { topPercentFromPercentile, type RollResult } from '../../game';
+import { buildShareText } from '../../game/shareText';
 import { RarityBadge } from './RarityBadge';
 import { EPPill } from './EPPill';
 
-export function buildShareText(
-  roll: RollResult,
-  opts?: { rollCount?: number },
-): string {
-  const top = topPercentFromPercentile(roll.percentile);
-  const badges = roll.badges
-    .slice(0, 5)
-    .map((b) => `${b.emoji} ${b.name}`)
-    .join(', ');
-  const lines = [
-    `RNGdle Unlocked — ${roll.number.toLocaleString()}`,
-    `${roll.rarity.toUpperCase()} · ${roll.totalEP.toLocaleString()} EP · Top ${top}% of scores`,
-    badges ? `Badges: ${badges}` : 'Badges: none',
-  ];
-  if (opts?.rollCount != null) {
-    lines.push(`Lifetime rolls: ${opts.rollCount.toLocaleString()}`);
-  }
-  lines.push('Play anytime — no daily lock.');
-  return lines.join('\n');
-}
+export { buildShareText } from '../../game/shareText';
 
 export function SharePanel({
   roll,
@@ -38,15 +20,15 @@ export function SharePanel({
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<string | null>(null);
-  const text = buildShareText(
-    roll,
-    showRollCount ? { rollCount } : undefined,
-  );
+  const text = buildShareText(roll, {
+    showRollCount,
+    rollCount,
+  });
 
   const copyText = async () => {
     try {
       await navigator.clipboard.writeText(text);
-      setStatus('Copied text!');
+      setStatus('Copied for Discord!');
     } catch {
       setStatus('Could not copy — select the text manually.');
     }
@@ -58,9 +40,10 @@ export function SharePanel({
       const dataUrl = await toPng(cardRef.current, {
         cacheBust: true,
         pixelRatio: 2,
-        backgroundColor: getComputedStyle(document.documentElement)
-          .getPropertyValue('--surface')
-          .trim() || '#fff',
+        backgroundColor:
+          getComputedStyle(document.documentElement)
+            .getPropertyValue('--surface')
+            .trim() || '#fff',
       });
       const a = document.createElement('a');
       a.download = `rngdle-unlocked-${roll.number}.png`;
@@ -74,7 +57,7 @@ export function SharePanel({
 
   const nativeShare = async () => {
     if (!navigator.share) {
-      setStatus('Web Share not available here.');
+      setStatus('Web Share not available — use Copy text for Discord.');
       return;
     }
     try {
@@ -98,12 +81,46 @@ export function SharePanel({
           </button>
         </div>
 
+        <p className="mb-2 text-xs text-[var(--prose-3)]">
+          Discord-style text — copy and paste into a chat.
+        </p>
+
+        {/* Primary: Discord paste block */}
+        <pre className="mb-3 overflow-x-auto whitespace-pre-wrap rounded-lg border border-[var(--outline)] bg-[#1e1f22] p-4 text-left font-mono text-[13px] leading-relaxed text-[#dbdee1]">
+          {text}
+        </pre>
+
+        <div className="mb-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="border-2 border-[var(--prose)] bg-[var(--prose)] px-4 py-2 text-xs font-bold uppercase text-[var(--bg)]"
+            onClick={copyText}
+          >
+            Copy for Discord
+          </button>
+          <button
+            type="button"
+            className="border border-[var(--prose)] px-3 py-2 text-xs font-bold uppercase"
+            onClick={nativeShare}
+          >
+            Share…
+          </button>
+          <button
+            type="button"
+            className="border border-[var(--prose)] px-3 py-2 text-xs font-bold uppercase"
+            onClick={downloadPng}
+          >
+            Download PNG
+          </button>
+        </div>
+
+        {/* Secondary: visual card for PNG */}
         <div
           ref={cardRef}
-          className="mb-4 space-y-2 rounded-lg border border-[var(--outline)] bg-[var(--bg)] p-6 text-center"
+          className="space-y-2 rounded-lg border border-[var(--outline)] bg-[var(--bg)] p-6 text-center"
         >
           <div className="text-xs font-bold uppercase tracking-[0.25em] text-[var(--prose-3)]">
-            RNGdle Unlocked
+            RNGdle Unlocked 🎲
           </div>
           <div className="mono-number text-4xl font-bold">
             {roll.number.toLocaleString()}
@@ -127,33 +144,6 @@ export function SharePanel({
           </div>
         </div>
 
-        <pre className="mb-3 whitespace-pre-wrap rounded border border-[var(--outline)] bg-[var(--bg)] p-3 text-left text-xs text-[var(--prose-2)]">
-          {text}
-        </pre>
-
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            className="border border-[var(--prose)] px-3 py-2 text-xs font-bold uppercase"
-            onClick={copyText}
-          >
-            Copy text
-          </button>
-          <button
-            type="button"
-            className="border border-[var(--prose)] px-3 py-2 text-xs font-bold uppercase"
-            onClick={downloadPng}
-          >
-            Download PNG
-          </button>
-          <button
-            type="button"
-            className="border border-[var(--prose)] px-3 py-2 text-xs font-bold uppercase"
-            onClick={nativeShare}
-          >
-            Share…
-          </button>
-        </div>
         {status && (
           <p className="mt-2 text-xs text-[var(--prose-3)]">{status}</p>
         )}
