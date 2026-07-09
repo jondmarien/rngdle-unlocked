@@ -130,11 +130,19 @@ function headerValue(
 }
 
 async function readBody(req: IncomingMessage): Promise<Buffer> {
-  // @vercel/node may already parse body onto req.body
-  const anyReq = req as NodeReq;
+  // @vercel/node often pre-parses JSON onto req.body and drains the stream.
+  const anyReq = req as NodeReq & { rawBody?: Buffer | string };
+  if (anyReq.rawBody !== undefined && anyReq.rawBody !== null) {
+    if (Buffer.isBuffer(anyReq.rawBody)) return anyReq.rawBody;
+    return Buffer.from(String(anyReq.rawBody));
+  }
   if (anyReq.body !== undefined && anyReq.body !== null) {
     if (Buffer.isBuffer(anyReq.body)) return anyReq.body;
-    if (typeof anyReq.body === 'string') return Buffer.from(anyReq.body);
+    if (typeof anyReq.body === 'string') {
+      // Already a JSON string (or form string)
+      return Buffer.from(anyReq.body);
+    }
+    // Parsed object — re-serialize for Fetch Request consumers (better-auth)
     return Buffer.from(JSON.stringify(anyReq.body));
   }
 
