@@ -1,27 +1,26 @@
 import { ROLL_MAX } from './rng';
 
-/**
- * Fixed reel width: enough digits to write ROLL_MAX (1_000_000 → 7).
- * Smaller rolls are zero-padded on the left so a leading 0 is visible and counted.
- */
+/** Max possible digit count for a roll (1_000_000 → 7). */
 export const DISPLAY_WIDTH = String(ROLL_MAX).length;
 
 /**
- * Canonical digit string for display + digit-pattern analysis.
- * Examples: 42 → "0000042", 0 → "0000000", 1000000 → "1000000".
- * Leading zeros are kept — never stripped.
+ * Natural decimal form of a roll — no leading-zero padding.
+ *
+ * Uniform RNG over 0…1_000_000 rarely hits 7-digit values (only 1_000_000),
+ * so padding everything to 7 made almost every reel start with "0" and look broken.
+ *
+ * Zeros that are *part of* the number (e.g. 100, 1000000, or 0 itself) are kept.
  */
 export function formatRollDigits(n: number): string {
   if (!Number.isInteger(n) || n < 0 || n > ROLL_MAX) {
-    // Callers should validate; still avoid throwing in UI paths
-    return String(Math.trunc(Math.abs(n))).padStart(DISPLAY_WIDTH, '0').slice(-DISPLAY_WIDTH);
+    return String(Math.trunc(Math.abs(n)));
   }
-  return String(n).padStart(DISPLAY_WIDTH, '0');
+  return String(n);
 }
 
-/** Unpadded decimal form (magnitude / “how big is this integer?”). */
+/** Alias — same as formatRollDigits (natural form). */
 export function naturalDigits(n: number): string {
-  return String(n);
+  return formatRollDigits(n);
 }
 
 export function naturalDigitLength(n: number): number {
