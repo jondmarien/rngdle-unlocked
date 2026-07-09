@@ -141,7 +141,11 @@ function AppRoutes() {
         />
       )}
       {route.kind === 'tab' && tab === 'home' && (
-        <HomeScreen onGoAccount={() => goTab('account')} />
+        <HomeScreen
+          onGoAccount={() => goTab('account')}
+          onOpenProfile={goProfile}
+          onOpenRoll={goRoll}
+        />
       )}
       {route.kind === 'tab' && tab === 'history' && (
         <HistoryScreen onGoAccount={() => goTab('account')} />

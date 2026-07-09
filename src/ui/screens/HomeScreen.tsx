@@ -7,6 +7,8 @@ import {
 import { playRollSound, shouldCelebrate } from '../../game/fx';
 import { useGame } from '../../state/GameProvider';
 import { BadgeBreakdown } from '../components/BadgeCard';
+import { BadgePill } from '../components/BadgePill';
+import { CommunityHighlights } from '../components/CommunityHighlights';
 import { EPPill } from '../components/EPPill';
 import { GenerateButton } from '../components/GenerateButton';
 import { NumberDisplay } from '../components/NumberDisplay';
@@ -17,8 +19,12 @@ import { SharePanel } from '../components/ShareCard';
 
 export function HomeScreen({
   onGoAccount,
+  onOpenProfile,
+  onOpenRoll,
 }: {
   onGoAccount?: () => void;
+  onOpenProfile?: (username: string) => void;
+  onOpenRoll?: (id: string, username?: string | null) => void;
 } = {}) {
   const {
     lastRoll,
@@ -144,6 +150,18 @@ export function HomeScreen({
                 </span>
               </div>
               <EPPill ep={lastRoll.totalEP} />
+              {lastRoll.badges.length > 0 && (
+                <div className="mt-1 flex max-w-md flex-wrap items-center justify-center gap-1.5">
+                  {lastRoll.badges.slice(0, 8).map((b) => (
+                    <BadgePill key={b.id} badge={b} compact />
+                  ))}
+                  {lastRoll.badges.length > 8 && (
+                    <span className="rounded-full border border-[var(--outline)] bg-[var(--bg)] px-2 py-0.5 text-[11px] font-semibold text-[var(--prose-2)]">
+                      +{lastRoll.badges.length - 8} more
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           ) : lastRoll && !revealDone ? (
             <p className="text-sm font-semibold text-[var(--prose-2)]">
@@ -271,6 +289,13 @@ export function HomeScreen({
         {saveError && (
           <p className="text-sm text-red-700 dark:text-red-400">{saveError}</p>
         )}
+
+        <div className="w-full max-w-md pt-2">
+          <CommunityHighlights
+            onOpenProfile={onOpenProfile}
+            onOpenRoll={onOpenRoll}
+          />
+        </div>
       </div>
 
       {lastRoll && revealDone && (

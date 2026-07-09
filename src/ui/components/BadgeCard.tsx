@@ -1,17 +1,8 @@
-import type { BadgeHit, RarityTier } from '../../game';
+import type { BadgeHit } from '../../game';
 import { formatRollDigits } from '../../game/digits';
 import { RARITY_LABELS } from '../../game/rarity';
+import { FAMILY_PILL, RARITY_PILL } from '../../lib/badge-theme';
 import { FAMILY_ICON, RARITY_ICON } from '../../lib/icons';
-
-const RARITY_CHIP: Record<RarityTier, string> = {
-  trash: 'bg-[var(--prose-3)]/20 text-[var(--prose-3)]',
-  common: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
-  uncommon: 'bg-teal-500/15 text-teal-600 dark:text-teal-400',
-  rare: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
-  epic: 'bg-violet-500/15 text-violet-600 dark:text-violet-400',
-  anomaly: 'bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-400',
-  mythic: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
-};
 
 export function BadgeCard({
   badge,
@@ -48,7 +39,13 @@ export function BadgeCard({
           </span>
           <h3 className="text-base font-bold tracking-tight">{badge.name}</h3>
           <span
-            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold capitalize ${RARITY_CHIP[badge.rarity]}`}
+            className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-semibold capitalize ${FAMILY_PILL[badge.family].chip}`}
+            title={FAMILY_PILL[badge.family].label}
+          >
+            {FAMILY_PILL[badge.family].label}
+          </span>
+          <span
+            className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-semibold capitalize ${RARITY_PILL[badge.rarity]}`}
           >
             <span className="icon-chip h-3.5 w-3.5">
               <img src={RARITY_ICON[badge.rarity]} alt="" aria-hidden />
