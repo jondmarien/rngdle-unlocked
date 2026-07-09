@@ -64,9 +64,15 @@ export function HomeScreen({
     };
   }, []);
 
+  // Clear ephemeral attest banner when the displayed roll changes
+  useEffect(() => {
+    setAttestMsg(null);
+  }, [lastRoll?.id]);
+
   const handleRoll = async () => {
     setRevealDone(false);
     pendingFx.current = true;
+    setAttestMsg(null);
     const outcome = await roll();
     if (!outcome) {
       setRevealDone(true);
