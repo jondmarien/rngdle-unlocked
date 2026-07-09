@@ -94,96 +94,47 @@ export default defineHandler(async (request) => {
       : [];
     const stats = progress ? JSON.parse(progress.statsJson || '{}') : {};
 
-    const SECRET_META: Record<
-      string,
-      {
-        name: string;
-        emoji: string;
-        tier: 'section' | 'omega';
-        section: string;
-        ep: number;
+    // Derive secret masteries from collection (section complete → secret earned)
+    const unlockedIds = new Set(
+      (Array.isArray(collection) ? collection : [])
+        .map((c) => c.badgeId)
+        .filter((id): id is string => Boolean(id)),
+    );
+    let secretRows: {
+      id: string;
+      name: string;
+      emoji: string;
+      tier: 'section' | 'omega';
+      section: string;
+      ep: number;
+      unlocked: boolean;
+    }[] = [];
+    try {
+      const {
+        SECRET_BADGES,
+        evaluateOwnedSecrets,
+      } = await import('../../src/game/secrets.js');
+      const earned = new Set(
+        evaluateOwnedSecrets(unlockedIds).map((s) => s.id),
+      );
+      // Also treat explicit secret ids in collection as unlocked
+      for (const id of unlockedIds) {
+        if (id.startsWith('secret-')) earned.add(id);
       }
-    > = {
-      'secret-master-math': {
-        name: 'Theorem Complete',
-        emoji: '📐',
-        tier: 'section',
-        section: 'math',
-        ep: 2500,
-      },
-      'secret-master-pattern': {
-        name: 'Pattern Weaver',
-        emoji: '🧩',
-        tier: 'section',
-        section: 'pattern',
-        ep: 2500,
-      },
-      'secret-master-void': {
-        name: 'Voidwalker',
-        emoji: '🕳️',
-        tier: 'section',
-        section: 'void',
-        ep: 2000,
-      },
-      'secret-master-cultural': {
-        name: 'Lorekeeper',
-        emoji: '📜',
-        tier: 'section',
-        section: 'cultural',
-        ep: 3000,
-      },
-      'secret-master-magnitude': {
-        name: 'Scale Breaker',
-        emoji: '📏',
-        tier: 'section',
-        section: 'magnitude',
-        ep: 2000,
-      },
-      'secret-master-sequence': {
-        name: 'Sequence Sovereign',
-        emoji: '🔢',
-        tier: 'section',
-        section: 'sequence',
-        ep: 2000,
-      },
-      'secret-master-poker': {
-        name: 'Full House Master',
-        emoji: '🃏',
-        tier: 'section',
-        section: 'poker',
-        ep: 2500,
-      },
-      'secret-master-element': {
-        name: 'Periodic Crown',
-        emoji: '⚛️',
-        tier: 'section',
-        section: 'element',
-        ep: 2500,
-      },
-      'secret-master-journey': {
-        name: 'Path Eternal',
-        emoji: '🛤️',
-        tier: 'section',
-        section: 'journey',
-        ep: 5000,
-      },
-      'secret-omega-codex': {
-        name: 'Codex Absolute',
-        emoji: '✨',
-        tier: 'omega',
-        section: 'omega',
-        ep: 50_000,
-      },
-    };
-
-    const secrets = (Array.isArray(collection) ? collection : [])
-      .map((c) => {
-        const id = c.badgeId;
-        if (!id || !SECRET_META[id]) return null;
-        const m = SECRET_META[id]!;
-        return { id, ...m };
-      })
-      .filter(Boolean);
+      secretRows = SECRET_BADGES.map((s) => ({
+        id: s.id,
+        name: s.name,
+        emoji: s.emoji,
+        tier: s.tier,
+        section: String(s.section),
+        ep: s.ep,
+        unlocked: earned.has(s.id),
+      }));
+    } catch (e) {
+      log.warn('secret evaluate failed', {
+        err: e instanceof Error ? e.message : String(e),
+      });
+    }
 
     return Response.json({
       profile: {
@@ -198,7 +149,7 @@ export default defineHandler(async (request) => {
         lifetimeRollCount: progress?.lifetimeRollCount ?? 0,
         journeyEP: progress?.journeyEp ?? 0,
         badgeCount: Array.isArray(collection) ? collection.length : 0,
-        secrets,
+        secrets: secretRows,
         stats,
         recentRolls: recent.map((r) => {
           let topBadges: string[] = [];

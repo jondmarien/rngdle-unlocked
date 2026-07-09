@@ -71,6 +71,7 @@ export {
   isSectionComplete,
   sectionProgress,
   newlyUnlockedSecrets,
+  evaluateOwnedSecrets,
   secretHits,
   sumSecretEP,
   mergeSecretUnlocks,
