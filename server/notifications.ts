@@ -9,6 +9,8 @@ export function newNotificationId(): string {
 export async function createNotification(
   db: Db,
   opts: {
+    /** Optional stable id for idempotent unlocks (e.g. unlock-user-badgeId). */
+    id?: string;
     userId: string;
     kind: string;
     title: string;
@@ -18,7 +20,7 @@ export async function createNotification(
   },
 ): Promise<void> {
   await db.insert(notifications).values({
-    id: newNotificationId(),
+    id: opts.id ?? newNotificationId(),
     userId: opts.userId,
     kind: opts.kind,
     title: opts.title,

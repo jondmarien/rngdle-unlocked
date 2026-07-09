@@ -7,9 +7,12 @@ import { FAMILY_ICON, RARITY_ICON } from '../../lib/icons';
 export function BadgeCard({
   badge,
   number,
+  isNew = false,
 }: {
   badge: BadgeHit;
   number: number;
+  /** First-time codex unlock this roll */
+  isNew?: boolean;
 }) {
   // Natural digits (same as reel) — real zeros kept, no fake leading pad
   const digits = formatRollDigits(number).split('');
@@ -19,9 +22,23 @@ export function BadgeCard({
       : digits.map(() => false);
 
   return (
-    <article className="rounded-lg border border-[var(--outline)] bg-[var(--surface)] p-4 text-left">
+    <article
+      className={`relative rounded-lg border bg-[var(--surface)] p-4 text-left ${
+        isNew
+          ? 'border-rose-400/55 shadow-[0_0_0_1px_rgba(251,113,133,0.12)]'
+          : 'border-[var(--outline)]'
+      }`}
+    >
+      {isNew && (
+        <span
+          className="absolute -right-1 -top-2 z-10 rotate-6 rounded-md border border-rose-400/60 bg-rose-500 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-white shadow-md sm:right-2 sm:top-2 sm:rotate-12"
+          aria-label="New badge unlock"
+        >
+          New
+        </span>
+      )}
       <div className="flex items-start justify-between gap-2">
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-2 pr-10">
           <span
             className="icon-chip h-8 w-8 ring-1 ring-black/10 dark:ring-white/10"
             title={badge.family}
@@ -86,9 +103,12 @@ export function BadgeCard({
 export function BadgeBreakdown({
   badges,
   number,
+  newBadgeIds,
 }: {
   badges: BadgeHit[];
   number: number;
+  /** Badge ids first unlocked this roll (codex NEW). */
+  newBadgeIds?: ReadonlySet<string> | readonly string[];
 }) {
   if (badges.length === 0) {
     return (
@@ -98,6 +118,12 @@ export function BadgeBreakdown({
     );
   }
 
+  const newSet =
+    newBadgeIds instanceof Set
+      ? newBadgeIds
+      : new Set(newBadgeIds ?? []);
+  const newCount = badges.filter((b) => newSet.has(b.id)).length;
+
   return (
     <div className="space-y-3">
       <div className="flex items-baseline justify-between gap-2 px-0.5">
@@ -106,12 +132,21 @@ export function BadgeBreakdown({
         </h2>
         <span className="text-sm text-[var(--prose-2)]">
           {badges.length} badge{badges.length === 1 ? '' : 's'} earned
+          {newCount > 0 ? (
+            <span className="ml-1.5 font-semibold text-rose-600 dark:text-rose-400">
+              · {newCount} new
+            </span>
+          ) : null}
         </span>
       </div>
       <ul className="space-y-2.5">
         {badges.map((b) => (
           <li key={b.id}>
-            <BadgeCard badge={b} number={number} />
+            <BadgeCard
+              badge={b}
+              number={number}
+              isNew={newSet.has(b.id)}
+            />
           </li>
         ))}
       </ul>

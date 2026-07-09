@@ -33,6 +33,7 @@ export function HomeScreen({
     saveError,
     lastJourneyUnlocks,
     lastSecretUnlocks,
+    lastNewBadgeIds,
     lifetimeRollCount,
     settings,
     stats,
@@ -296,7 +297,11 @@ export function HomeScreen({
 
       {lastRoll && revealDone && (
         <div className="number-fade-in mt-8 min-h-0 flex-1 overflow-y-auto pb-4">
-          <BadgeBreakdown badges={lastRoll.badges} number={lastRoll.number} />
+          <BadgeBreakdown
+            badges={lastRoll.badges}
+            number={lastRoll.number}
+            newBadgeIds={lastNewBadgeIds}
+          />
         </div>
       )}
 

@@ -82,6 +82,8 @@ type GameContextValue = {
   saveError: string | null;
   lastJourneyUnlocks: BadgeHit[];
   lastSecretUnlocks: BadgeHit[];
+  /** Badge ids first-time unlocked on the most recent roll (for NEW labels). */
+  lastNewBadgeIds: string[];
   confettiToken: number;
   /** free = unlimited CSPRNG; daily/weekly = optional challenge seed */
   rollMode: RollMode;
@@ -131,6 +133,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [lastJourneyUnlocks, setLastJourneyUnlocks] = useState<BadgeHit[]>([]);
   const [lastSecretUnlocks, setLastSecretUnlocks] = useState<BadgeHit[]>([]);
+  const [lastNewBadgeIds, setLastNewBadgeIds] = useState<string[]>([]);
   const [confettiToken, setConfettiToken] = useState(0);
   const [syncing, setSyncing] = useState(false);
   const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
@@ -311,11 +314,18 @@ export function GameProvider({ children }: { children: ReactNode }) {
           stats.bestConsecutive,
         ),
       };
+      const ownedBefore = new Set(state.collection.map((c) => c.badgeId));
       let collection = mergeCollection(state.collection, collectionAdds, at);
       const secretMerge = mergeSecretUnlocks(collection, at);
       collection = secretMerge.collection;
       const secretsUnlocked = secretHits(secretMerge.unlocked);
       const secretsEPGained = secretMerge.ep;
+
+      const newBadgeIds = [
+        ...result.badges.map((b) => b.id),
+        ...journeyUnlocked.map((b) => b.id),
+        ...secretsUnlocked.map((b) => b.id),
+      ].filter((id, i, arr) => arr.indexOf(id) === i && !ownedBefore.has(id));
 
       const next: PersistedState = {
         ...state,
@@ -335,6 +345,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setLastRoll(result);
       setLastJourneyUnlocks(journeyUnlocked);
       setLastSecretUnlocks(secretsUnlocked);
+      setLastNewBadgeIds(newBadgeIds);
       if (secretsUnlocked.length > 0) {
         setConfettiToken((t) => t + 1);
       }
@@ -423,6 +434,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setLastRoll(null);
     setLastJourneyUnlocks([]);
     setLastSecretUnlocks([]);
+    setLastNewBadgeIds([]);
     setSaveError(null);
   }, []);
 
@@ -459,6 +471,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const selectRoll = useCallback((rollResult: RollResult | null) => {
     setLastRoll(rollResult);
+    setLastNewBadgeIds([]);
   }, []);
 
   const exportSave = useCallback(() => {
@@ -612,6 +625,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       saveError,
       lastJourneyUnlocks,
       lastSecretUnlocks,
+      lastNewBadgeIds,
       confettiToken,
       rollMode,
       setRollMode,
@@ -640,6 +654,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       saveError,
       lastJourneyUnlocks,
       lastSecretUnlocks,
+      lastNewBadgeIds,
       confettiToken,
       rollMode,
       roll,

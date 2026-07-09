@@ -3,6 +3,7 @@ import type { CollectionEntry, PlayStats, RollResult } from '../src/game/types.j
 import { defaultPlayStats } from '../src/game/stats.js';
 import type { Db } from './db/index.js';
 import { rolls, userProgress } from './db/schema.js';
+import { processRollActivity } from './rollActivity.js';
 
 export type CloudSavePayload = {
   lifetimeEP: number;
@@ -127,6 +128,8 @@ export async function saveCloudMerge(
   local: CloudSavePayload,
 ): Promise<CloudSavePayload> {
   const cloud = await loadCloudSave(db, userId);
+  const prevCollection = cloud?.collection ?? [];
+  const prevRollIds = new Set((cloud?.history ?? []).map((r) => r.id));
 
   const merged: CloudSavePayload = cloud
     ? {
@@ -172,6 +175,7 @@ export async function saveCloudMerge(
 
   // Soft fairness: cap how many new rolls we accept in one sync burst
   const toUpsert = merged.history.slice(0, 200);
+  const newlySeenRolls: RollResult[] = [];
 
   for (const r of toUpsert) {
     // Sanity: reject absurd EP (anti-cheat soft bound)
@@ -198,6 +202,8 @@ export async function saveCloudMerge(
       attestationSeal: r.attestationSeal ?? null,
     };
 
+    const isNewRoll = !prevRollIds.has(r.id);
+
     if (shortCode) {
       await db
         .insert(rolls)
@@ -213,7 +219,18 @@ export async function saveCloudMerge(
     } else {
       await db.insert(rolls).values(values).onConflictDoNothing();
     }
+
+    if (isNewRoll) newlySeenRolls.push(r);
   }
+
+  // Activity side-effects (personal unlock notifs + community crown system msgs)
+  await processRollActivity(db, {
+    userId,
+    prevCollection,
+    nextCollection: merged.collection,
+    prevRollIds,
+    newRolls: newlySeenRolls,
+  });
 
   return merged;
 }
