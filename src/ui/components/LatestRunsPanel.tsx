@@ -61,20 +61,20 @@ export function LatestRunsPanel({
   }, [history, lane]);
 
   return (
-    <aside className="flex w-full flex-col rounded-xl border border-[var(--outline)] bg-[var(--surface)] text-left shadow-sm lg:sticky lg:top-20 lg:max-h-[calc(100dvh-6rem)]">
-      <div className="border-b border-[var(--outline)] px-3 py-3">
+    <aside className="flex h-full max-h-full w-full flex-col overflow-hidden rounded-xl border border-[var(--outline)] bg-[var(--bg)]/95 text-left shadow-lg backdrop-blur-md supports-[backdrop-filter]:bg-[var(--surface)]/90">
+      <div className="shrink-0 border-b border-[var(--outline)] px-3 py-2.5">
         <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--prose-3)]">
           Latest runs
         </h2>
         <p className="mt-0.5 text-[11px] leading-snug text-[var(--prose-3)]">
-          Top 10 most recent in each mode
+          Top 10 · Free / Ranked / Challenge
         </p>
       </div>
 
       <div
         role="tablist"
         aria-label="Latest runs mode"
-        className="flex flex-wrap gap-1 border-b border-[var(--outline)] p-2"
+        className="flex shrink-0 flex-wrap gap-1 border-b border-[var(--outline)] p-2"
       >
         {TABS.map((t) => {
           const selected = lane === t.id;
