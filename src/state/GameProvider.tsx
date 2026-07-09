@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -20,8 +21,13 @@ import {
   type ThemeMode,
 } from '../game';
 import { applyStreaks, recomputeBestConsecutive } from '../game/stats';
+import { useSession } from '../lib/auth-client';
 import { createLogger } from '../lib/logger';
-import { fetchCloudSave, pushCloudSave } from '../lib/sync-api';
+import {
+  fetchCloudSave,
+  pushCloudSave,
+  type CloudSavePayload,
+} from '../lib/sync-api';
 import {
   buildExportPayload,
   clearState,
@@ -35,6 +41,17 @@ import {
 } from './storage';
 
 const log = createLogger('game');
+
+function toCloudPayload(s: PersistedState): CloudSavePayload {
+  return {
+    lifetimeEP: s.lifetimeEP,
+    lifetimeRollCount: s.lifetimeRollCount,
+    journeyEP: s.journeyEP,
+    collection: s.collection,
+    stats: s.stats,
+    history: s.history,
+  };
+}
 
 export type RollOutcome = {
   roll: RollResult;
@@ -83,6 +100,10 @@ function applyTheme(theme: ThemeMode): void {
 }
 
 export function GameProvider({ children }: { children: ReactNode }) {
+  const { data: session } = useSession();
+  const loggedInRef = useRef(false);
+  loggedInRef.current = Boolean(session?.user);
+
   const [state, setState] = useState<PersistedState>(() => loadState());
   const [lastRoll, setLastRoll] = useState<RollResult | null>(
     () => loadState().history[0] ?? null,
@@ -94,6 +115,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [syncing, setSyncing] = useState(false);
   const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
+
+  /** Coalesce rapid auto-syncs so spam-rolling doesn't race the server. */
+  const autoSyncChain = useRef(Promise.resolve());
+  const latestAutoPayload = useRef<CloudSavePayload | null>(null);
 
   useEffect(() => {
     applyTheme(state.settings.theme);
@@ -107,6 +132,72 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setSaveError(null);
     }
   }, []);
+
+  const applyCloudPayload = useCallback(
+    (cloud: {
+      lifetimeEP: number;
+      lifetimeRollCount: number;
+      journeyEP: number;
+      collection: CollectionEntry[];
+      stats: PlayStats;
+      history: RollResult[];
+    }) => {
+      setState((prev) => {
+        const next: PersistedState = {
+          ...prev,
+          lifetimeEP: cloud.lifetimeEP,
+          lifetimeRollCount: cloud.lifetimeRollCount,
+          journeyEP: cloud.journeyEP,
+          collection: cloud.collection,
+          stats: cloud.stats,
+          history: cloud.history,
+        };
+        persist(next);
+        return next;
+      });
+      setLastRoll(cloud.history[0] ?? null);
+      setLastSyncAt(new Date().toISOString());
+    },
+    [persist],
+  );
+
+  /** Background push after rolls when signed in (does not block the roll UI). */
+  const enqueueAutoSync = useCallback(
+    (payload: CloudSavePayload) => {
+      if (!loggedInRef.current) return;
+      latestAutoPayload.current = payload;
+      autoSyncChain.current = autoSyncChain.current
+        .then(async () => {
+          if (!loggedInRef.current) return;
+          const p = latestAutoPayload.current;
+          if (!p) return;
+          log.info('autoSync:start', {
+            rolls: p.lifetimeRollCount,
+            ep: p.lifetimeEP,
+          });
+          setSyncing(true);
+          try {
+            const merged = await pushCloudSave(p);
+            // Only apply if this is still the latest enqueue (avoid clobbering newer local rolls)
+            if (latestAutoPayload.current === p) {
+              applyCloudPayload(merged);
+              setSyncError(null);
+            }
+            log.info('autoSync:ok', { rolls: merged.lifetimeRollCount });
+          } catch (e) {
+            const message = e instanceof Error ? e.message : 'Auto-sync failed';
+            log.error('autoSync:fail', { message });
+            setSyncError(message);
+          } finally {
+            setSyncing(false);
+          }
+        })
+        .catch(() => {
+          /* chain must not break */
+        });
+    },
+    [applyCloudPayload],
+  );
 
   const roll = useCallback(async (): Promise<RollOutcome | null> => {
     if (rolling) return null;
@@ -126,28 +217,27 @@ export function GameProvider({ children }: { children: ReactNode }) {
         ...journeyUnlocked.map((b) => ({ id: b.id, family: b.family })),
       ];
 
-      setState((prev) => {
-        const history = prependHistory(prev.history, result);
-        let stats = applyStreaks(prev.stats, result);
-        stats = {
-          ...stats,
-          bestConsecutive: recomputeBestConsecutive(
-            history,
-            stats.bestConsecutive,
-          ),
-        };
-        const next: PersistedState = {
-          ...prev,
+      // Compute next state synchronously so auto-sync pushes this roll, not stale state
+      const history = prependHistory(state.history, result);
+      let stats = applyStreaks(state.stats, result);
+      stats = {
+        ...stats,
+        bestConsecutive: recomputeBestConsecutive(
           history,
-          lifetimeRollCount: nextCount,
-          lifetimeEP: prev.lifetimeEP + result.totalEP + journeyEPGained,
-          journeyEP: prev.journeyEP + journeyEPGained,
-          collection: mergeCollection(prev.collection, collectionAdds, at),
-          stats,
-        };
-        persist(next);
-        return next;
-      });
+          stats.bestConsecutive,
+        ),
+      };
+      const next: PersistedState = {
+        ...state,
+        history,
+        lifetimeRollCount: nextCount,
+        lifetimeEP: state.lifetimeEP + result.totalEP + journeyEPGained,
+        journeyEP: state.journeyEP + journeyEPGained,
+        collection: mergeCollection(state.collection, collectionAdds, at),
+        stats,
+      };
+      persist(next);
+      setState(next);
       setLastRoll(result);
       setLastJourneyUnlocks(journeyUnlocked);
       log.info('roll:ok', {
@@ -156,7 +246,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
         rarity: result.rarity,
         badges: result.badges.length,
         journeyUnlocked: journeyUnlocked.length,
+        willAutoSync: loggedInRef.current,
       });
+
+      // Fire-and-forget cloud push when signed in (share links + leaderboards stay live)
+      enqueueAutoSync(toCloudPayload(next));
+
       return { roll: result, journeyUnlocked, journeyEPGained };
     } catch (err) {
       log.error('roll:fail', {
@@ -166,7 +261,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     } finally {
       setRolling(false);
     }
-  }, [persist, rolling, state.lifetimeRollCount]);
+  }, [enqueueAutoSync, persist, rolling, state]);
 
   const clearAll = useCallback(() => {
     clearState();
@@ -253,34 +348,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setConfettiToken((t) => t + 1);
   }, []);
 
-  const applyCloudPayload = useCallback(
-    (cloud: {
-      lifetimeEP: number;
-      lifetimeRollCount: number;
-      journeyEP: number;
-      collection: CollectionEntry[];
-      stats: PlayStats;
-      history: RollResult[];
-    }) => {
-      setState((prev) => {
-        const next: PersistedState = {
-          ...prev,
-          lifetimeEP: cloud.lifetimeEP,
-          lifetimeRollCount: cloud.lifetimeRollCount,
-          journeyEP: cloud.journeyEP,
-          collection: cloud.collection,
-          stats: cloud.stats,
-          history: cloud.history,
-        };
-        persist(next);
-        return next;
-      });
-      setLastRoll(cloud.history[0] ?? null);
-      setLastSyncAt(new Date().toISOString());
-    },
-    [persist],
-  );
-
   const syncToCloud = useCallback(async () => {
     setSyncing(true);
     setSyncError(null);
@@ -289,14 +356,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       ep: state.lifetimeEP,
     });
     try {
-      const merged = await pushCloudSave({
-        lifetimeEP: state.lifetimeEP,
-        lifetimeRollCount: state.lifetimeRollCount,
-        journeyEP: state.journeyEP,
-        collection: state.collection,
-        stats: state.stats,
-        history: state.history,
-      });
+      const merged = await pushCloudSave(toCloudPayload(state));
       applyCloudPayload(merged);
       log.info('syncToCloud:ok', { rolls: merged.lifetimeRollCount });
     } catch (e) {
@@ -320,14 +380,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         return;
       }
       // Merge pull with local then save
-      const merged = await pushCloudSave({
-        lifetimeEP: state.lifetimeEP,
-        lifetimeRollCount: state.lifetimeRollCount,
-        journeyEP: state.journeyEP,
-        collection: state.collection,
-        stats: state.stats,
-        history: state.history,
-      });
+      const merged = await pushCloudSave(toCloudPayload(state));
       applyCloudPayload(merged);
       log.info('pullFromCloud:ok', { rolls: merged.lifetimeRollCount });
     } catch (e) {

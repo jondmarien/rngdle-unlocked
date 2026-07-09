@@ -309,7 +309,8 @@ export function AccountScreen() {
               Cloud sync
             </h2>
             <p className="text-xs text-[var(--prose-3)]">
-              Merges local + cloud (max counters, union collection, merge history).
+              While signed in, every new roll is auto-pushed to the cloud (merge-safe).
+              Manual pull/push still available for catch-up.
             </p>
             <div className="flex flex-wrap gap-2">
               <button
