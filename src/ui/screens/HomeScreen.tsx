@@ -8,19 +8,20 @@ import {
 import { playRollSound, shouldCelebrate } from '../../game/fx';
 import { createLogger } from '../../lib/logger';
 import { useGame } from '../../state/GameProvider';
-
-const log = createLogger('home');
 import { BadgeBreakdown } from '../components/BadgeCard';
 import { BestRollCard } from '../components/BestRollCard';
 import { CommunityHighlights } from '../components/CommunityHighlights';
 import { CountUpEP } from '../components/CountUpEP';
 import { GenerateButton } from '../components/GenerateButton';
+import { LatestRunsPanel } from '../components/LatestRunsPanel';
 import { NumberDisplay } from '../components/NumberDisplay';
 import { OnboardingTip } from '../components/OnboardingTip';
 import { RarityBadge } from '../components/RarityBadge';
 import { RollModePicker } from '../components/RollModePicker';
 import { RollReplayModal } from '../components/RollReplayModal';
 import { SharePanel } from '../components/ShareCard';
+
+const log = createLogger('home');
 
 export function HomeScreen({
   onGoAccount,
@@ -185,8 +186,18 @@ export function HomeScreen({
     return history.find((r) => r.id === best.id) ?? null;
   }, [history, best]);
 
+  const latestRunsLane =
+    rollMode === 'ranked'
+      ? 'ranked'
+      : rollMode === 'daily' || rollMode === 'weekly'
+        ? 'challenge'
+        : 'free';
+
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col">
+      <div className="flex w-full flex-1 flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
+        {/* Main roll column */}
+        <div className="flex min-w-0 flex-1 flex-col">
       <div className="flex shrink-0 flex-col items-center gap-5 text-center">
         <OnboardingTip onGoAccount={onGoAccount} />
 
@@ -412,6 +423,19 @@ export function HomeScreen({
           />
         </div>
       )}
+        </div>
+
+        {/* Right rail — latest runs by mode */}
+        <div className="w-full shrink-0 lg:w-72 xl:w-80">
+          <LatestRunsPanel
+            key={latestRunsLane}
+            history={history}
+            activeRollId={lastRoll?.id ?? null}
+            defaultLane={latestRunsLane}
+            onSelect={(r) => setReplayRoll(r)}
+          />
+        </div>
+      </div>
 
       {shareRoll && (
         <SharePanel
