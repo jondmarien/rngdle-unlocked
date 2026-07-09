@@ -6,7 +6,8 @@
   "packageManager": "pnpm@9.15.9",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node scripts/build-api.mjs",
+    "build:api": "node scripts/build-api.mjs",
     "lint": "vp lint",
     "preview": "vite preview",
     "test": "vp test",
@@ -32,6 +33,7 @@
     "@vitejs/plugin-react": "^4.5.2",
     "dotenv": "^17.4.2",
     "drizzle-kit": "^0.31.10",
+    "esbuild": "^0.28.1",
     "tailwindcss": "^4.3.2",
     "typescript": "~7.0.2",
     "vite": "^6.3.5",
