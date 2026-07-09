@@ -1,5 +1,6 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from '@better-auth/drizzle-adapter';
+import { admin } from 'better-auth/plugins';
 import { createDb, schema } from './db/index.js';
 
 function getDb() {
@@ -20,6 +21,33 @@ function resolveBaseURL(): string {
   return 'http://localhost:5173';
 }
 
+function socialProviders() {
+  const providers: Record<
+    string,
+    { clientId: string; clientSecret: string }
+  > = {};
+  if (process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET) {
+    providers.discord = {
+      clientId: process.env.DISCORD_CLIENT_ID,
+      clientSecret: process.env.DISCORD_CLIENT_SECRET,
+    };
+  }
+  if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
+    providers.github = {
+      clientId: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    };
+  }
+  return providers;
+}
+
+function adminUserIds(): string[] {
+  return (process.env.ADMIN_USER_IDS ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
 export function createAuth() {
   const secret = process.env.BETTER_AUTH_SECRET;
   if (!secret) {
@@ -28,6 +56,7 @@ export function createAuth() {
 
   const db = getDb();
   const baseURL = resolveBaseURL();
+  const social = socialProviders();
 
   return betterAuth({
     secret,
@@ -46,6 +75,17 @@ export function createAuth() {
       enabled: true,
       minPasswordLength: 8,
     },
+    ...(Object.keys(social).length > 0
+      ? {
+          socialProviders: social,
+          account: {
+            accountLinking: {
+              enabled: true,
+              trustedProviders: ['github', 'discord'],
+            },
+          },
+        }
+      : {}),
     user: {
       additionalFields: {
         username: {
@@ -53,8 +93,21 @@ export function createAuth() {
           required: false,
           input: true,
         },
+        role: {
+          type: 'string',
+          required: false,
+          defaultValue: 'user',
+          input: false,
+        },
       },
     },
+    plugins: [
+      admin({
+        defaultRole: 'user',
+        adminRoles: ['admin'],
+        adminUserIds: adminUserIds(),
+      }),
+    ],
     trustedOrigins: [
       baseURL,
       process.env.VITE_APP_URL,

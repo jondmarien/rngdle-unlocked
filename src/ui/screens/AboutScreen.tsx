@@ -246,7 +246,8 @@ export function AboutScreen() {
         <ul className="list-disc space-y-1.5 pl-5">
           <li>
             No daily lock and no free-play roll-upload cap. Soft rate limits only
-            protect cloud APIs from spam bursts (and Ranked rolls per hour).
+            protect cloud APIs from spam bursts. Ranked is capped at about 90
+            rolls per hour (server cost); Free play stays unlimited.
           </li>
           <li>
             <strong className="text-[var(--prose)]">Ranked board</strong> —

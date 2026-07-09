@@ -20,7 +20,11 @@ const SESSION_WAIT_MS = 4000;
 /** Sign-up / sign-in must not hang the UI forever. */
 const AUTH_TIMEOUT_MS = 25_000;
 
-export function AccountScreen() {
+export function AccountScreen({
+  onOpenAdmin,
+}: {
+  onOpenAdmin?: () => void;
+} = {}) {
   const { data: session, isPending, error, refetch } = useSession();
   const { syncToCloud, pullFromCloud, lastSyncAt, syncError, syncing } =
     useGame();
@@ -38,6 +42,7 @@ export function AccountScreen() {
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [waitTimedOut, setWaitTimedOut] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     log.debug('mount', {
@@ -81,6 +86,24 @@ export function AccountScreen() {
       })
       .catch(() => {
         /* ignore */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.user?.id]);
+
+  useEffect(() => {
+    if (!session?.user) {
+      setIsAdmin(false);
+      return;
+    }
+    let cancelled = false;
+    fetch('/api/admin/broadcast', { credentials: 'include' })
+      .then((r) => {
+        if (!cancelled) setIsAdmin(r.ok || r.status === 405);
+      })
+      .catch(() => {
+        if (!cancelled) setIsAdmin(false);
       });
     return () => {
       cancelled = true;
@@ -177,6 +200,36 @@ export function AccountScreen() {
       setMsg(message);
       setStatus(null);
     } finally {
+      setBusy(false);
+    }
+  };
+
+  const onSocial = async (provider: 'discord' | 'github') => {
+    setBusy(true);
+    setMsg(null);
+    setStatus(`Redirecting to ${provider}…`);
+    try {
+      await authClient.signIn.social({
+        provider,
+        callbackURL: '/account',
+      });
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : `${provider} sign-in failed`);
+      setStatus(null);
+      setBusy(false);
+    }
+  };
+
+  const onLinkSocial = async (provider: 'discord' | 'github') => {
+    setBusy(true);
+    setMsg(null);
+    try {
+      await authClient.linkSocial({
+        provider,
+        callbackURL: '/account',
+      });
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : `Link ${provider} failed`);
       setBusy(false);
     }
   };
@@ -282,7 +335,33 @@ export function AccountScreen() {
       </div>
 
       {!session?.user ? (
-        <form onSubmit={onAuth} className="max-w-sm space-y-3">
+        <div className="max-w-sm space-y-4">
+          <div className="space-y-2">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void onSocial('discord')}
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#5865F2]/40 bg-[#5865F2]/15 px-4 py-2.5 text-sm font-bold text-[var(--prose)] disabled:opacity-50"
+            >
+              Continue with Discord
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void onSocial('github')}
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--outline)] bg-[var(--surface)] px-4 py-2.5 text-sm font-bold text-[var(--prose)] disabled:opacity-50"
+            >
+              Continue with GitHub
+            </button>
+            <p className="text-[11px] text-[var(--prose-3)]">
+              OAuth needs Discord/GitHub apps configured — see{' '}
+              <code className="text-[10px]">docs/oauth-setup.md</code>.
+            </p>
+          </div>
+          <p className="text-center text-xs font-semibold uppercase tracking-wider text-[var(--prose-3)]">
+            or email
+          </p>
+          <form onSubmit={onAuth} className="space-y-3">
           <div className="flex gap-2 text-xs font-bold uppercase">
             <button
               type="button"
@@ -345,6 +424,7 @@ export function AccountScreen() {
             <p className="text-xs text-[var(--prose-3)]">{status}</p>
           )}
         </form>
+        </div>
       ) : (
         <div className="space-y-4">
           <div className="rounded-xl border border-[var(--outline)] bg-[var(--surface)] p-4 text-sm">
@@ -356,12 +436,42 @@ export function AccountScreen() {
                 ? `@${(session.user as { username?: string }).username}`
                 : 'No username yet'}
             </p>
+            <div className="mt-2 flex flex-wrap gap-3">
+              <button
+                type="button"
+                className="text-xs font-bold uppercase underline"
+                onClick={() => void onSignOut()}
+              >
+                Sign out
+              </button>
+              {isAdmin && onOpenAdmin && (
+                <button
+                  type="button"
+                  className="text-xs font-bold uppercase underline text-amber-700 dark:text-amber-400"
+                  onClick={onOpenAdmin}
+                >
+                  Admin panel
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              className="mt-2 text-xs font-bold uppercase underline"
-              onClick={() => void onSignOut()}
+              disabled={busy}
+              onClick={() => void onLinkSocial('discord')}
+              className="rounded-lg border border-[#5865F2]/40 px-3 py-2 text-xs font-bold disabled:opacity-50"
             >
-              Sign out
+              Link Discord
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void onLinkSocial('github')}
+              className="rounded-lg border border-[var(--outline)] px-3 py-2 text-xs font-bold disabled:opacity-50"
+            >
+              Link GitHub
             </button>
           </div>
 

@@ -96,4 +96,6 @@ export const LIMITS = {
   notificationsPerMinute: 60,
   usersSearchPerMinute: 40,
   systemMessagePostPerMinute: 10,
+  adminMutatePerMinute: 30,
+  reportPerMinute: 10,
 } as const;

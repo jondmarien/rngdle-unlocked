@@ -28,3 +28,8 @@ dist-ssr
 .env.*
 !.env.example
 
+# Local scratch / temp dumps (keep intentional debug scripts tracked)
+*.tmp
+scripts/*.tmp
+next notes.txt
+

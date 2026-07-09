@@ -8,6 +8,7 @@ import { CelebrationLayer } from './ui/components/Celebration';
 import { AppShell } from './ui/layout/AppShell';
 import { AccountScreen } from './ui/screens/AccountScreen';
 import { AboutScreen } from './ui/screens/AboutScreen';
+import { AdminScreen } from './ui/screens/AdminScreen';
 import { CollectionScreen } from './ui/screens/CollectionScreen';
 import { HistoryScreen } from './ui/screens/HistoryScreen';
 import { HomeScreen } from './ui/screens/HomeScreen';
@@ -109,7 +110,9 @@ function AppRoutes() {
       ? route.tab
       : route.kind === 'profile'
         ? 'account'
-        : 'home';
+        : route.kind === 'admin'
+          ? 'account'
+          : 'home';
 
   const profileActive =
     route.kind === 'profile' &&
@@ -125,6 +128,9 @@ function AppRoutes() {
       onOpenMyProfile={goMyProfile}
       profileActive={profileActive}
     >
+      {route.kind === 'admin' && (
+        <AdminScreen onBack={() => goTab('account')} />
+      )}
       {route.kind === 'profile' && (
         <ProfileScreen
           username={route.username}
@@ -164,7 +170,9 @@ function AppRoutes() {
           onGoAccount={() => goTab('account')}
         />
       )}
-      {route.kind === 'tab' && tab === 'account' && <AccountScreen />}
+      {route.kind === 'tab' && tab === 'account' && (
+        <AccountScreen onOpenAdmin={() => navigate('/admin', { kind: 'admin' })} />
+      )}
       {route.kind === 'tab' && tab === 'about' && <AboutScreen />}
       {route.kind === 'tab' && tab === 'settings' && <SettingsScreen />}
     </AppShell>

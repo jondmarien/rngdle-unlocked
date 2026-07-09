@@ -7,9 +7,9 @@
 | **Repo** | `jondmarien/rngdle-unlocked` |
 | **Live** | https://rngdle-unlocked.chron0.tech |
 | **Branch** | `main` (auto-deploys Vercel) |
-| **Version** | `0.4.0` (`package.json`; Settings footer may lag slightly) |
-| **Latest release** | [v0.4.0](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.4.0) |
-| **Handoff commit context** | Session through ~`ae21ace` (Latest runs float layout) |
+| **Version** | `0.4.1` (`package.json`; Settings uses `VITE_APP_VERSION`) |
+| **Latest release** | [v0.4.0](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.4.0) (cut `v0.4.1` after smoke) |
+| **Handoff commit context** | P0/P1 + admin + OAuth wave |
 
 ---
 
@@ -144,41 +144,36 @@ Env: `.env.example` — `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`,
 5. **Browser extension noise** (`Receiving end does not exist`, `content.js`) is not app code.
 6. **GitHub Mermaid:** no HTML `<br/>`, avoid unicode middle-dots and heavy path punctuation in node labels.
 7. **Hate easter eggs:** refuse.
-8. Local untracked junk (do not commit unless intentional):  
-   `scripts/check-sync-db.mjs`, `debug-sync.mjs`, `debug-ranked-roll.mjs`, `section-ids.json.tmp`, `next notes.txt`.
+8. Local scratch only (gitignored): `scripts/*.tmp`, `next notes.txt`.  
+   **Keep and commit** diagnostic scripts: `scripts/check-sync-db.mjs`, `debug-sync.mjs`, `debug-ranked-roll.mjs`.
 
 ---
 
 ## 7. Open / next work (user-facing backlog)
 
-Prioritized from last user messages and unfinished polish:
+### Done this wave
+- [x] Confetti center burst (`Celebration.tsx`)
+- [x] Latest runs live enter/exit animation (no remount key wipe)
+- [x] P1: rail offset, Ranked ~90/h copy, Settings version inject, challenge copy
+- [x] Role-gated `/admin` + reports + audit; `ADMIN_SECRET` bootstrap only
+- [x] Discord + GitHub OAuth wiring + [`docs/oauth-setup.md`](./docs/oauth-setup.md)
+- [x] Commit diagnostic scripts; bump `0.4.1`
 
-### P0 / known UX debt
-- [ ] **Confetti origin:** user wants confetti to burst from **center of screen**, not left / top-left. See `Celebration.tsx` + `react-confetti` `confettiSource` — center `x: size.w/2`, `y: size.h * 0.35` (or similar); remove wide top-band source if it still drifts left.
-- [ ] Verify celebrate FX feel good on light + dark, and that `prefers-reduced-motion` is still acceptable.
-
-### P1 product polish
-- [ ] Latest runs: fine-tune `top` offset if sticky header height changes; ensure it never overlaps Generate on mid-width laptops.
-- [ ] Ranked rate limit (`rankedRollsPerHour: 90`) — confirm product intent; Free play has no roll upload hour cap.
-- [ ] Settings footer version string should track `package.json` on version bumps.
-- [ ] Challenge (Daily/Weekly) UX: confirm determinism messaging and history Challenge lane counts after seed rolls.
+### Still open for you / ops
+- [ ] Create Discord Application + GitHub OAuth App using `docs/oauth-setup.md` + `public/brand/oauth-icon-512.png`; paste Client ID/Secret into Vercel
+- [ ] Promote your account: `CONFIRM_PROMOTE=yes node scripts/promote-admin.mjs --email you@…` (needs `ADMIN_SECRET` + `DATABASE_URL`)
+- [ ] Smoke prod: Free/Ranked/mode-switch; epic+ confetti center; Latest runs animation; `/admin`; OAuth buttons after env
+- [ ] Cut annotated `v0.4.1` release when ready
 
 ### P2 competitive / social
 - [ ] Feed: optional “rare+ only” filter as *optional* chip (currently all rarities by design).
 - [ ] Profile / public roll pages: surface Free vs Ranked more clearly.
 - [ ] Leaderboard empty state when few Ranked rolls — onboarding CTA to Ranked mode.
 
-### P3 platform / later (also in README roadmap)
-- [ ] Discord / GitHub OAuth  
+### P3 platform / later
 - [ ] Turnstile on sign-up  
 - [ ] Server-side EP velocity caps  
-- [ ] Admin wipe / username report  
 - [ ] Dependabot moderate vulnerability on default branch (GitHub warning)
-
-### Optional hygiene
-- [ ] Delete or gitignore local debug scripts  
-- [ ] Cut `v0.4.1` after confetti-center + any critical fixes  
-- [ ] Keep `AGENTS.md` / this handoff updated when trust model changes  
 
 ---
 
@@ -206,10 +201,9 @@ Keep language consistent everywhere (About, RollModePicker, Leaderboard, README)
 
 ## 10. Suggested first task for the next agent
 
-1. Read `AGENTS.md` §5 (architecture rules).  
-2. Fix confetti to origin at **viewport center** (user request immediately before this handoff).  
-3. Hard-refresh prod smoke checklist §8.  
-4. Only then take new feature work.
+1. Confirm user finished OAuth portal setup + `promote-admin.mjs`.  
+2. Hard-refresh prod smoke checklist §8 + `/admin` + Discord/GitHub Account buttons.  
+3. Tag `v0.4.1` if smoke is clean.
 
 ---
 

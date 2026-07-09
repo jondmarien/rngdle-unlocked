@@ -29,6 +29,11 @@ export const user = pgTable('user', {
   profileAvatar: text('profile_avatar').notNull().default(''),
   /** When true, public /u profile shows unlocked codex badges */
   profileShowCodex: boolean('profile_show_codex').notNull().default(true),
+  /** Better Auth admin plugin — never accept from client signup (`input: false`) */
+  role: text('role').notNull().default('user'),
+  banned: boolean('banned').notNull().default(false),
+  banReason: text('ban_reason'),
+  banExpires: timestamp('ban_expires'),
 });
 
 export const session = pgTable('session', {
@@ -42,6 +47,8 @@ export const session = pgTable('session', {
   userId: text('user_id')
     .notNull()
     .references(() => user.id, { onDelete: 'cascade' }),
+  /** Better Auth admin plugin — set when an admin impersonates */
+  impersonatedBy: text('impersonated_by'),
 });
 
 export const account = pgTable('account', {
@@ -178,4 +185,37 @@ export const rateLimits = pgTable('rate_limits', {
   key: text('key').primaryKey(),
   windowStart: timestamp('window_start').notNull(),
   count: integer('count').notNull().default(0),
+});
+
+/** User-filed abuse / username reports (admins resolve). */
+export const userReports = pgTable('user_reports', {
+  id: text('id').primaryKey(),
+  reporterId: text('reporter_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  targetUserId: text('target_user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  reason: text('reason').notNull(),
+  /** open | resolved | dismissed */
+  status: text('status').notNull().default('open'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  resolvedBy: text('resolved_by').references(() => user.id, {
+    onDelete: 'set null',
+  }),
+  resolvedAt: timestamp('resolved_at'),
+});
+
+/** Immutable-ish admin action trail for destructive / privileged ops. */
+export const adminAuditLog = pgTable('admin_audit_log', {
+  id: text('id').primaryKey(),
+  actorUserId: text('actor_user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  action: text('action').notNull(),
+  targetType: text('target_type').notNull(),
+  targetId: text('target_id'),
+  metaJson: text('meta_json').notNull().default('{}'),
+  ip: text('ip'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 });

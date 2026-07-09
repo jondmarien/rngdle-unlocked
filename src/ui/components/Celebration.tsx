@@ -153,19 +153,15 @@ export function CelebrationLayer() {
         initialVelocityY={burst.intensity >= 3 ? 22 : 16}
         tweenDuration={burst.intensity >= 4 ? 280 : 360}
         colors={palette}
-        confettiSource={
-          burst.intensity >= 3
-            ? {
-                x: size.w * 0.15,
-                y: -20,
-                w: size.w * 0.7,
-                h: 0,
-              }
-            : undefined
-        }
+        confettiSource={{
+          x: size.w / 2 - 10,
+          y: size.h * 0.38,
+          w: 20,
+          h: 20,
+        }}
       />
 
-      {/* Second burst from bottom for mythic */}
+      {/* Second burst from mid-lower center for mythic */}
       {burst.intensity >= 4 && (
         <Confetti
           width={size.w}
@@ -176,10 +172,10 @@ export function CelebrationLayer() {
           initialVelocityY={-18}
           colors={palette}
           confettiSource={{
-            x: size.w * 0.25,
-            y: size.h + 10,
-            w: size.w * 0.5,
-            h: 0,
+            x: size.w / 2 - 12,
+            y: size.h * 0.62,
+            w: 24,
+            h: 24,
           }}
         />
       )}

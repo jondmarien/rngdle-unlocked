@@ -18,21 +18,21 @@ const MODES: {
     label: 'Ranked',
     short: 'Server RNG · competitive',
     detail:
-      'Server-issued free-play rolls. Requires sign-in and a public @username. These are the only free-play rolls that place on Leaderboard → Ranked, claim today/week/all-time community crowns, and trigger overtake alerts. Fair competition.',
+      'Server-issued free-play rolls. Requires sign-in and a public @username. Soft cap ~90 Ranked rolls/hour (server cost). These are the only free-play rolls that place on Leaderboard → Ranked, claim today/week/all-time community crowns, and trigger overtake alerts. Fair competition.',
   },
   {
     id: 'daily',
     label: 'Daily',
     short: 'One personal number / UTC day',
     detail:
-      'Shared day seed + your account makes a fixed personal number for today. Same inputs always match. Challenges are optional — Free (Practice board) and Ranked stay available anytime.',
+      'Shared UTC day seed + your account id → one deterministic personal number for today (same inputs always match). Shows under History → Challenge and Latest runs → Challenge. Optional — Free (Practice) and Ranked stay available anytime. Not Ranked crowns.',
   },
   {
     id: 'weekly',
     label: 'Weekly',
     short: 'One personal number / UTC week',
     detail:
-      'Same idea as Daily, but the seed lasts the whole ISO week. Free and Ranked free play stay unlimited whenever you want them.',
+      'Same deterministic idea as Daily for the whole ISO week. History → Challenge / Latest runs → Challenge. Free and Ranked stay unlimited. Not Ranked crowns.',
   },
 ];
 

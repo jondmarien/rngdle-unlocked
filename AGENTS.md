@@ -98,7 +98,10 @@ See [`.env.example`](./.env.example). Typical vars:
 | `BETTER_AUTH_SECRET` | Auth + HMAC attestations |
 | `BETTER_AUTH_URL` | Site origin (production must match real domain) |
 | `VITE_APP_URL` | Client trusted origin |
-| `ADMIN_SECRET` | Optional; `POST /api/system-messages` |
+| `ADMIN_SECRET` | Optional; bootstrap only (`scripts/promote-admin.mjs`) — not for browser admin |
+| `ADMIN_USER_IDS` | Optional; comma-separated user ids treated as admin |
+| `DISCORD_CLIENT_ID` / `DISCORD_CLIENT_SECRET` | Discord OAuth (see [`docs/oauth-setup.md`](./docs/oauth-setup.md)) |
+| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | GitHub OAuth |
 | `LOG_LEVEL` | Optional server log level |
 
 ---
@@ -196,7 +199,9 @@ Important tables: `user` (username, vanity profile fields), `user_progress`, `ro
 | `/api/feed` | `?source=all\|ranked\|practice` — self + following |
 | `/api/follow` | Follow graph |
 | `/api/notifications` | Activity + system inbox |
-| `/api/system-messages` | GET list; POST admin broadcast |
+| `/api/system-messages` | GET list; POST **admin session** (role=admin) |
+| `/api/admin/*` | Admin: broadcast, users search/wipe/ban, reports |
+| `/api/reports` | Signed-in users file abuse / username reports |
 | `/api/challenge` | Period seeds metadata |
 | `/api/attest` | Optional HMAC seal on claim |
 | `/api/og`, `/api/share/*`, `/api/u/*` | OG / share / profile HTML for bots |
@@ -247,7 +252,7 @@ GitHub Mermaid: avoid `<br/>`, unicode middle-dots, and heavy path punctuation i
 - Default branch: `main` (production via Vercel).
 - Prefer small, focused commits with complete sentences in messages.
 - Do not force-push `main` unless the user explicitly requests it.
-- Version in `package.json` (currently **0.4.0**); Settings footer version string should match when bumping.
+- Version in `package.json` (currently **0.4.1**); Settings footer reads `VITE_APP_VERSION` from the build.
 - Releases: annotated tags (`v0.x.y`) + `gh release create` when the user asks.
 
 ---

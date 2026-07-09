@@ -216,7 +216,9 @@ export function SettingsScreen() {
         )}
       </section>
 
-      <p className="text-xs text-[var(--prose-3)]">RNGdle Unlocked v0.4.0</p>
+      <p className="text-xs text-[var(--prose-3)]">
+        RNGdle Unlocked v{import.meta.env.VITE_APP_VERSION ?? '0.0.0'}
+      </p>
     </div>
   );
 }

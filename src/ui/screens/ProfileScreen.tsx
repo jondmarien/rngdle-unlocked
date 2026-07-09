@@ -8,6 +8,7 @@ import {
   type BadgeFamily,
   type RarityTier,
 } from '../../game';
+import { fileReport } from '../../lib/admin-api';
 import { useSession } from '../../lib/auth-client';
 import { FAMILY_PILL } from '../../lib/badge-theme';
 import { profileAvatarSrc } from '../../lib/profile-avatars';
@@ -422,18 +423,44 @@ export function ProfileScreen({
             </div>
           </div>
           {!isSelf && (
-            <button
-              type="button"
-              disabled={followBusy}
-              onClick={() => void toggleFollow()}
-              className={`shrink-0 border-2 px-4 py-2 text-sm font-semibold ${
-                following
-                  ? 'border-[var(--outline)] bg-[var(--surface)] text-[var(--prose-2)]'
-                  : 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
-              }`}
-            >
-              {following ? 'Following' : 'Follow'}
-            </button>
+            <div className="flex shrink-0 flex-col gap-2">
+              <button
+                type="button"
+                disabled={followBusy}
+                onClick={() => void toggleFollow()}
+                className={`border-2 px-4 py-2 text-sm font-semibold ${
+                  following
+                    ? 'border-[var(--outline)] bg-[var(--surface)] text-[var(--prose-2)]'
+                    : 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
+                }`}
+              >
+                {following ? 'Following' : 'Follow'}
+              </button>
+              {session?.user && (
+                <button
+                  type="button"
+                  className="text-xs font-semibold text-[var(--prose-3)] underline"
+                  onClick={() => {
+                    const reason = window.prompt(
+                      'Why are you reporting this username / profile? (min 8 chars)',
+                    );
+                    if (!reason || reason.trim().length < 8) return;
+                    void fileReport({
+                      targetUsername: profile.username,
+                      reason: reason.trim(),
+                    }).then((res) => {
+                      setFollowMsg(
+                        res.ok
+                          ? 'Report submitted. Thanks — admins will review.'
+                          : res.error,
+                      );
+                    });
+                  }}
+                >
+                  Report username
+                </button>
+              )}
+            </div>
           )}
         </div>
         {followMsg && (

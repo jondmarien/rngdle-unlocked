@@ -180,11 +180,10 @@ Switch modes anytime (board fully resets). Badges, EP, history, and share work a
 - **Dynamic OG** — `/api/og` for rolls; bot rewrite of `/u/:user` → profile OG HTML
 - **Soft rate limits** on sync, Ranked rolls (~90/h), and public APIs
 
-### Planned later
-- Discord / GitHub OAuth
+### Planned later / in progress
+- Discord / GitHub OAuth — code wired; finish apps + env: [`docs/oauth-setup.md`](./docs/oauth-setup.md)
 - Turnstile on sign-up
 - Server-side EP velocity caps
-- Admin wipe / username report
 
 ## 📁 What's in this repo
 
@@ -379,8 +378,9 @@ The Account screen times out after a few seconds and shows the sign-in form. Che
 | Cloud-gated vanity share + OG (rolls + profiles) | ✅ Shipped |
 | Daily/weekly challenge + attestation | ✅ Shipped |
 | Custom fonts + rarity/family icon art | ✅ Shipped |
-| OAuth (Discord/GitHub) | 🔮 Later |
-| Turnstile / EP velocity / admin tools | 🔮 Later |
+| OAuth (Discord/GitHub) | ✅ Wired — finish portal setup via [`docs/oauth-setup.md`](./docs/oauth-setup.md) |
+| Turnstile / EP velocity | 🔮 Later |
+| Admin panel (role-gated) | ✅ Shipped (`/admin`) |
 
 Design docs:
 
