@@ -16,6 +16,17 @@
       "destination": "/api/share/:code?user=:user"
     },
     {
+      "source": "/u/:username",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(bot|crawl|slurp|discord|twitter|facebook|slack|linkedin|telegram|whatsapp|preview|embed).*"
+        }
+      ],
+      "destination": "/api/u/:username"
+    },
+    {
       "source": "/api/share/r/(.*)",
       "destination": "/api/share/$1"
     },

@@ -1,6 +1,7 @@
 import { createDb } from '../../server/db/index.js';
 import { requestUrl } from '../../server/http.js';
 import { createLogger } from '../../server/logger.js';
+import { ogHtmlPage } from '../../server/ogHtml.js';
 import { findPublicRoll } from '../../server/rollLookup.js';
 import { defineHandler } from '../../server/vercel-adapter.js';
 
@@ -32,11 +33,12 @@ export default defineHandler(async (request) => {
     log.info('share', { key, userHint, path: url.pathname });
 
     if (!key) {
-      return htmlPage({
+      return ogHtmlPage({
         title: 'RNGdle Unlocked',
         desc: 'Unlimited CSPRNG rolls · badges · cloud sync',
         spaUrl: origin,
         status: 400,
+        linkLabel: 'Open app →',
       });
     }
 
@@ -55,11 +57,12 @@ export default defineHandler(async (request) => {
       const spaUrl = fallbackUser
         ? `${origin}/s/${encodeURIComponent(fallbackUser)}/${encodeURIComponent(key)}`
         : `${origin}/r/${encodeURIComponent(key)}`;
-      return htmlPage({
+      return ogHtmlPage({
         title: 'RNGdle Unlocked · Shared roll',
         desc: 'Open this link in the app. Sync to cloud after rolling so the public page can load.',
         spaUrl,
         status: 200,
+        linkLabel: 'Open roll →',
       });
     }
 
@@ -94,7 +97,14 @@ export default defineHandler(async (request) => {
     const spaUrl = `${origin}/s/${encodeURIComponent(handle)}/${encodeURIComponent(code)}`;
     const ogImage = `${origin}/api/og?code=${encodeURIComponent(code)}&user=${encodeURIComponent(handle)}&n=${encodeURIComponent(String(row.number))}&r=${encodeURIComponent(String(row.rarity))}&ep=${encodeURIComponent(String(row.totalEp))}&u=${encodeURIComponent(handle)}`;
 
-    return htmlPage({ title, desc, spaUrl, ogImage, status: 200 });
+    return ogHtmlPage({
+      title,
+      desc,
+      spaUrl,
+      ogImage,
+      status: 200,
+      linkLabel: 'Open roll →',
+    });
   } catch (err) {
     log.error('handler threw', {
       err: err instanceof Error ? err.message : String(err),
@@ -103,61 +113,3 @@ export default defineHandler(async (request) => {
   }
 });
 
-function htmlPage(opts: {
-  title: string;
-  desc: string;
-  spaUrl: string;
-  status: number;
-  ogImage?: string;
-}): Response {
-  const { title, desc, spaUrl, status, ogImage } = opts;
-  const imageMeta = ogImage
-    ? `
-  <meta property="og:image" content="${escapeHtml(ogImage)}" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:image" content="${escapeHtml(ogImage)}" />`
-    : `
-  <meta name="twitter:card" content="summary" />`;
-
-  const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>${escapeHtml(title)}</title>
-  <meta name="description" content="${escapeHtml(desc)}" />
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="${escapeHtml(title)}" />
-  <meta property="og:description" content="${escapeHtml(desc)}" />
-  <meta property="og:url" content="${escapeHtml(spaUrl)}" />
-  <meta property="og:site_name" content="RNGdle Unlocked" />${imageMeta}
-  <meta name="twitter:title" content="${escapeHtml(title)}" />
-  <meta name="twitter:description" content="${escapeHtml(desc)}" />
-  <meta http-equiv="refresh" content="0;url=${escapeHtml(spaUrl)}" />
-  <link rel="canonical" href="${escapeHtml(spaUrl)}" />
-</head>
-<body style="font-family:system-ui;background:#0f1412;color:#ecfdf5;padding:2rem">
-  <p><strong>${escapeHtml(title)}</strong></p>
-  <p>${escapeHtml(desc)}</p>
-  <p><a href="${escapeHtml(spaUrl)}" style="color:#5eead4">Open roll →</a></p>
-</body>
-</html>`;
-
-  return new Response(html, {
-    status,
-    headers: {
-      'Content-Type': 'text/html; charset=utf-8',
-      'Cache-Control': 'public, max-age=60',
-    },
-  });
-}
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
