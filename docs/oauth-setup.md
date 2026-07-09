@@ -6,7 +6,14 @@ You can complete this **before** the OAuth code ships: create the apps, upload t
 
 **Live origin:** `https://rngdle-unlocked.chron0.tech`  
 **Auth base path:** `/api/auth`  
-**Callbacks:** `/api/auth/callback/discord` · `/api/auth/callback/github`
+**Callbacks:** `/api/auth/callback/discord` · `/api/auth/callback/github`  
+**Legal (paste into Discord / GitHub app settings):**
+
+| Field | URL |
+| --- | --- |
+| Terms of Service | `https://rngdle-unlocked.chron0.tech/terms` |
+| Privacy Policy | `https://rngdle-unlocked.chron0.tech/privacy` |
+| Homepage | `https://rngdle-unlocked.chron0.tech` |
 
 **Brand icon for portals:** [`public/brand/oauth-icon-512.png`](../public/brand/oauth-icon-512.png) (512×512 PNG from the site favicon).
 
@@ -43,9 +50,16 @@ DATABASE_URL=…          # existing
 
 1. Open [Discord Developer Portal](https://discord.com/developers/applications) → **New Application** → name it e.g. `RNGdle Unlocked`.
 2. **App Icon:** upload [`public/brand/oauth-icon-512.png`](../public/brand/oauth-icon-512.png).
-3. Left nav → **OAuth2**.
-4. **Client information:** copy **Client ID** and **Client Secret** (Reset Secret if needed).
-5. **Redirects** → Add Redirect → save **both** (or the ones you use):
+3. **General Information** (or the app’s legal / links fields): set
+
+   | Field | URL |
+   | --- | --- |
+   | Terms of Service URL | `https://rngdle-unlocked.chron0.tech/terms` |
+   | Privacy Policy URL | `https://rngdle-unlocked.chron0.tech/privacy` |
+
+4. Left nav → **OAuth2**.
+5. **Client information:** copy **Client ID** and **Client Secret** (Reset Secret if needed).
+6. **Redirects** → Add Redirect → save **both** (or the ones you use):
 
    | Environment | Redirect URL |
    | --- | --- |
@@ -53,15 +67,15 @@ DATABASE_URL=…          # existing
    | Local (`npx vercel dev`, default port 3000) | `http://localhost:3000/api/auth/callback/discord` |
    | Optional Vite-only proxy setups | Prefer `vercel dev` so `/api/auth` hits the same origin as cookies |
 
-6. Scopes used by Better Auth for sign-in are typically `identify` + `email`. You do **not** need the `bot` scope for Account login.
-7. Paste into `.env.local` / `.env` and **Vercel → Project → Settings → Environment Variables** (Production + Preview):
+7. Scopes used by Better Auth for sign-in are typically `identify` + `email`. You do **not** need the `bot` scope for Account login.
+8. Paste into `.env.local` / `.env` and **Vercel → Project → Settings → Environment Variables** (Production + Preview):
 
    ```bash
    DISCORD_CLIENT_ID=…
    DISCORD_CLIENT_SECRET=…
    ```
 
-8. Redeploy after saving Vercel env (env changes do not apply to an already-running deployment).
+9. Redeploy after saving Vercel env (env changes do not apply to an already-running deployment).
 
 ### Discord notes
 
@@ -79,7 +93,15 @@ DATABASE_URL=…          # existing
    | --- | --- |
    | Application name | `RNGdle Unlocked` |
    | Homepage URL | `https://rngdle-unlocked.chron0.tech` |
+   | Application description | (optional) Unlimited random-number game — badges, EP, Ranked |
    | Authorization callback URL | `https://rngdle-unlocked.chron0.tech/api/auth/callback/github` |
+
+   After create, if GitHub shows Terms / Privacy fields on the OAuth App, use:
+
+   | Field | URL |
+   | --- | --- |
+   | Terms of service URL | `https://rngdle-unlocked.chron0.tech/terms` |
+   | Privacy policy URL | `https://rngdle-unlocked.chron0.tech/privacy` |
 
 3. After create: **Upload logo** → use [`public/brand/oauth-icon-512.png`](../public/brand/oauth-icon-512.png).
 4. Copy **Client ID**. Generate a **Client secret** and copy it once.

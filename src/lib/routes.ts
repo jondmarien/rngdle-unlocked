@@ -46,7 +46,8 @@ const PATH_TO_TAB: Record<string, TabId> = {
 export type AppRoute =
   | { kind: "tab"; tab: TabId }
   | { kind: "profile"; username: string }
-  | { kind: "roll"; rollId: string; username?: string };
+  | { kind: "roll"; rollId: string; username?: string }
+  | { kind: "legal"; page: "terms" | "privacy" };
 
 export function parsePath(pathname: string): AppRoute {
   const parts = pathname.split("/").filter(Boolean);
@@ -67,6 +68,12 @@ export function parsePath(pathname: string): AppRoute {
   // Legacy: /r/:uuid-or-code
   if (parts[0] === "r" && parts[1]) {
     return { kind: "roll", rollId: decodeURIComponent(parts[1]) };
+  }
+  if (parts.length === 1 && parts[0] === "terms") {
+    return { kind: "legal", page: "terms" };
+  }
+  if (parts.length === 1 && parts[0] === "privacy") {
+    return { kind: "legal", page: "privacy" };
   }
   if (parts.length === 0) {
     return { kind: "tab", tab: "home" };

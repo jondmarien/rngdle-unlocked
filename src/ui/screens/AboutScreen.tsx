@@ -368,6 +368,14 @@ export function AboutScreen() {
           original. Built for fun — not gambling, not financial advice, not a
           security product.
         </p>
+        <p className="flex flex-wrap gap-3 text-xs">
+          <a className="underline" href="/terms">
+            Terms of Service
+          </a>
+          <a className="underline" href="/privacy">
+            Privacy Policy
+          </a>
+        </p>
       </section>
     </article>
   );

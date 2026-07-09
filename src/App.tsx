@@ -18,6 +18,7 @@ import { PublicRollScreen } from './ui/screens/PublicRollScreen';
 import { SettingsScreen } from './ui/screens/SettingsScreen';
 import { ShowcaseScreen } from './ui/screens/ShowcaseScreen';
 import { StatsScreen } from './ui/screens/StatsScreen';
+import { LegalScreen } from './ui/screens/LegalScreen';
 import { NotificationsScreen } from './ui/screens/NotificationsScreen';
 
 const log = createLogger('router');
@@ -110,7 +111,9 @@ function AppRoutes() {
       ? route.tab
       : route.kind === 'profile'
         ? 'account'
-        : 'home';
+        : route.kind === 'legal'
+          ? 'about'
+          : 'home';
 
   const profileActive =
     route.kind === 'profile' &&
@@ -126,6 +129,7 @@ function AppRoutes() {
       onOpenMyProfile={goMyProfile}
       profileActive={profileActive}
     >
+      {route.kind === 'legal' && <LegalScreen kind={route.page} />}
       {route.kind === 'profile' && (
         <ProfileScreen
           username={route.username}
