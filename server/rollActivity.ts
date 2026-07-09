@@ -198,8 +198,10 @@ async function tryCrown(
   const rolledAt = new Date(opts.candidate.rolledAt);
   if (opts.since && rolledAt < opts.since) return;
 
+  // Competitive crowns: only server-issued ranked free-play rolls.
   const periodFilters = [
     eq(rolls.isPublic, true),
+    eq(rolls.source, 'ranked'),
     isNotNull(user.username),
     ...(opts.since ? [gte(rolls.rolledAt, opts.since)] : []),
   ];

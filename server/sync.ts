@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import type { CollectionEntry, PlayStats, RollResult } from '../src/game/types.js';
 import { defaultPlayStats } from '../src/game/stats.js';
 import type { Db } from './db/index.js';
@@ -204,8 +204,10 @@ async function upsertRoll(
     shortCode: string | null;
     challengeKey: string | null;
     attestationSeal: string | null;
+    source: string;
   },
 ): Promise<void> {
+  // Never demote a server-ranked row to client via re-sync of the same id.
   const conflictSet = {
     isPublic: true as const,
     shortCode: values.shortCode,
@@ -216,6 +218,7 @@ async function upsertRoll(
     rarity: values.rarity,
     percentile: values.percentile,
     badgesJson: values.badgesJson,
+    source: sql`case when ${rolls.source} = 'ranked' then 'ranked' else ${values.source} end`,
   };
 
   try {
@@ -338,6 +341,15 @@ export async function saveCloudMerge(
     const shortCode =
       r.shortCode && r.shortCode.length >= 6 ? r.shortCode : null;
 
+    // Never let client sync forge "ranked" — only server ranked-roll API sets that.
+    const source =
+      r.source === 'challenge' ||
+      (typeof r.challengeKey === 'string' &&
+        (r.challengeKey.startsWith('daily:') ||
+          r.challengeKey.startsWith('weekly:')))
+        ? 'challenge'
+        : 'client';
+
     const values = {
       id: r.id,
       userId,
@@ -352,6 +364,7 @@ export async function saveCloudMerge(
       shortCode,
       challengeKey: r.challengeKey ?? null,
       attestationSeal: r.attestationSeal ?? null,
+      source,
     };
 
     const isNewRoll = !prevRollIds.has(r.id);

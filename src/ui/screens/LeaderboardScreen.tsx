@@ -45,7 +45,7 @@ export function LeaderboardScreen({
 
   const [view, setView] = useState<BoardView>('board');
   const [period, setPeriod] = useState<'all' | 'week'>('all');
-  const [sort, setSort] = useState<'ep' | 'rolls' | 'badges'>('ep');
+  const [sort, setSort] = useState<'ep' | 'rolls'>('ep');
   const [entries, setEntries] = useState<Entry[]>([]);
   const [me, setMe] = useState<Entry | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -182,8 +182,9 @@ export function LeaderboardScreen({
       <div>
         <h1 className="text-xl font-bold tracking-tight">Leaderboard</h1>
         <p className="text-sm text-[var(--prose-2)]">
-          Ranked players, friends feed, and username search. Follow from the
-          board with + or open a profile.
+          Competitive board from <strong className="text-[var(--prose)]">Ranked</strong>{' '}
+          free play only (server RNG). Local Free play is practice and does not
+          place. Friends feed and username search are separate.
         </p>
       </div>
 
@@ -287,12 +288,7 @@ export function LeaderboardScreen({
                 <Toggle
                   active={sort === 'rolls'}
                   onClick={() => setSort('rolls')}
-                  label="Rolls"
-                />
-                <Toggle
-                  active={sort === 'badges'}
-                  onClick={() => setSort('badges')}
-                  label="Badges"
+                  label="Ranked rolls"
                 />
               </>
             )}

@@ -34,29 +34,30 @@ export function AboutScreen() {
             <ul className="mt-1.5 list-disc space-y-1 pl-5">
               <li>
                 <strong className="text-[var(--prose)]">Free play</strong> —
-                unlimited browser CSPRNG (new number every Generate). Refreshing
-                clears the reel so you start fresh (history still saves). The
-                Absolute Ceiling (<span className="font-mono">1,000,000</span>)
-                can appear from the normal range (~1 in a million) or from a
-                separate <strong className="text-[var(--prose)]">1 in 100
-                million</strong> jackpot lottery each roll — and unlocks the
-                custom ultra-rare <strong className="text-[var(--prose)]">Absolute
-                Ceiling</strong> seal (100k EP + art).
+                unlimited browser CSPRNG (practice). Does not count for the
+                competitive leaderboard or community crowns. Absolute Ceiling (
+                <span className="font-mono">1,000,000</span>) ~1 in a million, or
+                a separate 1-in-100M jackpot, unlocks the ultra-rare seal.
+              </li>
+              <li>
+                <strong className="text-[var(--prose)]">Ranked</strong> —
+                server-issued free-play rolls (sign-in + @username). Only Ranked
+                free play places on the leaderboard and can claim today / week /
+                all-time crowns. Fair competition.
               </li>
               <li>
                 <strong className="text-[var(--prose)]">Daily / Weekly</strong> —
                 optional challenge: shared UTC seed + your account → one personal
-                number for that period (same inputs always match). Free play
-                stays available anytime.
+                number for that period. Free and Ranked stay available anytime.
               </li>
             </ul>
           </li>
           <li>
             <strong className="text-[var(--prose)]">Community bests</strong> —
             on an idle Roll tab (no session roll yet), see{' '}
-            <em>Today&apos;s best</em> and <em>Best this week</em> from public
-            cloud rolls. They hide while you spin so your result stays center
-            stage.
+            <em>Today&apos;s best</em> and <em>Best this week</em> from Ranked
+            (server) free-play rolls. They hide while you spin so your result
+            stays center stage.
           </li>
           <li>
             <strong className="text-[var(--prose)]">Badges</strong> — number

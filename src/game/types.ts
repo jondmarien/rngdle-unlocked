@@ -58,6 +58,11 @@ export type RollResult = {
   rolledAt: string;
   /** When set, roll came from daily/weekly challenge seed. */
   challengeKey?: string;
+  /**
+   * How the number was produced.
+   * client = local free play · ranked = server free play · challenge = daily/weekly
+   */
+  source?: 'client' | 'ranked' | 'challenge';
   /** Server HMAC seal after POST /api/attest. */
   attestationSeal?: string;
 };

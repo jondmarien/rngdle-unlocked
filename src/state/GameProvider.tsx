@@ -47,7 +47,8 @@ import {
   type PersistedState,
 } from './storage';
 
-export type RollMode = 'free' | ChallengeKind;
+/** free = local CSPRNG · ranked = server free play · daily/weekly = challenges */
+export type RollMode = 'free' | 'ranked' | ChallengeKind;
 
 const log = createLogger('game');
 
@@ -86,7 +87,7 @@ type GameContextValue = {
   /** Badge ids first-time unlocked on the most recent roll (for NEW labels). */
   lastNewBadgeIds: string[];
   confettiToken: number;
-  /** free = unlimited CSPRNG; daily/weekly = optional challenge seed */
+  /** free = local CSPRNG; ranked = server free play; daily/weekly = challenges */
   rollMode: RollMode;
   setRollMode: (m: RollMode) => void;
   roll: () => Promise<RollOutcome | null>;
@@ -141,7 +142,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [syncing, setSyncing] = useState(false);
   const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
-  const [rollMode, setRollMode] = useState<RollMode>('free');
+  const [rollMode, setRollModeState] = useState<RollMode>('free');
 
   /** Coalesce rapid auto-syncs so spam-rolling doesn't race the server. */
   const autoSyncChain = useRef(Promise.resolve());
@@ -149,6 +150,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
   /** Always the latest persisted state (avoids stale force-push on share). */
   const stateRef = useRef(state);
   stateRef.current = state;
+  /**
+   * Bumped when mode changes (or an in-flight roll is abandoned) so a slow
+   * free/challenge roll cannot paint onto a different mode after switch.
+   */
+  const rollEpochRef = useRef(0);
 
   useEffect(() => {
     applyTheme(state.settings.theme);
@@ -269,20 +275,65 @@ export function GameProvider({ children }: { children: ReactNode }) {
     });
   }, [persist, enqueueAutoSync]);
 
+  /** Switch free/daily/weekly and abandon any in-flight roll UI. */
+  const setRollMode = useCallback((m: RollMode) => {
+    rollEpochRef.current += 1;
+    setRollModeState(m);
+    setLastRoll(null);
+    setLastJourneyUnlocks([]);
+    setLastSecretUnlocks([]);
+    setLastNewBadgeIds([]);
+    setRolling(false);
+    log.debug('rollMode:switch', { mode: m, epoch: rollEpochRef.current });
+  }, []);
+
   const roll = useCallback(async (): Promise<RollOutcome | null> => {
     if (rolling) return null;
+    const epoch = rollEpochRef.current;
+    const modeAtStart = rollMode;
     setRolling(true);
     log.debug('roll:start', {
       lifetimeRollCount: state.lifetimeRollCount,
-      rollMode,
+      rollMode: modeAtStart,
+      epoch,
     });
     try {
       let result: RollResult;
-      if (rollMode === 'free') {
+      if (modeAtStart === 'free') {
         result = await performRoll();
+        result.source = 'client';
+      } else if (modeAtStart === 'ranked') {
+        // Server CSPRNG free play — only these count for leaderboard / crowns
+        if (!session?.user) {
+          setSaveError('Sign in to play Ranked free play.');
+          return null;
+        }
+        const res = await fetch('/api/ranked-roll', {
+          method: 'POST',
+          credentials: 'include',
+        });
+        const body = (await res.json().catch(() => ({}))) as {
+          roll?: RollResult;
+          error?: string;
+          code?: string;
+        };
+        if (!res.ok || !body.roll) {
+          const msg =
+            body.error ||
+            (res.status === 401
+              ? 'Sign in to play Ranked free play.'
+              : res.status === 429
+                ? 'Ranked rate limit — try again later.'
+                : 'Ranked roll failed.');
+          setSaveError(msg);
+          log.warn('ranked-roll:fail', { status: res.status, msg });
+          return null;
+        }
+        result = { ...body.roll, source: 'ranked' };
+        setSaveError(null);
       } else {
         // Optional challenge: personal number from shared period seed + subject
-        const info = buildPeriodSeed(rollMode);
+        const info = buildPeriodSeed(modeAtStart);
         const userId = session?.user?.id;
         let subject = userId ?? 'guest:anon';
         if (!userId && typeof localStorage !== 'undefined') {
@@ -300,9 +351,17 @@ export function GameProvider({ children }: { children: ReactNode }) {
         }
         const n = await challengeNumber(info.seed, subject);
         result = evaluateNumber(n, new Date(), {
-          challengeKey: `${rollMode}:${info.periodKey}`,
+          challengeKey: `${modeAtStart}:${info.periodKey}`,
         });
+        result.source = 'challenge';
       }
+
+      // Mode switched (or board reset) while async work ran — drop the result.
+      if (epoch !== rollEpochRef.current) {
+        log.debug('roll:abandoned', { epoch, modeAtStart });
+        return null;
+      }
+
       const prevCount = state.lifetimeRollCount;
       const nextCount = prevCount + 1;
       const unlockedDefs = newlyUnlockedJourney(prevCount, nextCount);
@@ -387,7 +446,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
       });
       throw err;
     } finally {
-      setRolling(false);
+      if (epoch === rollEpochRef.current) {
+        setRolling(false);
+      }
     }
   }, [enqueueAutoSync, persist, rolling, rollMode, session?.user, state]);
 
@@ -699,6 +760,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       lastNewBadgeIds,
       confettiToken,
       rollMode,
+      setRollMode,
       roll,
       attestRoll,
       clearAll,

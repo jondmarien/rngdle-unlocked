@@ -127,6 +127,7 @@ async function bestPublicRollSince(
       and(
         gte(rolls.rolledAt, since),
         eq(rolls.isPublic, true),
+        eq(rolls.source, 'ranked'),
         isNotNull(user.username),
       ),
     )
@@ -144,7 +145,13 @@ async function countPublicRollsSince(
   const [row] = await db
     .select({ n: sql<number>`count(*)`.mapWith(Number) })
     .from(rolls)
-    .where(and(gte(rolls.rolledAt, since), eq(rolls.isPublic, true)));
+    .where(
+      and(
+        gte(rolls.rolledAt, since),
+        eq(rolls.isPublic, true),
+        eq(rolls.source, 'ranked'),
+      ),
+    );
   return row?.n ?? 0;
 }
 

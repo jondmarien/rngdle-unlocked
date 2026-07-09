@@ -87,6 +87,21 @@ export function HomeScreen({
     setAttestMsg(null);
   }, [lastRoll?.id]);
 
+  /** Mode switch must wipe the whole roll board (reel, meta, share, cascade). */
+  useEffect(() => {
+    clearShareTimer();
+    setShareRoll(null);
+    setReplayRoll(null);
+    setAttestMsg(null);
+    setSlotValue(null);
+    setRevealKey(0);
+    setRevealDone(false);
+    setCascadeKey(0);
+    setAwaitingResult(false);
+    pendingFx.current = false;
+    revealRollRef.current = null;
+  }, [rollMode]);
+
   const handleRoll = async () => {
     // Cancel deferred anomaly/mythic share from a previous roll
     clearShareTimer();
@@ -318,6 +333,16 @@ export function HomeScreen({
                 </span>
               )}
             </div>
+            {lastRoll.source === 'ranked' && (
+              <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                Ranked · server roll · counts for the board
+              </p>
+            )}
+            {lastRoll.source === 'client' && rollMode === 'free' && (
+              <p className="text-sm text-[var(--prose-2)]">
+                Local free play · practice only (not ranked)
+              </p>
+            )}
             {lastRoll.challengeKey && (
               <p className="text-sm text-[var(--prose-2)]">
                 Challenge:{' '}
@@ -344,14 +369,16 @@ export function HomeScreen({
           <p className="text-sm text-red-700 dark:text-red-400">{saveError}</p>
         )}
 
-        {showCommunityBest && (
-          <div className="w-full max-w-2xl pt-2">
-            <CommunityHighlights
-              onOpenProfile={onOpenProfile}
-              onOpenRoll={onOpenRoll}
-            />
-          </div>
-        )}
+        {/* Keep mounted so fetch state isn't torn down (avoids racey empty flashes). */}
+        <div
+          className={`w-full max-w-2xl pt-2 ${showCommunityBest ? '' : 'hidden'}`}
+          aria-hidden={!showCommunityBest}
+        >
+          <CommunityHighlights
+            onOpenProfile={onOpenProfile}
+            onOpenRoll={onOpenRoll}
+          />
+        </div>
       </div>
 
       {lastRoll && revealDone && (

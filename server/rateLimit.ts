@@ -84,6 +84,8 @@ export function clientIp(request: { headers: { get(name: string): string | null 
 export const LIMITS = {
   syncPerMinute: 30,
   rollsUploadPerHour: 120,
+  /** Server-issued ranked free-play rolls per user per hour. */
+  rankedRollsPerHour: 90,
   leaderboardPerMinute: 60,
   profilePerMinute: 60,
   followPerMinute: 30,

@@ -9,23 +9,30 @@ const MODES: {
   {
     id: 'free',
     label: 'Free play',
-    short: 'Fresh random each time',
+    short: 'Local RNG · unlimited',
     detail:
-      'Unlimited CSPRNG rolls in your browser. Every Generate is a new number. This is the main game.',
+      'Unlimited CSPRNG rolls in your browser. Every Generate is a new number. Fun and offline-friendly — does not count for the competitive leaderboard or community crowns.',
+  },
+  {
+    id: 'ranked',
+    label: 'Ranked',
+    short: 'Server RNG · board',
+    detail:
+      'Server-issued free-play rolls. Requires sign-in and a public @username. These are the only free-play rolls that count for the leaderboard, today’s/week’s best, and overtake alerts. Fair competition.',
   },
   {
     id: 'daily',
     label: 'Daily',
-    short: 'One personal number per UTC day',
+    short: 'One personal number / UTC day',
     detail:
-      'Shared day seed + your account makes a fixed personal number for today. Same inputs always match. Switch back to Free play anytime for unlimited random rolls.',
+      'Shared day seed + your account makes a fixed personal number for today. Same inputs always match. Optional challenge — Free and Ranked stay available anytime.',
   },
   {
     id: 'weekly',
     label: 'Weekly',
-    short: 'One personal number per UTC week',
+    short: 'One personal number / UTC week',
     detail:
-      'Same idea as Daily, but the seed lasts the whole ISO week. Good for a weekly challenge. Free play stays unlimited whenever you want it.',
+      'Same idea as Daily, but the seed lasts the whole ISO week. Free and Ranked free play stay unlimited whenever you want them.',
   },
 ];
 
@@ -43,14 +50,15 @@ export function RollModePicker({
       <div>
         <p className="text-sm font-semibold text-[var(--prose)]">How to roll</p>
         <p className="mt-0.5 text-sm leading-snug text-[var(--prose-2)]">
-          Pick free unlimited RNG, or an optional timed challenge.
+          Local free play, competitive Ranked (server), or optional timed
+          challenges.
         </p>
       </div>
 
       <div
         role="radiogroup"
         aria-label="Roll mode"
-        className="grid grid-cols-1 gap-2 sm:grid-cols-3"
+        className="grid grid-cols-2 gap-2 sm:grid-cols-4"
       >
         {MODES.map((m) => {
           const selected = value === m.id;
@@ -61,9 +69,11 @@ export function RollModePicker({
               role="radio"
               aria-checked={selected}
               onClick={() => onChange(m.id)}
-              className={`rounded-lg border px-3 py-2.5 text-left transition ${
+              className={`rounded-lg border px-2.5 py-2.5 text-left transition sm:px-3 ${
                 selected
-                  ? 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
+                  ? m.id === 'ranked'
+                    ? 'border-amber-500 bg-amber-500 text-black'
+                    : 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
                   : 'border-[var(--outline)] bg-[var(--surface)] text-[var(--prose)] hover:border-[var(--prose-2)]'
               }`}
             >
@@ -71,7 +81,7 @@ export function RollModePicker({
                 {m.label}
               </span>
               <span
-                className={`mt-1 block text-xs leading-snug ${
+                className={`mt-1 block text-[11px] leading-snug sm:text-xs ${
                   selected ? 'opacity-90' : 'text-[var(--prose-2)]'
                 }`}
               >

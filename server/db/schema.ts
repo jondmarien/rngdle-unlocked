@@ -107,6 +107,13 @@ export const rolls = pgTable('rolls', {
   attestedAt: timestamp('attested_at'),
   /** Challenge period key when rolled in challenge mode (e.g. daily:2026-07-08) */
   challengeKey: text('challenge_key'),
+  /**
+   * Provenance for competitive surfaces:
+   * - client: local free play (synced; not ranked)
+   * - ranked: server CSPRNG free play (leaderboard / community crowns)
+   * - challenge: daily/weekly seed rolls
+   */
+  source: text('source').notNull().default('client'),
 });
 
 /** Social graph — follower follows following */
