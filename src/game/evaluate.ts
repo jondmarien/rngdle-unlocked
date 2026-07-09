@@ -6,13 +6,14 @@ import { sumEP } from './score';
 import type { RollResult } from './types';
 
 function newId(): string {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return crypto.randomUUID();
+  const c = globalThis.crypto;
+  if (c && typeof c.randomUUID === 'function') {
+    return c.randomUUID();
   }
   // Fallback without Math.random: time + CSPRNG bytes if available
   try {
     const b = new Uint8Array(4);
-    crypto.getRandomValues(b);
+    c!.getRandomValues(b);
     const n = new DataView(b.buffer).getUint32(0, false);
     return `roll-${Date.now()}-${n.toString(16)}`;
   } catch {

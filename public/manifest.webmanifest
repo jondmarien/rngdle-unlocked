@@ -4,14 +4,20 @@
   "description": "Unlimited random number game — roll anytime, collect badges, score EP.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f6f4ef",
-  "theme_color": "#14120f",
+  "background_color": "#0f1412",
+  "theme_color": "#0f1412",
   "icons": [
     {
       "src": "/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
+    },
+    {
+      "src": "/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ]
 }

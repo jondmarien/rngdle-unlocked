@@ -1,13 +1,15 @@
 {
   "name": "rngdle-unlocked",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
+  "packageManager": "pnpm@9.15.9",
   "scripts": {
     "dev": "vp dev",
-    "build": "tsc -b && vp build",
+    "build": "tsc -b && vite build",
     "lint": "vp lint",
-    "preview": "vp preview"
+    "preview": "vite preview",
+    "test": "vp test"
   },
   "dependencies": {
     "html-to-image": "^1.11.13",
@@ -19,17 +21,10 @@
     "@types/node": "^24.13.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.3",
+    "@vitejs/plugin-react": "^4.5.2",
     "tailwindcss": "^4.3.2",
-    "typescript": "~6.0.2",
-    "vite": "catalog:",
-    "vite-plus": "catalog:"
-  },
-  "devEngines": {
-    "packageManager": {
-      "name": "pnpm",
-      "version": "11.10.0",
-      "onFail": "download"
-    }
+    "typescript": "~5.8.3",
+    "vite": "^6.3.5",
+    "vite-plus": "^0.2.4"
   }
 }

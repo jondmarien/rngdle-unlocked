@@ -10,39 +10,35 @@ Social features (accounts, leaderboards) are deferred to **MVP part 2**.
 
 ## Stack
 
-- [Vite+](https://viteplus.dev/) (`vp` CLI) + React + TypeScript
+- React + TypeScript + Vite 6
+- Optional local [Vite+](https://viteplus.dev/) (`vp`) for check/test DX
 - Tailwind CSS v4
-- Vitest via `vite-plus/test`
-- Deploy: static on Vercel
+- Deploy: static on Vercel (`pnpm` 9)
 
 ## Setup
 
-### Install Vite+ (once)
+```bash
+corepack enable
+corepack prepare pnpm@9.15.9 --activate
+pnpm install
+pnpm dev   # or: npx vite
+```
 
-Windows (PowerShell):
+Optional global Vite+ CLI for `vp check` / `vp test`:
 
 ```powershell
 $env:CI = "true"; $env:VP_NODE_MANAGER = "yes"; irm https://vite.plus/ps1 | iex
-```
-
-Then open a **new** terminal.
-
-### Project
-
-```bash
-vp install
-vp dev
 ```
 
 ## Commands
 
 | Command | Purpose |
 |---------|---------|
-| `vp dev` | Dev server |
-| `vp test` | Unit tests |
-| `vp check` | Format + lint + types |
-| `vp build` | Production build → `dist/` |
-| `vp preview` | Preview production build |
+| `pnpm dev` | Dev server |
+| `pnpm build` | Production build → `dist/` (used by Vercel) |
+| `pnpm preview` | Preview production build |
+| `vp test` | Unit tests (Vite+) |
+| `vp check` | Format + lint + types (Vite+) |
 
 ## Design docs
 

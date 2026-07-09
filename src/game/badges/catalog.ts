@@ -366,7 +366,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'void',
     emoji: '🌑',
     matches: (n) => n >= 1000 && n % 1000 === 0,
-    highlight: (n) => maskWhere(n, (d, i, s) => i >= s.length - 3),
+    highlight: (n) => maskWhere(n, (_d, i, s) => i >= s.length - 3),
   },
   {
     id: 'round-hundred',
@@ -376,7 +376,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'void',
     emoji: '💯',
     matches: (n) => n >= 100 && n % 100 === 0 && n % 1000 !== 0,
-    highlight: (n) => maskWhere(n, (d, i, s) => i >= s.length - 2),
+    highlight: (n) => maskWhere(n, (_d, i, s) => i >= s.length - 2),
   },
   {
     id: 'deep-void',

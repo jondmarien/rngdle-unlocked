@@ -1,36 +1,10 @@
-import { defineConfig, lazyPlugins } from 'vite-plus'
+import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-// https://vite.dev/config/
+// Standard Vite config so Vercel/CI can build without the global `vp` CLI.
+// Locally you can still use `vp dev` / `vp test` / `vp check` via vite-plus.
 export default defineConfig({
-  fmt: {},
-  lint: {
-    plugins: ['react', 'typescript', 'oxc'],
-    rules: {
-      'react/rules-of-hooks': 'error',
-      'react/only-export-components': [
-        'warn',
-        {
-          allowConstantExport: true,
-        },
-      ],
-      'vite-plus/prefer-vite-plus-imports': 'error',
-    },
-    options: {
-      typeAware: true,
-      typeCheck: true,
-    },
-    jsPlugins: [
-      {
-        name: 'vite-plus',
-        specifier: 'vite-plus/oxlint-plugin',
-      },
-    ],
-  },
-  plugins: lazyPlugins(() => [react(), tailwindcss()]),
-  test: {
-    include: ['src/**/*.test.ts'],
-    environment: 'node',
-  },
+  plugins: [react(), tailwindcss()],
 })
+
