@@ -148,6 +148,39 @@ function asRarity(r: string): RarityTier {
   return (ok.includes(r as RarityTier) ? r : 'common') as RarityTier;
 }
 
+const PREVIEW_LIMIT = 10;
+
+function SectionHeader({
+  title,
+  meta,
+  open,
+  onToggle,
+}: {
+  title: string;
+  meta?: string;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="flex w-full items-baseline justify-between gap-2 text-left"
+      aria-expanded={open}
+    >
+      <h2 className="text-base font-bold text-[var(--prose)]">
+        <span className="mr-1.5 inline-block w-4 text-center text-sm text-[var(--prose-3)]">
+          {open ? '▾' : '▸'}
+        </span>
+        {title}
+      </h2>
+      {meta && (
+        <span className="shrink-0 text-sm text-[var(--prose-2)]">{meta}</span>
+      )}
+    </button>
+  );
+}
+
 export function ProfileScreen({
   username,
   onOpenRoll,
@@ -163,6 +196,12 @@ export function ProfileScreen({
     null;
   const [profile, setProfile] = useState<Profile | null>(null);
   const [codexFilter, setCodexFilter] = useState<BadgeFamily | 'all'>('all');
+  const [openSecrets, setOpenSecrets] = useState(true);
+  const [openCodex, setOpenCodex] = useState(true);
+  const [openBest, setOpenBest] = useState(true);
+  const [openRecent, setOpenRecent] = useState(true);
+  const [codexExpanded, setCodexExpanded] = useState(false);
+  const [recentExpanded, setRecentExpanded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [following, setFollowing] = useState(false);
@@ -438,68 +477,70 @@ export function ProfileScreen({
       {/* Secret masteries — only completed section seals (+ omega if earned) */}
       {unlockedCount > 0 && (
         <section className="space-y-3">
-          <div className="flex items-baseline justify-between gap-2">
-            <h2 className="text-base font-bold text-[var(--prose)]">
-              Secret masteries
-            </h2>
-            <span className="text-sm text-[var(--prose-2)]">
-              {unlockedCount} earned
-            </span>
-          </div>
-          <p className="text-sm text-[var(--prose-2)]">
-            Seals for completing whole codex sections.
-          </p>
+          <SectionHeader
+            title="Secret masteries"
+            meta={`${unlockedCount} earned`}
+            open={openSecrets}
+            onToggle={() => setOpenSecrets((v) => !v)}
+          />
+          {openSecrets && (
+            <>
+              <p className="text-sm text-[var(--prose-2)]">
+                Seals for completing whole codex sections.
+              </p>
 
-          {hasOmega && (
-            <div className="flex flex-col gap-3 rounded-xl border-2 border-amber-400/70 bg-gradient-to-br from-amber-500/20 via-violet-500/15 to-teal-500/20 p-4 shadow-[0_0_32px_rgba(251,191,36,0.2)] sm:flex-row sm:items-center">
-              <img
-                src={OMEGA_SECRET.image}
-                alt={OMEGA_SECRET.name}
-                className="mx-auto h-28 w-28 rounded-xl border-2 border-amber-400/80 object-cover shadow-[0_0_20px_rgba(251,191,36,0.35)] sm:mx-0 sm:h-32 sm:w-32"
-              />
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">
-                  Final seal
-                </p>
-                <p className="mt-1 text-xl font-bold tracking-tight">
-                  {OMEGA_SECRET.name}
-                </p>
-                <p className="mt-1 text-sm text-[var(--prose-2)]">
-                  {OMEGA_SECRET.description}
-                </p>
-                <p className="mt-2 text-sm font-semibold text-amber-800 dark:text-amber-300">
-                  +{OMEGA_SECRET.ep.toLocaleString()} life EP
-                </p>
-              </div>
-            </div>
-          )}
-
-          {sectionSecrets.length > 0 && (
-            <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {sectionSecrets.map((s) => (
-                <li
-                  key={s.id}
-                  className="flex gap-3 rounded-xl border border-violet-400/50 bg-gradient-to-br from-violet-500/15 to-transparent p-3"
-                >
-                  {s.image && (
-                    <img
-                      src={s.image}
-                      alt={s.name}
-                      className="h-20 w-20 shrink-0 rounded-lg border border-violet-400/50 object-cover"
-                    />
-                  )}
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
-                      {s.section}
+              {hasOmega && (
+                <div className="flex flex-col gap-3 rounded-xl border-2 border-amber-400/70 bg-gradient-to-br from-amber-500/20 via-violet-500/15 to-teal-500/20 p-4 shadow-[0_0_32px_rgba(251,191,36,0.2)] sm:flex-row sm:items-center">
+                  <img
+                    src={OMEGA_SECRET.image}
+                    alt={OMEGA_SECRET.name}
+                    className="mx-auto h-28 w-28 rounded-xl border-2 border-amber-400/80 object-cover shadow-[0_0_20px_rgba(251,191,36,0.35)] sm:mx-0 sm:h-32 sm:w-32"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">
+                      Final seal
                     </p>
-                    <p className="font-bold tracking-tight">{s.name}</p>
-                    <p className="text-sm text-amber-800 dark:text-amber-300">
-                      +{s.ep.toLocaleString()} life EP
+                    <p className="mt-1 text-xl font-bold tracking-tight">
+                      {OMEGA_SECRET.name}
+                    </p>
+                    <p className="mt-1 text-sm text-[var(--prose-2)]">
+                      {OMEGA_SECRET.description}
+                    </p>
+                    <p className="mt-2 text-sm font-semibold text-amber-800 dark:text-amber-300">
+                      +{OMEGA_SECRET.ep.toLocaleString()} life EP
                     </p>
                   </div>
-                </li>
-              ))}
-            </ul>
+                </div>
+              )}
+
+              {sectionSecrets.length > 0 && (
+                <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {sectionSecrets.map((s) => (
+                    <li
+                      key={s.id}
+                      className="flex gap-3 rounded-xl border border-violet-400/50 bg-gradient-to-br from-violet-500/15 to-transparent p-3"
+                    >
+                      {s.image && (
+                        <img
+                          src={s.image}
+                          alt={s.name}
+                          className="h-20 w-20 shrink-0 rounded-lg border border-violet-400/50 object-cover"
+                        />
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+                          {s.section}
+                        </p>
+                        <p className="font-bold tracking-tight">{s.name}</p>
+                        <p className="text-sm text-amber-800 dark:text-amber-300">
+                          +{s.ep.toLocaleString()} life EP
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
           )}
         </section>
       )}
@@ -507,123 +548,139 @@ export function ProfileScreen({
       {/* Codex unlocks — only if owner allows (default on) */}
       {profile.profileShowCodex !== false && (
         <section className="space-y-3">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-base font-bold text-[var(--prose)]">
-              Codex unlocks
-            </h2>
-            <span className="text-sm text-[var(--prose-2)]">
-              {codexUnlocks.length} badge
-              {codexUnlocks.length === 1 ? '' : 's'}
-              {NUMBER_BADGES.length + JOURNEY_BADGES.length > 0
-                ? ` · ${codexUnlocks.length}/${NUMBER_BADGES.length + JOURNEY_BADGES.length}`
-                : ''}
-            </span>
-          </div>
-          <p className="text-sm text-[var(--prose-2)]">
-            Badges @{profile.username} has unlocked. Locked codex entries stay
-            private.
-          </p>
-
-          {codexUnlocks.length === 0 ? (
-            <p className="rounded-lg border border-dashed border-[var(--outline)] px-3 py-4 text-sm text-[var(--prose-3)]">
-              No codex badges synced yet.
-            </p>
-          ) : (
+          <SectionHeader
+            title="Codex unlocks"
+            meta={`${codexUnlocks.length} badge${codexUnlocks.length === 1 ? '' : 's'} · ${codexUnlocks.length}/${NUMBER_BADGES.length + JOURNEY_BADGES.length}`}
+            open={openCodex}
+            onToggle={() => setOpenCodex((v) => !v)}
+          />
+          {openCodex && (
             <>
-              <div className="flex flex-wrap gap-1.5">
-                {CODEX_FAMILY_FILTERS.filter(
-                  (f) =>
-                    f.id === 'all' || (codexFamilyCounts.get(f.id) ?? 0) > 0,
-                ).map((f) => {
-                  const selected = codexFilter === f.id;
-                  const n =
-                    f.id === 'all'
-                      ? codexUnlocks.length
-                      : (codexFamilyCounts.get(f.id) ?? 0);
-                  return (
-                    <button
-                      key={f.id}
-                      type="button"
-                      onClick={() => setCodexFilter(f.id)}
-                      className={`rounded-md border px-2.5 py-1 text-xs font-semibold sm:text-sm ${
-                        selected
-                          ? 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
-                          : 'border-[var(--outline)] text-[var(--prose-2)] hover:bg-[var(--surface-raised)]'
-                      }`}
-                    >
-                      {f.label}
-                      <span className="ml-1 opacity-70">{n}</span>
-                    </button>
-                  );
-                })}
-              </div>
+              <p className="text-sm text-[var(--prose-2)]">
+                Badges @{profile.username} has unlocked. Locked codex entries
+                stay private.
+              </p>
 
-              <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {codexFiltered.map((b) => {
-                  const fam =
-                    b.family in FAMILY_PILL
-                      ? FAMILY_PILL[b.family as BadgeFamily]
-                      : null;
-                  let when: string | null = null;
-                  try {
-                    if (b.firstEarnedAt) {
-                      when = new Date(b.firstEarnedAt).toLocaleString(
-                        undefined,
-                        {
-                          dateStyle: 'medium',
-                          timeStyle: 'short',
-                        },
-                      );
-                    }
-                  } catch {
-                    when = null;
-                  }
-                  return (
-                    <li
-                      key={b.id}
-                      className="rounded-lg border border-[var(--outline)] bg-[var(--surface)] p-3 text-left text-sm"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0 font-bold tracking-tight">
-                          <span className="mr-1" aria-hidden>
-                            {b.emoji}
-                          </span>
-                          {b.name}
-                        </div>
-                        <span className="mono-number shrink-0 text-xs font-bold text-amber-700 dark:text-amber-400">
-                          +{b.ep.toLocaleString()}
-                        </span>
-                      </div>
-                      <p className="mt-1 line-clamp-2 text-xs text-[var(--prose-2)]">
-                        {b.description}
-                      </p>
-                      <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                        <RarityBadge rarity={b.rarity} />
-                        {fam && (
-                          <span
-                            className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold capitalize ${fam.chip}`}
-                          >
-                            {fam.label}
-                          </span>
-                        )}
-                        {when && (
-                          <time
-                            dateTime={b.firstEarnedAt}
-                            className="text-[10px] text-[var(--prose-3)]"
-                            title="First unlocked"
-                          >
-                            {when}
-                          </time>
-                        )}
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-              {codexFiltered.length === 0 && (
-                <p className="text-sm text-[var(--prose-3)]">
-                  Nothing in this family yet.
+              {codexUnlocks.length === 0 ? (
+                <p className="rounded-lg border border-dashed border-[var(--outline)] px-3 py-4 text-sm text-[var(--prose-3)]">
+                  No codex badges synced yet.
                 </p>
+              ) : (
+                <>
+                  <div className="flex flex-wrap gap-1.5">
+                    {CODEX_FAMILY_FILTERS.filter(
+                      (f) =>
+                        f.id === 'all' ||
+                        (codexFamilyCounts.get(f.id) ?? 0) > 0,
+                    ).map((f) => {
+                      const selected = codexFilter === f.id;
+                      const n =
+                        f.id === 'all'
+                          ? codexUnlocks.length
+                          : (codexFamilyCounts.get(f.id) ?? 0);
+                      return (
+                        <button
+                          key={f.id}
+                          type="button"
+                          onClick={() => {
+                            setCodexFilter(f.id);
+                            setCodexExpanded(false);
+                          }}
+                          className={`rounded-md border px-2.5 py-1 text-xs font-semibold sm:text-sm ${
+                            selected
+                              ? 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
+                              : 'border-[var(--outline)] text-[var(--prose-2)] hover:bg-[var(--surface-raised)]'
+                          }`}
+                        >
+                          {f.label}
+                          <span className="ml-1 opacity-70">{n}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    {(codexExpanded
+                      ? codexFiltered
+                      : codexFiltered.slice(0, PREVIEW_LIMIT)
+                    ).map((b) => {
+                      const fam =
+                        b.family in FAMILY_PILL
+                          ? FAMILY_PILL[b.family as BadgeFamily]
+                          : null;
+                      let when: string | null = null;
+                      try {
+                        if (b.firstEarnedAt) {
+                          when = new Date(b.firstEarnedAt).toLocaleString(
+                            undefined,
+                            {
+                              dateStyle: 'medium',
+                              timeStyle: 'short',
+                            },
+                          );
+                        }
+                      } catch {
+                        when = null;
+                      }
+                      return (
+                        <li
+                          key={b.id}
+                          className="rounded-lg border border-[var(--outline)] bg-[var(--surface)] p-3 text-left text-sm"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 font-bold tracking-tight">
+                              <span className="mr-1" aria-hidden>
+                                {b.emoji}
+                              </span>
+                              {b.name}
+                            </div>
+                            <span className="mono-number shrink-0 text-xs font-bold text-amber-700 dark:text-amber-400">
+                              +{b.ep.toLocaleString()}
+                            </span>
+                          </div>
+                          <p className="mt-1 line-clamp-2 text-xs text-[var(--prose-2)]">
+                            {b.description}
+                          </p>
+                          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                            <RarityBadge rarity={b.rarity} />
+                            {fam && (
+                              <span
+                                className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold capitalize ${fam.chip}`}
+                              >
+                                {fam.label}
+                              </span>
+                            )}
+                            {when && (
+                              <time
+                                dateTime={b.firstEarnedAt}
+                                className="text-[10px] text-[var(--prose-3)]"
+                                title="First unlocked"
+                              >
+                                {when}
+                              </time>
+                            )}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  {codexFiltered.length === 0 && (
+                    <p className="text-sm text-[var(--prose-3)]">
+                      Nothing in this family yet.
+                    </p>
+                  )}
+                  {codexFiltered.length > PREVIEW_LIMIT && (
+                    <button
+                      type="button"
+                      onClick={() => setCodexExpanded((v) => !v)}
+                      className="w-full rounded-lg border border-[var(--outline)] bg-[var(--surface-raised)] px-3 py-2 text-sm font-semibold text-[var(--prose-2)] hover:border-[var(--prose-2)] hover:text-[var(--prose)]"
+                    >
+                      {codexExpanded
+                        ? 'Show fewer'
+                        : `+ ${codexFiltered.length - PREVIEW_LIMIT} more`}
+                    </button>
+                  )}
+                </>
               )}
             </>
           )}
@@ -633,99 +690,125 @@ export function ProfileScreen({
       {/* Best roll — showcase style */}
       {best && (
         <section className="space-y-2">
-          <h2 className="text-base font-bold text-[var(--prose)]">Best roll</h2>
-          <div
-            className={`rounded-xl border bg-[var(--surface)] p-4 ${theme.soft}`}
-          >
-            <div className="mono-number text-3xl font-bold sm:text-4xl">
-              {best.number.toLocaleString()}
-            </div>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <RarityBadge rarity={asRarity(best.rarity)} />
-              <EPPill ep={best.totalEP} />
-              {best.percentile != null && (
-                <span className="text-sm text-[var(--prose-2)]">
-                  Top {topPercentFromPercentile(best.percentile)}%
-                </span>
+          <SectionHeader
+            title="Best roll"
+            open={openBest}
+            onToggle={() => setOpenBest((v) => !v)}
+          />
+          {openBest && (
+            <div
+              className={`rounded-xl border bg-[var(--surface)] p-4 ${theme.soft}`}
+            >
+              <div className="mono-number text-3xl font-bold sm:text-4xl">
+                {best.number.toLocaleString()}
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <RarityBadge rarity={asRarity(best.rarity)} />
+                <EPPill ep={best.totalEP} />
+                {best.percentile != null && (
+                  <span className="text-sm text-[var(--prose-2)]">
+                    Top {topPercentFromPercentile(best.percentile)}%
+                  </span>
+                )}
+              </div>
+              {best.topBadges && best.topBadges.length > 0 && (
+                <p className="mt-2 text-sm text-[var(--prose-2)]">
+                  {best.topBadges.join(' · ')}
+                </p>
               )}
             </div>
-            {best.topBadges && best.topBadges.length > 0 && (
-              <p className="mt-2 text-sm text-[var(--prose-2)]">
-                {best.topBadges.join(' · ')}
-              </p>
-            )}
-          </div>
+          )}
         </section>
       )}
 
       {/* Recent rolls — history/showcase style cards */}
       <section className="space-y-3">
-        <div className="flex items-baseline justify-between gap-2">
-          <h2 className="text-base font-bold text-[var(--prose)]">
-            Recent public rolls
-          </h2>
-          <span className="text-sm text-[var(--prose-2)]">
-            {profile.recentRolls.length} shown
-          </span>
-        </div>
-        {profile.recentRolls.length === 0 ? (
-          <p className="text-sm text-[var(--prose-2)]">No public rolls yet.</p>
-        ) : (
-          <ul className="space-y-2.5">
-            {profile.recentRolls.map((r) => (
-              <li key={r.id}>
-                <button
-                  type="button"
-                  className="w-full rounded-xl border border-[var(--outline)] bg-[var(--surface)] p-4 text-left transition hover:border-[var(--prose-2)] hover:bg-[var(--surface-raised)]"
-                  onClick={() =>
-                    onOpenRoll(r.shortCode || r.id, profile.username)
-                  }
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <div className="mono-number text-2xl font-bold tracking-tight">
-                        {r.number.toLocaleString()}
-                      </div>
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <RarityBadge rarity={asRarity(r.rarity)} />
-                        <span className="text-sm font-semibold text-amber-700 dark:text-amber-400">
-                          {r.totalEP.toLocaleString()} EP
-                        </span>
-                        {r.percentile != null && (
-                          <span className="text-sm text-[var(--prose-2)]">
-                            Top {topPercentFromPercentile(r.percentile)}%
-                          </span>
-                        )}
-                        {r.attested && (
-                          <span
-                            className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${theme.chip}`}
-                          >
-                            Sealed
-                          </span>
-                        )}
-                        {r.challengeKey && (
-                          <span className="text-xs font-mono text-[var(--prose-2)]">
-                            {r.challengeKey}
-                          </span>
-                        )}
-                      </div>
-                      {r.topBadges && r.topBadges.length > 0 && (
-                        <p className="mt-2 text-sm leading-snug text-[var(--prose-2)]">
-                          {r.topBadges.join(' · ')}
-                          {r.badgeCount > (r.topBadges?.length ?? 0)
-                            ? ` · +${r.badgeCount - r.topBadges.length} more`
-                            : ''}
-                        </p>
-                      )}
-                    </div>
-                    <time className="shrink-0 text-sm text-[var(--prose-2)]">
-                      {fmtDate(r.rolledAt)}
-                    </time>
-                  </div>
-                </button>
-              </li>
-            ))}
-          </ul>
+        <SectionHeader
+          title="Recent public rolls"
+          meta={`${profile.recentRolls.length} total`}
+          open={openRecent}
+          onToggle={() => setOpenRecent((v) => !v)}
+        />
+        {openRecent && (
+          <>
+            {profile.recentRolls.length === 0 ? (
+              <p className="text-sm text-[var(--prose-2)]">
+                No public rolls yet.
+              </p>
+            ) : (
+              <>
+                <ul className="space-y-2.5">
+                  {(recentExpanded
+                    ? profile.recentRolls
+                    : profile.recentRolls.slice(0, PREVIEW_LIMIT)
+                  ).map((r) => (
+                    <li key={r.id}>
+                      <button
+                        type="button"
+                        className="w-full rounded-xl border border-[var(--outline)] bg-[var(--surface)] p-4 text-left transition hover:border-[var(--prose-2)] hover:bg-[var(--surface-raised)]"
+                        onClick={() =>
+                          onOpenRoll(r.shortCode || r.id, profile.username)
+                        }
+                      >
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <div className="mono-number text-2xl font-bold tracking-tight">
+                              {r.number.toLocaleString()}
+                            </div>
+                            <div className="mt-2 flex flex-wrap items-center gap-2">
+                              <RarityBadge rarity={asRarity(r.rarity)} />
+                              <span className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+                                {r.totalEP.toLocaleString()} EP
+                              </span>
+                              {r.percentile != null && (
+                                <span className="text-sm text-[var(--prose-2)]">
+                                  Top {topPercentFromPercentile(r.percentile)}%
+                                </span>
+                              )}
+                              {r.attested && (
+                                <span
+                                  className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${theme.chip}`}
+                                >
+                                  Sealed
+                                </span>
+                              )}
+                              {r.challengeKey && (
+                                <span className="text-xs font-mono text-[var(--prose-2)]">
+                                  {r.challengeKey}
+                                </span>
+                              )}
+                            </div>
+                            {r.topBadges && r.topBadges.length > 0 && (
+                              <p className="mt-2 text-sm leading-snug text-[var(--prose-2)]">
+                                {r.topBadges.join(' · ')}
+                                {r.badgeCount > (r.topBadges?.length ?? 0)
+                                  ? ` · +${r.badgeCount - r.topBadges.length} more`
+                                  : ''}
+                              </p>
+                            )}
+                          </div>
+                          <time className="shrink-0 text-sm text-[var(--prose-2)]">
+                            {fmtDate(r.rolledAt)}
+                          </time>
+                        </div>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                {profile.recentRolls.length > PREVIEW_LIMIT && (
+                  <button
+                    type="button"
+                    onClick={() => setRecentExpanded((v) => !v)}
+                    className="w-full rounded-lg border border-[var(--outline)] bg-[var(--surface-raised)] px-3 py-2 text-sm font-semibold text-[var(--prose-2)] hover:border-[var(--prose-2)] hover:text-[var(--prose)]"
+                  >
+                    {recentExpanded
+                      ? 'Show fewer'
+                      : `+ ${profile.recentRolls.length - PREVIEW_LIMIT} more`}
+                  </button>
+                )}
+              </>
+            )}
+          </>
         )}
       </section>
     </div>
