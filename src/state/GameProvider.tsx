@@ -102,6 +102,7 @@ type GameContextValue = {
   setConfettiEnabled: (v: boolean) => void;
   setAutoScrollBadges: (v: boolean) => void;
   setAutoShareHighRarity: (v: boolean) => void;
+  setShowLatestRuns: (v: boolean) => void;
   selectRoll: (roll: RollResult | null) => void;
   exportSave: () => void;
   importSave: (file: File) => Promise<void>;
@@ -564,6 +565,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
     (autoShareHighRarity: boolean) => patchSettings({ autoShareHighRarity }),
     [patchSettings],
   );
+  const setShowLatestRuns = useCallback(
+    (showLatestRuns: boolean) => patchSettings({ showLatestRuns }),
+    [patchSettings],
+  );
 
   const selectRoll = useCallback((rollResult: RollResult | null) => {
     setLastRoll(rollResult);
@@ -760,6 +765,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setConfettiEnabled,
       setAutoScrollBadges,
       setAutoShareHighRarity,
+      setShowLatestRuns,
       selectRoll,
       exportSave,
       importSave,
@@ -792,6 +798,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setConfettiEnabled,
       setAutoScrollBadges,
       setAutoShareHighRarity,
+      setShowLatestRuns,
       selectRoll,
       exportSave,
       importSave,

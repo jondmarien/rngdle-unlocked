@@ -11,6 +11,7 @@ export function SettingsScreen() {
     setConfettiEnabled,
     setAutoScrollBadges,
     setAutoShareHighRarity,
+    setShowLatestRuns,
     clearAll,
     exportSave,
     importSave,
@@ -80,9 +81,18 @@ export function SettingsScreen() {
           />
           Auto-open share after anomaly / mythic rolls
         </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={settings.showLatestRuns !== false}
+            onChange={(e) => setShowLatestRuns(e.target.checked)}
+          />
+          Show Latest runs on the Roll tab
+        </label>
         <p className="text-xs text-[var(--prose-3)]">
-          Scroll and share prefs save on this device (localStorage). Auto-share
-          is off by default so a quick re-roll never steals a popup.
+          Scroll, share, and Latest runs prefs save on this device
+          (localStorage). Auto-share is off by default so a quick re-roll never
+          steals a popup.
         </p>
       </section>
 

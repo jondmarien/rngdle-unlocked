@@ -45,6 +45,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   autoScrollBadges: true,
   /** Default off — anomaly/mythic share is manual unless enabled. */
   autoShareHighRarity: false,
+  /** Default on; hide Latest runs rail / mobile list under Settings. */
+  showLatestRuns: true,
 };
 
 export function defaultState(): PersistedState {

@@ -196,16 +196,18 @@ export function HomeScreen({
   return (
     <div className="relative flex min-h-0 w-full flex-1 flex-col">
       {/* Fixed right rail under sticky header — does not squeeze the roll column */}
-      <div className="pointer-events-none fixed bottom-3 right-3 top-[8rem] z-30 hidden w-[min(18.5rem,calc(100vw-2rem))] xl:block">
-        <div className="pointer-events-auto h-full max-h-[calc(100dvh-9rem)]">
-          <LatestRunsPanel
-            history={history}
-            activeRollId={lastRoll?.id ?? null}
-            defaultLane={latestRunsLane}
-            onSelect={(r) => setReplayRoll(r)}
-          />
+      {settings.showLatestRuns !== false && (
+        <div className="pointer-events-none fixed bottom-3 right-3 top-[8rem] z-30 hidden w-[min(18.5rem,calc(100vw-2rem))] xl:block">
+          <div className="pointer-events-auto h-full max-h-[calc(100dvh-9rem)]">
+            <LatestRunsPanel
+              history={history}
+              activeRollId={lastRoll?.id ?? null}
+              defaultLane={latestRunsLane}
+              onSelect={(r) => setReplayRoll(r)}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="flex shrink-0 flex-col items-center gap-5 text-center">
         <OnboardingTip onGoAccount={onGoAccount} />
@@ -434,14 +436,16 @@ export function HomeScreen({
       )}
 
       {/* Mobile / tablet: latest runs below roll (not a side squeeze) */}
-      <div className="mt-8 w-full xl:hidden">
-        <LatestRunsPanel
-          history={history}
-          activeRollId={lastRoll?.id ?? null}
-          defaultLane={latestRunsLane}
-          onSelect={(r) => setReplayRoll(r)}
-        />
-      </div>
+      {settings.showLatestRuns !== false && (
+        <div className="mt-8 w-full xl:hidden">
+          <LatestRunsPanel
+            history={history}
+            activeRollId={lastRoll?.id ?? null}
+            defaultLane={latestRunsLane}
+            onSelect={(r) => setReplayRoll(r)}
+          />
+        </div>
+      )}
 
       {shareRoll && (
         <SharePanel

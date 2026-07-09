@@ -86,6 +86,11 @@ export type AppSettings = {
    * Default off; localStorage only.
    */
   autoShareHighRarity: boolean;
+  /**
+   * Show the Latest runs panel on the Roll tab (side rail on xl+, below on mobile).
+   * Default on; localStorage only.
+   */
+  showLatestRuns: boolean;
 };
 
 export type CollectionEntry = {
