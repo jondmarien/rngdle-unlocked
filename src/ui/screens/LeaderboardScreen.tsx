@@ -44,8 +44,10 @@ export function LeaderboardScreen({
     null;
 
   const [view, setView] = useState<BoardView>('board');
+  /** Ranked = server free play · Practice = synced free-play / overall progress */
+  const [scope, setScope] = useState<'ranked' | 'practice'>('ranked');
   const [period, setPeriod] = useState<'all' | 'week'>('all');
-  const [sort, setSort] = useState<'ep' | 'rolls'>('ep');
+  const [sort, setSort] = useState<'ep' | 'rolls' | 'badges'>('ep');
   const [entries, setEntries] = useState<Entry[]>([]);
   const [me, setMe] = useState<Entry | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -70,9 +72,17 @@ export function LeaderboardScreen({
     const ac = new AbortController();
     setLoading(true);
     setError(null);
-    const q = new URLSearchParams({ period, sort, limit: '50' });
+    // Ranked board only supports ep/rolls
+    const effectiveSort =
+      scope === 'ranked' && sort === 'badges' ? 'ep' : sort;
+    const q = new URLSearchParams({
+      scope,
+      period,
+      sort: effectiveSort,
+      limit: '50',
+    });
     const url = `/api/leaderboard?${q}`;
-    log.info('fetch:start', { period, sort });
+    log.info('fetch:start', { scope, period, sort: effectiveSort });
 
     withTimeout(
       fetch(url, { signal: ac.signal, credentials: 'include' }),
@@ -105,7 +115,7 @@ export function LeaderboardScreen({
       cancelled = true;
       ac.abort();
     };
-  }, [period, sort, view]);
+  }, [scope, period, sort, view]);
 
   useEffect(() => {
     if (view !== 'feed') return;
@@ -182,9 +192,11 @@ export function LeaderboardScreen({
       <div>
         <h1 className="text-xl font-bold tracking-tight">Leaderboard</h1>
         <p className="text-sm text-[var(--prose-2)]">
-          Competitive board from <strong className="text-[var(--prose)]">Ranked</strong>{' '}
-          free play only (server RNG). Local Free play is practice and does not
-          place. Friends feed and username search are separate.
+          Two boards: <strong className="text-[var(--prose)]">Ranked</strong>{' '}
+          (server free play — fair competition) and{' '}
+          <strong className="text-[var(--prose)]">Practice</strong> (synced free
+          play / overall progress — social honor system). Feed and Find are
+          separate.
         </p>
       </div>
 
@@ -269,6 +281,27 @@ export function LeaderboardScreen({
         <>
           <div className="flex flex-wrap gap-2">
             <Toggle
+              active={scope === 'ranked'}
+              onClick={() => {
+                setScope('ranked');
+                if (sort === 'badges') setSort('ep');
+              }}
+              label="Ranked"
+            />
+            <Toggle
+              active={scope === 'practice'}
+              onClick={() => setScope('practice')}
+              label="Practice"
+            />
+          </div>
+          <p className="text-xs leading-snug text-[var(--prose-3)]">
+            {scope === 'ranked'
+              ? 'Server-issued free-play rolls only. Requires Ranked mode + @username.'
+              : 'Synced free-play progress and public practice rolls. Fun / social — not anti-cheat competitive.'}
+          </p>
+
+          <div className="flex flex-wrap gap-2">
+            <Toggle
               active={period === 'all'}
               onClick={() => setPeriod('all')}
               label="All-time"
@@ -288,8 +321,15 @@ export function LeaderboardScreen({
                 <Toggle
                   active={sort === 'rolls'}
                   onClick={() => setSort('rolls')}
-                  label="Ranked rolls"
+                  label="Rolls"
                 />
+                {scope === 'practice' && (
+                  <Toggle
+                    active={sort === 'badges'}
+                    onClick={() => setSort('badges')}
+                    label="Badges"
+                  />
+                )}
               </>
             )}
           </div>
@@ -322,7 +362,9 @@ export function LeaderboardScreen({
           )}
           {session?.user && !me && !loading && (
             <p className="text-sm text-[var(--prose-2)]">
-              Set a public @username and push to cloud to appear on the board.
+              {scope === 'ranked'
+                ? 'Claim @username and generate Ranked free-play rolls to place here.'
+                : 'Set a public @username and sync free-play progress to appear on Practice.'}
             </p>
           )}
 
