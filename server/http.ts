@@ -1,7 +1,7 @@
 /**
- * Explicit Web Fetch request shape for Vercel serverless handlers.
- * Avoids ambient `Request` clashes (Node vs DOM) under Vercel's isolated typecheck.
+ * Helpers for API handlers (Web Request/Response after vercel-adapter).
  */
+
 export type ApiHeaders = {
   get(name: string): string | null;
 };
@@ -13,14 +13,33 @@ export type ApiRequest = {
   json(): Promise<unknown>;
 };
 
-/** better-auth expects the full Fetch Request; runtime value is the real one. */
-export function asFetchRequest(request: ApiRequest): globalThis.Request {
-  return request as unknown as globalThis.Request;
+/** Safe absolute URL parse for handlers (never throws). */
+export function requestUrl(request: Request | ApiRequest, fallbackPath = '/'): URL {
+  try {
+    return new URL(request.url);
+  } catch {
+    const host =
+      request.headers.get('x-forwarded-host') ||
+      request.headers.get('host') ||
+      'localhost';
+    const proto =
+      request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim() ||
+      'https';
+    const path =
+      typeof request.url === 'string' && request.url.startsWith('/')
+        ? request.url
+        : fallbackPath;
+    return new URL(path, `${proto}://${host}`);
+  }
 }
 
-/** better-auth headers option accepts HeadersInit; keep the cast localized. */
-export function asAuthHeaders(headers: ApiHeaders): {
-  get(name: string): string | null;
-} {
-  return headers;
+export function clientHeader(
+  request: Request | ApiRequest,
+  name: string,
+): string | null {
+  try {
+    return request.headers.get(name);
+  } catch {
+    return null;
+  }
 }

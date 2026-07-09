@@ -1,18 +1,24 @@
 import { and, eq } from 'drizzle-orm';
 import { createDb } from '../../../server/db/index.js';
 import { rolls, user } from '../../../server/db/schema.js';
-import type { ApiRequest } from '../../../server/http.js';
+import { requestUrl } from '../../../server/http.js';
+import { createLogger } from '../../../server/logger.js';
+import { defineHandler } from '../../../server/vercel-adapter.js';
+
+const log = createLogger('api/share');
 
 /**
  * HTML share page with Open Graph tags for Discord / social crawlers.
  * Humans get a meta-refresh into the SPA at /r/:id
  */
-export default async function handler(request: ApiRequest): Promise<Response> {
+export default defineHandler(async (request) => {
   try {
-    const url = new URL(request.url);
+    const url = requestUrl(request);
     const parts = url.pathname.split('/').filter(Boolean);
     const id = decodeURIComponent(parts[parts.length - 1] ?? '');
-    const origin = `${url.protocol}//${url.host}`;
+    const origin = url.origin;
+
+    log.info('share', { id });
 
     const db = createDb();
     const [row] = await db
@@ -93,10 +99,12 @@ export default async function handler(request: ApiRequest): Promise<Response> {
       },
     });
   } catch (err) {
-    console.error('[api/share/r]', err);
+    log.error('handler threw', {
+      err: err instanceof Error ? err.message : String(err),
+    });
     return new Response('Server error', { status: 500 });
   }
-}
+});
 
 function escapeHtml(s: string): string {
   return s

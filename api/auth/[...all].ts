@@ -1,46 +1,42 @@
 import { createAuth } from '../../server/auth.js';
-import type { ApiRequest } from '../../server/http.js';
 import { createLogger } from '../../server/logger.js';
+import { requestUrl } from '../../server/http.js';
+import { defineHandler } from '../../server/vercel-adapter.js';
 
 const log = createLogger('api/auth');
 
 /**
- * Better Auth catch-all — handles /api/auth/*
+ * Better Auth catch-all — /api/auth/*
+ * Must use Node (req,res) via defineHandler; Vercel does not pass Web Request.
  */
-export default async function handler(request: ApiRequest): Promise<Response> {
+export default defineHandler(async (request) => {
   const started = Date.now();
-  let pathname = '/api/auth';
-  try {
-    pathname = new URL(request.url).pathname;
-  } catch {
-    /* ignore */
-  }
-  log.info('request', { method: request.method, pathname });
+  const url = requestUrl(request, '/api/auth');
+  log.info('request', { method: request.method, url: url.href });
 
-  try {
-    const missing = ['DATABASE_URL', 'BETTER_AUTH_SECRET'].filter(
-      (k) => !process.env[k],
+  const missing = ['DATABASE_URL', 'BETTER_AUTH_SECRET'].filter(
+    (k) => !process.env[k],
+  );
+  if (missing.length > 0) {
+    log.error('missing env', { missing });
+    return Response.json(
+      { error: `Server misconfigured: missing ${missing.join(', ')}` },
+      { status: 500 },
     );
-    if (missing.length > 0) {
-      log.error('missing env', { missing });
-      return Response.json(
-        { error: `Server misconfigured: missing ${missing.join(', ')}` },
-        { status: 500 },
-      );
-    }
+  }
 
+  try {
     const auth = createAuth();
-    // Runtime value is a real Fetch Request from Vercel; cast for better-auth.
-    const res = await auth.handler(request as unknown as Request);
+    const res = await auth.handler(request);
     log.info('response', {
-      pathname,
+      pathname: url.pathname,
       status: res.status,
       ms: Date.now() - started,
     });
     return res;
   } catch (err) {
     log.error('handler threw', {
-      pathname,
+      pathname: url.pathname,
       ms: Date.now() - started,
       err: err instanceof Error ? err.message : String(err),
       stack: err instanceof Error ? err.stack : undefined,
@@ -50,4 +46,4 @@ export default async function handler(request: ApiRequest): Promise<Response> {
       { status: 500 },
     );
   }
-}
+});

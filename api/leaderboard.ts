@@ -1,7 +1,7 @@
 import { and, desc, eq, gte, isNotNull, sql } from 'drizzle-orm';
 import { createDb } from '../server/db/index.js';
 import { rolls, user, userProgress } from '../server/db/schema.js';
-import type { ApiRequest } from '../server/http.js';
+import { requestUrl } from '../server/http.js';
 import { createLogger } from '../server/logger.js';
 import {
   checkRateLimit,
@@ -10,10 +10,11 @@ import {
   LIMITS,
   rateLimitedResponse,
 } from '../server/rateLimit.js';
+import { defineHandler } from '../server/vercel-adapter.js';
 
 const log = createLogger('api/leaderboard');
 
-export default async function handler(request: ApiRequest): Promise<Response> {
+export default defineHandler(async (request) => {
   if (request.method !== 'GET') {
     return Response.json({ error: 'Method not allowed' }, { status: 405 });
   }
@@ -33,7 +34,7 @@ export default async function handler(request: ApiRequest): Promise<Response> {
       return rateLimitedResponse(rl, 'Rate limited', true);
     }
 
-    const url = new URL(request.url);
+    const url = requestUrl(request);
     const period = url.searchParams.get('period') === 'week' ? 'week' : 'all';
     const sort = url.searchParams.get('sort') ?? 'ep';
     log.info('query', { period, sort, ip });
@@ -49,7 +50,9 @@ export default async function handler(request: ApiRequest): Promise<Response> {
           userId: rolls.userId,
           username: user.username,
           name: user.name,
-          weekEP: sql<number>`coalesce(sum(${rolls.totalEp}), 0)`.mapWith(Number),
+          weekEP: sql<number>`coalesce(sum(${rolls.totalEp}), 0)`.mapWith(
+            Number,
+          ),
           weekRolls: sql<number>`count(*)`.mapWith(Number),
         })
         .from(rolls)
@@ -79,7 +82,6 @@ export default async function handler(request: ApiRequest): Promise<Response> {
       });
     }
 
-    // All-time from user_progress
     const rows = await db
       .select({
         userId: userProgress.userId,
@@ -141,4 +143,4 @@ export default async function handler(request: ApiRequest): Promise<Response> {
       { status: 500 },
     );
   }
-}
+});

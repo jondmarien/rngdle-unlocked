@@ -1,7 +1,8 @@
 import { and, desc, eq } from 'drizzle-orm';
 import { createDb } from '../../server/db/index.js';
 import { rolls, user, userProgress } from '../../server/db/schema.js';
-import type { ApiRequest } from '../../server/http.js';
+import { requestUrl } from '../../server/http.js';
+import { createLogger } from '../../server/logger.js';
 import {
   checkRateLimit,
   clientIp,
@@ -9,8 +10,11 @@ import {
   LIMITS,
   rateLimitedResponse,
 } from '../../server/rateLimit.js';
+import { defineHandler } from '../../server/vercel-adapter.js';
 
-export default async function handler(request: ApiRequest): Promise<Response> {
+const log = createLogger('api/profile');
+
+export default defineHandler(async (request) => {
   if (request.method !== 'GET') {
     return Response.json({ error: 'Method not allowed' }, { status: 405 });
   }
@@ -28,15 +32,16 @@ export default async function handler(request: ApiRequest): Promise<Response> {
       return rateLimitedResponse(rl, 'Rate limited', true);
     }
 
-    const url = new URL(request.url);
+    const url = requestUrl(request);
     const parts = url.pathname.split('/').filter(Boolean);
-    // /api/profile/:username
     const username = decodeURIComponent(parts[parts.length - 1] ?? '')
       .trim()
       .toLowerCase();
     if (!username || username.length < 3) {
       return Response.json({ error: 'Invalid username' }, { status: 400 });
     }
+
+    log.info('lookup', { username });
 
     const [u] = await db
       .select({
@@ -78,9 +83,7 @@ export default async function handler(request: ApiRequest): Promise<Response> {
     const collection = progress
       ? (JSON.parse(progress.collectionJson || '[]') as unknown[])
       : [];
-    const stats = progress
-      ? JSON.parse(progress.statsJson || '{}')
-      : {};
+    const stats = progress ? JSON.parse(progress.statsJson || '{}') : {};
 
     return Response.json({
       profile: {
@@ -111,10 +114,12 @@ export default async function handler(request: ApiRequest): Promise<Response> {
       },
     });
   } catch (err) {
-    console.error('[api/profile]', err);
+    log.error('handler threw', {
+      err: err instanceof Error ? err.message : String(err),
+    });
     return Response.json(
       { error: err instanceof Error ? err.message : 'Server error' },
       { status: 500 },
     );
   }
-}
+});

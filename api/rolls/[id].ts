@@ -1,7 +1,8 @@
 import { and, eq } from 'drizzle-orm';
 import { createDb } from '../../server/db/index.js';
 import { rolls, user } from '../../server/db/schema.js';
-import type { ApiRequest } from '../../server/http.js';
+import { requestUrl } from '../../server/http.js';
+import { createLogger } from '../../server/logger.js';
 import {
   checkRateLimit,
   clientIp,
@@ -9,8 +10,11 @@ import {
   LIMITS,
   rateLimitedResponse,
 } from '../../server/rateLimit.js';
+import { defineHandler } from '../../server/vercel-adapter.js';
 
-export default async function handler(request: ApiRequest): Promise<Response> {
+const log = createLogger('api/rolls');
+
+export default defineHandler(async (request) => {
   if (request.method !== 'GET') {
     return Response.json({ error: 'Method not allowed' }, { status: 405 });
   }
@@ -28,12 +32,14 @@ export default async function handler(request: ApiRequest): Promise<Response> {
       return rateLimitedResponse(rl);
     }
 
-    const url = new URL(request.url);
+    const url = requestUrl(request);
     const parts = url.pathname.split('/').filter(Boolean);
     const id = decodeURIComponent(parts[parts.length - 1] ?? '');
     if (!id) {
       return Response.json({ error: 'Missing id' }, { status: 400 });
     }
+
+    log.info('lookup', { id });
 
     const [row] = await db
       .select({
@@ -80,10 +86,12 @@ export default async function handler(request: ApiRequest): Promise<Response> {
       },
     });
   } catch (err) {
-    console.error('[api/rolls]', err);
+    log.error('handler threw', {
+      err: err instanceof Error ? err.message : String(err),
+    });
     return Response.json(
       { error: err instanceof Error ? err.message : 'Server error' },
       { status: 500 },
     );
   }
-}
+});

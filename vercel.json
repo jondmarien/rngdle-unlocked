@@ -5,10 +5,6 @@
   "installCommand": "pnpm install --frozen-lockfile",
   "rewrites": [
     {
-      "source": "/api/auth/(.*)",
-      "destination": "/api/auth/[...all]"
-    },
-    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
