@@ -10,6 +10,7 @@ export function SettingsScreen() {
     setSoundEnabled,
     setConfettiEnabled,
     setAutoScrollBadges,
+    setAutoShareHighRarity,
     clearAll,
     exportSave,
     importSave,
@@ -71,9 +72,17 @@ export function SettingsScreen() {
           />
           Auto-scroll as badge breakdown unlocks
         </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={settings.autoShareHighRarity === true}
+            onChange={(e) => setAutoShareHighRarity(e.target.checked)}
+          />
+          Auto-open share after anomaly / mythic rolls
+        </label>
         <p className="text-xs text-[var(--prose-3)]">
-          When on, the page gently follows each cascading badge after a roll.
-          Saved on this device (localStorage) — not a cloud preference.
+          Scroll and share prefs save on this device (localStorage). Auto-share
+          is off by default so a quick re-roll never steals a popup.
         </p>
       </section>
 

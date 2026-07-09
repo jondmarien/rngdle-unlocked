@@ -43,6 +43,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   confettiEnabled: true,
   /** Default on; users can turn off under Settings (localStorage). */
   autoScrollBadges: true,
+  /** Default off — anomaly/mythic share is manual unless enabled. */
+  autoShareHighRarity: false,
 };
 
 export function defaultState(): PersistedState {

@@ -119,7 +119,10 @@ export function HomeScreen({
       if (settings.confettiEnabled && shouldCelebrate(settled.rarity)) {
         fireCelebration();
       }
-      if (settled.rarity === 'mythic' || settled.rarity === 'anomaly') {
+      if (
+        settings.autoShareHighRarity &&
+        (settled.rarity === 'mythic' || settled.rarity === 'anomaly')
+      ) {
         const rollId = settled.id;
         clearShareTimer();
         // Only open share if this roll is still the one we settled

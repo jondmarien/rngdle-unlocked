@@ -72,6 +72,11 @@ export type AppSettings = {
    * Stored in localStorage with other settings (not Neon-only).
    */
   autoScrollBadges: boolean;
+  /**
+   * Auto-open share panel after anomaly/mythic rolls settle.
+   * Default off; localStorage only.
+   */
+  autoShareHighRarity: boolean;
 };
 
 export type CollectionEntry = {

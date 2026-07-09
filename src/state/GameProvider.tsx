@@ -98,6 +98,7 @@ type GameContextValue = {
   setSoundEnabled: (v: boolean) => void;
   setConfettiEnabled: (v: boolean) => void;
   setAutoScrollBadges: (v: boolean) => void;
+  setAutoShareHighRarity: (v: boolean) => void;
   selectRoll: (roll: RollResult | null) => void;
   exportSave: () => void;
   importSave: (file: File) => Promise<void>;
@@ -482,6 +483,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
     (autoScrollBadges: boolean) => patchSettings({ autoScrollBadges }),
     [patchSettings],
   );
+  const setAutoShareHighRarity = useCallback(
+    (autoShareHighRarity: boolean) => patchSettings({ autoShareHighRarity }),
+    [patchSettings],
+  );
 
   const selectRoll = useCallback((rollResult: RollResult | null) => {
     setLastRoll(rollResult);
@@ -672,6 +677,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setSoundEnabled,
       setConfettiEnabled,
       setAutoScrollBadges,
+      setAutoShareHighRarity,
       selectRoll,
       exportSave,
       importSave,
@@ -701,6 +707,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setSoundEnabled,
       setConfettiEnabled,
       setAutoScrollBadges,
+      setAutoShareHighRarity,
       selectRoll,
       exportSave,
       importSave,
