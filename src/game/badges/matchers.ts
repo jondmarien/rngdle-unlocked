@@ -1,5 +1,9 @@
 import { ROLL_MAX } from '../rng';
 
+/**
+ * Natural decimal digits (no pad). Integer properties use this.
+ * The reel may still *display* leading zeros via formatRollDigits.
+ */
 export function digitsOf(n: number): string {
   return String(n);
 }
@@ -138,6 +142,7 @@ export function isEven(n: number): boolean {
   return n % 2 === 0;
 }
 
+/** Natural (unpadded) length — e.g. 42 → 2, not 7. */
 export function digitLength(n: number): number {
-  return digitsOf(n).length;
+  return String(n).length;
 }

@@ -1,4 +1,5 @@
 import type { BadgeHit, RarityTier } from '../../game';
+import { formatRollDigits } from '../../game/digits';
 import { RARITY_LABELS } from '../../game/rarity';
 
 const RARITY_CHIP: Record<RarityTier, string> = {
@@ -11,6 +12,22 @@ const RARITY_CHIP: Record<RarityTier, string> = {
   mythic: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
 };
 
+/**
+ * Map natural-digit highlights onto the zero-padded reel string.
+ * Leading pad zeros are never highlighted as "matched" unless the whole
+ * number is 0 (single natural digit "0" aligned to the last cell).
+ */
+function paddedHighlights(number: number, natural: boolean[]): boolean[] {
+  const padded = formatRollDigits(number).split('');
+  const naturalStr = String(number);
+  const offset = padded.length - naturalStr.length;
+  return padded.map((_, i) => {
+    const ni = i - offset;
+    if (ni < 0 || ni >= natural.length) return false;
+    return natural[ni] === true;
+  });
+}
+
 export function BadgeCard({
   badge,
   number,
@@ -18,11 +35,9 @@ export function BadgeCard({
   badge: BadgeHit;
   number: number;
 }) {
-  const digits = String(number).split('');
-  const highlights =
-    badge.highlights.length === digits.length
-      ? badge.highlights
-      : digits.map(() => false);
+  // Full reel including leading zeros — zeros stay visible
+  const digits = formatRollDigits(number).split('');
+  const highlights = paddedHighlights(number, badge.highlights);
 
   return (
     <article className="rounded-xl border border-[var(--outline)] bg-[var(--surface)] p-3 text-left shadow-sm">
@@ -49,25 +64,23 @@ export function BadgeCard({
         {badge.description}
       </p>
 
-      {digits.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {digits.map((d, i) => {
-            const on = highlights[i];
-            return (
-              <span
-                key={i}
-                className={`mono-number flex h-8 w-8 items-center justify-center rounded-md border text-sm font-bold ${
-                  on
-                    ? 'border-emerald-500/60 bg-emerald-500/20 text-emerald-700 dark:text-emerald-300'
-                    : 'border-[var(--outline)] bg-[var(--bg)] text-[var(--prose-3)]'
-                }`}
-              >
-                {d}
-              </span>
-            );
-          })}
-        </div>
-      )}
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {digits.map((d, i) => {
+          const on = highlights[i];
+          return (
+            <span
+              key={i}
+              className={`mono-number flex h-8 w-8 items-center justify-center rounded-md border text-sm font-bold ${
+                on
+                  ? 'border-emerald-500/60 bg-emerald-500/20 text-emerald-700 dark:text-emerald-300'
+                  : 'border-[var(--outline)] bg-[var(--bg)] text-[var(--prose-3)]'
+              }`}
+            >
+              {d}
+            </span>
+          );
+        })}
+      </div>
     </article>
   );
 }

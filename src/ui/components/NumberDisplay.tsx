@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import type { RarityTier } from '../../game';
+import { DISPLAY_WIDTH, formatRollDigits } from '../../game/digits';
 
 const SPIN_INTERVAL_MS = 45;
 const REVEAL_STAGGER_MS = 140;
 const PRE_REVEAL_SPIN_MS = 320;
+
+const IDLE_PLACEHOLDER = Array.from({ length: DISPLAY_WIDTH }, () => '?');
 
 function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined') return false;
@@ -19,9 +22,9 @@ function randomDigit(): string {
   return String(((Date.now() / 7) | 0) % 10);
 }
 
-/** Natural digit string — no leading pad beyond the number itself. */
+/** Fixed-width digits with leading zeros preserved (never dropped). */
 function toDigits(n: number): string[] {
-  return String(n).split('');
+  return formatRollDigits(n).split('');
 }
 
 export function NumberDisplay({
@@ -36,11 +39,10 @@ export function NumberDisplay({
   revealKey?: number;
   onRevealComplete?: () => void;
 }) {
-  const [display, setDisplay] = useState<string[]>(() => ['?', '?', '?', '?', '?', '?']);
+  const [display, setDisplay] = useState<string[]>(() => [...IDLE_PLACEHOLDER]);
   const [revealedCount, setRevealedCount] = useState(0);
   const [settled, setSettled] = useState<Set<number>>(() => new Set());
   const [isAnimating, setIsAnimating] = useState(false);
-  const [width, setWidth] = useState(6);
 
   const targetRef = useRef<string[] | null>(null);
   const revealedRef = useRef(0);
@@ -48,13 +50,12 @@ export function NumberDisplay({
   completeRef.current = onRevealComplete;
   const lastSnapValue = useRef<number | null>(null);
 
-  // Idle / history: snap to natural width
+  // Idle / history: snap to full padded width (zeros visible)
   useEffect(() => {
     if (value == null) {
       targetRef.current = null;
       revealedRef.current = 0;
-      setWidth(6);
-      setDisplay(['?', '?', '?', '?', '?', '?']);
+      setDisplay([...IDLE_PLACEHOLDER]);
       setRevealedCount(0);
       setSettled(new Set());
       setIsAnimating(false);
@@ -68,26 +69,22 @@ export function NumberDisplay({
     lastSnapValue.current = value;
     const digits = toDigits(value);
     targetRef.current = digits;
-    const w = digits.length;
-    setWidth(w);
-    revealedRef.current = w;
+    revealedRef.current = DISPLAY_WIDTH;
     setDisplay([...digits]);
-    setRevealedCount(w);
-    setSettled(new Set(Array.from({ length: w }, (_, i) => i)));
+    setRevealedCount(DISPLAY_WIDTH);
+    setSettled(new Set(Array.from({ length: DISPLAY_WIDTH }, (_, i) => i)));
     setIsAnimating(false);
     completeRef.current?.();
   }, [value, revealKey, isAnimating]);
 
-  // Slot reveal at the number's true digit length
+  // Slot reveal — always DISPLAY_WIDTH cells; leading 0 locks in like any other digit
   useEffect(() => {
     if (value == null || revealKey === 0) return;
 
     const digits = toDigits(value);
-    const w = digits.length;
     targetRef.current = digits;
     lastSnapValue.current = value;
     revealedRef.current = 0;
-    setWidth(w);
 
     const timers: number[] = [];
     const clearAll = () => {
@@ -96,10 +93,10 @@ export function NumberDisplay({
 
     if (prefersReducedMotion()) {
       setDisplay([...digits]);
-      setRevealedCount(w);
-      setSettled(new Set(Array.from({ length: w }, (_, i) => i)));
+      setRevealedCount(DISPLAY_WIDTH);
+      setSettled(new Set(Array.from({ length: DISPLAY_WIDTH }, (_, i) => i)));
       setIsAnimating(false);
-      revealedRef.current = w;
+      revealedRef.current = DISPLAY_WIDTH;
       completeRef.current?.();
       return;
     }
@@ -107,20 +104,23 @@ export function NumberDisplay({
     setIsAnimating(true);
     setRevealedCount(0);
     setSettled(new Set());
-    setDisplay(Array.from({ length: w }, () => randomDigit()));
+    setDisplay(Array.from({ length: DISPLAY_WIDTH }, () => randomDigit()));
 
     const spinLoop = window.setInterval(() => {
       const locked = revealedRef.current;
       setDisplay((prev) =>
         prev.map((_, i) => {
-          if (i < locked) return targetRef.current?.[i] ?? '?';
+          if (i < locked) {
+            // Keep locked digit exactly (including '0')
+            return targetRef.current?.[i] ?? '0';
+          }
           return randomDigit();
         }),
       );
     }, SPIN_INTERVAL_MS);
     timers.push(spinLoop);
 
-    for (let i = 0; i < w; i++) {
+    for (let i = 0; i < DISPLAY_WIDTH; i++) {
       const delay = PRE_REVEAL_SPIN_MS + i * REVEAL_STAGGER_MS;
       timers.push(
         window.setTimeout(() => {
@@ -129,10 +129,11 @@ export function NumberDisplay({
           setSettled((prev) => new Set(prev).add(i));
           setDisplay((prev) => {
             const next = [...prev];
+            // Explicitly assign — including '0' so it is never treated as empty
             next[i] = digits[i]!;
             return next;
           });
-          if (i === w - 1) {
+          if (i === DISPLAY_WIDTH - 1) {
             window.clearInterval(spinLoop);
             setIsAnimating(false);
             completeRef.current?.();
@@ -145,14 +146,18 @@ export function NumberDisplay({
   }, [revealKey, value]);
 
   const colorClass =
-    rarity && !isAnimating && revealedCount >= width
+    rarity && !isAnimating && revealedCount >= DISPLAY_WIDTH
       ? `rarity-${rarity}`
       : 'text-[var(--prose)]';
 
   return (
     <div
       className={`mono-number inline-flex justify-center gap-[0.06em] rounded-xl border border-[var(--outline)] bg-[var(--surface)] px-5 py-3 text-5xl font-bold shadow-sm sm:text-7xl ${colorClass}`}
-      aria-label={value == null ? 'No roll yet' : `Rolled ${value.toLocaleString()}`}
+      aria-label={
+        value == null
+          ? 'No roll yet'
+          : `Rolled ${formatRollDigits(value).split('').join(' ')}`
+      }
       aria-live="polite"
     >
       {display.map((char, i) => {
@@ -171,6 +176,7 @@ export function NumberDisplay({
               .filter(Boolean)
               .join(' ')}
           >
+            {/* Always render the character — never hide '0' */}
             {char}
           </span>
         );

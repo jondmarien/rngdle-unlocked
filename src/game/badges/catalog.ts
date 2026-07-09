@@ -13,6 +13,7 @@ import {
 } from '../highlights';
 import {
   digitLength,
+  digitsOf,
   hasBookends,
   isAllSameDigits,
   isAlternating,
@@ -226,7 +227,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     ep: 1_800,
     family: 'cultural',
     emoji: '😈',
-    matches: (n) => String(n).includes('666'),
+    matches: (n) => digitsOf(n).includes('666'),
     highlight: (n) => maskSubstring(n, '666'),
   },
   {
@@ -245,7 +246,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     ep: 2_024,
     family: 'cultural',
     emoji: '🤙',
-    matches: (n) => String(n).includes('67'),
+    matches: (n) => digitsOf(n).includes('67'),
     highlight: (n) => maskSubstring(n, '67'),
   },
   {
@@ -350,7 +351,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'pattern',
     emoji: '🥪',
     matches: (n) => {
-      const s = String(n);
+      const s = digitsOf(n);
       if (s.length < 3) return false;
       if (s[0] !== s[s.length - 1]) return false;
       return s.slice(1, -1).split('').some((c) => c !== s[0]);
@@ -507,7 +508,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     ep: 2_500,
     family: 'pattern',
     emoji: '💾',
-    matches: (n) => /^[01]+$/.test(String(n)) && String(n).length >= 3,
+    matches: (n) => /^[01]+$/.test(digitsOf(n)) && digitsOf(n).length >= 3,
   },
   {
     id: 'lucky-7-digit',
@@ -516,7 +517,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     ep: 25,
     family: 'cultural',
     emoji: '7️⃣',
-    matches: (n) => String(n).includes('7'),
+    matches: (n) => digitsOf(n).includes('7'),
     highlight: (n) => maskDigit(n, 7),
   },
   {
@@ -527,11 +528,11 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'pattern',
     emoji: '🚪',
     matches: (n) => {
-      const s = String(n);
+      const s = digitsOf(n);
       return s.length >= 4 && s.slice(0, 2) === s.slice(-2);
     },
     highlight: (n) => {
-      const s = String(n);
+      const s = digitsOf(n);
       const m = Array.from(s, () => false);
       m[0] = m[1] = m[s.length - 2] = m[s.length - 1] = true;
       return m;
@@ -546,7 +547,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     ep: 282,
     family: 'element',
     emoji: '🩷',
-    matches: (n) => (String(n).match(/5/g) ?? []).length === 1,
+    matches: (n) => (digitsOf(n).match(/5/g) ?? []).length === 1,
     highlight: (n) => maskDigit(n, 5),
   },
   {
@@ -556,7 +557,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     ep: 282,
     family: 'element',
     emoji: '✏️',
-    matches: (n) => (String(n).match(/6/g) ?? []).length === 1,
+    matches: (n) => (digitsOf(n).match(/6/g) ?? []).length === 1,
     highlight: (n) => maskDigit(n, 6),
   },
   {
@@ -566,7 +567,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     ep: 282,
     family: 'element',
     emoji: '💨',
-    matches: (n) => (String(n).match(/7/g) ?? []).length === 1,
+    matches: (n) => (digitsOf(n).match(/7/g) ?? []).length === 1,
     highlight: (n) => maskDigit(n, 7),
   },
   {
@@ -576,7 +577,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     ep: 282,
     family: 'element',
     emoji: '🫧',
-    matches: (n) => (String(n).match(/8/g) ?? []).length === 1,
+    matches: (n) => (digitsOf(n).match(/8/g) ?? []).length === 1,
     highlight: (n) => maskDigit(n, 8),
   },
 ];

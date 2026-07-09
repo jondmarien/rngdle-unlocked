@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { evaluateBadges, NUMBER_BADGES } from './badges';
-// evaluateBadges re-export path
 
 function ids(n: number): string[] {
   return evaluateBadges(n).map((b) => b.id);

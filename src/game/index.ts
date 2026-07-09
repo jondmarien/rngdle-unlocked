@@ -10,6 +10,7 @@ export type {
 } from './types';
 
 export { ROLL_MAX, ROLL_RANGE, rollNumber, assertValidRollNumber } from './rng';
+export { DISPLAY_WIDTH, formatRollDigits, naturalDigits } from './digits';
 export {
   contributeEntropy,
   contributeKeyEntropy,

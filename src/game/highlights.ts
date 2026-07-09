@@ -1,5 +1,7 @@
-/** Digit highlight helpers — indices match String(n) positions. */
-
+/**
+ * Highlight helpers use natural decimal digits (String(n)).
+ * The reel display may zero-pad; BadgeCard maps highlights onto the padded form.
+ */
 export function digitsStr(n: number): string {
   return String(n);
 }
