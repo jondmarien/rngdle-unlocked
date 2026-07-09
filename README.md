@@ -157,7 +157,7 @@ Switch modes anytime. Badges, EP, history, sync, and share work the same after y
 - **Follows + Feed** — follow `@user` from Board (+), Find search, or profile; rare+ public rolls in Board → Feed
 - **In-app notifications** — Alerts tab (Activity + System messages); optional browser notifications
 - **System messages** — developer broadcasts (`POST /api/system-messages` with `ADMIN_SECRET`)
-- **Profiles** — `/u/:username` with Follow button
+- **Profiles** — `/u/:username` with accent color, flair, bio, showcase-style recent rolls + Follow
 - **Vanity share URLs** — `/s/:username/:shortCode` (no `/api` in the human path)
 - **Share gates** — no public link until cloud confirms; logged-out = account CTA + text only
 - **Mythic / anomaly** auto-open share after reveal

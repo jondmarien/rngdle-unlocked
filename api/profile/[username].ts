@@ -50,6 +50,9 @@ export default defineHandler(async (request) => {
         username: user.username,
         image: user.image,
         createdAt: user.createdAt,
+        profileAccent: user.profileAccent,
+        profileBio: user.profileBio,
+        profileFlair: user.profileFlair,
       })
       .from(user)
       .where(eq(user.username, username))
@@ -75,11 +78,13 @@ export default defineHandler(async (request) => {
         percentile: rolls.percentile,
         badgesJson: rolls.badgesJson,
         rolledAt: rolls.rolledAt,
+        attestationSeal: rolls.attestationSeal,
+        challengeKey: rolls.challengeKey,
       })
       .from(rolls)
       .where(and(eq(rolls.userId, u.id), eq(rolls.isPublic, true)))
       .orderBy(desc(rolls.rolledAt))
-      .limit(12);
+      .limit(24);
 
     const collection = progress
       ? (JSON.parse(progress.collectionJson || '[]') as unknown[])
@@ -92,27 +97,48 @@ export default defineHandler(async (request) => {
         name: u.name,
         image: u.image,
         memberSince: u.createdAt,
+        profileAccent: u.profileAccent || 'teal',
+        profileBio: u.profileBio || '',
+        profileFlair: u.profileFlair || '',
         lifetimeEP: progress?.lifetimeEp ?? 0,
         lifetimeRollCount: progress?.lifetimeRollCount ?? 0,
         journeyEP: progress?.journeyEp ?? 0,
         badgeCount: Array.isArray(collection) ? collection.length : 0,
         stats,
-        recentRolls: recent.map((r) => ({
-          id: r.id,
-          shortCode: r.shortCode,
-          number: r.number,
-          totalEP: r.totalEp,
-          rarity: r.rarity,
-          percentile: r.percentile,
-          badgeCount: (() => {
-            try {
-              return JSON.parse(r.badgesJson || '[]').length;
-            } catch {
-              return 0;
-            }
-          })(),
-          rolledAt: r.rolledAt,
-        })),
+        recentRolls: recent.map((r) => {
+          let topBadges: string[] = [];
+          let badgeCount = 0;
+          try {
+            const badges = JSON.parse(r.badgesJson || '[]') as {
+              emoji?: string;
+              name?: string;
+              ep?: number;
+            }[];
+            badgeCount = badges.length;
+            topBadges = [...badges]
+              .sort((a, b) => (b.ep ?? 0) - (a.ep ?? 0))
+              .slice(0, 4)
+              .map((b) => `${b.emoji ?? ''} ${b.name ?? ''}`.trim());
+          } catch {
+            badgeCount = 0;
+          }
+          return {
+            id: r.id,
+            shortCode: r.shortCode,
+            number: r.number,
+            totalEP: r.totalEp,
+            rarity: r.rarity,
+            percentile: r.percentile,
+            badgeCount,
+            topBadges,
+            attested: Boolean(r.attestationSeal),
+            challengeKey: r.challengeKey,
+            rolledAt:
+              r.rolledAt instanceof Date
+                ? r.rolledAt.toISOString()
+                : String(r.rolledAt),
+          };
+        }),
       },
     });
   } catch (err) {

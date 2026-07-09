@@ -7,6 +7,16 @@ import { defineHandler } from '../server/vercel-adapter.js';
 
 const log = createLogger('api/me');
 
+const ACCENTS = new Set([
+  'teal',
+  'violet',
+  'amber',
+  'rose',
+  'sky',
+  'emerald',
+  'mono',
+]);
+
 async function getSession(request: Request) {
   const auth = createAuth();
   return auth.api.getSession({ headers: request.headers });
@@ -21,8 +31,32 @@ export default defineHandler(async (request) => {
       log.debug('no session');
       return Response.json({ user: null }, { status: 200 });
     }
-    log.debug('session ok', { userId: session.user.id });
-    return Response.json({ user: session.user, session: session.session });
+    // Enrich with vanity fields from DB (session user may be stale)
+    try {
+      const db = createDb();
+      const [row] = await db
+        .select({
+          username: user.username,
+          profileAccent: user.profileAccent,
+          profileBio: user.profileBio,
+          profileFlair: user.profileFlair,
+        })
+        .from(user)
+        .where(eq(user.id, session.user.id))
+        .limit(1);
+      return Response.json({
+        user: {
+          ...session.user,
+          username: row?.username ?? (session.user as { username?: string }).username,
+          profileAccent: row?.profileAccent ?? 'teal',
+          profileBio: row?.profileBio ?? '',
+          profileFlair: row?.profileFlair ?? '',
+        },
+        session: session.session,
+      });
+    } catch {
+      return Response.json({ user: session.user, session: session.session });
+    }
   }
 
   if (request.method === 'PATCH') {
@@ -30,28 +64,89 @@ export default defineHandler(async (request) => {
     if (!session?.user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const body = (await request.json()) as { username?: string };
-    const username = body.username?.trim().toLowerCase();
-    log.info('username patch', { userId: session.user.id, username });
-    if (!username || !/^[a-z0-9_]{3,24}$/.test(username)) {
-      return Response.json(
-        { error: 'Username must be 3–24 chars: a-z, 0-9, _' },
-        { status: 400 },
-      );
-    }
+    const body = (await request.json()) as {
+      username?: string;
+      profileAccent?: string;
+      profileBio?: string;
+      profileFlair?: string;
+    };
+
     const db = createDb();
+    const patch: {
+      username?: string;
+      profileAccent?: string;
+      profileBio?: string;
+      profileFlair?: string;
+      updatedAt: Date;
+    } = { updatedAt: new Date() };
+
+    if (body.username !== undefined) {
+      const username = body.username?.trim().toLowerCase();
+      log.info('username patch', { userId: session.user.id, username });
+      if (!username || !/^[a-z0-9_]{3,24}$/.test(username)) {
+        return Response.json(
+          { error: 'Username must be 3–24 chars: a-z, 0-9, _' },
+          { status: 400 },
+        );
+      }
+      patch.username = username;
+    }
+
+    if (body.profileAccent !== undefined) {
+      const a = body.profileAccent.trim().toLowerCase();
+      if (!ACCENTS.has(a)) {
+        return Response.json(
+          { error: 'Invalid accent. Use teal, violet, amber, rose, sky, emerald, mono.' },
+          { status: 400 },
+        );
+      }
+      patch.profileAccent = a;
+    }
+
+    if (body.profileBio !== undefined) {
+      patch.profileBio = body.profileBio.trim().slice(0, 160);
+    }
+
+    if (body.profileFlair !== undefined) {
+      patch.profileFlair = body.profileFlair.trim().slice(0, 48);
+    }
+
+    if (
+      patch.username === undefined &&
+      patch.profileAccent === undefined &&
+      patch.profileBio === undefined &&
+      patch.profileFlair === undefined
+    ) {
+      return Response.json({ error: 'Nothing to update' }, { status: 400 });
+    }
+
     try {
-      await db
-        .update(user)
-        .set({ username, updatedAt: new Date() })
-        .where(eq(user.id, session.user.id));
+      await db.update(user).set(patch).where(eq(user.id, session.user.id));
     } catch {
       return Response.json(
         { error: 'Username taken or invalid' },
         { status: 409 },
       );
     }
-    return Response.json({ ok: true, username });
+
+    const [row] = await db
+      .select({
+        username: user.username,
+        profileAccent: user.profileAccent,
+        profileBio: user.profileBio,
+        profileFlair: user.profileFlair,
+      })
+      .from(user)
+      .where(eq(user.id, session.user.id))
+      .limit(1);
+
+    return Response.json({
+      ok: true,
+      username: row?.username,
+      profileAccent: row?.profileAccent ?? 'teal',
+      profileBio: row?.profileBio ?? '',
+      profileFlair: row?.profileFlair ?? '',
+    });
   }
 
   return Response.json({ error: 'Method not allowed' }, { status: 405 });

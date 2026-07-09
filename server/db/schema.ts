@@ -19,6 +19,12 @@ export const user = pgTable('user', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
   /** Public handle for profiles / leaderboards */
   username: text('username').unique(),
+  /** Profile vanity: accent key (teal, violet, amber, rose, sky, emerald, mono) */
+  profileAccent: text('profile_accent').notNull().default('teal'),
+  /** Short public bio (max ~160 chars enforced in API) */
+  profileBio: text('profile_bio').notNull().default(''),
+  /** Optional flair line under display name */
+  profileFlair: text('profile_flair').notNull().default(''),
 });
 
 export const session = pgTable('session', {

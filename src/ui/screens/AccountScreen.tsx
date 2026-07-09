@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react';
 import { authClient, useSession } from '../../lib/auth-client';
 import { createLogger, withTimeout } from '../../lib/logger';
+import {
+  PROFILE_ACCENTS,
+  accentStyles,
+  normalizeAccent,
+  type ProfileAccent,
+} from '../../lib/profile-theme';
 import { useGame } from '../../state/GameProvider';
 
 const log = createLogger('account');
@@ -19,6 +25,9 @@ export function AccountScreen() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
+  const [profileAccent, setProfileAccent] = useState<ProfileAccent>('teal');
+  const [profileBio, setProfileBio] = useState('');
+  const [profileFlair, setProfileFlair] = useState('');
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
@@ -39,6 +48,34 @@ export function AccountScreen() {
       error: error?.message ?? null,
     });
   }, [isPending, session?.user, error]);
+
+  // Load vanity + username from /api/me when signed in
+  useEffect(() => {
+    if (!session?.user) return;
+    let cancelled = false;
+    fetch('/api/me', { credentials: 'include' })
+      .then(async (r) => {
+        const data = (await r.json()) as {
+          user?: {
+            username?: string | null;
+            profileAccent?: string;
+            profileBio?: string;
+            profileFlair?: string;
+          } | null;
+        };
+        if (cancelled || !data.user) return;
+        if (data.user.username) setUsername(data.user.username);
+        setProfileAccent(normalizeAccent(data.user.profileAccent));
+        setProfileBio(data.user.profileBio ?? '');
+        setProfileFlair(data.user.profileFlair ?? '');
+      })
+      .catch(() => {
+        /* ignore */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.user?.id]);
 
   useEffect(() => {
     if (!isPending) {
@@ -182,6 +219,34 @@ export function AccountScreen() {
     }
   };
 
+  const saveProfileVanity = async () => {
+    setBusy(true);
+    setMsg(null);
+    try {
+      const res = await withTimeout(
+        fetch('/api/me', {
+          method: 'PATCH',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            profileAccent,
+            profileBio,
+            profileFlair,
+          }),
+        }),
+        15_000,
+        'PATCH /api/me vanity',
+      );
+      const data = (await res.json()) as { error?: string };
+      if (!res.ok) throw new Error(data.error ?? 'Failed');
+      setMsg('Profile look saved. Open your public /u page to preview.');
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : 'Failed');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   if (sessionLoading) {
     return <p className="text-sm text-[var(--prose-3)]">Loading session…</p>;
   }
@@ -298,15 +363,89 @@ export function AccountScreen() {
             <button
               type="button"
               disabled={busy}
-              className="border border-[var(--prose)] px-3 py-2 text-xs font-bold uppercase"
+              className="border border-[var(--prose)] px-3 py-2 text-sm font-semibold"
               onClick={() => void saveUsername()}
             >
               Save username
             </button>
           </div>
 
+          <div className="space-y-3 rounded-lg border border-[var(--outline)] bg-[var(--surface)] p-4">
+            <div>
+              <h2 className="text-base font-bold text-[var(--prose)]">
+                Public profile look
+              </h2>
+              <p className="text-sm text-[var(--prose-2)]">
+                Accent, flair, and bio on{' '}
+                <code className="text-xs">/u/yourname</code>. Requires a
+                username.
+              </p>
+            </div>
+            <div>
+              <p className="mb-1.5 text-sm font-semibold text-[var(--prose-2)]">
+                Accent
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {PROFILE_ACCENTS.map((a) => {
+                  const t = accentStyles(a);
+                  const selected = profileAccent === a;
+                  return (
+                    <button
+                      key={a}
+                      type="button"
+                      onClick={() => setProfileAccent(a)}
+                      className={`rounded-full border px-3 py-1.5 text-sm font-semibold ${
+                        selected
+                          ? `${t.chip} ring-2 ${t.ring}`
+                          : 'border-[var(--outline)] text-[var(--prose-2)]'
+                      }`}
+                    >
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-semibold text-[var(--prose-2)]">
+                Flair (optional)
+              </label>
+              <input
+                value={profileFlair}
+                onChange={(e) => setProfileFlair(e.target.value.slice(0, 48))}
+                maxLength={48}
+                placeholder="e.g. Anomaly hunter"
+                className="w-full border border-[var(--outline)] bg-[var(--bg)] px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-semibold text-[var(--prose-2)]">
+                Bio (optional, 160 chars)
+              </label>
+              <textarea
+                value={profileBio}
+                onChange={(e) => setProfileBio(e.target.value.slice(0, 160))}
+                maxLength={160}
+                rows={3}
+                placeholder="A short line for your public profile."
+                className="w-full resize-y border border-[var(--outline)] bg-[var(--bg)] px-3 py-2 text-sm"
+              />
+              <p className="mt-1 text-xs text-[var(--prose-2)]">
+                {profileBio.length}/160
+              </p>
+            </div>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void saveProfileVanity()}
+              className="border-2 border-[var(--prose)] bg-[var(--prose)] px-3 py-2 text-sm font-semibold text-[var(--bg)] disabled:opacity-50"
+            >
+              Save profile look
+            </button>
+          </div>
+
           <div className="space-y-2">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--prose-3)]">
+            <h2 className="text-sm font-bold text-[var(--prose)]">
               Cloud sync
             </h2>
             <p className="text-xs text-[var(--prose-3)]">

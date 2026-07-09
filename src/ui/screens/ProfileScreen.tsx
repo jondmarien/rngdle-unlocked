@@ -1,17 +1,36 @@
 import { useEffect, useState } from 'react';
+import { topPercentFromPercentile, type RarityTier } from '../../game';
 import { useSession } from '../../lib/auth-client';
+import {
+  accentStyles,
+  normalizeAccent,
+  type ProfileAccent,
+} from '../../lib/profile-theme';
+import { RarityBadge } from '../components/RarityBadge';
+import { EPPill } from '../components/EPPill';
 
 type Profile = {
   username: string;
   name: string;
   image: string | null;
   memberSince: string;
+  profileAccent?: string;
+  profileBio?: string;
+  profileFlair?: string;
   lifetimeEP: number;
   lifetimeRollCount: number;
   journeyEP: number;
   badgeCount: number;
   stats: {
-    bestRoll?: { number: number; totalEP: number; rarity: string } | null;
+    bestRoll?: {
+      number: number;
+      totalEP: number;
+      rarity: string;
+      percentile?: number;
+      badgeCount?: number;
+      rolledAt?: string;
+      topBadges?: string[];
+    } | null;
     bestQualityStreak?: number;
     bestDayStreak?: number;
   };
@@ -21,10 +40,35 @@ type Profile = {
     number: number;
     totalEP: number;
     rarity: string;
+    percentile?: number;
     badgeCount: number;
+    topBadges?: string[];
+    attested?: boolean;
+    challengeKey?: string | null;
     rolledAt: string;
   }[];
 };
+
+function fmtDate(iso: string): string {
+  try {
+    return new Date(iso).toLocaleString();
+  } catch {
+    return iso;
+  }
+}
+
+function asRarity(r: string): RarityTier {
+  const ok: RarityTier[] = [
+    'trash',
+    'common',
+    'uncommon',
+    'rare',
+    'epic',
+    'anomaly',
+    'mythic',
+  ];
+  return (ok.includes(r as RarityTier) ? r : 'common') as RarityTier;
+}
 
 export function ProfileScreen({
   username,
@@ -96,8 +140,7 @@ export function ProfileScreen({
   }, [session?.user, username]);
 
   const isSelf =
-    myUsername &&
-    myUsername.toLowerCase() === username.toLowerCase();
+    myUsername && myUsername.toLowerCase() === username.toLowerCase();
 
   const toggleFollow = async () => {
     if (!session?.user) {
@@ -134,16 +177,16 @@ export function ProfileScreen({
   };
 
   if (loading) {
-    return <p className="text-sm text-[var(--prose-3)]">Loading profile…</p>;
+    return <p className="text-sm text-[var(--prose-2)]">Loading profile…</p>;
   }
   if (error || !profile) {
     return (
       <div className="space-y-2">
-        <p className="text-sm text-red-600 dark:text-red-400">
+        <p className="text-sm text-red-700 dark:text-red-400">
           {error ?? 'Not found'}
         </p>
         {onBack && (
-          <button type="button" className="text-xs underline" onClick={onBack}>
+          <button type="button" className="text-sm underline" onClick={onBack}>
             Back
           </button>
         )}
@@ -151,83 +194,212 @@ export function ProfileScreen({
     );
   }
 
+  const accent = normalizeAccent(profile.profileAccent);
+  const theme = accentStyles(accent);
+  const initial = (profile.username?.[0] ?? '?').toUpperCase();
+  const best = profile.stats?.bestRoll;
+
   return (
     <div className="space-y-6">
       {onBack && (
-        <button type="button" className="text-xs uppercase underline" onClick={onBack}>
+        <button
+          type="button"
+          className="text-sm font-semibold text-[var(--prose-2)] underline-offset-2 hover:underline"
+          onClick={onBack}
+        >
           ← Back
         </button>
       )}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">@{profile.username}</h1>
-          <p className="text-sm text-[var(--prose-3)]">{profile.name}</p>
+
+      {/* Hero banner */}
+      <section
+        className={`relative overflow-hidden rounded-xl border border-[var(--outline)] bg-gradient-to-br ${theme.banner} p-5 sm:p-6`}
+      >
+        <div className="relative flex flex-wrap items-start justify-between gap-4">
+          <div className="flex min-w-0 items-start gap-4">
+            <div
+              className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 border-[var(--outline)] bg-[var(--surface)] text-2xl font-bold ring-2 ${theme.ring}`}
+              aria-hidden
+            >
+              {profile.image ? (
+                <img
+                  src={profile.image}
+                  alt=""
+                  className="h-full w-full rounded-full object-cover"
+                />
+              ) : (
+                initial
+              )}
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-[var(--prose-2)]">
+                @{profile.username}
+              </p>
+              <h1 className="truncate text-2xl font-bold tracking-tight sm:text-3xl">
+                {profile.name}
+              </h1>
+              {profile.profileFlair && (
+                <p
+                  className={`mt-1 inline-block rounded-full border px-2.5 py-0.5 text-sm font-medium ${theme.chip}`}
+                >
+                  {profile.profileFlair}
+                </p>
+              )}
+              {profile.profileBio && (
+                <p className="mt-2 max-w-md text-sm leading-relaxed text-[var(--prose)]">
+                  {profile.profileBio}
+                </p>
+              )}
+              <p className="mt-2 text-sm text-[var(--prose-2)]">
+                Member since {fmtDate(String(profile.memberSince))}
+              </p>
+            </div>
+          </div>
+          {!isSelf && (
+            <button
+              type="button"
+              disabled={followBusy}
+              onClick={() => void toggleFollow()}
+              className={`shrink-0 border-2 px-4 py-2 text-sm font-semibold ${
+                following
+                  ? 'border-[var(--outline)] bg-[var(--surface)] text-[var(--prose-2)]'
+                  : 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
+              }`}
+            >
+              {following ? 'Following' : 'Follow'}
+            </button>
+          )}
         </div>
-        {!isSelf && (
-          <button
-            type="button"
-            disabled={followBusy}
-            onClick={() => void toggleFollow()}
-            className={`border-2 px-3 py-1.5 text-xs font-bold uppercase ${
-              following
-                ? 'border-[var(--outline)] text-[var(--prose-3)]'
-                : 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
-            }`}
-          >
-            {following ? 'Following' : 'Follow'}
-          </button>
+        {followMsg && (
+          <p className="mt-3 text-sm text-[var(--prose-2)]">{followMsg}</p>
         )}
-      </div>
-      {followMsg && (
-        <p className="text-xs text-[var(--prose-3)]">{followMsg}</p>
-      )}
+      </section>
 
+      {/* Stats */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <Stat label="Lifetime EP" value={profile.lifetimeEP.toLocaleString()} />
-        <Stat label="Rolls" value={profile.lifetimeRollCount.toLocaleString()} />
-        <Stat label="Badges" value={String(profile.badgeCount)} />
-        <Stat label="Journey EP" value={profile.journeyEP.toLocaleString()} />
+        <Stat label="Lifetime EP" value={profile.lifetimeEP.toLocaleString()} soft={theme.soft} />
+        <Stat
+          label="Rolls"
+          value={profile.lifetimeRollCount.toLocaleString()}
+          soft={theme.soft}
+        />
+        <Stat label="Badges" value={String(profile.badgeCount)} soft={theme.soft} />
+        <Stat
+          label="Journey EP"
+          value={profile.journeyEP.toLocaleString()}
+          soft={theme.soft}
+        />
       </div>
 
-      {profile.stats?.bestRoll && (
-        <div className="rounded-xl border border-[var(--outline)] bg-[var(--surface)] p-3 text-sm">
-          <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--prose-3)]">
-            Best roll
-          </div>
-          <div className="mono-number text-xl font-bold">
-            {profile.stats.bestRoll.number.toLocaleString()}
-          </div>
-          <div className="text-xs text-[var(--prose-3)]">
-            {profile.stats.bestRoll.totalEP.toLocaleString()} EP ·{' '}
-            {profile.stats.bestRoll.rarity}
-          </div>
+      {(profile.stats?.bestDayStreak || profile.stats?.bestQualityStreak) && (
+        <div className="flex flex-wrap gap-2 text-sm text-[var(--prose-2)]">
+          {profile.stats.bestDayStreak != null &&
+            profile.stats.bestDayStreak > 0 && (
+              <span className={`rounded-md border px-2.5 py-1 ${theme.soft}`}>
+                Best day streak {profile.stats.bestDayStreak}
+              </span>
+            )}
+          {profile.stats.bestQualityStreak != null &&
+            profile.stats.bestQualityStreak > 0 && (
+              <span className={`rounded-md border px-2.5 py-1 ${theme.soft}`}>
+                Best quality streak {profile.stats.bestQualityStreak}
+              </span>
+            )}
         </div>
       )}
 
-      <section>
-        <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-[var(--prose-3)]">
-          Recent public rolls
-        </h2>
+      {/* Best roll — showcase style */}
+      {best && (
+        <section className="space-y-2">
+          <h2 className="text-base font-bold text-[var(--prose)]">Best roll</h2>
+          <div
+            className={`rounded-xl border bg-[var(--surface)] p-4 ${theme.soft}`}
+          >
+            <div className="mono-number text-3xl font-bold sm:text-4xl">
+              {best.number.toLocaleString()}
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <RarityBadge rarity={asRarity(best.rarity)} />
+              <EPPill ep={best.totalEP} />
+              {best.percentile != null && (
+                <span className="text-sm text-[var(--prose-2)]">
+                  Top {topPercentFromPercentile(best.percentile)}%
+                </span>
+              )}
+            </div>
+            {best.topBadges && best.topBadges.length > 0 && (
+              <p className="mt-2 text-sm text-[var(--prose-2)]">
+                {best.topBadges.join(' · ')}
+              </p>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Recent rolls — history/showcase style cards */}
+      <section className="space-y-3">
+        <div className="flex items-baseline justify-between gap-2">
+          <h2 className="text-base font-bold text-[var(--prose)]">
+            Recent public rolls
+          </h2>
+          <span className="text-sm text-[var(--prose-2)]">
+            {profile.recentRolls.length} shown
+          </span>
+        </div>
         {profile.recentRolls.length === 0 ? (
-          <p className="text-sm text-[var(--prose-3)]">No public rolls yet.</p>
+          <p className="text-sm text-[var(--prose-2)]">No public rolls yet.</p>
         ) : (
-          <ul className="divide-y divide-[var(--outline)] border border-[var(--outline)]">
+          <ul className="space-y-2.5">
             {profile.recentRolls.map((r) => (
               <li key={r.id}>
                 <button
                   type="button"
-                  className="flex w-full flex-wrap items-center justify-between gap-2 px-3 py-2 text-left hover:bg-[var(--surface-raised)]"
+                  className="w-full rounded-xl border border-[var(--outline)] bg-[var(--surface)] p-4 text-left transition hover:border-[var(--prose-2)] hover:bg-[var(--surface-raised)]"
                   onClick={() =>
                     onOpenRoll(r.shortCode || r.id, profile.username)
                   }
                 >
-                  <span className="mono-number font-bold">
-                    {r.number.toLocaleString()}
-                  </span>
-                  <span className="text-xs text-[var(--prose-3)]">
-                    {r.totalEP.toLocaleString()} EP · {r.rarity} · {r.badgeCount}{' '}
-                    badges
-                  </span>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <div className="mono-number text-2xl font-bold tracking-tight">
+                        {r.number.toLocaleString()}
+                      </div>
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <RarityBadge rarity={asRarity(r.rarity)} />
+                        <span className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+                          {r.totalEP.toLocaleString()} EP
+                        </span>
+                        {r.percentile != null && (
+                          <span className="text-sm text-[var(--prose-2)]">
+                            Top {topPercentFromPercentile(r.percentile)}%
+                          </span>
+                        )}
+                        {r.attested && (
+                          <span
+                            className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${theme.chip}`}
+                          >
+                            Sealed
+                          </span>
+                        )}
+                        {r.challengeKey && (
+                          <span className="text-xs font-mono text-[var(--prose-2)]">
+                            {r.challengeKey}
+                          </span>
+                        )}
+                      </div>
+                      {r.topBadges && r.topBadges.length > 0 && (
+                        <p className="mt-2 text-sm leading-snug text-[var(--prose-2)]">
+                          {r.topBadges.join(' · ')}
+                          {r.badgeCount > (r.topBadges?.length ?? 0)
+                            ? ` · +${r.badgeCount - r.topBadges.length} more`
+                            : ''}
+                        </p>
+                      )}
+                    </div>
+                    <time className="shrink-0 text-sm text-[var(--prose-2)]">
+                      {fmtDate(r.rolledAt)}
+                    </time>
+                  </div>
                 </button>
               </li>
             ))}
@@ -238,13 +410,22 @@ export function ProfileScreen({
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({
+  label,
+  value,
+  soft,
+}: {
+  label: string;
+  value: string;
+  soft: string;
+}) {
   return (
-    <div className="rounded-lg border border-[var(--outline)] bg-[var(--surface)] p-3">
-      <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--prose-3)]">
-        {label}
-      </div>
-      <div className="mono-number text-lg font-bold">{value}</div>
+    <div className={`rounded-lg border p-3 ${soft}`}>
+      <div className="text-sm font-semibold text-[var(--prose-2)]">{label}</div>
+      <div className="mono-number text-xl font-bold">{value}</div>
     </div>
   );
 }
+
+// silence unused type export if needed
+export type { ProfileAccent };

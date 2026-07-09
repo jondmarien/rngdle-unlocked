@@ -47,6 +47,9 @@ const stmts = [
     read_at timestamp NOT NULL DEFAULT now(),
     PRIMARY KEY (user_id, message_id)
   )`,
+  `ALTER TABLE "user" ADD COLUMN IF NOT EXISTS profile_accent text NOT NULL DEFAULT 'teal'`,
+  `ALTER TABLE "user" ADD COLUMN IF NOT EXISTS profile_bio text NOT NULL DEFAULT ''`,
+  `ALTER TABLE "user" ADD COLUMN IF NOT EXISTS profile_flair text NOT NULL DEFAULT ''`,
 ];
 
 for (const s of stmts) {
