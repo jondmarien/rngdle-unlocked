@@ -25,7 +25,7 @@
 ## Out of scope (later)
 
 - 3 Discord/GitHub OAuth (Better Auth plugins)
-- 9 “You got overtaken” notifications
+- 9 “You got overtaken” notifications — ✅ shipped (day/week/all-time)
 - 13 Turnstile on sign-up
 - 14 Per-user EP velocity cap server-side
 - 15 Admin wipe / abusive username report

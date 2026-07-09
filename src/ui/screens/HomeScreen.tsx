@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   contributeKeyEntropy,
   contributePointerEntropy,
-  topPercentFromPercentile,
+  topPercentFromEP,
   type RollResult,
 } from '../../game';
 import { playRollSound, shouldCelebrate } from '../../game/fx';
@@ -209,7 +209,7 @@ export function HomeScreen({
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <RarityBadge rarity={lastRoll.rarity} />
                 <span className="text-sm text-[var(--prose-2)]">
-                  Top {topPercentFromPercentile(lastRoll.percentile)}%
+                  Top {topPercentFromEP(lastRoll.totalEP)}%
                 </span>
               </div>
               <CountUpEP

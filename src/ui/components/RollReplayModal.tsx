@@ -1,4 +1,4 @@
-import { topPercentFromPercentile, type RollResult } from '../../game';
+import { topPercentFromEP, type RollResult } from '../../game';
 import { BadgeBreakdown } from './BadgeCard';
 import { EPPill } from './EPPill';
 import { RarityBadge } from './RarityBadge';
@@ -46,7 +46,7 @@ export function RollReplayModal({
               <RarityBadge rarity={roll.rarity} />
               <EPPill ep={roll.totalEP} />
               <span className="text-sm text-[var(--prose-2)]">
-                Top {topPercentFromPercentile(roll.percentile)}%
+                Top {topPercentFromEP(roll.totalEP)}%
               </span>
             </div>
             <p className="mt-2 text-xs text-[var(--prose-3)]">

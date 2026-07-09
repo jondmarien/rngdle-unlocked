@@ -162,8 +162,8 @@ Switch modes anytime. Badges, EP, history, sync, and share work the same after y
 - **You on the board** — rank highlighted + sticky card if outside top list
 - **Leaderboard** — all-time / week; sort by EP / rolls / badges
 - **Follows + Feed** — Board (+), Find search, or profile; rare+ rolls in Feed
-- **In-app notifications** — Alerts (Activity: follows, badge unlocks, secret masteries; System: broadcasts + community crowns); optional browser notifications
-- **System messages** — developer broadcasts (`POST /api/system-messages` + `ADMIN_SECRET`); auto crown posts when a public roll takes day/week EP #1
+- **In-app notifications** — Alerts (Activity: follows, badge unlocks, secret masteries, overtake when someone takes your day/week/all-time crown; System: broadcasts + community crowns); optional browser notifications
+- **System messages** — developer broadcasts (`POST /api/system-messages` + `ADMIN_SECRET`); auto crown posts when a public roll takes day/week/all-time EP #1
 - **Profiles** — `/u/:username` with accent, flair, bio, **preset emblem avatars**, secret seals, recent rolls + Follow
 - **Vanity share URLs** — `/s/:username/:shortCode`
 - **Share gates** — no public link until cloud confirms
@@ -174,7 +174,6 @@ Switch modes anytime. Badges, EP, history, sync, and share work the same after y
 
 ### Planned later
 - Discord / GitHub OAuth
-- “You got overtaken” notifications
 - Turnstile on sign-up
 - Server-side EP velocity caps
 - Admin wipe / username report
@@ -323,7 +322,7 @@ Full diagrams: **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)**.
 - **Serverless handlers** use a **Node `(req, res)` adapter** (`server/vercel-adapter.ts`) with absolute URLs for Better Auth.
 - **Auth multi-segment paths** rewritten to `/api/auth?__path=…` (no Next-style catch-all).
 - **Merge-safe sync** — max counters, union collections (earliest `firstEarnedAt`), merge histories by id.
-- **Roll activity on sync** (`server/rollActivity.ts`) — idempotent unlock notifications; system messages when a public roll takes day/week EP crown.
+- **Roll activity on sync** (`server/rollActivity.ts`) — idempotent unlock notifications; system crown messages for day/week/all-time EP #1; personal `overtaken` Activity alerts for the previous holder.
 - **Share publish** polls `/api/rolls/:key` (`waitForCloudPublish`) before enabling vanity links.
 - **Attestation** — optional HMAC on a claim; free-play RNG remains client-side.
 - **Session reel** — `lastRoll` is session-only (not restored from history/cloud on load).
@@ -363,7 +362,7 @@ The Account screen times out after a few seconds and shows the sign-in form. Che
 | Community today/week bests | ✅ Shipped |
 | Leaderboards + follows + feed | ✅ Shipped |
 | Profiles (vanity + avatars) + follows | ✅ Shipped |
-| Activity unlocks + system crown msgs | ✅ Shipped |
+| Activity unlocks + system crown msgs + overtake notifs | ✅ Shipped |
 | Cloud-gated vanity share + OG (rolls + profiles) | ✅ Shipped |
 | Daily/weekly challenge + attestation | ✅ Shipped |
 | Custom fonts + rarity/family icon art | ✅ Shipped |

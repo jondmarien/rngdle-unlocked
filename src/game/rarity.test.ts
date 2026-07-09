@@ -32,6 +32,17 @@ describe('percentileFromEP', () => {
       prev = p;
     }
   });
+
+  it('anchors high tiers near the rarity ladder (not ~top 20%)', () => {
+    // epic floor → ~top 12%
+    expect(100 - percentileFromEP(6_500)).toBeCloseTo(12, 0);
+    // anomaly floor → top 5%
+    expect(100 - percentileFromEP(8_000)).toBeCloseTo(5, 0);
+    // mythic floor → top 1%
+    expect(100 - percentileFromEP(11_000)).toBeCloseTo(1, 0);
+    // deep mythic still rarer than floor
+    expect(percentileFromEP(20_000)).toBeGreaterThan(percentileFromEP(11_000));
+  });
 });
 
 describe('sumEP', () => {

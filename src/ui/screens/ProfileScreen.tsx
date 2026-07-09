@@ -4,7 +4,7 @@ import {
   JOURNEY_BADGES,
   NUMBER_BADGES,
   OMEGA_SECRET,
-  topPercentFromPercentile,
+  topPercentFromEP,
   type BadgeFamily,
   type RarityTier,
 } from '../../game';
@@ -705,11 +705,9 @@ export function ProfileScreen({
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <RarityBadge rarity={asRarity(best.rarity)} />
                 <EPPill ep={best.totalEP} />
-                {best.percentile != null && (
-                  <span className="text-sm text-[var(--prose-2)]">
-                    Top {topPercentFromPercentile(best.percentile)}%
-                  </span>
-                )}
+                <span className="text-sm text-[var(--prose-2)]">
+                  Top {topPercentFromEP(best.totalEP)}%
+                </span>
               </div>
               {best.topBadges && best.topBadges.length > 0 && (
                 <p className="mt-2 text-sm text-[var(--prose-2)]">
@@ -760,11 +758,9 @@ export function ProfileScreen({
                               <span className="text-sm font-semibold text-amber-700 dark:text-amber-400">
                                 {r.totalEP.toLocaleString()} EP
                               </span>
-                              {r.percentile != null && (
-                                <span className="text-sm text-[var(--prose-2)]">
-                                  Top {topPercentFromPercentile(r.percentile)}%
-                                </span>
-                              )}
+                              <span className="text-sm text-[var(--prose-2)]">
+                                Top {topPercentFromEP(r.totalEP)}%
+                              </span>
                               {r.attested && (
                                 <span
                                   className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${theme.chip}`}

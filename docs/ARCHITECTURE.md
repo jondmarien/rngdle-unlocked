@@ -50,7 +50,7 @@ sequenceDiagram
   opt signed in
     G->>C: auto-sync merge
     C-->>G: merged cloud
-    Note over C: unlock notifs · community crown msgs
+    Note over C: unlock notifs · crown msgs · overtake alerts
   end
 ```
 

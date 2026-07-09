@@ -28,6 +28,8 @@ export type BadgeHit = {
   emoji: string;
   highlights: boolean[];
   rarity: RarityTier;
+  /** Optional custom Grok art (e.g. Absolute Ceiling). */
+  image?: string;
 };
 
 export type BadgeDef = {
@@ -39,6 +41,8 @@ export type BadgeDef = {
   emoji: string;
   matches: (n: number) => boolean;
   highlight?: (n: number) => boolean[];
+  /** Optional custom art under /public (ultra-rare seals). */
+  image?: string;
 };
 
 export type RollResult = {

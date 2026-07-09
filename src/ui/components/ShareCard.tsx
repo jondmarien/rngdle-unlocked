@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { toPng } from 'html-to-image';
 import {
   ensureShortCode,
-  topPercentFromPercentile,
+  topPercentFromEP,
   type RollResult,
 } from '../../game';
 import { buildRollShareUrl, buildShareText } from '../../game/shareText';
@@ -239,7 +239,7 @@ export function SharePanel({
             <EPPill ep={roll.totalEP} />
           </div>
           <p className="text-xs text-[var(--prose-3)]">
-            Top {topPercentFromPercentile(roll.percentile)}% of roll scores
+            Top {topPercentFromEP(roll.totalEP)}% of roll scores
           </p>
           <div className="flex flex-wrap justify-center gap-1 pt-2">
             {roll.badges

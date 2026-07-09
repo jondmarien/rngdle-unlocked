@@ -19,6 +19,7 @@ export function evaluateBadges(n: number): BadgeHit[] {
         emoji: b.emoji,
         highlights,
         rarity: badgeRarityFromEP(b.ep),
+        ...(b.image ? { image: b.image } : {}),
       });
     }
   }

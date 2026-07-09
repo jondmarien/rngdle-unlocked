@@ -102,8 +102,9 @@ export function NotificationsScreen({
         <div>
           <h1 className="text-xl font-bold tracking-tight">Notifications</h1>
           <p className="text-sm text-[var(--prose-2)]">
-            Activity is personal (follows, etc.). System messages are from the
-            developer to everyone.
+            Activity is personal (follows, unlocks, when someone overtakes your
+            daily / weekly / all-time crown). System messages are broadcasts —
+            including community crown notices — to everyone.
           </p>
         </div>
         <button
@@ -182,7 +183,7 @@ export function NotificationsScreen({
       {!loading && items.length === 0 && (
         <p className="text-sm text-[var(--prose-2)]">
           {tab === 'activity'
-            ? 'No activity yet. When someone follows you, it shows up here.'
+            ? 'No activity yet. Follows, unlocks, and overtake alerts show up here.'
             : 'No system messages yet.'}
         </p>
       )}

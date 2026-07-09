@@ -148,12 +148,15 @@ export const NUMBER_BADGES: BadgeDef[] = [
   },
   {
     id: 'million',
-    name: 'Ceiling',
-    description: 'Rolled exactly 1,000,000 — the top of the range.',
-    ep: 50_000,
+    name: 'Absolute Ceiling',
+    description:
+      'Rolled exactly 1,000,000 — the top of the range. ~1 in a million from the main draw, plus a separate free-play jackpot lottery at 1 in 100 million. Custom ultra-rare seal.',
+    ep: 100_000,
     family: 'magnitude',
     emoji: '👑',
+    image: '/badges/ceiling.jpg',
     matches: (n) => n === 1_000_000,
+    highlight: maskAll,
   },
   {
     id: 'one',

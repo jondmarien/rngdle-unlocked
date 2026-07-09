@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, isNotNull } from 'drizzle-orm';
+import { and, desc, eq, gte, isNotNull, ne } from 'drizzle-orm';
 import { NUMBER_BADGES } from '../src/game/badges/catalog.js';
 import { JOURNEY_BADGES } from '../src/game/journey.js';
 import { SECRET_BADGES } from '../src/game/secrets.js';
@@ -7,6 +7,9 @@ import type { Db } from './db/index.js';
 import { rolls, systemMessages, user } from './db/schema.js';
 import { createLogger } from './logger.js';
 import { createNotification } from './notifications.js';
+
+/** Community crown windows: calendar day, rolling week, all-time (general). */
+type CrownPeriod = 'today' | 'week' | 'alltime';
 
 const log = createLogger('roll-activity');
 
@@ -27,7 +30,8 @@ function labelFor(badgeId: string): { name: string; emoji: string } {
 
 /**
  * After a cloud merge: notify the user for newly unlocked badges/secrets,
- * and broadcast system messages if they take today's or this week's best roll.
+ * broadcast system messages if they take day/week/all-time best, and
+ * personally notify whoever they overtook on those boards.
  */
 export async function processRollActivity(
   db: Db,
@@ -136,34 +140,69 @@ async function maybeBroadcastCommunityBests(
   const dayStart = startOfUtcDay(new Date(now));
   const weekStart = new Date(now - 7 * 24 * 60 * 60 * 1000);
 
-  await tryCrown(db, {
-    period: 'today',
-    since: dayStart,
+  const base = {
+    championUserId: opts.userId,
     candidate,
     handle,
     name: u?.name ?? handle,
-  });
-  await tryCrown(db, {
-    period: 'week',
-    since: weekStart,
-    candidate,
-    handle,
-    name: u?.name ?? handle,
-  });
+  };
+
+  await tryCrown(db, { ...base, period: 'today', since: dayStart });
+  await tryCrown(db, { ...base, period: 'week', since: weekStart });
+  await tryCrown(db, { ...base, period: 'alltime', since: null });
+}
+
+function crownPeriodCopy(period: CrownPeriod): {
+  possessive: string;
+  board: string;
+  systemTitle: (handle: string) => string;
+  overtakeTitle: string;
+} {
+  switch (period) {
+    case 'today':
+      return {
+        possessive: "today's",
+        board: "today's best roll",
+        systemTitle: (h) => `👑 Today's best roll — @${h}`,
+        overtakeTitle: "📉 Overtaken — today's best",
+      };
+    case 'week':
+      return {
+        possessive: "this week's",
+        board: "this week's best roll",
+        systemTitle: (h) => `👑 Weekly best roll — @${h}`,
+        overtakeTitle: '📉 Overtaken — weekly best',
+      };
+    case 'alltime':
+      return {
+        possessive: 'the all-time',
+        board: 'the all-time best roll',
+        systemTitle: (h) => `👑 All-time best roll — @${h}`,
+        overtakeTitle: '📉 Overtaken — all-time best',
+      };
+  }
 }
 
 async function tryCrown(
   db: Db,
   opts: {
-    period: 'today' | 'week';
-    since: Date;
+    period: CrownPeriod;
+    /** Null = all-time (no lower bound). */
+    since: Date | null;
+    championUserId: string;
     candidate: RollResult;
     handle: string;
     name: string;
   },
 ): Promise<void> {
   const rolledAt = new Date(opts.candidate.rolledAt);
-  if (rolledAt < opts.since) return;
+  if (opts.since && rolledAt < opts.since) return;
+
+  const periodFilters = [
+    eq(rolls.isPublic, true),
+    isNotNull(user.username),
+    ...(opts.since ? [gte(rolls.rolledAt, opts.since)] : []),
+  ];
 
   const [top] = await db
     .select({
@@ -176,33 +215,49 @@ async function tryCrown(
     })
     .from(rolls)
     .innerJoin(user, eq(user.id, rolls.userId))
-    .where(
-      and(
-        gte(rolls.rolledAt, opts.since),
-        eq(rolls.isPublic, true),
-        isNotNull(user.username),
-      ),
-    )
+    .where(and(...periodFilters))
     .orderBy(desc(rolls.totalEp), desc(rolls.rolledAt))
     .limit(1);
 
   if (!top || top.id !== opts.candidate.id) return;
 
-  const periodLabel = opts.period === 'today' ? "today's" : "this week's";
+  const copy = crownPeriodCopy(opts.period);
   const msgId = `best-${opts.period}-${opts.candidate.id}`;
   const code = top.shortCode || top.id;
   const href = `/s/${encodeURIComponent(opts.handle)}/${encodeURIComponent(code)}`;
   const badgeBits = summarizeBadges(opts.candidate);
+  const rollStats = `Number ${top.number.toLocaleString()} · ${String(top.rarity).toUpperCase()} · ${Number(top.totalEp).toLocaleString()} EP.`;
 
-  const title =
-    opts.period === 'today'
-      ? `👑 Today's best roll — @${opts.handle}`
-      : `👑 Weekly best roll — @${opts.handle}`;
+  // Previous #1 under the same board (exclude the new champion roll).
+  const [prev] = await db
+    .select({
+      id: rolls.id,
+      userId: rolls.userId,
+      number: rolls.number,
+      totalEp: rolls.totalEp,
+      rarity: rolls.rarity,
+      username: user.username,
+    })
+    .from(rolls)
+    .innerJoin(user, eq(user.id, rolls.userId))
+    .where(and(...periodFilters, ne(rolls.id, opts.candidate.id)))
+    .orderBy(desc(rolls.totalEp), desc(rolls.rolledAt))
+    .limit(1);
 
-  const body = [
-    `@${opts.handle} (${opts.name}) claimed ${periodLabel} crown.`,
-    `Number ${top.number.toLocaleString()} · ${String(top.rarity).toUpperCase()} · ${Number(top.totalEp).toLocaleString()} EP.`,
+  const dethronedHandle =
+    prev?.username?.trim().toLowerCase() || null;
+  const dethronedOther =
+    prev != null && prev.userId !== opts.championUserId;
+
+  const systemBody = [
+    dethronedOther && dethronedHandle
+      ? `@${opts.handle} (${opts.name}) overtook @${dethronedHandle} for ${copy.possessive} crown.`
+      : `@${opts.handle} (${opts.name}) claimed ${copy.possessive} crown.`,
+    rollStats,
     badgeBits,
+    dethronedOther && prev
+      ? `Previous: ${prev.number.toLocaleString()} · ${String(prev.rarity).toUpperCase()} · ${Number(prev.totalEp).toLocaleString()} EP.`
+      : null,
     `Open: ${href}`,
   ]
     .filter(Boolean)
@@ -211,17 +266,83 @@ async function tryCrown(
   try {
     await db.insert(systemMessages).values({
       id: msgId,
-      title: title.slice(0, 200),
-      body: body.slice(0, 8000),
+      title: copy.systemTitle(opts.handle).slice(0, 200),
+      body: systemBody.slice(0, 8000),
     });
     log.info('community crown', {
       period: opts.period,
       handle: opts.handle,
       number: top.number,
       ep: top.totalEp,
+      overtook: dethronedOther ? dethronedHandle : null,
     });
   } catch {
     // Already broadcast for this roll
+  }
+
+  if (dethronedOther && prev) {
+    await notifyOvertaken(db, {
+      period: opts.period,
+      previousUserId: prev.userId,
+      previousNumber: prev.number,
+      previousEp: prev.totalEp,
+      previousRarity: String(prev.rarity),
+      championHandle: opts.handle,
+      championNumber: top.number,
+      championEp: Number(top.totalEp),
+      championRarity: String(top.rarity),
+      championRollId: opts.candidate.id,
+      href,
+      boardLabel: copy.board,
+      overtakeTitle: copy.overtakeTitle,
+    });
+  }
+}
+
+/** Personal Activity alert when someone else takes a crown you held. */
+async function notifyOvertaken(
+  db: Db,
+  opts: {
+    period: CrownPeriod;
+    previousUserId: string;
+    previousNumber: number;
+    previousEp: number;
+    previousRarity: string;
+    championHandle: string;
+    championNumber: number;
+    championEp: number;
+    championRarity: string;
+    championRollId: string;
+    href: string;
+    boardLabel: string;
+    overtakeTitle: string;
+  },
+): Promise<void> {
+  const notifId = `overtake-${opts.period}-${opts.championRollId}`;
+  const body = [
+    `@${opts.championHandle} took ${opts.boardLabel} with ${opts.championNumber.toLocaleString()} · ${opts.championRarity.toUpperCase()} · ${opts.championEp.toLocaleString()} EP.`,
+    `Your previous lead: ${opts.previousNumber.toLocaleString()} · ${opts.previousRarity.toUpperCase()} · ${opts.previousEp.toLocaleString()} EP.`,
+    'Time to roll again.',
+  ].join(' ');
+
+  try {
+    await createNotification(db, {
+      id: notifId,
+      userId: opts.previousUserId,
+      kind: 'overtaken',
+      title: opts.overtakeTitle,
+      body,
+      href: opts.href,
+      actorUsername: opts.championHandle,
+    });
+    log.info('overtake notif', {
+      period: opts.period,
+      victim: opts.previousUserId,
+      by: opts.championHandle,
+      rollId: opts.championRollId,
+    });
+  } catch {
+    // Duplicate (already notified for this crown event) or transient DB error
   }
 }
 

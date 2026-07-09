@@ -289,58 +289,90 @@ export function CollectionScreen() {
                 <article
                   key={b.id}
                   className={`rounded-lg border p-3 text-left text-sm ${
-                    fresh
-                      ? 'border-amber-400/45 bg-[var(--surface)] shadow-[0_0_0_1px_rgba(251,191,36,0.08)]'
-                      : has
-                        ? 'border-[var(--outline)] bg-[var(--surface)]'
-                        : 'border-[var(--outline)] bg-[var(--bg)] opacity-70'
+                    b.image && has
+                      ? 'border-amber-400/55 bg-gradient-to-br from-amber-500/15 via-violet-500/10 to-[var(--surface)] shadow-[0_0_20px_rgba(251,191,36,0.15)]'
+                      : fresh
+                        ? 'border-amber-400/45 bg-[var(--surface)] shadow-[0_0_0_1px_rgba(251,191,36,0.08)]'
+                        : has
+                          ? 'border-[var(--outline)] bg-[var(--surface)]'
+                          : 'border-[var(--outline)] bg-[var(--bg)] opacity-70'
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="font-bold tracking-tight">
-                      {has ? (
-                        <>
-                          <span className="mr-1" aria-hidden>
-                            {b.emoji}
-                          </span>
-                          {b.name}
-                          {fresh && (
-                            <span className="ml-1.5 inline-flex rounded bg-amber-400 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-black">
-                              New
-                            </span>
-                          )}
-                        </>
-                      ) : (
-                        <>
-                          <span className="mr-1" aria-hidden>
-                            🔒
-                          </span>
-                          ????
-                        </>
-                      )}
-                    </div>
-                    <span className="shrink-0 text-xs font-medium capitalize text-[var(--prose-2)]">
-                      {b.family}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-[var(--prose-2)]">
-                    {has
-                      ? b.description
-                      : FAMILY_HINT[b.family as Exclude<BadgeFamily, 'secret'>]}
-                  </p>
-                  <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 text-sm text-[var(--prose-2)]">
-                    <span>
-                      {has ? `+${b.ep.toLocaleString()} EP` : 'Locked'}
-                    </span>
-                    {(age || when) && (
-                      <time
-                        dateTime={at}
-                        className="text-xs text-[var(--prose-3)]"
-                        title="First unlocked"
+                  <div className="flex gap-3">
+                    {b.image && (
+                      <div
+                        className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border sm:h-20 sm:w-20 ${
+                          has
+                            ? 'border-amber-400/70 shadow-[0_0_12px_rgba(251,191,36,0.3)]'
+                            : 'border-[var(--outline)] grayscale'
+                        }`}
                       >
-                        {age ? `Unlocked ${age}` : `Unlocked ${when}`}
-                      </time>
+                        <img
+                          src={b.image}
+                          alt={has ? b.name : 'Locked ultra-rare seal'}
+                          className={`h-full w-full object-cover ${has ? '' : 'opacity-40 blur-[1px]'}`}
+                        />
+                        {!has && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-base">
+                            🔒
+                          </div>
+                        )}
+                      </div>
                     )}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="font-bold tracking-tight">
+                          {has ? (
+                            <>
+                              {!b.image && (
+                                <span className="mr-1" aria-hidden>
+                                  {b.emoji}
+                                </span>
+                              )}
+                              {b.name}
+                              {fresh && (
+                                <span className="ml-1.5 inline-flex rounded bg-amber-400 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-black">
+                                  New
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <span className="mr-1" aria-hidden>
+                                🔒
+                              </span>
+                              {b.image ? 'Ultra-rare seal' : '????'}
+                            </>
+                          )}
+                        </div>
+                        <span className="shrink-0 text-xs font-medium capitalize text-[var(--prose-2)]">
+                          {b.family}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-[var(--prose-2)]">
+                        {has
+                          ? b.description
+                          : b.image
+                            ? 'Hit exactly 1,000,000 to claim this seal.'
+                            : FAMILY_HINT[
+                                b.family as Exclude<BadgeFamily, 'secret'>
+                              ]}
+                      </p>
+                      <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 text-sm text-[var(--prose-2)]">
+                        <span>
+                          {has ? `+${b.ep.toLocaleString()} EP` : 'Locked'}
+                        </span>
+                        {(age || when) && (
+                          <time
+                            dateTime={at}
+                            className="text-xs text-[var(--prose-3)]"
+                            title="First unlocked"
+                          >
+                            {age ? `Unlocked ${age}` : `Unlocked ${when}`}
+                          </time>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </article>
               );

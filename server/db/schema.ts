@@ -133,7 +133,7 @@ export const notifications = pgTable('notifications', {
   userId: text('user_id')
     .notNull()
     .references(() => user.id, { onDelete: 'cascade' }),
-  /** follow | system_copy | other */
+  /** follow | badge_unlock | secret_mastery | overtaken | … */
   kind: text('kind').notNull(),
   title: text('title').notNull(),
   body: text('body').notNull().default(''),

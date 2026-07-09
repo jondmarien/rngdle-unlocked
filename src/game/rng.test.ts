@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
+  CEILING_JACKPOT_ODDS,
+  JACKPOT_REJECT_THRESHOLD,
   mapBytesToInclusiveRange,
+  mapBytesToJackpotHit,
   REJECT_THRESHOLD,
   ROLL_MAX,
   ROLL_RANGE,
@@ -18,8 +21,9 @@ describe('mapBytesToInclusiveRange', () => {
     expect(mapBytesToInclusiveRange(u32Bytes(0))).toBe(0);
   });
 
-  it('maps ROLL_RANGE - 1 to ROLL_MAX', () => {
+  it('maps ROLL_RANGE - 1 to ROLL_MAX (ceiling is in the uniform range)', () => {
     expect(mapBytesToInclusiveRange(u32Bytes(ROLL_RANGE - 1))).toBe(ROLL_MAX);
+    expect(mapBytesToInclusiveRange(u32Bytes(ROLL_MAX))).toBe(ROLL_MAX);
   });
 
   it('always returns integer in 0..ROLL_MAX for accepted samples', () => {
@@ -42,6 +46,27 @@ describe('mapBytesToInclusiveRange', () => {
     expect(ROLL_RANGE).toBe(1_000_001);
     expect(REJECT_THRESHOLD % ROLL_RANGE).toBe(0);
     expect(REJECT_THRESHOLD).toBeLessThanOrEqual(0x1_0000_0000);
+  });
+});
+
+describe('mapBytesToJackpotHit', () => {
+  it('hits only when residue is 0 within an unbiased block', () => {
+    expect(mapBytesToJackpotHit(u32Bytes(0))).toBe(true);
+    expect(mapBytesToJackpotHit(u32Bytes(CEILING_JACKPOT_ODDS))).toBe(true);
+    expect(mapBytesToJackpotHit(u32Bytes(1))).toBe(false);
+    expect(mapBytesToJackpotHit(u32Bytes(CEILING_JACKPOT_ODDS - 1))).toBe(
+      false,
+    );
+  });
+
+  it('rejects samples at or above JACKPOT_REJECT_THRESHOLD', () => {
+    expect(mapBytesToJackpotHit(u32Bytes(JACKPOT_REJECT_THRESHOLD))).toBeNull();
+    expect(mapBytesToJackpotHit(u32Bytes(0xffff_ffff))).toBeNull();
+  });
+
+  it('documents 1-in-100M Absolute Ceiling jackpot', () => {
+    expect(CEILING_JACKPOT_ODDS).toBe(100_000_000);
+    expect(JACKPOT_REJECT_THRESHOLD % CEILING_JACKPOT_ODDS).toBe(0);
   });
 });
 

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
-  topPercentFromPercentile,
+  topPercentFromEP,
   type RarityTier,
   type RollResult,
 } from '../../game';
@@ -238,7 +238,7 @@ export function HistoryScreen({
                       {r.totalEP.toLocaleString()} EP
                     </span>
                     <span>
-                      Top {topPercentFromPercentile(r.percentile)}%
+                      Top {topPercentFromEP(r.totalEP)}%
                     </span>
                     <span>
                       {r.badges.length} badge

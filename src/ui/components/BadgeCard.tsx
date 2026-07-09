@@ -111,32 +111,52 @@ export function BadgeCard({
     return () => window.clearTimeout(t);
   }, [animateIn, badge.id]);
 
+  const hasArt = Boolean(badge.image);
+
   return (
     <article
       className={[
         'relative rounded-xl border bg-[var(--surface)] p-3.5 text-left transition-all duration-300 sm:p-4',
-        isNew
-          ? 'border-amber-400/35 shadow-[0_0_0_1px_rgba(251,191,36,0.08)]'
-          : 'border-[var(--outline)]',
+        hasArt
+          ? 'border-amber-400/50 bg-gradient-to-br from-amber-500/15 via-violet-500/10 to-transparent shadow-[0_0_28px_rgba(251,191,36,0.18)]'
+          : isNew
+            ? 'border-amber-400/35 shadow-[0_0_0_1px_rgba(251,191,36,0.08)]'
+            : 'border-[var(--outline)]',
         visible
           ? 'translate-y-0 opacity-100'
           : 'pointer-events-none translate-y-3 opacity-0',
       ].join(' ')}
     >
+      {hasArt && (
+        <div className="mb-3 flex justify-center sm:float-right sm:mb-2 sm:ml-3">
+          <div className="relative h-24 w-24 overflow-hidden rounded-xl border-2 border-amber-400/70 shadow-[0_0_20px_rgba(251,191,36,0.35)] sm:h-28 sm:w-28">
+            <img
+              src={badge.image}
+              alt=""
+              className="h-full w-full object-cover"
+            />
+            <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-1.5 py-1 text-center text-[9px] font-black uppercase tracking-[0.14em] text-amber-200">
+              Ultra rare
+            </span>
+          </div>
+        </div>
+      )}
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
-          <span
-            className="icon-chip h-7 w-7 ring-1 ring-black/10 dark:ring-white/10 sm:h-8 sm:w-8"
-            title={badge.family}
-          >
-            <img
-              src={
-                FAMILY_ICON[badge.family] ?? RARITY_ICON[badge.rarity] ?? ''
-              }
-              alt=""
-              aria-hidden
-            />
-          </span>
+          {!hasArt && (
+            <span
+              className="icon-chip h-7 w-7 ring-1 ring-black/10 dark:ring-white/10 sm:h-8 sm:w-8"
+              title={badge.family}
+            >
+              <img
+                src={
+                  FAMILY_ICON[badge.family] ?? RARITY_ICON[badge.rarity] ?? ''
+                }
+                alt=""
+                aria-hidden
+              />
+            </span>
+          )}
           <span className="text-base leading-none sm:text-lg" aria-hidden>
             {badge.emoji}
           </span>

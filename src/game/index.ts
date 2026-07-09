@@ -13,7 +13,13 @@ export type {
 } from './types';
 export { rollToHighlight } from './types';
 
-export { ROLL_MAX, ROLL_RANGE, rollNumber, assertValidRollNumber } from './rng';
+export {
+  ROLL_MAX,
+  ROLL_RANGE,
+  CEILING_JACKPOT_ODDS,
+  rollNumber,
+  assertValidRollNumber,
+} from './rng';
 export { DISPLAY_WIDTH, formatRollDigits, naturalDigits } from './digits';
 export {
   contributeEntropy,
@@ -27,7 +33,11 @@ export {
   RARITY_THRESHOLDS,
   RARITY_LABELS,
 } from './rarity';
-export { percentileFromEP, topPercentFromPercentile } from './percentile';
+export {
+  percentileFromEP,
+  topPercentFromPercentile,
+  topPercentFromEP,
+} from './percentile';
 export { sumEP } from './score';
 export { evaluateBadges, NUMBER_BADGES, badgeById } from './badges';
 export { evaluateNumber, performRoll, ensureShortCode } from './evaluate';

@@ -1,5 +1,5 @@
 import {
-  topPercentFromPercentile,
+  topPercentFromEP,
   type RollHighlight,
   type RollResult,
 } from '../../game';
@@ -78,7 +78,7 @@ export function BestRollCard({
         <RarityBadge rarity={best.rarity} />
         <EPPill ep={best.totalEP} />
         <span className="text-sm text-[var(--prose-2)]">
-          Top {topPercentFromPercentile(best.percentile)}%
+          Top {topPercentFromEP(best.totalEP)}%
         </span>
       </div>
       <p className="mt-1.5 text-xs text-[var(--prose-3)]">

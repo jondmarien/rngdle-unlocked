@@ -35,7 +35,13 @@ export function AboutScreen() {
               <li>
                 <strong className="text-[var(--prose)]">Free play</strong> —
                 unlimited browser CSPRNG (new number every Generate). Refreshing
-                clears the reel so you start fresh (history still saves).
+                clears the reel so you start fresh (history still saves). The
+                Absolute Ceiling (<span className="font-mono">1,000,000</span>)
+                can appear from the normal range (~1 in a million) or from a
+                separate <strong className="text-[var(--prose)]">1 in 100
+                million</strong> jackpot lottery each roll — and unlocks the
+                custom ultra-rare <strong className="text-[var(--prose)]">Absolute
+                Ceiling</strong> seal (100k EP + art).
               </li>
               <li>
                 <strong className="text-[var(--prose)]">Daily / Weekly</strong> —
@@ -145,9 +151,11 @@ export function AboutScreen() {
           </li>
           <li>
             <strong className="text-[var(--prose)]">Alerts</strong> — Activity
-            (follows, first-time badge unlocks, secret masteries) and System
+            (follows, first-time badge unlocks, secret masteries, and when
+            someone overtakes your daily / weekly / all-time crown) and System
             messages (developer broadcasts + community crown notices when
-            someone takes today&apos;s or this week&apos;s best public roll).
+            someone takes today&apos;s, this week&apos;s, or the all-time best
+            public roll).
           </li>
           <li>
             Optional{' '}

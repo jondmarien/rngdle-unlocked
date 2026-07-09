@@ -54,8 +54,13 @@ describe('badge fixtures', () => {
   it('zero', () => {
     expect(ids(0)).toContain('zero');
   });
-  it('million', () => {
+  it('million Absolute Ceiling seal', () => {
     expect(ids(1_000_000)).toContain('million');
+    const hit = evaluateBadges(1_000_000).find((h) => h.id === 'million');
+    expect(hit?.name).toBe('Absolute Ceiling');
+    expect(hit?.image).toBe('/badges/ceiling.jpg');
+    expect(hit?.ep).toBe(100_000);
+    expect(hit?.rarity).toBe('mythic');
   });
   it('even 8', () => {
     expect(ids(8)).toContain('even');

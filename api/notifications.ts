@@ -102,7 +102,8 @@ export default defineHandler(async (request) => {
       kind: 'system',
       title: s.title,
       body: s.body,
-      href: null,
+      // Crown broadcasts embed "Open: /s/user/code" — surface as clickable href
+      href: extractOpenHref(s.body),
       actorUsername: null,
       read: s.readAt != null,
       createdAt:
@@ -206,3 +207,13 @@ export default defineHandler(async (request) => {
 
   return Response.json({ error: 'Method not allowed' }, { status: 405 });
 });
+
+/** Pull path from "Open: /s/…" (or any absolute-path) in system message body. */
+function extractOpenHref(body: string): string | null {
+  const m = body.match(/Open:\s*(\/[^\s]+)/i);
+  if (!m?.[1]) return null;
+  // Only allow same-origin relative paths
+  const path = m[1];
+  if (!path.startsWith('/') || path.startsWith('//')) return null;
+  return path;
+}
