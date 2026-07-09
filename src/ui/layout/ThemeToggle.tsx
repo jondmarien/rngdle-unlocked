@@ -1,6 +1,10 @@
 import type { ThemeMode } from '../../game';
 
-const MODES: ThemeMode[] = ['light', 'system', 'dark'];
+const MODES: { id: ThemeMode; label: string }[] = [
+  { id: 'light', label: 'Light' },
+  { id: 'system', label: 'Auto' },
+  { id: 'dark', label: 'Dark' },
+];
 
 export function ThemeToggle({
   value,
@@ -11,25 +15,28 @@ export function ThemeToggle({
 }) {
   return (
     <div
-      className="flex overflow-hidden rounded-md border border-[var(--outline)]"
+      className="inline-flex max-w-full overflow-hidden rounded-lg border border-[var(--outline)] bg-[var(--surface)] p-0.5"
       role="group"
       aria-label="Theme"
     >
-      {MODES.map((m) => (
-        <button
-          key={m}
-          type="button"
-          title={m === 'system' ? 'System' : m}
-          onClick={() => onChange(m)}
-          className={`px-2.5 py-1.5 text-xs font-semibold capitalize sm:text-sm ${
-            value === m
-              ? 'bg-[var(--prose)] text-[var(--bg)]'
-              : 'text-[var(--prose-2)] hover:bg-[var(--surface-raised)]'
-          }`}
-        >
-          {m === 'system' ? 'Auto' : m}
-        </button>
-      ))}
+      {MODES.map((m) => {
+        const selected = value === m.id;
+        return (
+          <button
+            key={m.id}
+            type="button"
+            title={m.id === 'system' ? 'Follow system' : m.label}
+            onClick={() => onChange(m.id)}
+            className={`min-w-[4.25rem] rounded-md px-3 py-1.5 text-center text-xs font-semibold tracking-wide transition-colors sm:min-w-[5rem] sm:text-sm ${
+              selected
+                ? 'bg-[var(--prose)] text-[var(--bg)] shadow-sm'
+                : 'text-[var(--prose-2)] hover:bg-[var(--surface-raised)] hover:text-[var(--prose)]'
+            }`}
+          >
+            {m.label}
+          </button>
+        );
+      })}
     </div>
   );
 }
