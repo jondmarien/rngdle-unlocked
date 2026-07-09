@@ -16,7 +16,12 @@ export {
   contributePointerEntropy,
   mixPoolInto,
 } from './entropyPool';
-export { rarityFromEP, RARITY_THRESHOLDS } from './rarity';
+export {
+  rarityFromEP,
+  badgeRarityFromEP,
+  RARITY_THRESHOLDS,
+  RARITY_LABELS,
+} from './rarity';
 export { percentileFromEP, topPercentFromPercentile } from './percentile';
 export { sumEP } from './score';
 export { evaluateBadges, NUMBER_BADGES, badgeById } from './badges';

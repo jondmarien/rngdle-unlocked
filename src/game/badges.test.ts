@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { evaluateBadges, NUMBER_BADGES } from './badges';
+// evaluateBadges re-export path
 
 function ids(n: number): string[] {
   return evaluateBadges(n).map((b) => b.id);
@@ -66,4 +67,18 @@ describe('badge fixtures', () => {
   it('full house 11222', () => {
     expect(ids(11222)).toContain('full-house');
   });
+  it('six-seven contains 67', () => {
+    expect(ids(356773)).toContain('six-seven');
+  });
+  it('sequence-3 consecutive digits', () => {
+    expect(ids(356773)).toContain('sequence-3');
+  });
+  it('includes emoji and highlights on hits', () => {
+    const hits = evaluateBadges(42);
+    const nice = hits.find((h) => h.id === 'nice-42');
+    expect(nice?.emoji).toBeTruthy();
+    expect(nice?.highlights.length).toBe(2);
+    expect(nice?.rarity).toBeTruthy();
+  });
 });
+

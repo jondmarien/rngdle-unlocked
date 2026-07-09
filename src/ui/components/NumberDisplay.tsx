@@ -1,9 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import type { RarityTier } from '../../game';
-import { ROLL_MAX } from '../../game';
-
-/** Max display width: "1000000" is 7 digits. */
-export const DISPLAY_WIDTH = String(ROLL_MAX).length;
 
 const SPIN_INTERVAL_MS = 45;
 const REVEAL_STAGGER_MS = 140;
@@ -23,9 +19,9 @@ function randomDigit(): string {
   return String(((Date.now() / 7) | 0) % 10);
 }
 
-/** Fixed-width pad with spaces for leading blanks (RNGdle-style). */
-function padDigits(n: number): string[] {
-  return String(n).padStart(DISPLAY_WIDTH, ' ').split('');
+/** Natural digit string — no leading pad beyond the number itself. */
+function toDigits(n: number): string[] {
+  return String(n).split('');
 }
 
 export function NumberDisplay({
@@ -40,12 +36,11 @@ export function NumberDisplay({
   revealKey?: number;
   onRevealComplete?: () => void;
 }) {
-  const [display, setDisplay] = useState<string[]>(() =>
-    Array.from({ length: DISPLAY_WIDTH }, () => '?'),
-  );
+  const [display, setDisplay] = useState<string[]>(() => ['?', '?', '?', '?', '?', '?']);
   const [revealedCount, setRevealedCount] = useState(0);
   const [settled, setSettled] = useState<Set<number>>(() => new Set());
   const [isAnimating, setIsAnimating] = useState(false);
+  const [width, setWidth] = useState(6);
 
   const targetRef = useRef<string[] | null>(null);
   const revealedRef = useRef(0);
@@ -53,12 +48,13 @@ export function NumberDisplay({
   completeRef.current = onRevealComplete;
   const lastSnapValue = useRef<number | null>(null);
 
-  // Snap when value changes without a new revealKey (history / first paint)
+  // Idle / history: snap to natural width
   useEffect(() => {
     if (value == null) {
       targetRef.current = null;
       revealedRef.current = 0;
-      setDisplay(Array.from({ length: DISPLAY_WIDTH }, () => '?'));
+      setWidth(6);
+      setDisplay(['?', '?', '?', '?', '?', '?']);
       setRevealedCount(0);
       setSettled(new Set());
       setIsAnimating(false);
@@ -66,28 +62,32 @@ export function NumberDisplay({
       return;
     }
 
-    if (revealKey > 0) return; // handled by reveal effect
+    if (revealKey > 0) return;
 
     if (lastSnapValue.current === value && !isAnimating) return;
     lastSnapValue.current = value;
-    const digits = padDigits(value);
+    const digits = toDigits(value);
     targetRef.current = digits;
-    revealedRef.current = DISPLAY_WIDTH;
-    setDisplay(digits.map((c) => (c === ' ' ? ' ' : c)));
-    setRevealedCount(DISPLAY_WIDTH);
-    setSettled(new Set(Array.from({ length: DISPLAY_WIDTH }, (_, i) => i)));
+    const w = digits.length;
+    setWidth(w);
+    revealedRef.current = w;
+    setDisplay([...digits]);
+    setRevealedCount(w);
+    setSettled(new Set(Array.from({ length: w }, (_, i) => i)));
     setIsAnimating(false);
     completeRef.current?.();
   }, [value, revealKey, isAnimating]);
 
-  // Slot-machine reveal on each new roll
+  // Slot reveal at the number's true digit length
   useEffect(() => {
     if (value == null || revealKey === 0) return;
 
-    const digits = padDigits(value);
+    const digits = toDigits(value);
+    const w = digits.length;
     targetRef.current = digits;
     lastSnapValue.current = value;
     revealedRef.current = 0;
+    setWidth(w);
 
     const timers: number[] = [];
     const clearAll = () => {
@@ -95,11 +95,11 @@ export function NumberDisplay({
     };
 
     if (prefersReducedMotion()) {
-      setDisplay(digits.map((c) => (c === ' ' ? ' ' : c)));
-      setRevealedCount(DISPLAY_WIDTH);
-      setSettled(new Set(Array.from({ length: DISPLAY_WIDTH }, (_, i) => i)));
+      setDisplay([...digits]);
+      setRevealedCount(w);
+      setSettled(new Set(Array.from({ length: w }, (_, i) => i)));
       setIsAnimating(false);
-      revealedRef.current = DISPLAY_WIDTH;
+      revealedRef.current = w;
       completeRef.current?.();
       return;
     }
@@ -107,23 +107,20 @@ export function NumberDisplay({
     setIsAnimating(true);
     setRevealedCount(0);
     setSettled(new Set());
-    setDisplay(Array.from({ length: DISPLAY_WIDTH }, () => randomDigit()));
+    setDisplay(Array.from({ length: w }, () => randomDigit()));
 
     const spinLoop = window.setInterval(() => {
       const locked = revealedRef.current;
       setDisplay((prev) =>
         prev.map((_, i) => {
-          if (i < locked) {
-            const t = targetRef.current?.[i] ?? '?';
-            return t === ' ' ? ' ' : t;
-          }
+          if (i < locked) return targetRef.current?.[i] ?? '?';
           return randomDigit();
         }),
       );
     }, SPIN_INTERVAL_MS);
     timers.push(spinLoop);
 
-    for (let i = 0; i < DISPLAY_WIDTH; i++) {
+    for (let i = 0; i < w; i++) {
       const delay = PRE_REVEAL_SPIN_MS + i * REVEAL_STAGGER_MS;
       timers.push(
         window.setTimeout(() => {
@@ -132,11 +129,10 @@ export function NumberDisplay({
           setSettled((prev) => new Set(prev).add(i));
           setDisplay((prev) => {
             const next = [...prev];
-            const t = digits[i]!;
-            next[i] = t === ' ' ? ' ' : t;
+            next[i] = digits[i]!;
             return next;
           });
-          if (i === DISPLAY_WIDTH - 1) {
+          if (i === w - 1) {
             window.clearInterval(spinLoop);
             setIsAnimating(false);
             completeRef.current?.();
@@ -149,23 +145,20 @@ export function NumberDisplay({
   }, [revealKey, value]);
 
   const colorClass =
-    rarity && !isAnimating && revealedCount >= DISPLAY_WIDTH
+    rarity && !isAnimating && revealedCount >= width
       ? `rarity-${rarity}`
       : 'text-[var(--prose)]';
 
   return (
     <div
-      className={`mono-number flex justify-center gap-[0.06em] text-5xl font-bold sm:text-7xl ${colorClass}`}
+      className={`mono-number inline-flex justify-center gap-[0.06em] rounded-xl border border-[var(--outline)] bg-[var(--surface)] px-5 py-3 text-5xl font-bold shadow-sm sm:text-7xl ${colorClass}`}
       aria-label={value == null ? 'No roll yet' : `Rolled ${value.toLocaleString()}`}
       aria-live="polite"
     >
       {display.map((char, i) => {
-        const targetChar = targetRef.current?.[i];
-        const isLeadingBlank =
-          (i < revealedCount && targetChar === ' ') || char === ' ';
         const isRevealed = i < revealedCount;
         const isSpinning = isAnimating && !isRevealed;
-        const isSettled = settled.has(i) && targetChar !== ' ';
+        const isSettled = settled.has(i);
 
         return (
           <span
@@ -173,15 +166,12 @@ export function NumberDisplay({
             className={[
               'inline-block min-w-[0.62em] text-center tabular-nums',
               isSpinning ? 'digit-spin text-[var(--prose-3)]' : '',
-              isLeadingBlank && isRevealed
-                ? 'w-[0.28em] min-w-0 overflow-hidden opacity-0'
-                : '',
               isSettled ? 'digit-settle' : '',
             ]
               .filter(Boolean)
               .join(' ')}
           >
-            {isLeadingBlank && isRevealed ? '\u00A0' : isSpinning ? char : char === ' ' ? '\u00A0' : char}
+            {char}
           </span>
         );
       })}

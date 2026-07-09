@@ -34,7 +34,16 @@ export function CollectionScreen() {
                 title={b.description}
               >
                 <div className="font-bold uppercase tracking-wide">
-                  {has ? b.name : '????'}
+                  {has ? (
+                    <>
+                      <span className="mr-1" aria-hidden>
+                        {b.emoji}
+                      </span>
+                      {b.name}
+                    </>
+                  ) : (
+                    '????'
+                  )}
                 </div>
                 <div className="text-[var(--prose-3)]">
                   {has ? `+${b.ep.toLocaleString()} EP` : 'Locked'}
@@ -63,7 +72,16 @@ export function CollectionScreen() {
                 }`}
               >
                 <div className="font-bold uppercase tracking-wide">
-                  {has ? b.name : '????'}
+                  {has ? (
+                    <>
+                      <span className="mr-1" aria-hidden>
+                        {b.emoji}
+                      </span>
+                      {b.name}
+                    </>
+                  ) : (
+                    '????'
+                  )}
                 </div>
                 <div className="text-[var(--prose-3)]">
                   {has ? `+${b.ep.toLocaleString()} life EP` : b.description}

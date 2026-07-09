@@ -61,7 +61,7 @@ export function AppShell({
         ))}
       </nav>
 
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 py-6">
+      <main className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col px-4 py-6">
         {children}
       </main>
     </div>

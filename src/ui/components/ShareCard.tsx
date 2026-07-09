@@ -11,7 +11,7 @@ export function buildShareText(
   const top = topPercentFromPercentile(roll.percentile);
   const badges = roll.badges
     .slice(0, 5)
-    .map((b) => b.name)
+    .map((b) => `${b.emoji} ${b.name}`)
     .join(', ');
   const lines = [
     `RNGdle Unlocked — ${roll.number.toLocaleString()}`,
@@ -121,7 +121,7 @@ export function SharePanel({
                 key={b.id}
                 className="rounded bg-[var(--surface-raised)] px-2 py-0.5 text-[10px] uppercase"
               >
-                {b.name}
+                {b.emoji} {b.name}
               </span>
             ))}
           </div>

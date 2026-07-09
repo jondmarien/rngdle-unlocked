@@ -15,6 +15,7 @@ export type BadgeFamily =
   | 'magnitude'
   | 'sequence'
   | 'poker'
+  | 'element'
   | 'journey';
 
 export type BadgeHit = {
@@ -23,6 +24,11 @@ export type BadgeHit = {
   description: string;
   ep: number;
   family: BadgeFamily;
+  emoji: string;
+  /** Per-digit highlight mask for the rolled number's decimal string. */
+  highlights: boolean[];
+  /** Rarity of this badge alone (for card chrome). */
+  rarity: RarityTier;
 };
 
 export type BadgeDef = {
@@ -31,7 +37,10 @@ export type BadgeDef = {
   description: string;
   ep: number;
   family: BadgeFamily;
+  emoji: string;
   matches: (n: number) => boolean;
+  /** Which digits to glow on the breakdown card. Default: all. */
+  highlight?: (n: number) => boolean[];
 };
 
 export type RollResult = {

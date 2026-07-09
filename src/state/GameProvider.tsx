@@ -9,6 +9,7 @@ import {
 } from 'react';
 import {
   performRoll,
+  journeyHits,
   newlyUnlockedJourney,
   sumJourneyEP,
   type AppSettings,
@@ -91,13 +92,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       const prevCount = state.lifetimeRollCount;
       const nextCount = prevCount + 1;
       const unlockedDefs = newlyUnlockedJourney(prevCount, nextCount);
-      const journeyUnlocked = unlockedDefs.map((b) => ({
-        id: b.id,
-        name: b.name,
-        description: b.description,
-        ep: b.ep,
-        family: b.family,
-      }));
+      const journeyUnlocked = journeyHits(unlockedDefs);
       const journeyEPGained = sumJourneyEP(unlockedDefs);
       const at = result.rolledAt;
 

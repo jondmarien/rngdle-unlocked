@@ -1,3 +1,4 @@
+import { badgeRarityFromEP } from './rarity';
 import type { BadgeDef, BadgeHit } from './types';
 
 export const JOURNEY_THRESHOLDS = [
@@ -42,14 +43,33 @@ const NAMES: Record<JourneyThreshold, string> = {
   10000: 'Legend',
 };
 
+const EMOJI: Record<JourneyThreshold, string> = {
+  5: '🌱',
+  10: '🔟',
+  15: '🔥',
+  20: '🎯',
+  50: '⭐',
+  100: '💯',
+  250: '🚀',
+  500: '🏅',
+  1000: '⚒️',
+  1500: '💪',
+  2000: '🌋',
+  3000: '🏰',
+  4000: '👑',
+  5000: '💎',
+  10000: '🏆',
+};
+
 function journeyBadge(threshold: JourneyThreshold): BadgeDef {
   return {
     id: `rolls-${threshold}`,
     name: NAMES[threshold],
-    description: `Reached ${threshold.toLocaleString()} lifetime rolls`,
+    description: `Reached ${threshold.toLocaleString()} lifetime rolls.`,
     ep: EP_BY_THRESHOLD[threshold],
     family: 'journey',
-    matches: () => false, // not number-based
+    emoji: EMOJI[threshold],
+    matches: () => false,
   };
 }
 
@@ -59,7 +79,6 @@ export function journeyBadgesForCount(count: number): BadgeDef[] {
   return JOURNEY_THRESHOLDS.filter((t) => count >= t).map(journeyBadge);
 }
 
-/** Badges newly unlocked when count goes from prev → next (exclusive of prev). */
 export function newlyUnlockedJourney(prev: number, next: number): BadgeDef[] {
   return JOURNEY_THRESHOLDS.filter((t) => prev < t && next >= t).map(journeyBadge);
 }
@@ -71,6 +90,9 @@ export function journeyHits(defs: BadgeDef[]): BadgeHit[] {
     description: b.description,
     ep: b.ep,
     family: b.family,
+    emoji: b.emoji,
+    highlights: [],
+    rarity: badgeRarityFromEP(b.ep),
   }));
 }
 
