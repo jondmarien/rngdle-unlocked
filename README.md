@@ -53,31 +53,31 @@ Unlike a classic daily lock, you can roll **unlimited** times. Progress defaults
 
 ```mermaid
 flowchart TB
-  subgraph CLIENT["Browser SPA"]
-    UI["React UI<br/>Roll reel · Codex · Board · Share"]
-    LS[("localStorage<br/>primary save")]
-    FREE["Free play CSPRNG<br/>crypto.getRandomValues"]
-    CHAL["Daily / Weekly seed"]
+  subgraph Client["Browser SPA"]
+    UI[React UI]
+    FREE[Free play CSPRNG]
+    CHAL[Daily or Weekly seed]
+    LS[(localStorage)]
     UI --> FREE
     UI --> CHAL
     UI --> LS
   end
 
-  subgraph VERCEL["Vercel"]
-    STATIC["Static dist/"]
-    API["Serverless /api/*"]
-    RANK["POST /api/ranked-roll<br/>server CSPRNG"]
+  subgraph Host["Vercel"]
+    STATIC[Static dist]
+    API["Serverless API"]
+    RANK["POST ranked-roll"]
   end
 
-  subgraph DATA["Neon Postgres"]
-    NEON[("auth · progress · rolls.source<br/>follows · notifications · crowns")]
+  subgraph Data["Neon Postgres"]
+    NEON[(auth progress rolls follows)]
   end
 
-  UI -->|Free play sync · Practice board| API
+  STATIC --> UI
+  UI -->|Free play sync Practice board| API
   UI -->|Ranked Generate| RANK
   RANK --> NEON
   API --> NEON
-  STATIC --> UI
 ```
 
 Deeper diagrams (roll lifecycle, Ranked vs Free, notifications, OG): **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)**.

@@ -8,24 +8,24 @@ RNGdle Unlocked is a **client-first** number game with an **optional** cloud soc
 flowchart TB
   subgraph Browser
     UI[React SPA]
-    Engine[src/game pure TS]
+    Engine[game engine pure TS]
     LS[(localStorage)]
     UI --> Engine
     UI --> LS
   end
 
   subgraph Vercel
-    Static[dist/ static]
-    API["/api/* serverless"]
-    Ranked["POST /api/ranked-roll"]
+    Static[Static dist]
+    API[Serverless API]
+    Ranked[POST ranked-roll]
   end
 
   subgraph Neon
-    DB[(Postgres · rolls.source)]
+    DB[(Postgres rolls source)]
   end
 
   Static --> UI
-  UI -->|auth · sync · Practice board| API
+  UI -->|auth sync Practice board| API
   UI -->|Ranked Generate| Ranked
   Ranked --> DB
   API --> DB
