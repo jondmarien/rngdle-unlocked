@@ -5,13 +5,14 @@ import {
   topPercentFromPercentile,
 } from '../../game';
 import { playRollSound, shouldCelebrate } from '../../game/fx';
-import { useGame, type RollMode } from '../../state/GameProvider';
+import { useGame } from '../../state/GameProvider';
 import { BadgeBreakdown } from '../components/BadgeCard';
 import { EPPill } from '../components/EPPill';
 import { GenerateButton } from '../components/GenerateButton';
 import { NumberDisplay } from '../components/NumberDisplay';
 import { OnboardingTip } from '../components/OnboardingTip';
 import { RarityBadge } from '../components/RarityBadge';
+import { RollModePicker } from '../components/RollModePicker';
 import { SharePanel } from '../components/ShareCard';
 
 export function HomeScreen({
@@ -64,7 +65,6 @@ export function HomeScreen({
     };
   }, []);
 
-  // Clear ephemeral attest banner when the displayed roll changes
   useEffect(() => {
     setAttestMsg(null);
   }, [lastRoll?.id]);
@@ -90,11 +90,7 @@ export function HomeScreen({
       if (settings.confettiEnabled && shouldCelebrate(lastRoll.rarity)) {
         fireCelebration();
       }
-      // Auto-open share on mythic / anomaly (feature 10)
-      if (
-        lastRoll.rarity === 'mythic' ||
-        lastRoll.rarity === 'anomaly'
-      ) {
+      if (lastRoll.rarity === 'mythic' || lastRoll.rarity === 'anomaly') {
         setShareOpen(true);
       }
       pendingFx.current = false;
@@ -105,53 +101,26 @@ export function HomeScreen({
 
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col">
-      {/* Fixed action column — button never jumps when badges load */}
-      <div className="flex shrink-0 flex-col items-center gap-4 text-center">
+      <div className="flex shrink-0 flex-col items-center gap-5 text-center">
         <OnboardingTip onGoAccount={onGoAccount} />
 
-        <p className="max-w-sm text-sm text-[var(--prose-3)]">
-          Unlimited rolls. No daily lock. Fortified browser CSPRNG.
-        </p>
-
-        {/* Feature 5 — optional challenge mode */}
-        <div className="flex flex-wrap justify-center gap-1.5 text-[10px] font-bold uppercase">
-          {(
-            [
-              ['free', 'Free play'],
-              ['daily', 'Daily'],
-              ['weekly', 'Weekly'],
-            ] as const
-          ).map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setRollMode(id as RollMode)}
-              className={`rounded border px-2 py-1 ${
-                rollMode === id
-                  ? 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
-                  : 'border-[var(--outline)] text-[var(--prose-3)]'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        {rollMode !== 'free' && (
-          <p className="max-w-sm text-[10px] text-[var(--prose-3)]">
-            Challenge mode: personal number from shared {rollMode} seed + your
-            account (verifiable). Free play stays unlimited CSPRNG.
-          </p>
-        )}
+        <RollModePicker value={rollMode} onChange={setRollMode} />
 
         {(stats.dayStreak > 0 || stats.qualityStreak > 0 || stats.bestRoll) && (
-          <div className="flex flex-wrap justify-center gap-2 text-[10px] font-bold uppercase tracking-wider text-[var(--prose-3)]">
-            {stats.dayStreak > 0 && <span>🔥 {stats.dayStreak}d streak</span>}
+          <div className="flex flex-wrap justify-center gap-2 text-sm text-[var(--prose-2)]">
+            {stats.dayStreak > 0 && (
+              <span className="rounded-md border border-[var(--outline)] px-2.5 py-1">
+                {stats.dayStreak}d streak
+              </span>
+            )}
             {stats.qualityStreak > 0 && (
-              <span>⚡ {stats.qualityStreak} quality</span>
+              <span className="rounded-md border border-[var(--outline)] px-2.5 py-1">
+                {stats.qualityStreak} quality
+              </span>
             )}
             {stats.bestRoll && (
-              <span>
-                🏆 best {stats.bestRoll.totalEP.toLocaleString()} EP
+              <span className="rounded-md border border-[var(--outline)] px-2.5 py-1">
+                Best {stats.bestRoll.totalEP.toLocaleString()} EP
               </span>
             )}
           </div>
@@ -164,32 +133,35 @@ export function HomeScreen({
           onRevealComplete={onRevealComplete}
         />
 
-        {/* Reserved score strip so layout stays stable during reveal */}
-        <div className="flex min-h-[4.75rem] flex-col items-center justify-center gap-1.5">
+        <div className="flex min-h-[5rem] flex-col items-center justify-center gap-2">
           {lastRoll && revealDone ? (
-            <div className="number-fade-in flex flex-col items-center gap-1.5">
+            <div className="number-fade-in flex flex-col items-center gap-2">
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <RarityBadge rarity={lastRoll.rarity} />
-                <span className="text-xs text-[var(--prose-3)]">
+                <span className="text-sm text-[var(--prose-2)]">
                   Top {topPercentFromPercentile(lastRoll.percentile)}%
                 </span>
               </div>
               <EPPill ep={lastRoll.totalEP} />
             </div>
           ) : lastRoll && !revealDone ? (
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--prose-3)]">
+            <p className="text-sm font-semibold text-[var(--prose-2)]">
               Rolling…
             </p>
           ) : (
-            <p className="text-xs text-[var(--prose-3)]">Press generate to roll</p>
+            <p className="text-sm text-[var(--prose-2)]">
+              Press Generate to roll
+            </p>
           )}
         </div>
 
         {revealDone && lastJourneyUnlocks.length > 0 && (
-          <div className="number-fade-in w-full max-w-md rounded border border-[var(--accent)] bg-[var(--surface-raised)] px-3 py-2 text-sm">
-            {lastJourneyUnlocks.map((j) => j.emoji).join(' ')} Journey unlocked:{' '}
+          <div className="number-fade-in w-full max-w-md rounded-lg border border-[var(--accent)] bg-[var(--surface-raised)] px-3 py-2.5 text-sm leading-snug">
+            Journey unlocked:{' '}
             {lastJourneyUnlocks.map((j) => j.name).join(', ')} (+
-            {lastJourneyUnlocks.reduce((a, b) => a + b.ep, 0).toLocaleString()}{' '}
+            {lastJourneyUnlocks
+              .reduce((a, b) => a + b.ep, 0)
+              .toLocaleString()}{' '}
             lifetime EP)
           </div>
         )}
@@ -201,56 +173,68 @@ export function HomeScreen({
         />
 
         {lastRoll && revealDone && (
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <button
-              type="button"
-              className="text-xs font-bold uppercase tracking-wider text-[var(--prose-2)] underline-offset-2 hover:underline"
-              onClick={() => setShareOpen(true)}
-            >
-              Share this roll
-            </button>
-            {!lastRoll.attestationSeal && (
+          <div className="flex w-full max-w-md flex-col items-center gap-2">
+            <div className="flex flex-wrap items-center justify-center gap-2">
               <button
                 type="button"
-                className="text-xs font-bold uppercase tracking-wider text-[var(--prose-3)] underline-offset-2 hover:underline"
-                onClick={() => {
-                  setAttestMsg(null);
-                  void attestRoll(lastRoll).then((r) => {
-                    setAttestMsg(
-                      r
-                        ? 'Server seal attached ✓'
-                        : 'Seal failed — sign in and sync first',
-                    );
-                  });
-                }}
+                className="rounded-md border border-[var(--outline)] bg-[var(--surface)] px-3 py-2 text-sm font-semibold text-[var(--prose)] hover:border-[var(--prose-2)]"
+                onClick={() => setShareOpen(true)}
               >
-                Prove this roll
+                Share
               </button>
-            )}
-            {lastRoll.attestationSeal && (
-              <span className="text-[10px] font-bold uppercase text-emerald-600 dark:text-emerald-400">
-                ✓ Sealed
-              </span>
-            )}
+              {!lastRoll.attestationSeal ? (
+                <button
+                  type="button"
+                  className="rounded-md border border-[var(--outline)] bg-[var(--surface)] px-3 py-2 text-sm font-semibold text-[var(--prose)] hover:border-[var(--prose-2)]"
+                  title="Ask the server to HMAC-seal this roll claim. Not proof of honest RNG."
+                  onClick={() => {
+                    setAttestMsg(null);
+                    void attestRoll(lastRoll).then((r) => {
+                      setAttestMsg(
+                        r
+                          ? 'Server seal attached. This stamps the claim; free-play RNG is still client-side.'
+                          : 'Seal failed. Sign in and sync first.',
+                      );
+                    });
+                  }}
+                >
+                  Prove roll
+                </button>
+              ) : (
+                <span className="rounded-md border border-emerald-600/40 bg-emerald-500/10 px-3 py-2 text-sm font-semibold text-emerald-800 dark:text-emerald-300">
+                  Sealed
+                </span>
+              )}
+            </div>
             {lastRoll.challengeKey && (
-              <span className="text-[10px] font-bold uppercase text-[var(--prose-3)]">
-                {lastRoll.challengeKey}
-              </span>
+              <p className="text-sm text-[var(--prose-2)]">
+                Challenge:{' '}
+                <span className="font-mono font-medium text-[var(--prose)]">
+                  {lastRoll.challengeKey}
+                </span>
+              </p>
+            )}
+            {lastRoll.attestationSeal && !attestMsg && (
+              <p className="max-w-sm text-sm leading-snug text-[var(--prose-2)]">
+                Server stamped this roll. That records the claim; it does not
+                mean the number came from server RNG.
+              </p>
+            )}
+            {attestMsg && (
+              <p className="max-w-sm text-sm leading-snug text-[var(--prose-2)]">
+                {attestMsg}
+              </p>
             )}
           </div>
         )}
-        {attestMsg && (
-          <p className="text-xs text-[var(--prose-3)]">{attestMsg}</p>
-        )}
 
         {saveError && (
-          <p className="text-xs text-red-600 dark:text-red-400">{saveError}</p>
+          <p className="text-sm text-red-700 dark:text-red-400">{saveError}</p>
         )}
       </div>
 
-      {/* Scrollable badges below the button — never shifts the CTA */}
       {lastRoll && revealDone && (
-        <div className="number-fade-in mt-6 min-h-0 flex-1 overflow-y-auto pb-4">
+        <div className="number-fade-in mt-8 min-h-0 flex-1 overflow-y-auto pb-4">
           <BadgeBreakdown badges={lastRoll.badges} number={lastRoll.number} />
         </div>
       )}

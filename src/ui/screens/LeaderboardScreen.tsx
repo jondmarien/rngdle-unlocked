@@ -372,10 +372,10 @@ function Toggle({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded border px-2 py-1 ${
+      className={`rounded-md border px-2.5 py-1.5 text-sm font-semibold ${
         active
           ? 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
-          : 'border-[var(--outline)] text-[var(--prose-3)]'
+          : 'border-[var(--outline)] text-[var(--prose-2)]'
       }`}
     >
       {label}

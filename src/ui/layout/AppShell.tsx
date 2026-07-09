@@ -30,11 +30,11 @@ export function AppShell({
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-[var(--bg)] text-[var(--prose)]">
-      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--outline)] px-3 py-2">
-        <div className="flex items-center gap-3">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--outline)] px-4 py-3">
+        <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
           <a
             href={tabPath('home')}
-            className="text-lg font-bold tracking-[0.2em]"
+            className="text-base font-bold tracking-wide sm:text-lg"
             onClick={(e) => {
               e.preventDefault();
               onTab('home');
@@ -42,11 +42,13 @@ export function AppShell({
           >
             RNGdle Unlocked
           </a>
-          <span className="hidden text-xs text-[var(--prose-3)] sm:inline">
+          <span className="text-sm text-[var(--prose-2)]">
             {lifetimeRollCount.toLocaleString()} rolls ·{' '}
             {lifetimeEP.toLocaleString()} EP
-            {stats.dayStreak > 0 ? ` · 🔥${stats.dayStreak}d` : ''}
-            {stats.qualityStreak > 0 ? ` · ⚡${stats.qualityStreak}` : ''}
+            {stats.dayStreak > 0 ? ` · ${stats.dayStreak}d streak` : ''}
+            {stats.qualityStreak > 0
+              ? ` · ${stats.qualityStreak} quality`
+              : ''}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -54,7 +56,10 @@ export function AppShell({
         </div>
       </header>
 
-      <nav className="flex gap-1 overflow-x-auto border-b border-[var(--outline)] px-2 py-1">
+      <nav
+        className="flex gap-0.5 overflow-x-auto border-b border-[var(--outline)] px-2 py-1.5 sm:px-3"
+        aria-label="Main"
+      >
         {TABS.map((t) => (
           <a
             key={t.id}
@@ -63,10 +68,10 @@ export function AppShell({
               e.preventDefault();
               onTab(t.id);
             }}
-            className={`whitespace-nowrap px-3 py-1.5 text-xs font-bold uppercase tracking-wider ${
+            className={`whitespace-nowrap rounded-md px-3 py-2 text-sm font-semibold tracking-wide ${
               tab === t.id
-                ? 'border-b-2 border-[var(--prose)] text-[var(--prose)]'
-                : 'text-[var(--prose-3)] hover:text-[var(--prose)]'
+                ? 'bg-[var(--surface-raised)] text-[var(--prose)]'
+                : 'text-[var(--prose-2)] hover:bg-[var(--surface)] hover:text-[var(--prose)]'
             }`}
           >
             {t.label}
@@ -74,7 +79,7 @@ export function AppShell({
         ))}
       </nav>
 
-      <main className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col px-4 py-6">
+      <main className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col px-4 py-6 sm:px-5">
         {children}
       </main>
     </div>

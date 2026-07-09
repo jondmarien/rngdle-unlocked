@@ -13,7 +13,7 @@ const LABELS: Record<RarityTier, string> = {
 export function RarityBadge({ rarity }: { rarity: RarityTier }) {
   return (
     <span
-      className={`rarity-${rarity} text-sm font-bold uppercase tracking-[0.2em]`}
+      className={`rarity-${rarity} text-base font-bold tracking-wide`}
     >
       {LABELS[rarity]}
     </span>

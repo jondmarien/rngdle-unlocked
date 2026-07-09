@@ -28,19 +28,17 @@ export function OnboardingTip({ onGoAccount }: { onGoAccount?: () => void }) {
   if (!show) return null;
 
   return (
-    <div className="mb-4 rounded-lg border-2 border-[var(--accent)] bg-[var(--surface-raised)] p-3 text-sm shadow-sm">
-      <p className="font-bold uppercase tracking-wider text-[var(--prose)]">
-        Nice roll 🎲
-      </p>
-      <p className="mt-1 text-[var(--prose-2)]">
+    <div className="w-full max-w-lg rounded-lg border border-[var(--outline)] bg-[var(--surface-raised)] p-4 text-left">
+      <p className="text-base font-bold text-[var(--prose)]">Nice roll</p>
+      <p className="mt-1 text-sm leading-relaxed text-[var(--prose-2)]">
         Create an account to keep progress forever, climb the board, and get a
         public share link for rare hits.
       </p>
-      <div className="mt-2 flex flex-wrap gap-2">
+      <div className="mt-3 flex flex-wrap gap-2">
         {onGoAccount && (
           <button
             type="button"
-            className="border-2 border-[var(--prose)] bg-[var(--prose)] px-3 py-1.5 text-xs font-bold uppercase text-[var(--bg)]"
+            className="border-2 border-[var(--prose)] bg-[var(--prose)] px-3 py-2 text-sm font-semibold text-[var(--bg)]"
             onClick={onGoAccount}
           >
             Create account
@@ -48,7 +46,7 @@ export function OnboardingTip({ onGoAccount }: { onGoAccount?: () => void }) {
         )}
         <button
           type="button"
-          className="border border-[var(--outline)] px-3 py-1.5 text-xs font-bold uppercase text-[var(--prose-3)]"
+          className="border border-[var(--outline)] px-3 py-2 text-sm font-semibold text-[var(--prose-2)]"
           onClick={() => {
             saveOnboarding({ dismissedAccountTip: true });
             setShow(false);

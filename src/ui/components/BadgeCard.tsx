@@ -27,27 +27,25 @@ export function BadgeCard({
       : digits.map(() => false);
 
   return (
-    <article className="rounded-xl border border-[var(--outline)] bg-[var(--surface)] p-3 text-left shadow-sm">
+    <article className="rounded-lg border border-[var(--outline)] bg-[var(--surface)] p-4 text-left">
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <span className="text-lg leading-none" aria-hidden>
+          <span className="text-xl leading-none" aria-hidden>
             {badge.emoji}
           </span>
-          <h3 className="text-sm font-bold uppercase tracking-wide">
-            {badge.name}
-          </h3>
+          <h3 className="text-base font-bold tracking-tight">{badge.name}</h3>
           <span
-            className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${RARITY_CHIP[badge.rarity]}`}
+            className={`rounded-full px-2 py-0.5 text-xs font-semibold capitalize ${RARITY_CHIP[badge.rarity]}`}
           >
             {RARITY_LABELS[badge.rarity]}
           </span>
         </div>
-        <span className="mono-number shrink-0 text-sm font-bold text-amber-600 dark:text-amber-400">
+        <span className="mono-number shrink-0 text-base font-bold text-amber-700 dark:text-amber-400">
           +{badge.ep.toLocaleString()} EP
         </span>
       </div>
 
-      <p className="mt-1.5 text-xs uppercase tracking-wide text-[var(--prose-3)]">
+      <p className="mt-2 text-sm leading-relaxed text-[var(--prose-2)]">
         {badge.description}
       </p>
 
@@ -57,10 +55,10 @@ export function BadgeCard({
           return (
             <span
               key={i}
-              className={`mono-number flex h-8 w-8 items-center justify-center rounded-md border text-sm font-bold ${
+              className={`mono-number flex h-9 w-9 items-center justify-center rounded-md border text-sm font-bold ${
                 on
-                  ? 'border-emerald-500/60 bg-emerald-500/20 text-emerald-700 dark:text-emerald-300'
-                  : 'border-[var(--outline)] bg-[var(--bg)] text-[var(--prose-3)]'
+                  ? 'border-emerald-500/60 bg-emerald-500/20 text-emerald-800 dark:text-emerald-300'
+                  : 'border-[var(--outline)] bg-[var(--bg)] text-[var(--prose-2)]'
               }`}
             >
               {d}
@@ -81,23 +79,23 @@ export function BadgeBreakdown({
 }) {
   if (badges.length === 0) {
     return (
-      <p className="py-6 text-center text-sm text-[var(--prose-3)]">
-        No number badges this roll — still a valid spin.
+      <p className="py-6 text-center text-base text-[var(--prose-2)]">
+        No number badges this roll. Still a valid spin.
       </p>
     );
   }
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-baseline justify-between px-0.5">
-        <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--prose-2)]">
+    <div className="space-y-3">
+      <div className="flex items-baseline justify-between gap-2 px-0.5">
+        <h2 className="text-base font-bold text-[var(--prose)]">
           Badge breakdown
         </h2>
-        <span className="text-[10px] uppercase tracking-wider text-[var(--prose-3)]">
+        <span className="text-sm text-[var(--prose-2)]">
           {badges.length} badge{badges.length === 1 ? '' : 's'} earned
         </span>
       </div>
-      <ul className="space-y-2">
+      <ul className="space-y-2.5">
         {badges.map((b) => (
           <li key={b.id}>
             <BadgeCard badge={b} number={number} />

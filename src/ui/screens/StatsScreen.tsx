@@ -145,8 +145,8 @@ export function StatsScreen() {
             const n = hist.counts[tier];
             const pct = (n / hist.max) * 100;
             return (
-              <li key={tier} className="flex items-center gap-2 text-xs">
-                <span className="w-20 shrink-0 font-bold uppercase tracking-wider text-[var(--prose-3)]">
+              <li key={tier} className="flex items-center gap-2 text-sm">
+                <span className="w-24 shrink-0 font-semibold text-[var(--prose-2)]">
                   {RARITY_LABELS[tier] ?? tier}
                 </span>
                 <div className="h-3 flex-1 overflow-hidden rounded bg-[var(--surface-raised)]">
@@ -188,7 +188,7 @@ export function StatsScreen() {
             );
           })}
         </div>
-        <div className="mt-1 flex justify-between text-[10px] text-[var(--prose-3)]">
+        <div className="mt-1 flex justify-between text-sm text-[var(--prose-2)]">
           <span>{calendar.days[0]?.key}</span>
           <span>{calendar.days[calendar.days.length - 1]?.key}</span>
         </div>
@@ -200,10 +200,8 @@ export function StatsScreen() {
 function Tile({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-[var(--outline)] bg-[var(--surface)] p-3">
-      <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--prose-3)]">
-        {label}
-      </div>
-      <div className="mono-number text-lg font-bold">{value}</div>
+      <div className="text-sm font-semibold text-[var(--prose-2)]">{label}</div>
+      <div className="mono-number text-xl font-bold">{value}</div>
     </div>
   );
 }

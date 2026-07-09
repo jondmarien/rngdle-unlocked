@@ -6,9 +6,10 @@
   --bg: #f6f4ef;
   --surface: #ffffff;
   --surface-raised: #efece4;
+  /* Body / secondary / muted: keep WCAG-friendly contrast on cream bg */
   --prose: #14120f;
-  --prose-2: #3d3a34;
-  --prose-3: #6e6a62;
+  --prose-2: #2f2c27;
+  --prose-3: #4f4a42;
   --outline: #cfc8ba;
   --accent: #1a5cff;
   --trash: #6e6a62;
@@ -19,6 +20,8 @@
   --anomaly: #c026d3;
   --mythic: #d97706;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
   color: var(--prose);
   background: var(--bg);
 }
@@ -28,8 +31,9 @@
   --surface: #171512;
   --surface-raised: #221f1a;
   --prose: #f3efe6;
-  --prose-2: #c8c2b4;
-  --prose-3: #8a8478;
+  /* Brighter secondary/muted on dark so labels stay readable */
+  --prose-2: #d4cec0;
+  --prose-3: #a8a092;
   --outline: #3a352c;
   --accent: #6b9bff;
 }

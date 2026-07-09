@@ -85,10 +85,10 @@ export function CollectionScreen() {
             key={f.id}
             type="button"
             onClick={() => setFilter(f.id)}
-            className={`rounded border px-2 py-1 text-[10px] font-bold uppercase ${
+            className={`rounded-md border px-2.5 py-1.5 text-sm font-semibold ${
               filter === f.id
                 ? 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
-                : 'border-[var(--outline)] text-[var(--prose-3)]'
+                : 'border-[var(--outline)] text-[var(--prose-2)]'
             }`}
           >
             {f.label}
@@ -97,7 +97,7 @@ export function CollectionScreen() {
         <button
           type="button"
           onClick={() => setShowLocked((v) => !v)}
-          className="rounded border border-[var(--outline)] px-2 py-1 text-[10px] font-bold uppercase text-[var(--prose-3)]"
+          className="rounded-md border border-[var(--outline)] px-2.5 py-1.5 text-sm font-semibold text-[var(--prose-2)]"
         >
           {showLocked ? 'Hide locked' : 'Show locked'}
         </button>
@@ -136,7 +136,7 @@ export function CollectionScreen() {
                         </>
                       )}
                     </div>
-                    <span className="shrink-0 text-[10px] uppercase text-[var(--prose-3)]">
+                    <span className="shrink-0 text-xs font-medium capitalize text-[var(--prose-2)]">
                       {b.family}
                     </span>
                   </div>

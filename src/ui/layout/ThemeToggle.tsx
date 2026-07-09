@@ -10,14 +10,18 @@ export function ThemeToggle({
   onChange: (m: ThemeMode) => void;
 }) {
   return (
-    <div className="flex overflow-hidden rounded border border-[var(--outline)]">
+    <div
+      className="flex overflow-hidden rounded-md border border-[var(--outline)]"
+      role="group"
+      aria-label="Theme"
+    >
       {MODES.map((m) => (
         <button
           key={m}
           type="button"
-          title={m}
+          title={m === 'system' ? 'System' : m}
           onClick={() => onChange(m)}
-          className={`px-2 py-1 text-[10px] font-bold uppercase tracking-wide ${
+          className={`px-2.5 py-1.5 text-xs font-semibold capitalize sm:text-sm ${
             value === m
               ? 'bg-[var(--prose)] text-[var(--bg)]'
               : 'text-[var(--prose-2)] hover:bg-[var(--surface-raised)]'
