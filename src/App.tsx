@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/react';
 import { useState } from 'react';
 import { GameProvider } from './state/GameProvider';
 import { AppShell, type TabId } from './ui/layout/AppShell';
@@ -25,6 +26,7 @@ export default function App() {
   return (
     <GameProvider>
       <AppRoutes />
+      <Analytics />
     </GameProvider>
   );
 }
