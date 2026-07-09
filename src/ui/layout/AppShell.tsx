@@ -94,55 +94,57 @@ export function AppShell({
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-[var(--bg)] text-[var(--prose)]">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--outline)] px-4 py-3">
-        <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
-          <a
-            href={tabPath('home')}
-            className="font-display text-base font-bold tracking-wide sm:text-lg"
-            onClick={(e) => {
-              e.preventDefault();
-              onTab('home');
-            }}
-          >
-            RNGdle Unlocked
-          </a>
-          <span className="text-sm text-[var(--prose-2)]">
-            {lifetimeRollCount.toLocaleString()} rolls ·{' '}
-            {lifetimeEP.toLocaleString()} EP
-            {stats.dayStreak > 0 ? ` · ${stats.dayStreak}d streak` : ''}
-            {stats.qualityStreak > 0
-              ? ` · ${stats.qualityStreak} quality`
-              : ''}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          {session?.user && (
-            <button
-              type="button"
-              title="Notifications"
-              onClick={() => onTab('notifications')}
-              className={`relative rounded-md border px-2.5 py-1.5 text-sm font-semibold ${
-                tab === 'notifications'
-                  ? 'border-[var(--prose)] bg-[var(--surface-raised)]'
-                  : 'border-[var(--outline)]'
-              }`}
+      {/* Sticky chrome: brand bar + nav stay visible while content scrolls */}
+      <div className="sticky top-0 z-40 border-b border-[var(--outline)] bg-[var(--bg)]/95 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-[var(--bg)]/85">
+        <header className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+          <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
+            <a
+              href={tabPath('home')}
+              className="font-display text-base font-bold tracking-wide sm:text-lg"
+              onClick={(e) => {
+                e.preventDefault();
+                onTab('home');
+              }}
             >
-              Alerts
-              {unread > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--accent)] px-1 text-[11px] font-bold text-white">
-                  {unread > 99 ? '99+' : unread}
-                </span>
-              )}
-            </button>
-          )}
-          <ThemeToggle value={settings.theme} onChange={setTheme} />
-        </div>
-      </header>
+              RNGdle Unlocked
+            </a>
+            <span className="text-sm text-[var(--prose-2)]">
+              {lifetimeRollCount.toLocaleString()} rolls ·{' '}
+              {lifetimeEP.toLocaleString()} EP
+              {stats.dayStreak > 0 ? ` · ${stats.dayStreak}d streak` : ''}
+              {stats.qualityStreak > 0
+                ? ` · ${stats.qualityStreak} quality`
+                : ''}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {session?.user && (
+              <button
+                type="button"
+                title="Notifications"
+                onClick={() => onTab('notifications')}
+                className={`relative rounded-md border px-2.5 py-1.5 text-sm font-semibold ${
+                  tab === 'notifications'
+                    ? 'border-[var(--prose)] bg-[var(--surface-raised)]'
+                    : 'border-[var(--outline)]'
+                }`}
+              >
+                Alerts
+                {unread > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--accent)] px-1 text-[11px] font-bold text-white">
+                    {unread > 99 ? '99+' : unread}
+                  </span>
+                )}
+              </button>
+            )}
+            <ThemeToggle value={settings.theme} onChange={setTheme} />
+          </div>
+        </header>
 
-      <nav
-        className="flex gap-0.5 overflow-x-auto border-b border-[var(--outline)] px-2 py-1.5 sm:px-3"
-        aria-label="Main"
-      >
+        <nav
+          className="flex gap-0.5 overflow-x-auto px-2 py-1.5 sm:px-3"
+          aria-label="Main"
+        >
         {NAV.map((item) => {
           if (item.kind === 'profile') {
             const href = myUsername
@@ -186,7 +188,8 @@ export function AppShell({
             </a>
           );
         })}
-      </nav>
+        </nav>
+      </div>
 
       <main className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col px-4 py-6 sm:px-5">
         {children}

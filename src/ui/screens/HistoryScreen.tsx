@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   topPercentFromPercentile,
+  type RarityTier,
   type RollResult,
 } from '../../game';
 import { useGame } from '../../state/GameProvider';
@@ -18,6 +19,88 @@ function fmtDate(iso: string): string {
   }
 }
 
+const RARITY_RANK: Record<RarityTier, number> = {
+  trash: 0,
+  common: 1,
+  uncommon: 2,
+  rare: 3,
+  epic: 4,
+  anomaly: 5,
+  mythic: 6,
+};
+
+type HistorySort =
+  | 'newest'
+  | 'oldest'
+  | 'best_ep'
+  | 'worst_ep'
+  | 'rarest'
+  | 'commonest'
+  | 'most_badges'
+  | 'fewest_badges'
+  | 'highest_number'
+  | 'lowest_number';
+
+const SORT_OPTIONS: { id: HistorySort; label: string }[] = [
+  { id: 'newest', label: 'Newest' },
+  { id: 'oldest', label: 'Oldest' },
+  { id: 'best_ep', label: 'Best EP' },
+  { id: 'worst_ep', label: 'Worst EP' },
+  { id: 'rarest', label: 'Rarest' },
+  { id: 'commonest', label: 'Commonest' },
+  { id: 'most_badges', label: 'Most badges' },
+  { id: 'fewest_badges', label: 'Fewest badges' },
+  { id: 'highest_number', label: 'Highest #' },
+  { id: 'lowest_number', label: 'Lowest #' },
+];
+
+function sortHistory(list: RollResult[], sort: HistorySort): RollResult[] {
+  const copy = [...list];
+  const byTime = (a: RollResult, b: RollResult) =>
+    a.rolledAt < b.rolledAt ? 1 : a.rolledAt > b.rolledAt ? -1 : 0;
+
+  switch (sort) {
+    case 'newest':
+      return copy.sort(byTime);
+    case 'oldest':
+      return copy.sort((a, b) => -byTime(a, b));
+    case 'best_ep':
+      return copy.sort(
+        (a, b) => b.totalEP - a.totalEP || byTime(a, b),
+      );
+    case 'worst_ep':
+      return copy.sort(
+        (a, b) => a.totalEP - b.totalEP || byTime(a, b),
+      );
+    case 'rarest':
+      return copy.sort(
+        (a, b) =>
+          RARITY_RANK[b.rarity] - RARITY_RANK[a.rarity] ||
+          b.totalEP - a.totalEP,
+      );
+    case 'commonest':
+      return copy.sort(
+        (a, b) =>
+          RARITY_RANK[a.rarity] - RARITY_RANK[b.rarity] ||
+          a.totalEP - b.totalEP,
+      );
+    case 'most_badges':
+      return copy.sort(
+        (a, b) => b.badges.length - a.badges.length || b.totalEP - a.totalEP,
+      );
+    case 'fewest_badges':
+      return copy.sort(
+        (a, b) => a.badges.length - b.badges.length || a.totalEP - b.totalEP,
+      );
+    case 'highest_number':
+      return copy.sort((a, b) => b.number - a.number || byTime(a, b));
+    case 'lowest_number':
+      return copy.sort((a, b) => a.number - b.number || byTime(a, b));
+    default:
+      return copy;
+  }
+}
+
 export function HistoryScreen({
   onGoAccount,
 }: {
@@ -26,12 +109,18 @@ export function HistoryScreen({
   const { history, lifetimeRollCount, settings, stats } = useGame();
   const [shareRoll, setShareRoll] = useState<RollResult | null>(null);
   const [replayRoll, setReplayRoll] = useState<RollResult | null>(null);
+  const [sort, setSort] = useState<HistorySort>('newest');
 
   const best = stats.bestRoll;
   const bestFull = useMemo(() => {
     if (!best) return null;
     return history.find((r) => r.id === best.id) ?? null;
   }, [history, best]);
+
+  const sorted = useMemo(
+    () => sortHistory(history, sort),
+    [history, sort],
+  );
 
   if (history.length === 0) {
     return (
@@ -62,16 +151,61 @@ export function HistoryScreen({
       )}
 
       <div>
-        <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-[var(--prose-3)]">
-          All rolls
-        </h2>
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--prose-3)]">
+            All rolls
+          </h2>
+          <label className="flex items-center gap-2 text-xs text-[var(--prose-2)]">
+            <span className="font-semibold uppercase tracking-wide">
+              Filter by
+            </span>
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value as HistorySort)}
+              className="rounded-md border border-[var(--outline)] bg-[var(--surface)] px-2 py-1.5 text-sm font-semibold text-[var(--prose)]"
+              aria-label="Sort history"
+            >
+              {SORT_OPTIONS.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <div className="mb-2 flex flex-wrap gap-1.5">
+          {SORT_OPTIONS.map((o) => {
+            const selected = sort === o.id;
+            return (
+              <button
+                key={o.id}
+                type="button"
+                onClick={() => setSort(o.id)}
+                className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold sm:text-xs ${
+                  selected
+                    ? 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
+                    : 'border-[var(--outline)] text-[var(--prose-2)] hover:bg-[var(--surface-raised)]'
+                }`}
+              >
+                {o.label}
+              </button>
+            );
+          })}
+        </div>
+
         <ul className="divide-y divide-[var(--outline)] border border-[var(--outline)]">
-          {history.map((r) => {
+          {sorted.map((r, idx) => {
             const top = [...r.badges]
               .sort((a, b) => b.ep - a.ep)
               .slice(0, 4);
             const extra = Math.max(0, r.badges.length - top.length);
             const isBest = best?.id === r.id;
+            const showRank =
+              sort === 'best_ep' ||
+              sort === 'worst_ep' ||
+              sort === 'rarest' ||
+              sort === 'most_badges';
             return (
               <li
                 key={r.id}
@@ -81,6 +215,11 @@ export function HistoryScreen({
               >
                 <div className="min-w-0 flex-1 text-left">
                   <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    {showRank && (
+                      <span className="mono-number w-6 text-xs font-bold text-[var(--prose-3)]">
+                        #{idx + 1}
+                      </span>
+                    )}
                     <div className="mono-number text-lg font-bold">
                       {r.number.toLocaleString()}
                     </div>
@@ -100,6 +239,10 @@ export function HistoryScreen({
                     </span>
                     <span>
                       Top {topPercentFromPercentile(r.percentile)}%
+                    </span>
+                    <span>
+                      {r.badges.length} badge
+                      {r.badges.length === 1 ? '' : 's'}
                     </span>
                     {r.challengeKey && (
                       <span className="font-mono">{r.challengeKey}</span>
