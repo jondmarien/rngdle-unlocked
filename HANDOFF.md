@@ -274,7 +274,7 @@ Keep language consistent everywhere (About, RollModePicker, Leaderboard, README)
 
 1. Confirm user finished OAuth portal setup + `promote-admin.mjs`.
 2. Hard-refresh prod smoke checklist §8 + `/admin` + Discord/GitHub Account buttons.
-3. Optional: surface a player-facing What’s new on About (keep `CHANGELOG.md` developer-oriented).
+3. Keep About → What’s new (`src/lib/whats-new.ts`) player-facing when cutting releases; keep `CHANGELOG.md` developer-oriented.
 
 ---
 

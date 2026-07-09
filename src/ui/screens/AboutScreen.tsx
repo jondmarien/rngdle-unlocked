@@ -1,3 +1,5 @@
+import { WHATS_NEW } from '../../lib/whats-new';
+
 const ROLL_MAX = '1,000,000';
 
 export function AboutScreen() {
@@ -19,7 +21,56 @@ export function AboutScreen() {
           Practice), follows, public profiles, share links, challenges, and roll
           seals.
         </p>
+        <p className="text-xs text-[var(--prose-3)]">
+          Version{' '}
+          <span className="font-mono tabular-nums">
+            {import.meta.env.VITE_APP_VERSION ?? '0.0.0'}
+          </span>
+        </p>
       </header>
+
+      <section className="space-y-4">
+        <div className="space-y-1">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--prose)]">
+            What&apos;s new
+          </h2>
+          <p className="text-xs text-[var(--prose-3)]">
+            Highlights for players — not a full engineering changelog.
+          </p>
+        </div>
+        <ol className="space-y-5">
+          {WHATS_NEW.map((entry) => (
+            <li key={entry.version} className="space-y-2">
+              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                <span className="font-mono text-xs font-semibold tabular-nums text-[var(--prose)]">
+                  v{entry.version}
+                </span>
+                <span className="text-xs text-[var(--prose-3)]">{entry.date}</span>
+                <span className="text-sm font-semibold text-[var(--prose)]">
+                  {entry.title}
+                </span>
+              </div>
+              <ul className="list-disc space-y-1.5 pl-5">
+                {entry.highlights.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            </li>
+          ))}
+        </ol>
+        <p className="text-xs text-[var(--prose-3)]">
+          Full release notes on{' '}
+          <a
+            className="underline"
+            href="https://github.com/jondmarien/rngdle-unlocked/releases"
+            target="_blank"
+            rel="noreferrer"
+          >
+            GitHub Releases
+          </a>
+          .
+        </p>
+      </section>
 
       <section className="space-y-3">
         <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--prose)]">

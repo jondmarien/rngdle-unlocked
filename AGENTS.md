@@ -347,6 +347,8 @@ These four checks require a **manual browser smoke** — automated `pnpm test` /
 | Feed                    | `server/feed.ts`, `api/feed.ts`                                         |
 | Schema                  | `server/db/schema.ts`                                                   |
 | Architecture            | `docs/ARCHITECTURE.md`, `docs/refactor-notes-2026-07.md`                |
+| Player What’s new       | `src/lib/whats-new.ts`, `AboutScreen.tsx`                               |
+| Developer changelog     | `CHANGELOG.md`                                                          |
 
 ---
 
