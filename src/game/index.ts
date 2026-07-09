@@ -62,4 +62,19 @@ export {
   type ChallengeInfo,
   type ChallengeKind,
 } from './challenge';
+export {
+  SECRET_BADGES,
+  SECTION_SECRETS,
+  OMEGA_SECRET,
+  SECTION_FAMILIES,
+  secretById,
+  isSectionComplete,
+  sectionProgress,
+  newlyUnlockedSecrets,
+  secretHits,
+  sumSecretEP,
+  mergeSecretUnlocks,
+  type SecretBadgeDef,
+  type SectionFamily,
+} from './secrets';
 

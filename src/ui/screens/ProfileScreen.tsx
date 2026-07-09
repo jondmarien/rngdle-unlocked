@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react';
-import { topPercentFromPercentile, type RarityTier } from '../../game';
+import {
+  OMEGA_SECRET,
+  SECRET_BADGES,
+  topPercentFromPercentile,
+  type RarityTier,
+} from '../../game';
 import { useSession } from '../../lib/auth-client';
 import {
   accentStyles,
@@ -21,6 +26,14 @@ type Profile = {
   lifetimeRollCount: number;
   journeyEP: number;
   badgeCount: number;
+  secrets?: {
+    id: string;
+    name: string;
+    emoji: string;
+    tier: 'section' | 'omega';
+    section: string;
+    ep: number;
+  }[];
   stats: {
     bestRoll?: {
       number: number;
@@ -198,6 +211,9 @@ export function ProfileScreen({
   const theme = accentStyles(accent);
   const initial = (profile.username?.[0] ?? '?').toUpperCase();
   const best = profile.stats?.bestRoll;
+  const secrets = profile.secrets ?? [];
+  const hasOmega = secrets.some((s) => s.id === OMEGA_SECRET.id);
+  const sectionSecrets = secrets.filter((s) => s.tier === 'section');
 
   return (
     <div className="space-y-6">
@@ -306,6 +322,56 @@ export function ProfileScreen({
               </span>
             )}
         </div>
+      )}
+
+      {/* Secret masteries */}
+      {secrets.length > 0 && (
+        <section className="space-y-3">
+          <div className="flex items-baseline justify-between gap-2">
+            <h2 className="text-base font-bold text-[var(--prose)]">
+              Secret masteries
+            </h2>
+            <span className="text-sm text-[var(--prose-2)]">
+              {secrets.length}/{SECRET_BADGES.length}
+            </span>
+          </div>
+          {hasOmega && (
+            <div className="rounded-xl border-2 border-amber-400/70 bg-gradient-to-br from-amber-500/20 via-violet-500/15 to-teal-500/20 p-4 shadow-[0_0_32px_rgba(251,191,36,0.2)]">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">
+                Final seal
+              </p>
+              <p className="mt-1 text-xl font-bold tracking-tight">
+                {OMEGA_SECRET.emoji} {OMEGA_SECRET.name}
+              </p>
+              <p className="mt-1 text-sm text-[var(--prose-2)]">
+                {OMEGA_SECRET.description}
+              </p>
+            </div>
+          )}
+          {sectionSecrets.length > 0 && (
+            <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {sectionSecrets.map((s) => (
+                <li
+                  key={s.id}
+                  className="rounded-xl border border-violet-400/40 bg-gradient-to-br from-violet-500/10 to-transparent p-3"
+                >
+                  <p className="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+                    {s.section}
+                  </p>
+                  <p className="font-bold tracking-tight">
+                    <span className="mr-1" aria-hidden>
+                      {s.emoji}
+                    </span>
+                    {s.name}
+                  </p>
+                  <p className="text-sm text-amber-800 dark:text-amber-300">
+                    +{s.ep.toLocaleString()} life EP
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       )}
 
       {/* Best roll — showcase style */}

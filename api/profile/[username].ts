@@ -87,9 +87,103 @@ export default defineHandler(async (request) => {
       .limit(24);
 
     const collection = progress
-      ? (JSON.parse(progress.collectionJson || '[]') as unknown[])
+      ? (JSON.parse(progress.collectionJson || '[]') as {
+          badgeId?: string;
+          family?: string;
+        }[])
       : [];
     const stats = progress ? JSON.parse(progress.statsJson || '{}') : {};
+
+    const SECRET_META: Record<
+      string,
+      {
+        name: string;
+        emoji: string;
+        tier: 'section' | 'omega';
+        section: string;
+        ep: number;
+      }
+    > = {
+      'secret-master-math': {
+        name: 'Theorem Complete',
+        emoji: '📐',
+        tier: 'section',
+        section: 'math',
+        ep: 2500,
+      },
+      'secret-master-pattern': {
+        name: 'Pattern Weaver',
+        emoji: '🧩',
+        tier: 'section',
+        section: 'pattern',
+        ep: 2500,
+      },
+      'secret-master-void': {
+        name: 'Voidwalker',
+        emoji: '🕳️',
+        tier: 'section',
+        section: 'void',
+        ep: 2000,
+      },
+      'secret-master-cultural': {
+        name: 'Lorekeeper',
+        emoji: '📜',
+        tier: 'section',
+        section: 'cultural',
+        ep: 3000,
+      },
+      'secret-master-magnitude': {
+        name: 'Scale Breaker',
+        emoji: '📏',
+        tier: 'section',
+        section: 'magnitude',
+        ep: 2000,
+      },
+      'secret-master-sequence': {
+        name: 'Sequence Sovereign',
+        emoji: '🔢',
+        tier: 'section',
+        section: 'sequence',
+        ep: 2000,
+      },
+      'secret-master-poker': {
+        name: 'Full House Master',
+        emoji: '🃏',
+        tier: 'section',
+        section: 'poker',
+        ep: 2500,
+      },
+      'secret-master-element': {
+        name: 'Periodic Crown',
+        emoji: '⚛️',
+        tier: 'section',
+        section: 'element',
+        ep: 2500,
+      },
+      'secret-master-journey': {
+        name: 'Path Eternal',
+        emoji: '🛤️',
+        tier: 'section',
+        section: 'journey',
+        ep: 5000,
+      },
+      'secret-omega-codex': {
+        name: 'Codex Absolute',
+        emoji: '✨',
+        tier: 'omega',
+        section: 'omega',
+        ep: 50_000,
+      },
+    };
+
+    const secrets = (Array.isArray(collection) ? collection : [])
+      .map((c) => {
+        const id = c.badgeId;
+        if (!id || !SECRET_META[id]) return null;
+        const m = SECRET_META[id]!;
+        return { id, ...m };
+      })
+      .filter(Boolean);
 
     return Response.json({
       profile: {
@@ -104,6 +198,7 @@ export default defineHandler(async (request) => {
         lifetimeRollCount: progress?.lifetimeRollCount ?? 0,
         journeyEP: progress?.journeyEp ?? 0,
         badgeCount: Array.isArray(collection) ? collection.length : 0,
+        secrets,
         stats,
         recentRolls: recent.map((r) => {
           let topBadges: string[] = [];

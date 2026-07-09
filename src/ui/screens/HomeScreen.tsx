@@ -26,6 +26,7 @@ export function HomeScreen({
     roll,
     saveError,
     lastJourneyUnlocks,
+    lastSecretUnlocks,
     lifetimeRollCount,
     settings,
     stats,
@@ -163,6 +164,24 @@ export function HomeScreen({
               .reduce((a, b) => a + b.ep, 0)
               .toLocaleString()}{' '}
             lifetime EP)
+          </div>
+        )}
+
+        {revealDone && lastSecretUnlocks.length > 0 && (
+          <div className="number-fade-in w-full max-w-md rounded-xl border-2 border-amber-400/60 bg-gradient-to-br from-violet-500/15 via-amber-500/10 to-teal-500/15 px-4 py-3 text-left text-sm leading-snug shadow-[0_0_24px_rgba(251,191,36,0.15)]">
+            <p className="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300">
+              Secret mastery
+            </p>
+            <p className="mt-1 font-semibold text-[var(--prose)]">
+              {lastSecretUnlocks.map((s) => `${s.emoji} ${s.name}`).join(' · ')}
+            </p>
+            <p className="mt-1 text-[var(--prose-2)]">
+              +
+              {lastSecretUnlocks
+                .reduce((a, b) => a + b.ep, 0)
+                .toLocaleString()}{' '}
+              lifetime EP · open Codex → Secret
+            </p>
           </div>
         )}
 

@@ -16,7 +16,8 @@ export type BadgeFamily =
   | 'sequence'
   | 'poker'
   | 'element'
-  | 'journey';
+  | 'journey'
+  | 'secret';
 
 export type BadgeHit = {
   id: string;

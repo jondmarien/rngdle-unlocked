@@ -14,7 +14,9 @@ import {
   evaluateNumber,
   performRoll,
   journeyHits,
+  mergeSecretUnlocks,
   newlyUnlockedJourney,
+  secretHits,
   sumJourneyEP,
   type AppSettings,
   type BadgeHit,
@@ -63,6 +65,8 @@ export type RollOutcome = {
   roll: RollResult;
   journeyUnlocked: BadgeHit[];
   journeyEPGained: number;
+  secretsUnlocked: BadgeHit[];
+  secretsEPGained: number;
 };
 
 type GameContextValue = {
@@ -77,6 +81,7 @@ type GameContextValue = {
   rolling: boolean;
   saveError: string | null;
   lastJourneyUnlocks: BadgeHit[];
+  lastSecretUnlocks: BadgeHit[];
   confettiToken: number;
   /** free = unlimited CSPRNG; daily/weekly = optional challenge seed */
   rollMode: RollMode;
@@ -126,6 +131,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [rolling, setRolling] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [lastJourneyUnlocks, setLastJourneyUnlocks] = useState<BadgeHit[]>([]);
+  const [lastSecretUnlocks, setLastSecretUnlocks] = useState<BadgeHit[]>([]);
   const [confettiToken, setConfettiToken] = useState(0);
   const [syncing, setSyncing] = useState(false);
   const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
@@ -149,6 +155,30 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Backfill secret masteries if collection already qualifies (import / older saves)
+  useEffect(() => {
+    setState((prev) => {
+      const { collection, unlocked, ep } = mergeSecretUnlocks(
+        prev.collection,
+        new Date().toISOString(),
+      );
+      if (unlocked.length === 0) return prev;
+      const next = {
+        ...prev,
+        collection,
+        lifetimeEP: prev.lifetimeEP + ep,
+        journeyEP: prev.journeyEP + ep,
+      };
+      persist(next);
+      setLastSecretUnlocks(secretHits(unlocked));
+      log.info('secrets:backfill', {
+        count: unlocked.length,
+        ids: unlocked.map((u) => u.id),
+      });
+      return next;
+    });
+  }, [persist]);
+
   const applyCloudPayload = useCallback(
     (cloud: {
       lifetimeEP: number;
@@ -158,19 +188,26 @@ export function GameProvider({ children }: { children: ReactNode }) {
       stats: PlayStats;
       history: RollResult[];
     }) => {
+      const secretMerge = mergeSecretUnlocks(
+        cloud.collection,
+        new Date().toISOString(),
+      );
       setState((prev) => {
         const next: PersistedState = {
           ...prev,
-          lifetimeEP: cloud.lifetimeEP,
+          lifetimeEP: cloud.lifetimeEP + secretMerge.ep,
           lifetimeRollCount: cloud.lifetimeRollCount,
-          journeyEP: cloud.journeyEP,
-          collection: cloud.collection,
+          journeyEP: cloud.journeyEP + secretMerge.ep,
+          collection: secretMerge.collection,
           stats: cloud.stats,
           history: cloud.history,
         };
         persist(next);
         return next;
       });
+      if (secretMerge.unlocked.length > 0) {
+        setLastSecretUnlocks(secretHits(secretMerge.unlocked));
+      }
       setLastRoll(cloud.history[0] ?? null);
       setLastSyncAt(new Date().toISOString());
     },
@@ -271,25 +308,40 @@ export function GameProvider({ children }: { children: ReactNode }) {
           stats.bestConsecutive,
         ),
       };
+      let collection = mergeCollection(state.collection, collectionAdds, at);
+      const secretMerge = mergeSecretUnlocks(collection, at);
+      collection = secretMerge.collection;
+      const secretsUnlocked = secretHits(secretMerge.unlocked);
+      const secretsEPGained = secretMerge.ep;
+
       const next: PersistedState = {
         ...state,
         history,
         lifetimeRollCount: nextCount,
-        lifetimeEP: state.lifetimeEP + result.totalEP + journeyEPGained,
-        journeyEP: state.journeyEP + journeyEPGained,
-        collection: mergeCollection(state.collection, collectionAdds, at),
+        lifetimeEP:
+          state.lifetimeEP +
+          result.totalEP +
+          journeyEPGained +
+          secretsEPGained,
+        journeyEP: state.journeyEP + journeyEPGained + secretsEPGained,
+        collection,
         stats,
       };
       persist(next);
       setState(next);
       setLastRoll(result);
       setLastJourneyUnlocks(journeyUnlocked);
+      setLastSecretUnlocks(secretsUnlocked);
+      if (secretsUnlocked.length > 0) {
+        setConfettiToken((t) => t + 1);
+      }
       log.info('roll:ok', {
         number: result.number,
         totalEP: result.totalEP,
         rarity: result.rarity,
         badges: result.badges.length,
         journeyUnlocked: journeyUnlocked.length,
+        secretsUnlocked: secretsUnlocked.length,
         challengeKey: result.challengeKey,
         willAutoSync: loggedInRef.current,
       });
@@ -297,7 +349,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
       // Fire-and-forget cloud push when signed in (share links + leaderboards stay live)
       enqueueAutoSync(toCloudPayload(next));
 
-      return { roll: result, journeyUnlocked, journeyEPGained };
+      return {
+        roll: result,
+        journeyUnlocked,
+        journeyEPGained,
+        secretsUnlocked,
+        secretsEPGained,
+      };
     } catch (err) {
       log.error('roll:fail', {
         err: err instanceof Error ? err.message : String(err),
@@ -361,6 +419,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setState(defaultState());
     setLastRoll(null);
     setLastJourneyUnlocks([]);
+    setLastSecretUnlocks([]);
     setSaveError(null);
   }, []);
 
@@ -421,7 +480,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       } catch {
         throw new Error('File is not valid JSON');
       }
-      const next = parseImportPayload(parsed);
+      let next = parseImportPayload(parsed);
       next.stats = {
         ...next.stats,
         bestConsecutive: recomputeBestConsecutive(
@@ -429,10 +488,21 @@ export function GameProvider({ children }: { children: ReactNode }) {
           next.stats.bestConsecutive,
         ),
       };
+      const secretMerge = mergeSecretUnlocks(
+        next.collection,
+        new Date().toISOString(),
+      );
+      next = {
+        ...next,
+        collection: secretMerge.collection,
+        lifetimeEP: next.lifetimeEP + secretMerge.ep,
+        journeyEP: next.journeyEP + secretMerge.ep,
+      };
       persist(next);
       setState(next);
       setLastRoll(next.history[0] ?? null);
       setLastJourneyUnlocks([]);
+      setLastSecretUnlocks(secretHits(secretMerge.unlocked));
     },
     [persist],
   );
@@ -538,6 +608,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       rolling,
       saveError,
       lastJourneyUnlocks,
+      lastSecretUnlocks,
       confettiToken,
       rollMode,
       setRollMode,
@@ -565,6 +636,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       rolling,
       saveError,
       lastJourneyUnlocks,
+      lastSecretUnlocks,
       confettiToken,
       rollMode,
       roll,
