@@ -11,6 +11,8 @@ Inspired by the daily number-game genre, but **unlocked**: roll as often as you 
 [![React 19](https://img.shields.io/badge/UI-React_19-61dafb?logo=react&logoColor=black)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/lang-TypeScript_7-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite 6](https://img.shields.io/badge/build-Vite_Plus-646cff?logo=vite&logoColor=white)](https://vitejs.dev)
+[![TanStack Query](https://img.shields.io/badge/data-TanStack_Query-FF4154?logo=reactquery&logoColor=white)](https://tanstack.com/query)
+[![Zod](https://img.shields.io/badge/schema-Zod-3E67B1)](https://zod.dev)
 [![pnpm 10](https://img.shields.io/badge/pkg-pnpm_10-f69220?logo=pnpm&logoColor=white)](https://pnpm.io)
 [![Vercel](https://img.shields.io/badge/deploy-Vercel-000000?logo=vercel&logoColor=white)](https://vercel.com)
 [![Neon](https://img.shields.io/badge/db-Neon_Postgres-00E599?logo=postgresql&logoColor=white)](https://neon.tech)
@@ -171,9 +173,9 @@ Switch modes anytime (board fully resets). Badges, EP, history, and share work a
 - **Dual leaderboard** — **Ranked** (server free play) · **Practice** (synced free play / overall progress); all-time / week; Practice all-time can sort EP / rolls / badges
 - **Community highlights** — today’s + weekly best **Ranked** rolls on the home tab when idle (`/api/highlights`)
 - **You on the board** — rank highlighted + sticky card if outside top list (per active board)
-- **Follows + Feed** — Board (+), Find search, or profile; rare+ rolls in Feed
+- **Follows + Feed** — Board (+), Find search, or profile; **all public rarities** (All / Ranked / Free play toggles)
 - **In-app notifications** — Activity (follows, unlocks, **overtaken** on Ranked crowns); System (broadcasts + Ranked crown notices)
-- **System messages** — developer broadcasts (`POST /api/system-messages` + `ADMIN_SECRET`); auto crowns for Ranked day/week/all-time EP #1
+- **System messages** — developer broadcasts (`POST /api/system-messages` + admin session / `api/admin/broadcast`); auto crowns for Ranked day/week/all-time EP #1
 - **Profiles** — `/u/:username` with accent, flair, bio, **preset emblem avatars**, secret seals, recent rolls + Follow
 - **Vanity share URLs** — `/s/:username/:shortCode`
 - **Share gates** — no public link until cloud confirms
@@ -181,10 +183,10 @@ Switch modes anytime (board fully resets). Badges, EP, history, and share work a
 - **Prove this roll** — optional server HMAC seal (`/api/attest`) for claims
 - **Dynamic OG** — `/api/og` for rolls; bot rewrite of `/u/:user` → profile OG HTML
 - **Soft rate limits** on sync, Ranked rolls (~90/h), and public APIs
+- **Discord / GitHub OAuth** — wired in app; finish portal + env via [`docs/oauth-setup.md`](./docs/oauth-setup.md)
 
 ### Planned later / in progress
 
-- Discord / GitHub OAuth — code wired; finish apps + env: [`docs/oauth-setup.md`](./docs/oauth-setup.md)
 - Turnstile on sign-up
 - Server-side EP velocity caps
 
@@ -192,33 +194,32 @@ Switch modes anytime (board fully resets). Badges, EP, history, and share work a
 
 ```
 rngdle-unlocked/
-├── api/                 ⚡ Vercel serverless (Node adapter → Web Request)
-│   ├── auth.ts · me.ts · sync.ts · health.ts
-│   ├── leaderboard.ts · ranked-roll.ts · highlights.ts · follow.ts · feed.ts
-│   ├── notifications.ts · system-messages.ts
-│   ├── challenge.ts · attest.ts · og.ts
-│   ├── profile/[username].ts · u/[username].ts   # profile JSON + profile OG HTML
-│   ├── rolls/[id].ts · share/[id].ts · users/search.ts
+├── api/                 ⚡ Thin Vercel handlers (Node adapter → Web Request)
+│   ├── auth.ts · me.ts · sync.ts · health.ts · ranked-roll.ts
+│   ├── leaderboard.ts · feed.ts · profile/[username].ts · og.ts · …
+│   └── admin/* · reports.ts · follow.ts · notifications.ts · …
 ├── server/              🧠 Shared API logic
-│   ├── auth · db/schema · sync · rankedRoll · rollActivity · notifications
-│   ├── ogHtml · secretMasteries · rateLimit · vercel-adapter
+│   ├── apiGuards · auth · db/schema · sync · rankedRoll · rollActivity
+│   ├── leaderboard · profile · feed · ogSvg · notifications
+│   ├── rateLimit · vercel-adapter · ogHtml · …
 ├── src/
 │   ├── game/            Pure TS engine (rng, badges, secrets, challenge)
-│   ├── state/           GameProvider + localStorage + auto-sync
-│   ├── lib/             Auth, icons, profile themes/avatars, routes
+│   ├── state/           GameProvider (contexts) + useSync + settings + localStorage
+│   ├── lib/             *-api.ts wrappers, schemas.ts, auth, routes, themes
 │   └── ui/              Screens + reel / cascade components
 ├── public/              Avatars, rarity/family icons, secret art, PWA
-├── docs/                ARCHITECTURE.md + superpowers specs/plans
+├── docs/                ARCHITECTURE.md + refactor notes + historical specs
 ├── scripts/             migrate-feature-wave, check-db, TS7 API patch
 └── vercel.json          SPA + bot OG rewrites for /s and /u
 ```
 
-| Area                     | Role                                     | Stack                        |
-| ------------------------ | ---------------------------------------- | ---------------------------- |
-| **`src/game/`**          | Pure game rules — testable without React | TypeScript                   |
-| **`src/ui/` + `state/`** | SPA experience + persistence             | React 19 · Tailwind v4       |
-| **`api/` + `server/`**   | Social backend on Vercel                 | Better Auth · Drizzle · Neon |
-| **`docs/`**              | Design specs and implementation plans    | Markdown                     |
+| Area                     | Role                                              | Stack                                      |
+| ------------------------ | ------------------------------------------------- | ------------------------------------------ |
+| **`src/game/`**          | Pure game rules — testable without React          | TypeScript                                 |
+| **`src/ui/` + `state/`** | SPA experience + persistence                      | React 19 · Tailwind v4 · TanStack Query    |
+| **`src/lib/*-api.ts`**   | Mandatory client API wrappers (no raw UI `fetch`) | fetch + Zod at trust boundaries            |
+| **`api/` + `server/`**   | Social backend on Vercel                          | Better Auth · Drizzle · Neon · apiGuards   |
+| **`docs/`**              | Living architecture + historical specs/plans      | Markdown                                   |
 
 ## 🗺️ Routes (SPA)
 
@@ -239,7 +240,7 @@ rngdle-unlocked/
 | `/r/:id`         | Legacy public roll path                                           |
 
 **API (serverless):**  
-`/api/auth/*`, `/api/me`, `/api/sync`, `/api/ranked-roll`, `/api/leaderboard?scope=ranked|practice`, `/api/highlights`, `/api/follow`, `/api/feed`, `/api/users/search`, `/api/notifications`, `/api/system-messages`, `/api/challenge`, `/api/attest`, `/api/og`, `/api/profile/:user`, `/api/u/:user`, `/api/rolls/:id`, `/api/share/:id`, `/api/health`.
+`/api/auth/*`, `/api/me`, `/api/sync`, `/api/ranked-roll`, `/api/leaderboard?scope=ranked|practice`, `/api/highlights`, `/api/follow`, `/api/feed`, `/api/users/search`, `/api/notifications`, `/api/system-messages`, `/api/admin/*`, `/api/reports`, `/api/challenge`, `/api/attest`, `/api/og`, `/api/profile/:user`, `/api/u/:user`, `/api/rolls/:id`, `/api/share/:id`, `/api/health`.
 
 Bot user-agents: `/s/:user/:code` → `/api/share/:code`; `/u/:username` → `/api/u/:username` for OG HTML + image.
 
@@ -292,8 +293,8 @@ Logged out: Discord-style text / PNG only — no public URL, with a create-accou
 | Command                                 | Purpose                                             |
 | --------------------------------------- | --------------------------------------------------- |
 | `pnpm dev`                              | Vite dev server (SPA)                               |
-| `pnpm build`                            | Typecheck app + Vite production build → `dist/`     |
-| `pnpm typecheck`                        | App, node, and API tsconfigs                        |
+| `pnpm build`                            | App + node typecheck, then Vite build → `dist/`     |
+| `pnpm typecheck`                        | App, node, and `tsconfig.server.json` (NodeNext)    |
 | `pnpm preview`                          | Preview `dist/`                                     |
 | `pnpm test`                             | Unit tests (`vp test`)                              |
 | `pnpm lint`                             | Lint via Vite+                                      |
@@ -328,13 +329,17 @@ See [`.env.example`](./.env.example). Never commit `.env` / `.env.local`.
 
 ## 🏗️ Architecture notes
 
-Full diagrams: **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)**.
+Full diagrams: **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)**. Refactor summary: **[docs/refactor-notes-2026-07.md](./docs/refactor-notes-2026-07.md)**.
 
 - **Game engine is pure TS** under `src/game/` — no React imports; unit tests cover badges, secrets, challenges, rarity.
 - **SPA routing** uses the History API (`src/lib/routes.ts`); Vercel rewrites non-`/api` paths to `index.html`.
-- **Serverless handlers** use a **Node `(req, res)` adapter** (`server/vercel-adapter.ts`) with absolute URLs for Better Auth.
-- **Auth multi-segment paths** rewritten to `/api/auth?__path=…` (no Next-style catch-all).
-- **Merge-safe sync** — max counters, union collections (earliest `firstEarnedAt`), merge histories by id.
+- **Client API wrappers** — UI uses `src/lib/*-api.ts` only (no raw `fetch('/api/...')` in screens). **TanStack Query** caches leaderboard / feed / highlights / profile / admin-check reads.
+- **Zod at trust boundaries** — save import payload, cloud sync POST body, and public profile GET response. Not every endpoint is schema-validated.
+- **State** — `GameProvider` exposes `useGame` / `useGameSettings` / `useCloudSync`; sync orchestration in `src/state/useSync.ts`.
+- **Serverless handlers** — thin `api/*` → `server/*`; preamble via `server/apiGuards.ts` (`requireUser` / `readJson` / `rateGuard`). Read pipelines live in `server/{leaderboard,profile,feed,ogSvg}.ts`.
+- **TypeScript** — `tsconfig.server.json` uses **NodeNext** so missing `.js` ESM extensions fail `pnpm typecheck` (prevents Ranked `/var/task` module misses).
+- **Auth multi-segment paths** rewritten to `/api/auth?__path=…` (no Next-style catch-all); Node `(req, res)` adapter in `server/vercel-adapter.ts`.
+- **Merge-safe sync** — max counters, union collections (earliest `firstEarnedAt`), merge histories by id; integrity gate rejects cloned progress dumps.
 - **Ranked rolls** (`POST /api/ranked-roll`, `server/rankedRoll.ts`) — server CSPRNG + score; `rolls.source = ranked`.
 - **Leaderboard scopes** — `?scope=ranked|practice` (default ranked).
 - **Roll activity** (`server/rollActivity.ts`) — unlock notifications; Ranked-only crowns + overtake alerts.
@@ -360,7 +365,7 @@ Need `follows` table — run `node scripts/migrate-feature-wave.mjs` on that dat
 Needs a **username**. **Ranked** board: generate via Roll → Ranked. **Practice** board: Free play + sync. Toggle boards on the Leaderboard screen.
 
 **Ranked roll 500 / “Ranked roll failed”**  
-Needs signed-in session + `@username`. Check Vercel function logs for `/api/ranked-roll`. Schema needs `rolls.source` (`node scripts/add-roll-source.mjs`).
+Needs signed-in session + `@username`. Check Vercel function logs for `/api/ranked-roll`. Schema needs `rolls.source` (`node scripts/add-roll-source.mjs`). Extensionless `src/game` imports used to break production while typecheck stayed green — `tsconfig.server.json` **NodeNext** now fails `pnpm typecheck` on that class of bug.
 
 **Wrong database**  
 Compare `DATABASE_URL` host in Vercel with `.env.local`. A Neon project in another region is a different database.
@@ -390,14 +395,16 @@ The Account screen times out after a few seconds and shows the sign-in form. Che
 | Cloned-progress profile pills + sync integrity         | ✅ Best-roll ownership + EP/collection checks                                     |
 | Turnstile / EP velocity                                | 🔮 Later                                                                          |
 | Admin panel (role-gated)                               | ✅ Shipped (`/admin`)                                                             |
+| Architecture refactor (NodeNext, apiGuards, lib wrappers, Zod, useSync) | ✅ Landed on `main` — see [refactor notes](docs/refactor-notes-2026-07.md) |
 
 Design docs:
 
 - [**Architecture (mermaid)**](docs/ARCHITECTURE.md)
-- [Solo design](docs/superpowers/specs/2026-07-08-rngdle-unlocked-design.md)
-- [Part 2 social design](docs/superpowers/specs/2026-07-09-mvp-part2-social-design.md)
-- [Feature wave plan](docs/superpowers/plans/2026-07-09-feature-wave.md)
-- [Implementation plan](docs/superpowers/plans/2026-07-08-rngdle-unlocked.md)
+- [**Refactor notes (July 2026)**](docs/refactor-notes-2026-07.md)
+- [Solo design](docs/superpowers/specs/2026-07-08-rngdle-unlocked-design.md) _(historical)_
+- [Part 2 social design](docs/superpowers/specs/2026-07-09-mvp-part2-social-design.md) _(historical)_
+- [Feature wave plan](docs/superpowers/plans/2026-07-09-feature-wave.md) _(historical)_
+- [Implementation plan](docs/superpowers/plans/2026-07-08-rngdle-unlocked.md) _(historical)_
 
 ---
 
