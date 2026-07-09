@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import type {
   AppSettings,
   CollectionEntry,
@@ -5,18 +6,20 @@ import type {
   RollResult,
 } from '../game/types';
 import { defaultPlayStats } from '../game/stats';
+import { collectionEntrySchema, rollResultSchema } from '../lib/schemas';
+import { STORAGE_KEYS } from '../lib/storage-keys';
 
 export const HISTORY_CAP = 500;
 export const SAVE_VERSION = 2;
 
 const KEYS = {
-  history: 'rngdle-unlocked:v1:history',
-  lifetimeEP: 'rngdle-unlocked:v1:lifetimeEP',
-  lifetimeRollCount: 'rngdle-unlocked:v1:lifetimeRollCount',
-  journeyEP: 'rngdle-unlocked:v1:journeyEP',
-  collection: 'rngdle-unlocked:v1:collection',
-  settings: 'rngdle-unlocked:v1:settings',
-  stats: 'rngdle-unlocked:v1:stats',
+  history: STORAGE_KEYS.history,
+  lifetimeEP: STORAGE_KEYS.lifetimeEP,
+  lifetimeRollCount: STORAGE_KEYS.lifetimeRollCount,
+  journeyEP: STORAGE_KEYS.journeyEP,
+  collection: STORAGE_KEYS.collection,
+  settings: STORAGE_KEYS.settings,
+  stats: STORAGE_KEYS.stats,
 } as const;
 
 export type PersistedState = {
@@ -260,12 +263,27 @@ export function parseImportPayload(raw: unknown): PersistedState {
     throw new Error('Save file is not for RNGdle Unlocked');
   }
 
-  const history = Array.isArray(stateRaw.history)
-    ? (stateRaw.history as RollResult[]).slice(0, HISTORY_CAP)
-    : [];
-  const collection = Array.isArray(stateRaw.collection)
-    ? (stateRaw.collection as CollectionEntry[])
-    : [];
+  // Validate every element — a hand-edited / corrupt save must not flow
+  // into streak recompute, secret merge, or rarity display unchecked.
+  const historyParsed = z
+    .array(rollResultSchema)
+    .safeParse(
+      Array.isArray(stateRaw.history)
+        ? stateRaw.history.slice(0, HISTORY_CAP)
+        : [],
+    );
+  if (!historyParsed.success) {
+    throw new Error('Invalid save file: corrupt roll history');
+  }
+  const history = historyParsed.data as RollResult[];
+
+  const collectionParsed = z
+    .array(collectionEntrySchema)
+    .safeParse(Array.isArray(stateRaw.collection) ? stateRaw.collection : []);
+  if (!collectionParsed.success) {
+    throw new Error('Invalid save file: corrupt badge collection');
+  }
+  const collection = collectionParsed.data as CollectionEntry[];
   const settings = {
     ...DEFAULT_SETTINGS,
     ...(typeof stateRaw.settings === 'object' && stateRaw.settings

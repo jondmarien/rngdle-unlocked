@@ -1,9 +1,11 @@
 import { eq, sql } from 'drizzle-orm';
+import { z } from 'zod';
 import type {
   CollectionEntry,
   PlayStats,
   RollResult,
 } from '../src/game/types.js';
+import { ROLL_MAX } from '../src/game/rng.js';
 import { defaultPlayStats } from '../src/game/stats.js';
 import type { Db } from './db/index.js';
 import { rolls, userProgress } from './db/schema.js';
@@ -20,6 +22,43 @@ export type CloudSavePayload = {
   stats: PlayStats;
   history: RollResult[];
 };
+
+/**
+ * Runtime shape gate for the largest untrusted payload in the app.
+ * Deliberately lenient where the merge already normalizes (rarity fallback,
+ * percentile clamp, EP/number range skip) so legacy clients keep syncing —
+ * this rejects type confusion, not out-of-range values.
+ */
+const cloudRollSchema = z.looseObject({
+  id: z.string().min(1),
+  shortCode: z.string().nullish(),
+  number: z.number(),
+  totalEP: z.number(),
+  rarity: z.string(),
+  percentile: z.number().nullish(),
+  badges: z.array(z.looseObject({})).nullish(),
+  rolledAt: z.string(),
+  challengeKey: z.string().nullish(),
+  source: z.string().nullish(),
+  attestationSeal: z.string().nullish(),
+});
+
+export const cloudSavePayloadSchema = z.looseObject({
+  lifetimeEP: z.number(),
+  lifetimeRollCount: z.number(),
+  journeyEP: z.number().nullish(),
+  collection: z
+    .array(
+      z.looseObject({
+        badgeId: z.string(),
+        family: z.string().nullish(),
+        firstEarnedAt: z.string().nullish(),
+      }),
+    )
+    .nullish(),
+  stats: z.looseObject({}).nullish(),
+  history: z.array(cloudRollSchema),
+});
 
 const HISTORY_CAP = 500;
 /** Cap how many roll rows we write per sync (keeps Vercel under timeout). */
@@ -62,8 +101,8 @@ export function mergeStats(
   a: PlayStats | null | undefined,
   b: PlayStats | null | undefined,
 ): PlayStats {
-  const left = { ...defaultPlayStats(), ...(a ?? {}) };
-  const right = { ...defaultPlayStats(), ...(b ?? {}) };
+  const left = { ...defaultPlayStats(), ...a };
+  const right = { ...defaultPlayStats(), ...b };
 
   const bestRoll = !left.bestRoll
     ? right.bestRoll
@@ -335,7 +374,7 @@ export async function saveCloudMerge(
 
   for (const r of toUpsert) {
     if (r.totalEP < 0 || r.totalEP > 500_000) continue;
-    if (r.number < 0 || r.number > 1_000_000) continue;
+    if (r.number < 0 || r.number > ROLL_MAX) continue;
 
     let rolledAt: Date;
     try {
