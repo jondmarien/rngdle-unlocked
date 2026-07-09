@@ -191,7 +191,8 @@ export function AccountScreen() {
       <div>
         <h1 className="text-xl font-bold uppercase tracking-wider">Account</h1>
         <p className="text-xs text-[var(--prose-3)]">
-          Part 2 social — sign in to sync progress to Neon (via Vercel).
+          Sign in to keep progress forever, auto-sync rolls, climb the board,
+          follow friends, and unlock public share links.
         </p>
         {(error || waitTimedOut) && !session?.user && (
           <p className="mt-1 text-xs text-[var(--prose-3)]">

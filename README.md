@@ -4,7 +4,7 @@
 
 ### Unlimited CSPRNG rolls · badges · EP · cloud social — *no 24-hour lock.*
 
-Inspired by the daily number-game genre, but **unlocked**: roll as often as you want, keep a lifetime collection, and optionally sync progress to Neon for accounts, leaderboards, and shareable rolls.
+Inspired by the daily number-game genre, but **unlocked**: roll as often as you want, keep a lifetime collection, and optionally sync to Neon for accounts, leaderboards, follows, challenges, and shareable rolls.
 
 **[Live Site](https://rngdle-unlocked.chron0.tech)**
 
@@ -26,14 +26,14 @@ Inspired by the daily number-game genre, but **unlocked**: roll as often as you 
 
 **RNGdle Unlocked** is a browser game: roll an integer from **0–1,000,000**, earn **entropy points (EP)** and **badges** from number properties, climb a **journey** of lifetime milestones, and share rolls to Discord.
 
-Unlike a classic daily lock, you can roll **unlimited** times. Progress defaults to **localStorage** on your device. Optional **cloud social** (accounts, username, leaderboard, public profiles, share links) runs on **Vercel serverless + Neon Postgres + Better Auth**.
+Unlike a classic daily lock, you can roll **unlimited** times. Progress defaults to **localStorage** on your device. Optional **cloud social** (accounts, username, auto-sync, leaderboard, follows/feed, challenges, attestation seals, vanity share URLs + OG images) runs on **Vercel serverless + Neon Postgres + Better Auth**.
 
 > **Not affiliated with [rngdle.com](https://www.rngdle.com/).** Badge names, scoring, and implementation are original.
 
 | Mode | What you get |
 | --- | --- |
-| **Solo (default)** | Fortified CSPRNG rolls, badges, EP, history, collection, showcase, export/import — all offline-capable in the browser |
-| **Social (opt-in)** | Email sign-up, `@username`, merge-safe cloud sync, leaderboards, `/u/:user` profiles, OG share pages |
+| **Solo (default)** | Fortified CSPRNG rolls, badges, EP, history, badge codex, showcase, stats, export/import — offline-capable |
+| **Social (opt-in)** | Email sign-up, `@username`, auto cloud sync, “you on the board,” follows + rare-roll feed, public profiles, cloud-gated share links, daily/weekly challenge seeds, optional roll seals, dynamic OG images |
 
 ## 📋 Table of contents
 
@@ -54,9 +54,9 @@ Unlike a classic daily lock, you can roll **unlimited** times. Progress defaults
 ```mermaid
 flowchart TB
   subgraph CLIENT["Browser SPA"]
-    UI["React UI<br/>Roll · History · Collection · Share"]
+    UI["React UI<br/>Roll · Codex · Stats · Board · Share"]
     LS[("localStorage<br/>primary save")]
-    RNG["CSPRNG path<br/>crypto.getRandomValues · entropy pool · reject sampling"]
+    RNG["CSPRNG / challenge seed<br/>crypto.getRandomValues · entropy pool · reject sampling"]
     UI --> RNG
     UI --> LS
   end
@@ -67,17 +67,19 @@ flowchart TB
   end
 
   subgraph DATA["Data"]
-    NEON[("Neon Postgres<br/>auth + progress + rolls")]
+    NEON[("Neon Postgres<br/>auth · progress · rolls · follows")]
   end
 
-  UI -->|optional sync| API
+  UI -->|optional sync / social| API
   API --> NEON
   STATIC --> UI
 ```
 
-**Roll path (always local):** fortified browser CSPRNG → badge evaluation → EP / rarity / percentile → history + collection updates → localStorage.
+**Roll path (free play):** fortified browser CSPRNG → badge evaluation → EP / rarity / percentile → history + collection → localStorage → auto-sync when signed in.
 
-**Social path (optional):** Better Auth session → merge local + cloud (max counters, union collection, merge history) → public username on leaderboards → share links that resolve only after a cloud push.
+**Challenge path (optional):** shared daily/weekly period seed + your user id → deterministic personal number → same badge/EP pipeline; free unlimited CSPRNG stays available anytime.
+
+**Social path (optional):** Better Auth session → merge-safe sync → public username on leaderboards → follow graph → vanity share links only after cloud confirm → Discord OG HTML + `/api/og` image.
 
 ## 🚀 Quick start
 
@@ -100,10 +102,12 @@ Open the URL Vite prints (usually `http://localhost:5173`). Rolls and badges wor
 cp .env.example .env.local
 ```
 
-2. Apply the Drizzle schema to Neon:
+2. Apply schema to Neon (Drizzle **or** additive script):
 
 ```bash
 pnpm db:push
+# if drizzle-kit asks about truncating rolls, prefer:
+node scripts/migrate-feature-wave.mjs
 ```
 
 3. Run SPA + APIs together (recommended for local social):
@@ -114,7 +118,7 @@ npx vercel dev
 
 Or `pnpm dev` for the SPA only and point APIs at a deployed preview.
 
-4. Production: deploy to Vercel, set the same env vars for **Production**, attach Neon, redeploy.
+4. Production: deploy to Vercel, set the same env vars for **Production**, attach Neon, redeploy. Re-run the migration script against prod `DATABASE_URL` if tables/columns are missing.
 
 **Live production:** [https://rngdle-unlocked.chron0.tech](https://rngdle-unlocked.chron0.tech)
 
@@ -124,20 +128,37 @@ Or `pnpm dev` for the SPA only and point APIs at a deployed preview.
 - **Unlimited rolls** 0–1,000,000 (no daily lock)
 - **Fortified CSPRNG** — `crypto.getRandomValues`, entropy mixing, reject sampling (not `Math.random`)
 - **140+ badges** across math, patterns, culture, sequences, and more
+- **Badge codex** — locked vs unlocked with **spoiler-safe** family hints
 - **EP + rarity ladder** (trash → mythic) and percentile framing
-- **Journey milestones** (lifetime EP, up to high goals like 100k)
-- **History, collection, showcase**, streaks, optional confetti/SFX
+- **Journey milestones** (lifetime EP)
+- **History, showcase, stats** — rarity histogram, EP/hour, 28-day streak calendar
+- **Streaks**, optional confetti / SFX
 - **Export / import** save files; theme light / dark / system
 - **Discord-style share text** + PNG card
 
-### Social (Part 2)
+### Social & competitive
 - **Email + password** auth (Better Auth)
-- **Username** for public identity (`@handle`)
-- **Cloud sync** — merge-safe push/pull (not a hard overwrite)
-- **Leaderboard** — all-time / week, sort by EP / rolls / badges
-- **Profiles** — `/u/:username`
-- **Public rolls** — `/r/:id` in-app; OG HTML at `/api/share/:id` (and legacy `/api/share/r/:id`)
+- **@username** public identity
+- **Auto cloud sync** on every roll when signed in (merge-safe)
+- **You on the board** — your rank highlighted + sticky card if outside top list
+- **Leaderboard** — all-time / week; sort by EP / rolls / badges
+- **Follows + Feed** — follow `@user`; rare+ public rolls in Board → Feed
+- **Profiles** — `/u/:username` with Follow button
+- **Vanity share URLs** — `/s/:username/:shortCode` (no `/api` in the human path)
+- **Share gates** — no public link until cloud confirms; logged-out = account CTA + text only
+- **Mythic / anomaly** auto-open share after reveal
+- **Daily / weekly challenge** seeds (optional mode on Roll tab)
+- **Prove this roll** — optional server HMAC seal (`/api/attest`)
+- **Dynamic OG image** — `/api/og` SVG card for Discord / social crawlers
 - **Soft rate limits** on sync and public APIs (fairness, not a 24h lock)
+
+### Planned later
+- Discord / GitHub OAuth
+- “You got overtaken” notifications
+- Turnstile on sign-up
+- Server-side EP velocity caps
+- Admin wipe / username report
+- Fully server-authoritative free-play RNG
 
 ## 📁 What's in this repo
 
@@ -148,24 +169,30 @@ rngdle-unlocked/
 │   ├── health.ts           Smoke test (env presence)
 │   ├── me.ts               Session + username
 │   ├── sync.ts             Cloud save merge
-│   ├── leaderboard.ts
+│   ├── leaderboard.ts      Board + “me” rank
+│   ├── follow.ts           Follow / unfollow / list
+│   ├── feed.ts             Friends’ rare rolls
+│   ├── challenge.ts        Daily + weekly seed payload
+│   ├── attest.ts           Optional roll seal
+│   ├── og.ts               Dynamic OG image (SVG)
 │   ├── profile/[username].ts
 │   ├── rolls/[id].ts
-│   └── share/[id].ts       OG HTML for Discord crawlers
+│   └── share/[id].ts       OG HTML + image meta for crawlers
 ├── server/              🧠 Shared API logic
 │   ├── auth.ts             betterAuth + Drizzle adapter
-│   ├── db/                 Neon + schema
+│   ├── attest.ts           HMAC seal helpers
+│   ├── db/                 Neon + schema (progress, rolls, follows, …)
 │   ├── sync.ts             Merge rules + roll upsert
 │   ├── rateLimit.ts
 │   ├── vercel-adapter.ts   (req, res) ↔ Fetch Request/Response
 │   └── logger.ts
 ├── src/
-│   ├── game/               Pure TS engine (rng, badges, EP, journey, share text)
-│   ├── state/              GameProvider + localStorage
-│   ├── lib/                Auth client, sync API, routes, logger
+│   ├── game/               Pure TS engine (rng, badges, challenge, share text)
+│   ├── state/              GameProvider + localStorage + waitForCloudPublish
+│   ├── lib/                Auth client, sync API, routes, onboarding, logger
 │   └── ui/                 Screens + components
 ├── docs/superpowers/    📚 Specs & plans
-├── scripts/             🔧 check-db, signup smoke, TS7 API patch
+├── scripts/             🔧 migrate-feature-wave, check-db, TS7 API patch
 ├── public/              🖼️ Favicon / PWA icons
 ├── vercel.json          Rewrites (SPA + auth/share path helpers)
 └── package.json         pnpm 10 · React 19 · TS 7 · Vite 6
@@ -182,31 +209,40 @@ rngdle-unlocked/
 
 | Path | Screen |
 | --- | --- |
-| `/` | Roll (home) |
-| `/history` | History |
-| `/collection` | Badge collection |
-| `/showcase` | Showcase |
-| `/leaderboard` | Board |
-| `/account` | Auth + cloud sync |
+| `/` | Roll (free / daily / weekly) |
+| `/history` | History + share |
+| `/collection` | Badge **codex** (encyclopedia) |
+| `/showcase` | Best rolls & streaks |
+| `/stats` | Rarity histogram, EP/hour, calendar |
+| `/leaderboard` | Board + friends **Feed** |
+| `/account` | Auth + username + push/pull |
 | `/about` | About |
-| `/settings` | Settings |
-| `/u/:username` | Public profile |
-| `/r/:id` | Public roll (needs cloud copy for other devices) |
+| `/settings` | Theme, effects, export/import |
+| `/u/:username` | Public profile (+ follow) |
+| `/s/:user/:code` | Vanity public roll (SPA) |
+| `/r/:id` | Legacy public roll path |
 
-API (serverless): `/api/auth/*`, `/api/me`, `/api/sync`, `/api/leaderboard`, `/api/profile/:user`, `/api/rolls/:id`, `/api/share/:id`, `/api/health`.
+**API (serverless):**  
+`/api/auth/*`, `/api/me`, `/api/sync`, `/api/leaderboard`, `/api/follow`, `/api/feed`, `/api/challenge`, `/api/attest`, `/api/og`, `/api/profile/:user`, `/api/rolls/:id`, `/api/share/:id`, `/api/health`.
+
+Bot user-agents hitting `/s/:user/:code` are rewritten to `/api/share/:code` for OG HTML + image.
 
 ## ☁️ Social / cloud setup
 
 ### 1. Neon
 - Create a Postgres project (or use Vercel Neon integration).
 - Put the **pooled** connection string in `DATABASE_URL` (local + Vercel Production).
-- Run `pnpm db:push` once so tables exist: `user`, `session`, `account`, `verification`, `user_progress`, `rolls`, `rate_limits`.
+- Apply schema:
+  - `pnpm db:push`, **or**
+  - `node scripts/migrate-feature-wave.mjs` (additive: `short_code`, attestation columns, `follows` — avoids truncate prompts)
+
+Tables include: `user`, `session`, `account`, `verification`, `user_progress`, `rolls`, `follows`, `rate_limits`.
 
 ### 2. Better Auth env
 | Variable | Local example | Production |
 | --- | --- | --- |
 | `DATABASE_URL` | Neon pooled URL | **Same real Neon project** you intend to use live |
-| `BETTER_AUTH_SECRET` | long random string | same or stronger |
+| `BETTER_AUTH_SECRET` | long random string | same or stronger (also used as attest HMAC key) |
 | `BETTER_AUTH_URL` | `http://localhost:5173` | `https://rngdle-unlocked.chron0.tech` (**not** localhost) |
 | `VITE_APP_URL` | same as above | production origin |
 
@@ -221,12 +257,15 @@ openssl rand -base64 32
 - Set env for **Production** (and Preview if you use it)
 - Redeploy after any env change
 
-### 4. Share links
-Public roll URLs only resolve for **rolls that were pushed to the cloud**. Flow:
+### 4. Share links (cloud-gated)
+Public vanity URLs only work for **rolls that exist in Neon**. Flow:
 
-1. Sign in → set username  
-2. **Push / merge to cloud**  
-3. Share from History / Home — Discord gets OG HTML via `/api/share/:id`, humans land on `/r/:id`
+1. Sign in → set `@username`  
+2. Roll (auto-sync) or **Push / merge to cloud**  
+3. Share panel waits for cloud → then enables the vanity link  
+4. Discord crawlers get OG HTML + `/api/og` image; humans open `/s/user/code`
+
+Logged out: Discord-style text / PNG only — no public URL, with a create-account CTA.
 
 ## 🧰 Commands
 
@@ -240,6 +279,7 @@ Public roll URLs only resolve for **rolls that were pushed to the cloud**. Flow:
 | `pnpm lint` | Lint via Vite+ |
 | `pnpm db:push` | Push Drizzle schema to Neon |
 | `pnpm db:studio` | Drizzle Studio |
+| `node scripts/migrate-feature-wave.mjs` | Additive SQL migration (follows, seals, short_code) |
 | `npx vercel dev` | Local SPA + serverless APIs |
 
 ### Debug logging (browser)
@@ -260,19 +300,21 @@ See [`.env.example`](./.env.example). Never commit `.env` / `.env.local`.
 | Name | Required for | Notes |
 | --- | --- | --- |
 | `DATABASE_URL` | Social APIs | Neon; must match the project you inspect in the console |
-| `BETTER_AUTH_SECRET` | Auth | Required in production |
+| `BETTER_AUTH_SECRET` | Auth + attest seals | Required in production |
 | `BETTER_AUTH_URL` | Auth cookies / CSRF | Production site origin |
 | `VITE_APP_URL` | Trusted origins | Usually same as `BETTER_AUTH_URL` |
 | `LOG_LEVEL` | Server logs | Optional (`debug` / `info`) |
 
 ## 🏗️ Architecture notes
 
-- **Game engine is pure TS** under `src/game/` — no React imports; covered by unit tests.
+- **Game engine is pure TS** under `src/game/` — no React imports; covered by unit tests (including challenge seeds).
 - **SPA routing** uses the History API (`src/lib/routes.ts`); Vercel rewrites non-`/api` paths to `index.html`.
 - **Serverless handlers** use a small **Node `(req, res)` adapter** (`server/vercel-adapter.ts`) because Vercel’s Node runtime does not pass a Web `Request` by default. The adapter builds an absolute URL (required by Better Auth / better-call).
 - **Auth multi-segment paths** (`/api/auth/sign-up/email`) are rewritten to `/api/auth?__path=…` and expanded in the adapter — Vite does not reliably support Next-style `[...all]` catch-alls.
 - **TypeScript 7** is native; a postinstall shim re-points `require('typescript')` at `@typescript/typescript6` so Vercel’s classic API typecheck still works.
 - **Merge-safe sync** never blindly overwrites: lifetime counters take max, collections union, histories merge by roll id.
+- **Share publish** polls `/api/rolls/:key` after auto-sync (`waitForCloudPublish`) before showing a public link.
+- **Attestation** is optional HMAC over `(userId, rollId, number, totalEp, rolledAt)` — not a claim of honest client RNG.
 
 ## ❓ FAQ / troubleshooting
 
@@ -282,11 +324,14 @@ Confirm latest deploy, Production env vars (especially `BETTER_AUTH_URL` = real 
 **`Invalid URL` / `headers.get is not a function` in logs**  
 Those were fixed by the Node adapter + absolute URL construction. Redeploy if you still see them on an old build.
 
-**Share link doesn’t show the roll**  
-The roll must exist in Neon (`rolls` table). Sign in → Push to cloud, then share again. Local-only history only opens on the same browser.
+**Share link doesn’t show / stuck on “Waiting for cloud…”**  
+The roll must exist in Neon (`rolls` table). Sign in so auto-sync runs, or Account → Push, then share again. Logged-out users never get a public URL (by design).
 
-**Leaderboard empty**  
-Needs at least one user with a **username** and **cloud progress**. Sort/filter: all-time vs week.
+**Follow / feed fails**  
+Need `follows` table — run `node scripts/migrate-feature-wave.mjs` on that database. Sign in required.
+
+**Leaderboard empty / “you” missing**  
+Needs a **username** and **cloud progress**. Set @handle, push, refresh Board.
 
 **Wrong database**  
 Compare `DATABASE_URL` host in Vercel with `.env.local`. A Neon project in another region is a different database.
@@ -300,16 +345,22 @@ The Account screen times out after a few seconds and shows the sign-in form. Che
 | --- | --- |
 | Solo unlimited playground | ✅ Shipped |
 | Badges / EP / journey / share card | ✅ Shipped |
-| Accounts + cloud sync | ✅ Shipped |
-| Leaderboards + profiles | ✅ Shipped |
-| OG share pages | ✅ Shipped |
-| Server-authoritative rolls | 🔮 Future |
-| OAuth providers | 🔮 Future |
+| Accounts + auto cloud sync | ✅ Shipped |
+| Leaderboards + “you on the board” | ✅ Shipped |
+| Profiles + follows + feed | ✅ Shipped |
+| Cloud-gated vanity share + mythic auto-share | ✅ Shipped |
+| Badge codex + stats page + onboarding tip | ✅ Shipped |
+| Daily/weekly challenge + roll attestation | ✅ Shipped |
+| Dynamic OG image | ✅ Shipped |
+| OAuth (Discord/GitHub) | 🔮 Later |
+| Notifications / Turnstile / EP velocity / admin | 🔮 Later |
+| Server-authoritative free-play rolls | 🔮 Future |
 
 Design docs:
 
 - [Solo design](docs/superpowers/specs/2026-07-08-rngdle-unlocked-design.md)
 - [Part 2 social design](docs/superpowers/specs/2026-07-09-mvp-part2-social-design.md)
+- [Feature wave plan](docs/superpowers/plans/2026-07-09-feature-wave.md)
 - [Implementation plan](docs/superpowers/plans/2026-07-08-rngdle-unlocked.md)
 
 ---

@@ -76,6 +76,10 @@ export function SettingsScreen() {
           />
           Include lifetime roll count on share cards
         </label>
+        <p className="text-xs text-[var(--prose-3)]">
+          Public vanity links require an account and a confirmed cloud sync.
+          Logged-out share is Discord text / PNG only.
+        </p>
       </section>
 
       <section className="space-y-1 text-sm text-[var(--prose-2)]">

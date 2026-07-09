@@ -18,7 +18,8 @@ export function ShowcaseScreen() {
       <div>
         <h1 className="text-xl font-bold uppercase tracking-wider">Showcase</h1>
         <p className="text-xs text-[var(--prose-3)]">
-          Streaks, best single roll, and best consecutive runs.
+          Streaks, best single roll, and best consecutive runs. For histograms
+          and a 28-day calendar, open the Stats tab.
         </p>
       </div>
 
