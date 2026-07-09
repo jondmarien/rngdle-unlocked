@@ -33,6 +33,15 @@ const AVATARS = new Set([
   'violet-orb',
 ]);
 
+const VANITY_SELECT = {
+  username: user.username,
+  profileAccent: user.profileAccent,
+  profileBio: user.profileBio,
+  profileFlair: user.profileFlair,
+  profileAvatar: user.profileAvatar,
+  profileShowCodex: user.profileShowCodex,
+} as const;
+
 async function getSession(request: Request) {
   const auth = createAuth();
   return auth.api.getSession({ headers: request.headers });
@@ -47,28 +56,24 @@ export default defineHandler(async (request) => {
       log.debug('no session');
       return Response.json({ user: null }, { status: 200 });
     }
-    // Enrich with vanity fields from DB (session user may be stale)
     try {
       const db = createDb();
       const [row] = await db
-        .select({
-          username: user.username,
-          profileAccent: user.profileAccent,
-          profileBio: user.profileBio,
-          profileFlair: user.profileFlair,
-          profileAvatar: user.profileAvatar,
-        })
+        .select(VANITY_SELECT)
         .from(user)
         .where(eq(user.id, session.user.id))
         .limit(1);
       return Response.json({
         user: {
           ...session.user,
-          username: row?.username ?? (session.user as { username?: string }).username,
+          username:
+            row?.username ??
+            (session.user as { username?: string }).username,
           profileAccent: row?.profileAccent ?? 'teal',
           profileBio: row?.profileBio ?? '',
           profileFlair: row?.profileFlair ?? '',
           profileAvatar: row?.profileAvatar ?? '',
+          profileShowCodex: row?.profileShowCodex ?? true,
         },
         session: session.session,
       });
@@ -88,6 +93,7 @@ export default defineHandler(async (request) => {
       profileBio?: string;
       profileFlair?: string;
       profileAvatar?: string;
+      profileShowCodex?: boolean;
     };
 
     const db = createDb();
@@ -97,6 +103,7 @@ export default defineHandler(async (request) => {
       profileBio?: string;
       profileFlair?: string;
       profileAvatar?: string;
+      profileShowCodex?: boolean;
       updatedAt: Date;
     } = { updatedAt: new Date() };
 
@@ -116,7 +123,10 @@ export default defineHandler(async (request) => {
       const a = body.profileAccent.trim().toLowerCase();
       if (!ACCENTS.has(a)) {
         return Response.json(
-          { error: 'Invalid accent. Use teal, violet, amber, rose, sky, emerald, mono.' },
+          {
+            error:
+              'Invalid accent. Use teal, violet, amber, rose, sky, emerald, mono.',
+          },
           { status: 400 },
         );
       }
@@ -133,7 +143,6 @@ export default defineHandler(async (request) => {
 
     if (body.profileAvatar !== undefined) {
       const a = body.profileAvatar.trim().toLowerCase();
-      // Empty clears preset (letter / OAuth fallback)
       if (a !== '' && !AVATARS.has(a)) {
         return Response.json(
           { error: 'Invalid profile picture selection.' },
@@ -143,12 +152,17 @@ export default defineHandler(async (request) => {
       patch.profileAvatar = a;
     }
 
+    if (body.profileShowCodex !== undefined) {
+      patch.profileShowCodex = Boolean(body.profileShowCodex);
+    }
+
     if (
       patch.username === undefined &&
       patch.profileAccent === undefined &&
       patch.profileBio === undefined &&
       patch.profileFlair === undefined &&
-      patch.profileAvatar === undefined
+      patch.profileAvatar === undefined &&
+      patch.profileShowCodex === undefined
     ) {
       return Response.json({ error: 'Nothing to update' }, { status: 400 });
     }
@@ -163,13 +177,7 @@ export default defineHandler(async (request) => {
     }
 
     const [row] = await db
-      .select({
-        username: user.username,
-        profileAccent: user.profileAccent,
-        profileBio: user.profileBio,
-        profileFlair: user.profileFlair,
-        profileAvatar: user.profileAvatar,
-      })
+      .select(VANITY_SELECT)
       .from(user)
       .where(eq(user.id, session.user.id))
       .limit(1);
@@ -181,6 +189,7 @@ export default defineHandler(async (request) => {
       profileBio: row?.profileBio ?? '',
       profileFlair: row?.profileFlair ?? '',
       profileAvatar: row?.profileAvatar ?? '',
+      profileShowCodex: row?.profileShowCodex ?? true,
     });
   }
 

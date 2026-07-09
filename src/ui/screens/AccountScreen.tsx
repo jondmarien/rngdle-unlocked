@@ -33,6 +33,7 @@ export function AccountScreen() {
   const [profileBio, setProfileBio] = useState('');
   const [profileFlair, setProfileFlair] = useState('');
   const [profileAvatar, setProfileAvatar] = useState('');
+  const [profileShowCodex, setProfileShowCodex] = useState(true);
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
@@ -67,6 +68,7 @@ export function AccountScreen() {
             profileBio?: string;
             profileFlair?: string;
             profileAvatar?: string;
+            profileShowCodex?: boolean;
           } | null;
         };
         if (cancelled || !data.user) return;
@@ -75,6 +77,7 @@ export function AccountScreen() {
         setProfileBio(data.user.profileBio ?? '');
         setProfileFlair(data.user.profileFlair ?? '');
         setProfileAvatar(normalizeProfileAvatar(data.user.profileAvatar));
+        setProfileShowCodex(data.user.profileShowCodex !== false);
       })
       .catch(() => {
         /* ignore */
@@ -240,6 +243,7 @@ export function AccountScreen() {
             profileBio,
             profileFlair,
             profileAvatar,
+            profileShowCodex,
           }),
         }),
         15_000,
@@ -499,6 +503,24 @@ export function AccountScreen() {
               <p className="mt-1 text-xs text-[var(--prose-2)]">
                 {profileBio.length}/160
               </p>
+            </div>
+            <div className="space-y-1.5">
+              <label className="flex items-start gap-2.5 text-sm text-[var(--prose)]">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={profileShowCodex}
+                  onChange={(e) => setProfileShowCodex(e.target.checked)}
+                />
+                <span>
+                  <span className="font-semibold">Show codex on public profile</span>
+                  <span className="mt-0.5 block text-xs text-[var(--prose-3)]">
+                    When on, visitors to{' '}
+                    <code className="text-[11px]">/u/yourname</code> see your
+                    unlocked badges (not locked spoilers). Default on.
+                  </span>
+                </span>
+              </label>
             </div>
             <button
               type="button"

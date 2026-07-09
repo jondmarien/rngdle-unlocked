@@ -51,6 +51,7 @@ const stmts = [
   `ALTER TABLE "user" ADD COLUMN IF NOT EXISTS profile_bio text NOT NULL DEFAULT ''`,
   `ALTER TABLE "user" ADD COLUMN IF NOT EXISTS profile_flair text NOT NULL DEFAULT ''`,
   `ALTER TABLE "user" ADD COLUMN IF NOT EXISTS profile_avatar text NOT NULL DEFAULT ''`,
+  `ALTER TABLE "user" ADD COLUMN IF NOT EXISTS profile_show_codex boolean NOT NULL DEFAULT true`,
 ];
 
 for (const s of stmts) {

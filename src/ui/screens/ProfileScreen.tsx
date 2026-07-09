@@ -34,6 +34,8 @@ type Profile = {
   profileBio?: string;
   profileFlair?: string;
   profileAvatar?: string;
+  /** When false, owner hid public codex (default true). */
+  profileShowCodex?: boolean;
   lifetimeEP: number;
   lifetimeRollCount: number;
   journeyEP: number;
@@ -502,127 +504,131 @@ export function ProfileScreen({
         </section>
       )}
 
-      {/* Codex unlocks — public collection (no spoilers; unlocked only) */}
-      <section className="space-y-3">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-base font-bold text-[var(--prose)]">
-            Codex unlocks
-          </h2>
-          <span className="text-sm text-[var(--prose-2)]">
-            {codexUnlocks.length} badge
-            {codexUnlocks.length === 1 ? '' : 's'}
-            {NUMBER_BADGES.length + JOURNEY_BADGES.length > 0
-              ? ` · ${codexUnlocks.length}/${NUMBER_BADGES.length + JOURNEY_BADGES.length}`
-              : ''}
-          </span>
-        </div>
-        <p className="text-sm text-[var(--prose-2)]">
-          Badges @{profile.username} has unlocked. Locked codex entries stay
-          private.
-        </p>
-
-        {codexUnlocks.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-[var(--outline)] px-3 py-4 text-sm text-[var(--prose-3)]">
-            No codex badges synced yet.
+      {/* Codex unlocks — only if owner allows (default on) */}
+      {profile.profileShowCodex !== false && (
+        <section className="space-y-3">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-base font-bold text-[var(--prose)]">
+              Codex unlocks
+            </h2>
+            <span className="text-sm text-[var(--prose-2)]">
+              {codexUnlocks.length} badge
+              {codexUnlocks.length === 1 ? '' : 's'}
+              {NUMBER_BADGES.length + JOURNEY_BADGES.length > 0
+                ? ` · ${codexUnlocks.length}/${NUMBER_BADGES.length + JOURNEY_BADGES.length}`
+                : ''}
+            </span>
+          </div>
+          <p className="text-sm text-[var(--prose-2)]">
+            Badges @{profile.username} has unlocked. Locked codex entries stay
+            private.
           </p>
-        ) : (
-          <>
-            <div className="flex flex-wrap gap-1.5">
-              {CODEX_FAMILY_FILTERS.filter(
-                (f) =>
-                  f.id === 'all' || (codexFamilyCounts.get(f.id) ?? 0) > 0,
-              ).map((f) => {
-                const selected = codexFilter === f.id;
-                const n =
-                  f.id === 'all'
-                    ? codexUnlocks.length
-                    : (codexFamilyCounts.get(f.id) ?? 0);
-                return (
-                  <button
-                    key={f.id}
-                    type="button"
-                    onClick={() => setCodexFilter(f.id)}
-                    className={`rounded-md border px-2.5 py-1 text-xs font-semibold sm:text-sm ${
-                      selected
-                        ? 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
-                        : 'border-[var(--outline)] text-[var(--prose-2)] hover:bg-[var(--surface-raised)]'
-                    }`}
-                  >
-                    {f.label}
-                    <span className="ml-1 opacity-70">{n}</span>
-                  </button>
-                );
-              })}
-            </div>
 
-            <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {codexFiltered.map((b) => {
-                const fam = (
-                  b.family in FAMILY_PILL
-                    ? FAMILY_PILL[b.family as BadgeFamily]
-                    : null
-                );
-                let when: string | null = null;
-                try {
-                  if (b.firstEarnedAt) {
-                    when = new Date(b.firstEarnedAt).toLocaleString(undefined, {
-                      dateStyle: 'medium',
-                      timeStyle: 'short',
-                    });
+          {codexUnlocks.length === 0 ? (
+            <p className="rounded-lg border border-dashed border-[var(--outline)] px-3 py-4 text-sm text-[var(--prose-3)]">
+              No codex badges synced yet.
+            </p>
+          ) : (
+            <>
+              <div className="flex flex-wrap gap-1.5">
+                {CODEX_FAMILY_FILTERS.filter(
+                  (f) =>
+                    f.id === 'all' || (codexFamilyCounts.get(f.id) ?? 0) > 0,
+                ).map((f) => {
+                  const selected = codexFilter === f.id;
+                  const n =
+                    f.id === 'all'
+                      ? codexUnlocks.length
+                      : (codexFamilyCounts.get(f.id) ?? 0);
+                  return (
+                    <button
+                      key={f.id}
+                      type="button"
+                      onClick={() => setCodexFilter(f.id)}
+                      className={`rounded-md border px-2.5 py-1 text-xs font-semibold sm:text-sm ${
+                        selected
+                          ? 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
+                          : 'border-[var(--outline)] text-[var(--prose-2)] hover:bg-[var(--surface-raised)]'
+                      }`}
+                    >
+                      {f.label}
+                      <span className="ml-1 opacity-70">{n}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {codexFiltered.map((b) => {
+                  const fam =
+                    b.family in FAMILY_PILL
+                      ? FAMILY_PILL[b.family as BadgeFamily]
+                      : null;
+                  let when: string | null = null;
+                  try {
+                    if (b.firstEarnedAt) {
+                      when = new Date(b.firstEarnedAt).toLocaleString(
+                        undefined,
+                        {
+                          dateStyle: 'medium',
+                          timeStyle: 'short',
+                        },
+                      );
+                    }
+                  } catch {
+                    when = null;
                   }
-                } catch {
-                  when = null;
-                }
-                return (
-                  <li
-                    key={b.id}
-                    className="rounded-lg border border-[var(--outline)] bg-[var(--surface)] p-3 text-left text-sm"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 font-bold tracking-tight">
-                        <span className="mr-1" aria-hidden>
-                          {b.emoji}
+                  return (
+                    <li
+                      key={b.id}
+                      className="rounded-lg border border-[var(--outline)] bg-[var(--surface)] p-3 text-left text-sm"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 font-bold tracking-tight">
+                          <span className="mr-1" aria-hidden>
+                            {b.emoji}
+                          </span>
+                          {b.name}
+                        </div>
+                        <span className="mono-number shrink-0 text-xs font-bold text-amber-700 dark:text-amber-400">
+                          +{b.ep.toLocaleString()}
                         </span>
-                        {b.name}
                       </div>
-                      <span className="mono-number shrink-0 text-xs font-bold text-amber-700 dark:text-amber-400">
-                        +{b.ep.toLocaleString()}
-                      </span>
-                    </div>
-                    <p className="mt-1 line-clamp-2 text-xs text-[var(--prose-2)]">
-                      {b.description}
-                    </p>
-                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                      <RarityBadge rarity={b.rarity} />
-                      {fam && (
-                        <span
-                          className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold capitalize ${fam.chip}`}
-                        >
-                          {fam.label}
-                        </span>
-                      )}
-                      {when && (
-                        <time
-                          dateTime={b.firstEarnedAt}
-                          className="text-[10px] text-[var(--prose-3)]"
-                          title="First unlocked"
-                        >
-                          {when}
-                        </time>
-                      )}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-            {codexFiltered.length === 0 && (
-              <p className="text-sm text-[var(--prose-3)]">
-                Nothing in this family yet.
-              </p>
-            )}
-          </>
-        )}
-      </section>
+                      <p className="mt-1 line-clamp-2 text-xs text-[var(--prose-2)]">
+                        {b.description}
+                      </p>
+                      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                        <RarityBadge rarity={b.rarity} />
+                        {fam && (
+                          <span
+                            className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold capitalize ${fam.chip}`}
+                          >
+                            {fam.label}
+                          </span>
+                        )}
+                        {when && (
+                          <time
+                            dateTime={b.firstEarnedAt}
+                            className="text-[10px] text-[var(--prose-3)]"
+                            title="First unlocked"
+                          >
+                            {when}
+                          </time>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+              {codexFiltered.length === 0 && (
+                <p className="text-sm text-[var(--prose-3)]">
+                  Nothing in this family yet.
+                </p>
+              )}
+            </>
+          )}
+        </section>
+      )}
 
       {/* Best roll — showcase style */}
       {best && (

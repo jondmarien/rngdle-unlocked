@@ -59,6 +59,7 @@ export default defineHandler(async (request) => {
         profileBio: user.profileBio,
         profileFlair: user.profileFlair,
         profileAvatar: user.profileAvatar,
+        profileShowCodex: user.profileShowCodex,
       })
       .from(user)
       .where(eq(user.username, username))
@@ -100,27 +101,37 @@ export default defineHandler(async (request) => {
       collectionRaw = [];
     }
 
-    // Public codex: only ids + meta already stored (no full catalog import on API)
-    const collection = collectionRaw
-      .map((e) => {
-        if (!e || typeof e !== 'object') return null;
-        const row = e as {
-          badgeId?: string;
-          family?: string;
-          firstEarnedAt?: string;
-        };
-        const badgeId = typeof row.badgeId === 'string' ? row.badgeId : '';
-        if (!badgeId) return null;
-        return {
-          badgeId,
-          family: typeof row.family === 'string' ? row.family : 'math',
-          firstEarnedAt:
-            typeof row.firstEarnedAt === 'string' ? row.firstEarnedAt : '',
-        };
-      })
-      .filter((e): e is { badgeId: string; family: string; firstEarnedAt: string } =>
-        Boolean(e),
-      );
+    const showCodex = u.profileShowCodex !== false;
+
+    // Public codex: only when owner allows (default on). No full catalog import.
+    const collection = showCodex
+      ? collectionRaw
+          .map((e) => {
+            if (!e || typeof e !== 'object') return null;
+            const row = e as {
+              badgeId?: string;
+              family?: string;
+              firstEarnedAt?: string;
+            };
+            const badgeId = typeof row.badgeId === 'string' ? row.badgeId : '';
+            if (!badgeId) return null;
+            return {
+              badgeId,
+              family: typeof row.family === 'string' ? row.family : 'math',
+              firstEarnedAt:
+                typeof row.firstEarnedAt === 'string' ? row.firstEarnedAt : '',
+            };
+          })
+          .filter(
+            (
+              e,
+            ): e is {
+              badgeId: string;
+              family: string;
+              firstEarnedAt: string;
+            } => Boolean(e),
+          )
+      : [];
 
     let stats: Record<string, unknown> = {};
     try {
@@ -152,11 +163,12 @@ export default defineHandler(async (request) => {
         profileBio: u.profileBio || '',
         profileFlair: u.profileFlair || '',
         profileAvatar: u.profileAvatar || '',
+        profileShowCodex: showCodex,
         lifetimeEP: progress?.lifetimeEp ?? 0,
         lifetimeRollCount: progress?.lifetimeRollCount ?? 0,
         journeyEP: progress?.journeyEp ?? 0,
         badgeCount: unlockedIds.size,
-        /** Unlocked codex entries (public). Client enriches names from catalog. */
+        /** Unlocked codex entries when profileShowCodex. Client enriches names. */
         collection,
         secrets,
         stats,

@@ -27,6 +27,8 @@ export const user = pgTable('user', {
   profileFlair: text('profile_flair').notNull().default(''),
   /** Preset avatar id from catalog (empty = letter / OAuth image) */
   profileAvatar: text('profile_avatar').notNull().default(''),
+  /** When true, public /u profile shows unlocked codex badges */
+  profileShowCodex: boolean('profile_show_codex').notNull().default(true),
 });
 
 export const session = pgTable('session', {
