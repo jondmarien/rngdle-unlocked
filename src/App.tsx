@@ -1,8 +1,9 @@
 import { Analytics } from '@vercel/analytics/react';
 import { useCallback, useEffect, useState } from 'react';
+import { parsePath, tabPath, type AppRoute, type TabId } from './lib/routes';
 import { GameProvider } from './state/GameProvider';
 import { CelebrationLayer } from './ui/components/Celebration';
-import { AppShell, type TabId } from './ui/layout/AppShell';
+import { AppShell } from './ui/layout/AppShell';
 import { AccountScreen } from './ui/screens/AccountScreen';
 import { AboutScreen } from './ui/screens/AboutScreen';
 import { CollectionScreen } from './ui/screens/CollectionScreen';
@@ -14,24 +15,8 @@ import { PublicRollScreen } from './ui/screens/PublicRollScreen';
 import { SettingsScreen } from './ui/screens/SettingsScreen';
 import { ShowcaseScreen } from './ui/screens/ShowcaseScreen';
 
-type Route =
-  | { kind: 'tab'; tab: TabId }
-  | { kind: 'profile'; username: string }
-  | { kind: 'roll'; rollId: string };
-
-function parsePath(pathname: string): Route {
-  const parts = pathname.split('/').filter(Boolean);
-  if (parts[0] === 'u' && parts[1]) {
-    return { kind: 'profile', username: decodeURIComponent(parts[1]).toLowerCase() };
-  }
-  if (parts[0] === 'r' && parts[1]) {
-    return { kind: 'roll', rollId: decodeURIComponent(parts[1]) };
-  }
-  return { kind: 'tab', tab: 'home' };
-}
-
 function AppRoutes() {
-  const [route, setRoute] = useState<Route>(() =>
+  const [route, setRoute] = useState<AppRoute>(() =>
     typeof window !== 'undefined'
       ? parsePath(window.location.pathname)
       : { kind: 'tab', tab: 'home' },
@@ -43,30 +28,40 @@ function AppRoutes() {
     return () => window.removeEventListener('popstate', onPop);
   }, []);
 
-  const goTab = useCallback((tab: TabId) => {
-    window.history.pushState({}, '', '/');
-    setRoute({ kind: 'tab', tab });
+  const navigate = useCallback((path: string, next: AppRoute) => {
+    if (window.location.pathname !== path) {
+      window.history.pushState({}, '', path);
+    }
+    setRoute(next);
   }, []);
 
-  const goProfile = useCallback((username: string) => {
-    const path = `/u/${encodeURIComponent(username)}`;
-    window.history.pushState({}, '', path);
-    setRoute({ kind: 'profile', username });
-  }, []);
+  const goTab = useCallback(
+    (tab: TabId) => {
+      navigate(tabPath(tab), { kind: 'tab', tab });
+    },
+    [navigate],
+  );
 
-  const goRoll = useCallback((rollId: string) => {
-    const path = `/r/${encodeURIComponent(rollId)}`;
-    window.history.pushState({}, '', path);
-    setRoute({ kind: 'roll', rollId });
-  }, []);
+  const goProfile = useCallback(
+    (username: string) => {
+      const path = `/u/${encodeURIComponent(username)}`;
+      navigate(path, { kind: 'profile', username });
+    },
+    [navigate],
+  );
+
+  const goRoll = useCallback(
+    (rollId: string) => {
+      const path = `/r/${encodeURIComponent(rollId)}`;
+      navigate(path, { kind: 'roll', rollId });
+    },
+    [navigate],
+  );
 
   const tab: TabId = route.kind === 'tab' ? route.tab : 'home';
 
   return (
-    <AppShell
-      tab={tab}
-      onTab={goTab}
-    >
+    <AppShell tab={tab} onTab={goTab}>
       {route.kind === 'profile' && (
         <ProfileScreen
           username={route.username}

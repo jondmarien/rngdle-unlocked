@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { authClient, useSession } from '../../lib/auth-client';
 import { useGame } from '../../state/GameProvider';
 
+/** Cap how long we show “Loading session…” if getSession hangs/fails. */
+const SESSION_WAIT_MS = 4000;
+
 export function AccountScreen() {
-  const { data: session, isPending, refetch } = useSession();
+  const { data: session, isPending, error, refetch } = useSession();
   const { syncToCloud, pullFromCloud, lastSyncAt, syncError, syncing } =
     useGame();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
@@ -13,6 +16,18 @@ export function AccountScreen() {
   const [username, setUsername] = useState('');
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [waitTimedOut, setWaitTimedOut] = useState(false);
+
+  useEffect(() => {
+    if (!isPending) {
+      setWaitTimedOut(false);
+      return;
+    }
+    const t = window.setTimeout(() => setWaitTimedOut(true), SESSION_WAIT_MS);
+    return () => window.clearTimeout(t);
+  }, [isPending]);
+
+  const sessionLoading = isPending && !error && !waitTimedOut;
 
   const onAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,7 +71,7 @@ export function AccountScreen() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as { error?: string; username?: string };
       if (!res.ok) throw new Error(data.error ?? 'Failed');
       setMsg(`Username set to @${data.username}`);
       await refetch();
@@ -67,7 +82,7 @@ export function AccountScreen() {
     }
   };
 
-  if (isPending) {
+  if (sessionLoading) {
     return <p className="text-sm text-[var(--prose-3)]">Loading session…</p>;
   }
 
@@ -78,6 +93,12 @@ export function AccountScreen() {
         <p className="text-xs text-[var(--prose-3)]">
           Part 2 social — sign in to sync progress to Neon (via Vercel).
         </p>
+        {(error || waitTimedOut) && !session?.user && (
+          <p className="mt-1 text-xs text-[var(--prose-3)]">
+            Not signed in
+            {error ? ` (session check failed: ${error.message})` : ''}.
+          </p>
+        )}
       </div>
 
       {!session?.user ? (
@@ -102,13 +123,17 @@ export function AccountScreen() {
             <input
               className="w-full border border-[var(--outline)] bg-[var(--surface)] px-3 py-2 text-sm"
               placeholder="Display name"
+              name="name"
+              autoComplete="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
           )}
           <input
             type="email"
+            name="email"
             required
+            autoComplete="email"
             className="w-full border border-[var(--outline)] bg-[var(--surface)] px-3 py-2 text-sm"
             placeholder="Email"
             value={email}
@@ -116,6 +141,7 @@ export function AccountScreen() {
           />
           <input
             type="password"
+            name="password"
             required
             minLength={8}
             autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
@@ -156,6 +182,8 @@ export function AccountScreen() {
             <input
               className="border border-[var(--outline)] bg-[var(--surface)] px-3 py-2 text-sm"
               placeholder="username"
+              name="username"
+              autoComplete="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
             />

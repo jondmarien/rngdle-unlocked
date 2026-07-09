@@ -1,0 +1,64 @@
+export type TabId =
+  | 'home'
+  | 'history'
+  | 'collection'
+  | 'showcase'
+  | 'leaderboard'
+  | 'account'
+  | 'about'
+  | 'settings';
+
+/** Canonical path for each main tab (SPA, History API). */
+export const TAB_PATH: Record<TabId, string> = {
+  home: '/',
+  history: '/history',
+  collection: '/collection',
+  showcase: '/showcase',
+  leaderboard: '/leaderboard',
+  account: '/account',
+  about: '/about',
+  settings: '/settings',
+};
+
+const PATH_TO_TAB: Record<string, TabId> = {
+  '': 'home',
+  roll: 'home',
+  history: 'history',
+  collection: 'collection',
+  showcase: 'showcase',
+  leaderboard: 'leaderboard',
+  board: 'leaderboard',
+  account: 'account',
+  about: 'about',
+  settings: 'settings',
+};
+
+export type AppRoute =
+  | { kind: 'tab'; tab: TabId }
+  | { kind: 'profile'; username: string }
+  | { kind: 'roll'; rollId: string };
+
+export function parsePath(pathname: string): AppRoute {
+  const parts = pathname.split('/').filter(Boolean);
+  if (parts[0] === 'u' && parts[1]) {
+    return {
+      kind: 'profile',
+      username: decodeURIComponent(parts[1]).toLowerCase(),
+    };
+  }
+  if (parts[0] === 'r' && parts[1]) {
+    return { kind: 'roll', rollId: decodeURIComponent(parts[1]) };
+  }
+  if (parts.length === 0) {
+    return { kind: 'tab', tab: 'home' };
+  }
+  if (parts.length === 1 && PATH_TO_TAB[parts[0]]) {
+    return { kind: 'tab', tab: PATH_TO_TAB[parts[0]] };
+  }
+  // Unknown path → home (SPA soft fallback)
+  return { kind: 'tab', tab: 'home' };
+}
+
+export function tabPath(tab: TabId): string {
+  return TAB_PATH[tab];
+}

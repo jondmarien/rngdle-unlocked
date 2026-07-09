@@ -1,16 +1,9 @@
 import type { ReactNode } from 'react';
+import { tabPath, type TabId } from '../../lib/routes';
 import { useGame } from '../../state/GameProvider';
 import { ThemeToggle } from './ThemeToggle';
 
-export type TabId =
-  | 'home'
-  | 'history'
-  | 'collection'
-  | 'showcase'
-  | 'leaderboard'
-  | 'account'
-  | 'about'
-  | 'settings';
+export type { TabId };
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'home', label: 'Roll' },
@@ -38,13 +31,16 @@ export function AppShell({
     <div className="flex min-h-[100dvh] flex-col bg-[var(--bg)] text-[var(--prose)]">
       <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--outline)] px-3 py-2">
         <div className="flex items-center gap-3">
-          <button
-            type="button"
+          <a
+            href={tabPath('home')}
             className="text-lg font-bold tracking-[0.2em]"
-            onClick={() => onTab('home')}
+            onClick={(e) => {
+              e.preventDefault();
+              onTab('home');
+            }}
           >
             RNGdle Unlocked
-          </button>
+          </a>
           <span className="hidden text-xs text-[var(--prose-3)] sm:inline">
             {lifetimeRollCount.toLocaleString()} rolls ·{' '}
             {lifetimeEP.toLocaleString()} EP
@@ -59,10 +55,13 @@ export function AppShell({
 
       <nav className="flex gap-1 overflow-x-auto border-b border-[var(--outline)] px-2 py-1">
         {TABS.map((t) => (
-          <button
+          <a
             key={t.id}
-            type="button"
-            onClick={() => onTab(t.id)}
+            href={tabPath(t.id)}
+            onClick={(e) => {
+              e.preventDefault();
+              onTab(t.id);
+            }}
             className={`whitespace-nowrap px-3 py-1.5 text-xs font-bold uppercase tracking-wider ${
               tab === t.id
                 ? 'border-b-2 border-[var(--prose)] text-[var(--prose)]'
@@ -70,7 +69,7 @@ export function AppShell({
             }`}
           >
             {t.label}
-          </button>
+          </a>
         ))}
       </nav>
 
