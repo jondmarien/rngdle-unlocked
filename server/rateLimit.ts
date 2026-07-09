@@ -2,9 +2,28 @@ import { eq } from 'drizzle-orm';
 import type { Db } from './db/index.js';
 import { rateLimits } from './db/schema.js';
 
-export type RateLimitResult =
-  | { ok: true; remaining: number }
-  | { ok: false; retryAfterSec: number };
+export type RateLimitOk = { ok: true; remaining: number };
+export type RateLimitBlocked = { ok: false; retryAfterSec: number };
+export type RateLimitResult = RateLimitOk | RateLimitBlocked;
+
+export function isRateLimited(rl: RateLimitResult): rl is RateLimitBlocked {
+  return rl.ok === false;
+}
+
+/** 429 JSON body for rate-limited requests. */
+export function rateLimitedResponse(
+  rl: RateLimitBlocked,
+  error = 'Rate limited',
+  withRetryAfterHeader = false,
+): Response {
+  const headers = withRetryAfterHeader
+    ? { 'Retry-After': String(rl.retryAfterSec) }
+    : undefined;
+  return Response.json(
+    { error, retryAfterSec: rl.retryAfterSec },
+    { status: 429, headers },
+  );
+}
 
 /**
  * Sliding fixed-window counter in Postgres (serverless-safe).

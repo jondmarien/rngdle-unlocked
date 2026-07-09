@@ -1,6 +1,11 @@
 import { createAuth } from '../server/auth.js';
 import { createDb } from '../server/db/index.js';
-import { checkRateLimit, LIMITS } from '../server/rateLimit.js';
+import {
+  checkRateLimit,
+  isRateLimited,
+  LIMITS,
+  rateLimitedResponse,
+} from '../server/rateLimit.js';
 import {
   loadCloudSave,
   saveCloudMerge,
@@ -28,11 +33,8 @@ export default async function handler(request: Request): Promise<Response> {
         LIMITS.syncPerMinute,
         60_000,
       );
-      if (!rl.ok) {
-        return Response.json(
-          { error: 'Rate limited', retryAfterSec: rl.retryAfterSec },
-          { status: 429 },
-        );
+      if (isRateLimited(rl)) {
+        return rateLimitedResponse(rl);
       }
       const cloud = await loadCloudSave(db, userId);
       return Response.json({ cloud });
@@ -45,13 +47,10 @@ export default async function handler(request: Request): Promise<Response> {
         LIMITS.syncPerMinute,
         60_000,
       );
-      if (!rl.ok) {
-        return Response.json(
-          {
-            error: `Slow down — try again in ${rl.retryAfterSec}s`,
-            retryAfterSec: rl.retryAfterSec,
-          },
-          { status: 429 },
+      if (isRateLimited(rl)) {
+        return rateLimitedResponse(
+          rl,
+          `Slow down — try again in ${rl.retryAfterSec}s`,
         );
       }
 
@@ -62,14 +61,10 @@ export default async function handler(request: Request): Promise<Response> {
         LIMITS.rollsUploadPerHour,
         3_600_000,
       );
-      if (!hourRl.ok) {
-        return Response.json(
-          {
-            error:
-              'Roll upload limit reached for this hour. Play locally and sync later — no 24h lock, just soft fairness.',
-            retryAfterSec: hourRl.retryAfterSec,
-          },
-          { status: 429 },
+      if (isRateLimited(hourRl)) {
+        return rateLimitedResponse(
+          hourRl,
+          'Roll upload limit reached for this hour. Play locally and sync later — no 24h lock, just soft fairness.',
         );
       }
 

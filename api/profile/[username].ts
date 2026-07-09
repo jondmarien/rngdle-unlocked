@@ -1,7 +1,13 @@
 import { and, desc, eq } from 'drizzle-orm';
 import { createDb } from '../../server/db/index.js';
 import { rolls, user, userProgress } from '../../server/db/schema.js';
-import { checkRateLimit, clientIp, LIMITS } from '../../server/rateLimit.js';
+import {
+  checkRateLimit,
+  clientIp,
+  isRateLimited,
+  LIMITS,
+  rateLimitedResponse,
+} from '../../server/rateLimit.js';
 
 export default async function handler(request: Request): Promise<Response> {
   if (request.method !== 'GET') {
@@ -17,11 +23,8 @@ export default async function handler(request: Request): Promise<Response> {
       LIMITS.profilePerMinute,
       60_000,
     );
-    if (!rl.ok) {
-      return Response.json(
-        { error: 'Rate limited', retryAfterSec: rl.retryAfterSec },
-        { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } },
-      );
+    if (isRateLimited(rl)) {
+      return rateLimitedResponse(rl, 'Rate limited', true);
     }
 
     const url = new URL(request.url);
