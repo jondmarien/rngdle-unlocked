@@ -7,9 +7,50 @@
 | **Repo**                   | `jondmarien/rngdle-unlocked`                                                                           |
 | **Live**                   | https://rngdle-unlocked.chron0.tech                                                                    |
 | **Branch**                 | `main` (auto-deploys Vercel)                                                                           |
-| **Version**                | `0.4.1` (`package.json`; Settings uses `VITE_APP_VERSION`)                                             |
-| **Latest release**         | [v0.4.0](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.4.0) (cut `v0.4.1` after smoke) |
-| **Handoff commit context** | P0/P1 + admin + OAuth wave                                                                             |
+| **Version**                | `0.4.1` in `package.json` (Settings uses `VITE_APP_VERSION`); **0.5.0 release pending** docs sync |
+| **Latest release**         | [v0.4.0](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.4.0) (no GitHub `v0.4.1` tag; next cut is **v0.5.0**) |
+| **Handoff commit context** | Opus audit refactor (`aa8e91e`…`fc4fa65` on `main`) + prior P0/P1 wave |
+
+---
+
+## 1b. Architecture refactor — actual end-state (July 2026)
+
+The [opus audit](docs/opus-report.md) (§§A–G historical; **§H** current) drove a readability/expandability refactor that landed on `main` in 11 commits (`aa8e91e`…`fc4fa65`). **Why:** stop recurring Ranked ESM outages at compile time, collapse handler/auth boilerplate, make the client API boundary mandatory, and shrink `GameProvider`. **Do not describe the original audit plan as if every item landed unchanged.** See also [`docs/refactor-notes-2026-07.md`](docs/refactor-notes-2026-07.md).
+
+### Changelog-style summary (this pass)
+
+| Area | What changed |
+| ---- | ------------ |
+| Tooling | Solution tsconfigs; `tsconfig.server.json` **NodeNext** / **nodenext** |
+| Server | `apiGuards` (`requireUser` / `readJson` / `rateGuard`); read pipelines in `server/{leaderboard,profile,feed,ogSvg}.ts` |
+| Client | Mandatory `lib/*-api.ts` wrappers; TanStack Query on key reads; Zod at import/sync/profile; `useSync` + three contexts |
+| Quality | Session typing; format/StatTile/SegmentedToggle/rarity dedupe; `storage-keys.ts`; dead-code sweep |
+
+**New direct deps:** `@tanstack/react-query`, `zod` (see `package.json`).
+
+### Landed as intended
+
+- **`tsconfig.server.json`** — API/server graph uses `NodeNext` + `nodenext` resolution; root `tsconfig.json` is a solution file referencing app/node/server projects.
+- **`server/apiGuards.ts`** — `requireUser`, `readJson`, `rateGuard` adopted across handlers.
+- **TanStack Query + `src/lib/*-api.ts` client API wrappers** — UI must not raw-`fetch` `/api/*`; `GameProvider` split into `useSync`, settings reducer, and three contexts (`useGame` / `useGameSettings` / `useCloudSync`).
+- **Zod at trust boundaries** — `parseImportPayload`, `api/sync` body, `fetchProfile` response.
+- **Read-side pipelines** — `server/{leaderboard,profile,feed,ogSvg}.ts` + expanded `server/notifications.ts`.
+- **Dedupes** — `format.ts`, `StatTile`, `SegmentedToggle`, rarity consolidation, `storage-keys.ts`, dead-code sweep.
+- **Automated verification** — `pnpm typecheck`, `pnpm test`, `pnpm build` pass after the refactor.
+
+### Intentional deltas from the audit plan
+
+| Area | Actual behavior |
+| ---- | ---------------- |
+| **`PATCH /api/me` malformed JSON** | Returns **HTTP 400** (`Invalid JSON`) via `readJson`, not a generic 500. |
+| **Save import validation** | Corrupt/hand-edited saves throw `Invalid save file: …` (e.g. corrupt roll history / badge collection). Valid legacy exports still import. |
+| **`SegmentedToggle` migration** | **Not** applied to `RollModePicker` rich radio cards or `CollectionScreen` family-filter chips — those UIs stay bespoke. |
+| **`POST /api/system-messages`** | **Still live** (admin-session POST). Not removed; `api/admin/broadcast.ts` is the day-to-day path but the redundant surface was left untouched. |
+| **Not landed** | `useSaveTransfer`, `badgeJson`/`routeParams`, `game/history.ts`, path aliases, full TanStack/`useMutation`, Zod on all POSTs |
+
+### Still required — not verified in-repo
+
+- **Manual browser smoke** for AGENTS.md §9 four-point roll-mode check (Free → Daily → mode-switch Free → Ranked). `pnpm typecheck` / `pnpm test` / `pnpm build` do **not** substitute; do not claim this checklist passed unless there is explicit evidence (release notes, smoke log, or user confirmation).
 
 ---
 
@@ -63,7 +104,7 @@ Rough chronological product work across this multi-turn session (and immediate p
 
 - Tiered celebrate: rare → epic → anomaly → mythic (confetti density/palette, edge blooms, screen shake, mythic rays/flash, richer audio)
 - Settings: confetti toggle covers full celebrate stack
-- **Open issue:** confetti origin still feels left/top-left — user wants **center of screen** (see §7)
+- Confetti origin centered (`Celebration.tsx`) — see §7 Done
 
 ### Reliability fixes worth knowing
 
@@ -75,6 +116,17 @@ Rough chronological product work across this multi-turn session (and immediate p
 | Free play sync 429                    | hourly `rollsUploadPerHour: 120`                           | **removed**; only soft per-minute sync burst        |
 | System notifs require per-click       | design                                                     | viewing System tab marks all system read            |
 | Mermaid “Unable to render” on GitHub  | `<br/>`, unicode dots, path-like labels                    | simplified diagrams in README / ARCHITECTURE        |
+
+### Resolved (architecture refactor)
+
+| Issue | Resolution |
+| ----- | ---------- |
+| Recurring Ranked outage from extensionless ESM imports typechecking green under `bundler` | **`tsconfig.server.json` NodeNext** — `pnpm typecheck` fails on missing `.js` extensions in the api/server graph (still keep `.js` discipline in `src/game`) |
+| Fat read handlers / duplicated auth-parse-rate boilerplate | `server/apiGuards.ts` + `server/{leaderboard,profile,feed,ogSvg}.ts` |
+| Screens bypassing `lib/*-api.ts` with raw `fetch` | Client API wrappers mandatory; TanStack Query on leaderboard/feed/highlights/profile/admin-check |
+| Blind casts at import/sync/profile | Zod at those trust boundaries |
+| Monolithic GameProvider sync + settings | `useSync.ts` + settings reducer + three contexts |
+| Confetti origin left/top-left | Center burst in `Celebration.tsx` (was listed as open; fixed this wave) |
 
 ### Docs / agent files
 
@@ -108,6 +160,13 @@ Daily/Weekly            →  seed challenge    →  source=challenge
 | Area                   | Path                                                                           |
 | ---------------------- | ------------------------------------------------------------------------------ |
 | Roll orchestration     | `src/state/GameProvider.tsx`                                                   |
+| Cloud sync             | `src/state/useSync.ts`, `useCloudSync`                                         |
+| Settings               | `src/state/settings.ts`, `useGameSettings`                                     |
+| Client API wrappers    | `src/lib/*-api.ts` (`roll-api`, `leaderboard-api`, `profile-api`, …)           |
+| Zod schemas            | `src/lib/schemas.ts`                                                           |
+| QueryClient            | `src/main.tsx`                                                                 |
+| Handler guards         | `server/apiGuards.ts`                                                          |
+| Read pipelines         | `server/leaderboard.ts`, `profile.ts`, `feed.ts`, `ogSvg.ts`                   |
 | Home reel + mode reset | `src/ui/screens/HomeScreen.tsx`, `NumberDisplay.tsx`                           |
 | Latest runs            | `src/ui/components/LatestRunsPanel.tsx`                                        |
 | Mode copy              | `src/ui/components/RollModePicker.tsx`                                         |
@@ -115,12 +174,13 @@ Daily/Weekly            →  seed challenge    →  source=challenge
 | Ranked issue           | `server/rankedRoll.ts`, `api/ranked-roll.ts`                                   |
 | Crowns / overtake      | `server/rollActivity.ts`                                                       |
 | Sync                   | `server/sync.ts`, `api/sync.ts`                                                |
-| Leaderboard            | `api/leaderboard.ts`, `LeaderboardScreen.tsx`                                  |
-| Feed                   | `api/feed.ts`                                                                  |
+| Leaderboard            | `server/leaderboard.ts`, `api/leaderboard.ts`, `LeaderboardScreen.tsx`         |
+| Feed                   | `server/feed.ts`, `api/feed.ts`                                                |
 | Schema                 | `server/db/schema.ts` (`rolls.source`)                                         |
 | Badge catalog          | `src/game/badges/catalog.ts`                                                   |
 | Absolute Ceiling art   | `public/badges/ceiling.jpg`                                                    |
 | Migrations             | `scripts/add-roll-source.mjs`, `scripts/migrate-feature-wave.mjs`              |
+| Refactor notes         | `docs/refactor-notes-2026-07.md`, `docs/opus-report.md` §H                     |
 
 ---
 
@@ -130,13 +190,13 @@ Daily/Weekly            →  seed challenge    →  source=challenge
 pnpm install
 pnpm dev            # SPA only
 pnpm test
-pnpm typecheck
-pnpm build
+pnpm typecheck      # includes tsconfig.server.json (NodeNext)
+pnpm build          # app + node typecheck, then Vite (server graph via typecheck)
 npx vercel dev      # SPA + APIs locally
 node scripts/add-roll-source.mjs   # if source column missing
 ```
 
-Env: `.env.example` — `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `VITE_APP_URL`, optional `ADMIN_SECRET`.
+**Deps of note:** `@tanstack/react-query`, `zod` (direct). Env: `.env.example` — `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `VITE_APP_URL`, optional `ADMIN_SECRET`, OAuth + Resend vars.
 
 **Schema caution:** `pnpm db:push` may prompt to truncate `rolls` for unique constraints. Prefer additive scripts unless user accepts data loss.
 
@@ -144,7 +204,7 @@ Env: `.env.example` — `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`,
 
 ## 6. Pitfalls for the next agent
 
-1. **ESM on Vercel:** any new `src/game` file loaded by serverless must use **relative `.js` extensions** in imports.
+1. **ESM on Vercel:** any new `src/game` file loaded by serverless must use **relative `.js` extensions** in imports. NodeNext on `tsconfig.server.json` catches this at `pnpm typecheck` — do not revert to `bundler` for the server project.
 2. **Mode switch reel:** never reset `revealKey` without remounting `NumberDisplay` or clearing `lastRevealKey` (stuck `?????`).
 3. **Do not reintroduce** free-play hourly upload cap.
 4. **Do not let client sync set `source=ranked`.**
@@ -172,7 +232,7 @@ Env: `.env.example` — `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`,
 - [ ] Create Discord Application + GitHub OAuth App using `docs/oauth-setup.md` + `public/brand/oauth-icon-512.png`; paste Client ID/Secret into Vercel
 - [ ] Promote your account: `CONFIRM_PROMOTE=yes node scripts/promote-admin.mjs --email you@…` (needs `ADMIN_SECRET` + `DATABASE_URL`)
 - [ ] Smoke prod: Free/Ranked/mode-switch; epic+ confetti center; Latest runs animation; `/admin`; OAuth buttons after env
-- [ ] Cut annotated `v0.4.1` release when ready
+- [ ] Cut annotated **`v0.5.0`** release after docs sync (architecture refactor; skip backfilling `v0.4.1` unless desired)
 
 ### P2 competitive / social
 
@@ -214,15 +274,17 @@ Keep language consistent everywhere (About, RollModePicker, Leaderboard, README)
 
 1. Confirm user finished OAuth portal setup + `promote-admin.mjs`.
 2. Hard-refresh prod smoke checklist §8 + `/admin` + Discord/GitHub Account buttons.
-3. Tag `v0.4.1` if smoke is clean.
+3. After docs review approval: bump to **0.5.0**, tag, and `gh release create` (architecture refactor notes).
 
 ---
 
 ## 11. Commit map (session-relevant)
 
 ```
+fc4fa65 fix(ts): restore ImportMeta.env and CSS module types for the IDE
+c32ee4a … aa8e91e  architecture refactor steps 1–10 (NodeNext → dead-code sweep)
+…
 ae21ace fix(home): float Latest runs right under chrome, not mid-column
-c10d2f5 chore(settings): clarify celebrate FX toggle label
 9a168c5 feat(fx): tiered epic/anomaly/mythic celebrate FX
 7c49588 feat(home): Latest runs sidebar with Free/Ranked/Challenge tabs
 054548a docs: add comprehensive AGENTS.md for coding agents
@@ -230,8 +292,6 @@ c10d2f5 chore(settings): clarify celebrate FX toggle label
 922b6b5 feat(feed,history): Free play vs Ranked lanes
 …
 670305f feat: Ranked free play (server RNG) + board fairness
-ad39583 feat: overtake alerts, rarity top% curve, Absolute Ceiling jackpot
-70cfa93 feat(ui): sticky app chrome and history sort filters
 ```
 
 ---
