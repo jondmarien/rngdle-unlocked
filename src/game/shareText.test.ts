@@ -43,7 +43,7 @@ describe('buildShareText', () => {
     expect(text).toContain('+2 more');
     expect(text).toMatch(/^".+"$/m);
     expect(text).toContain('3,179 EP');
-    expect(text).toContain('/api/share/');
+    expect(text).toMatch(/\/s\/[a-z0-9_]+\/[A-Za-z0-9]+/);
   });
 
   it('handles no badges', () => {

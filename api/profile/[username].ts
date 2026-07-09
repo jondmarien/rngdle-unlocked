@@ -68,6 +68,7 @@ export default defineHandler(async (request) => {
     const recent = await db
       .select({
         id: rolls.id,
+        shortCode: rolls.shortCode,
         number: rolls.number,
         totalEp: rolls.totalEp,
         rarity: rolls.rarity,
@@ -98,6 +99,7 @@ export default defineHandler(async (request) => {
         stats,
         recentRolls: recent.map((r) => ({
           id: r.id,
+          shortCode: r.shortCode,
           number: r.number,
           totalEP: r.totalEp,
           rarity: r.rarity,

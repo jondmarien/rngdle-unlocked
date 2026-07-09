@@ -1,41 +1,37 @@
-import { and, eq } from 'drizzle-orm';
 import { createDb } from '../../server/db/index.js';
-import { rolls, user } from '../../server/db/schema.js';
 import { requestUrl } from '../../server/http.js';
 import { createLogger } from '../../server/logger.js';
+import { findPublicRoll } from '../../server/rollLookup.js';
 import { defineHandler } from '../../server/vercel-adapter.js';
 
 const log = createLogger('api/share');
 
 /**
- * OG / Discord share HTML for a roll.
- * Paths: /api/share/:id  (and rewritten from /api/share/r/:id)
- * Humans are meta-refreshed to SPA /r/:id
+ * OG / Discord HTML for a roll (internal).
+ * Public vanity URLs: /s/:user/:code → rewritten here for crawlers.
+ * Meta-refresh sends humans to the same vanity SPA path when possible.
  */
 export default defineHandler(async (request) => {
   try {
     const url = requestUrl(request);
     const parts = url.pathname.split('/').filter(Boolean);
-    // /api/share/:id  or /api/share/r/:id (if not rewritten)
-    let id = '';
+    let key = '';
     const shareIdx = parts.indexOf('share');
     if (shareIdx >= 0) {
       const after = parts.slice(shareIdx + 1).filter((p) => p !== 'r');
-      id = decodeURIComponent(after[after.length - 1] ?? '');
+      key = decodeURIComponent(after[after.length - 1] ?? '');
     }
-    if (!id) {
-      id = decodeURIComponent(parts[parts.length - 1] ?? '');
+    if (!key) key = decodeURIComponent(parts[parts.length - 1] ?? '');
+    if (!key || key === 'share') {
+      key = url.searchParams.get('id') ?? url.searchParams.get('code') ?? '';
     }
-
-    // Query param fallback (rewrite destination)
-    if (!id || id === 'share') {
-      id = url.searchParams.get('id') ?? '';
-    }
+    const userHint =
+      url.searchParams.get('user') ?? url.searchParams.get('u') ?? undefined;
 
     const origin = url.origin;
-    log.info('share', { id, path: url.pathname });
+    log.info('share', { key, userHint, path: url.pathname });
 
-    if (!id) {
+    if (!key) {
       return htmlPage({
         title: 'RNGdle Unlocked',
         desc: 'Unlimited CSPRNG rolls · badges · cloud sync',
@@ -44,44 +40,24 @@ export default defineHandler(async (request) => {
       });
     }
 
-    let row: {
-      id: string;
-      number: number;
-      totalEp: number;
-      rarity: string;
-      badgesJson: string;
-      username: string | null;
-    } | null = null;
-
+    let row: Awaited<ReturnType<typeof findPublicRoll>> = null;
     try {
       const db = createDb();
-      const [found] = await db
-        .select({
-          id: rolls.id,
-          number: rolls.number,
-          totalEp: rolls.totalEp,
-          rarity: rolls.rarity,
-          badgesJson: rolls.badgesJson,
-          username: user.username,
-        })
-        .from(rolls)
-        .innerJoin(user, eq(user.id, rolls.userId))
-        .where(and(eq(rolls.id, id), eq(rolls.isPublic, true)))
-        .limit(1);
-      row = found ?? null;
+      row = await findPublicRoll(db, key, userHint);
     } catch (dbErr) {
       log.error('db lookup failed', {
         err: dbErr instanceof Error ? dbErr.message : String(dbErr),
       });
     }
 
-    const spaUrl = `${origin}/r/${encodeURIComponent(id)}`;
-
     if (!row) {
-      // Still redirect humans to SPA; crawlers get a generic card.
+      const fallbackUser = userHint && userHint !== 'player' ? userHint : null;
+      const spaUrl = fallbackUser
+        ? `${origin}/s/${encodeURIComponent(fallbackUser)}/${encodeURIComponent(key)}`
+        : `${origin}/r/${encodeURIComponent(key)}`;
       return htmlPage({
         title: 'RNGdle Unlocked · Shared roll',
-        desc: 'Open this link in the app. If you just rolled, sync to cloud first so the public page can load.',
+        desc: 'Open this link in the app. Sync to cloud after rolling so the public page can load.',
         spaUrl,
         status: 200,
       });
@@ -112,6 +88,10 @@ export default defineHandler(async (request) => {
     ]
       .filter(Boolean)
       .join(' · ');
+
+    const code = row.shortCode || row.id;
+    const handle = row.username || userHint || 'player';
+    const spaUrl = `${origin}/s/${encodeURIComponent(handle)}/${encodeURIComponent(code)}`;
 
     return htmlPage({ title, desc, spaUrl, status: 200 });
   } catch (err) {

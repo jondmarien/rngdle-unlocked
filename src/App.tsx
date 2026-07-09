@@ -60,7 +60,16 @@ function AppRoutes() {
   );
 
   const goRoll = useCallback(
-    (rollId: string) => {
+    (rollId: string, username?: string | null) => {
+      if (username && username.length >= 3) {
+        const path = `/s/${encodeURIComponent(username)}/${encodeURIComponent(rollId)}`;
+        navigate(path, {
+          kind: 'roll',
+          rollId,
+          username: username.toLowerCase(),
+        });
+        return;
+      }
       const path = `/r/${encodeURIComponent(rollId)}`;
       navigate(path, { kind: 'roll', rollId });
     },
@@ -81,6 +90,7 @@ function AppRoutes() {
       {route.kind === 'roll' && (
         <PublicRollScreen
           rollId={route.rollId}
+          username={route.username}
           onOpenProfile={goProfile}
           onBack={() => goTab('home')}
         />

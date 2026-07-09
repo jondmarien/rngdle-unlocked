@@ -95,6 +95,7 @@ export async function loadCloudSave(
   const history: RollResult[] = historyRows
     .map((r) => ({
       id: r.id,
+      shortCode: r.shortCode ?? undefined,
       number: r.number,
       totalEP: r.totalEp,
       rarity: r.rarity as RollResult['rarity'],
@@ -175,21 +176,34 @@ export async function saveCloudMerge(
     if (r.totalEP < 0 || r.totalEP > 500_000) continue;
     if (r.number < 0 || r.number > 1_000_000) continue;
 
-    await db
-      .insert(rolls)
-      .values({
-        id: r.id,
-        userId,
-        number: r.number,
-        totalEp: r.totalEP,
-        rarity: r.rarity,
-        percentile: r.percentile,
-        badgesJson: JSON.stringify(r.badges),
-        rolledAt: new Date(r.rolledAt),
-        createdAt: now,
-        isPublic: true,
-      })
-      .onConflictDoNothing();
+    const shortCode =
+      r.shortCode && r.shortCode.length >= 6 ? r.shortCode : null;
+
+    const values = {
+      id: r.id,
+      userId,
+      number: r.number,
+      totalEp: r.totalEP,
+      rarity: r.rarity,
+      percentile: r.percentile,
+      badgesJson: JSON.stringify(r.badges),
+      rolledAt: new Date(r.rolledAt),
+      createdAt: now,
+      isPublic: true as const,
+      shortCode,
+    };
+
+    if (shortCode) {
+      await db
+        .insert(rolls)
+        .values(values)
+        .onConflictDoUpdate({
+          target: rolls.id,
+          set: { isPublic: true, shortCode },
+        });
+    } else {
+      await db.insert(rolls).values(values).onConflictDoNothing();
+    }
   }
 
   return merged;

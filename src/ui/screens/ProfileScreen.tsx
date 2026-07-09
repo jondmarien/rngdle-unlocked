@@ -16,6 +16,7 @@ type Profile = {
   };
   recentRolls: {
     id: string;
+    shortCode?: string | null;
     number: number;
     totalEP: number;
     rarity: string;
@@ -30,7 +31,7 @@ export function ProfileScreen({
   onBack,
 }: {
   username: string;
-  onOpenRoll: (id: string) => void;
+  onOpenRoll: (id: string, username?: string | null) => void;
   onBack?: () => void;
 }) {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -123,7 +124,9 @@ export function ProfileScreen({
                 <button
                   type="button"
                   className="flex w-full flex-wrap items-center justify-between gap-2 px-3 py-2 text-left hover:bg-[var(--surface-raised)]"
-                  onClick={() => onOpenRoll(r.id)}
+                  onClick={() =>
+                    onOpenRoll(r.shortCode || r.id, profile.username)
+                  }
                 >
                   <span className="mono-number font-bold">
                     {r.number.toLocaleString()}

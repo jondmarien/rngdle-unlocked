@@ -41,7 +41,10 @@ export type BadgeDef = {
 };
 
 export type RollResult = {
+  /** Internal stable id (UUID). */
   id: string;
+  /** Short public code for vanity share URLs (e.g. /s/user/xK9m2pQ3). */
+  shortCode?: string;
   number: number;
   badges: BadgeHit[];
   totalEP: number;

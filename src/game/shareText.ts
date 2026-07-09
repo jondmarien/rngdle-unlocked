@@ -1,3 +1,5 @@
+import { ensureShortCode } from './evaluate';
+import { vanityUserSegment } from './ids';
 import type { BadgeHit, RarityTier, RollResult } from './types';
 
 const RARITY_SQUARE: Record<RarityTier, string> = {
@@ -50,9 +52,30 @@ export type ShareTextOptions = {
   siteUrl?: string;
   /** Prefer OG-friendly share link for this roll when synced. */
   rollShareUrl?: string;
+  /** Public username for vanity /s/:user/:code links. */
+  username?: string | null;
   showRollCount?: boolean;
   rollCount?: number;
 };
+
+/** Vanity share URL: https://host/s/username/shortCode (no /api, no UUID). */
+export function buildRollShareUrl(
+  roll: RollResult,
+  opts: { siteUrl?: string; username?: string | null } = {},
+): string {
+  const withCode = ensureShortCode(roll);
+  let origin =
+    opts.siteUrl ??
+    (typeof window !== 'undefined' && window.location?.origin
+      ? window.location.origin
+      : 'https://rngdle-unlocked.chron0.tech');
+  if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+    origin = 'https://rngdle-unlocked.chron0.tech';
+  }
+  const user = vanityUserSegment(opts.username);
+  const code = withCode.shortCode!;
+  return `${origin.replace(/\/$/, '')}/s/${encodeURIComponent(user)}/${encodeURIComponent(code)}`;
+}
 
 /**
  * Discord-friendly share block, aligned with RNGdle-style paste:
@@ -95,21 +118,14 @@ export function buildShareText(
   const quote = buildFlavorQuote(sorted);
   const ep = roll.totalEP.toLocaleString('en-US');
 
-  let origin =
-    opts.siteUrl ??
-    (typeof window !== 'undefined' && window.location?.origin
-      ? window.location.origin
-      : 'https://rngdle-unlocked.chron0.tech');
-  // Prefer production host when building share text on localhost
-  if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-    origin = 'https://rngdle-unlocked.chron0.tech';
-  }
-
-  // OG HTML endpoint (meta tags for Discord) → meta-refresh to SPA /r/:id
-  // Requires the roll to be cloud-synced (public row in DB).
+  // Vanity path /s/user/code — Discord crawlers hit OG via Vercel rewrite;
+  // humans load the SPA. Requires cloud sync for other devices.
   const link =
     opts.rollShareUrl ??
-    `${origin}/api/share/${encodeURIComponent(roll.id)}`;
+    buildRollShareUrl(roll, {
+      siteUrl: opts.siteUrl,
+      username: opts.username,
+    });
 
   const lines = [
     `RNGdle Unlocked 🎲 ${numberPlain}`,

@@ -75,9 +75,10 @@ export function AboutScreen() {
             and profile pages at <code className="text-xs">/u/you</code>.
           </li>
           <li>
-            Share links work for others only after the roll is in the cloud.
-            OG previews use <code className="text-xs">/api/share/:id</code>;
-            humans land on <code className="text-xs">/r/:id</code>.
+            Share links look like{' '}
+            <code className="text-xs">/s/yourname/xK9m2pQ3</code> (short code,
+            no <code className="text-xs">/api</code>). They work for others after
+            the roll is in the cloud (auto-sync while signed in).
           </li>
         </ul>
         <p className="text-xs text-[var(--prose-3)]">

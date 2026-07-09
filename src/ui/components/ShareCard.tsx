@@ -1,8 +1,14 @@
 import { useRef, useState } from 'react';
 import { toPng } from 'html-to-image';
-import { topPercentFromPercentile, type RollResult } from '../../game';
-import { buildShareText } from '../../game/shareText';
+import {
+  ensureShortCode,
+  topPercentFromPercentile,
+  type RollResult,
+} from '../../game';
+import { buildRollShareUrl, buildShareText } from '../../game/shareText';
+import { useSession } from '../../lib/auth-client';
 import { createLogger } from '../../lib/logger';
+import { vanityRollPath } from '../../lib/routes';
 import { RarityBadge } from './RarityBadge';
 import { EPPill } from './EPPill';
 
@@ -21,21 +27,29 @@ export function SharePanel({
   showRollCount: boolean;
   onClose: () => void;
 }) {
+  const { data: session } = useSession();
+  const username =
+    (session?.user as { username?: string | null } | undefined)?.username ??
+    null;
   const cardRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<string | null>(null);
-  const text = buildShareText(roll, {
+  const rollWithCode = ensureShortCode(roll);
+  const text = buildShareText(rollWithCode, {
     showRollCount,
     rollCount,
+    username,
   });
-  const publicPath = `/r/${encodeURIComponent(roll.id)}`;
-  const ogPath = `/api/share/${encodeURIComponent(roll.id)}`;
+  const publicPath = vanityRollPath(username, rollWithCode.shortCode!);
+  const fullUrl = buildRollShareUrl(rollWithCode, { username });
 
   const copyText = async () => {
     try {
       await navigator.clipboard.writeText(text);
       log.info('copied share text', { rollId: roll.id });
       setStatus(
-        'Copied for Discord! Public links need Account → Push to cloud first.',
+        username
+          ? 'Copied! Link looks like /s/you/shortCode (auto-syncs when signed in).'
+          : 'Copied! Set a username on Account for prettier /s/you/… links.',
       );
     } catch {
       setStatus('Could not copy — select the text manually.');
@@ -90,10 +104,15 @@ export function SharePanel({
         </div>
 
         <p className="mb-2 text-xs text-[var(--prose-3)]">
-          Discord-style text — copy and paste into a chat. Public links need the
-          roll in the cloud (Account → Push). App page:{' '}
-          <code className="text-[10px]">{publicPath}</code> · OG:{' '}
-          <code className="text-[10px]">{ogPath}</code>
+          Discord-style text — copy and paste into a chat. Vanity link (no{' '}
+          <code className="text-[10px]">/api</code>, short code):
+        </p>
+        <p className="mb-3 break-all font-mono text-[11px] text-[var(--prose)]">
+          {fullUrl}
+        </p>
+        <p className="mb-2 text-[10px] text-[var(--prose-3)]">
+          Path: <code>{publicPath}</code>
+          {!username && ' · set @username for your handle in the URL'}
         </p>
 
         {/* Primary: Discord paste block */}

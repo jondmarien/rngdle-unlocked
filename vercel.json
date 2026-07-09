@@ -5,16 +5,27 @@
   "installCommand": "pnpm install --frozen-lockfile",
   "rewrites": [
     {
+      "source": "/s/:user/:code",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(bot|crawl|slurp|discord|twitter|facebook|slack|linkedin|telegram|whatsapp|preview|embed).*"
+        }
+      ],
+      "destination": "/api/share/:code?user=:user"
+    },
+    {
+      "source": "/api/share/r/(.*)",
+      "destination": "/api/share/$1"
+    },
+    {
       "source": "/api/auth",
       "destination": "/api/auth"
     },
     {
       "source": "/api/auth/(.*)",
       "destination": "/api/auth?__path=$1"
-    },
-    {
-      "source": "/api/share/r/(.*)",
-      "destination": "/api/share/$1"
     },
     {
       "source": "/((?!api/).*)",

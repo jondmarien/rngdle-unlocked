@@ -11,6 +11,7 @@ const log = createLogger('public-roll');
 
 type PublicRoll = {
   id: string;
+  shortCode?: string | null;
   number: number;
   totalEP: number;
   rarity: RarityTier;
@@ -23,10 +24,13 @@ type PublicRoll = {
 
 export function PublicRollScreen({
   rollId,
+  username: routeUser,
   onOpenProfile,
   onBack,
 }: {
+  /** UUID or short vanity code */
   rollId: string;
+  username?: string;
   onOpenProfile: (username: string) => void;
   onBack?: () => void;
 }) {
@@ -39,9 +43,12 @@ export function PublicRollScreen({
     let cancelled = false;
     setError(null);
     setRoll(null);
-    log.info('load', { rollId });
+    log.info('load', { rollId, routeUser });
 
-    fetch(`/api/rolls/${encodeURIComponent(rollId)}`)
+    const q = routeUser
+      ? `?user=${encodeURIComponent(routeUser)}`
+      : '';
+    fetch(`/api/rolls/${encodeURIComponent(rollId)}${q}`)
       .then(async (r) => {
         const data = (await r.json()) as {
           error?: string;
@@ -56,18 +63,21 @@ export function PublicRollScreen({
       .catch((e) => {
         if (cancelled) return;
         // Same-browser fallback: roll may only exist in localStorage
-        const local = history.find((h) => h.id === rollId);
+        const local = history.find(
+          (h) => h.id === rollId || h.shortCode === rollId,
+        );
         if (local) {
           log.info('loaded from local history', { rollId });
           setRoll({
             id: local.id,
+            shortCode: local.shortCode,
             number: local.number,
             totalEP: local.totalEP,
             rarity: local.rarity,
             percentile: local.percentile,
             badges: local.badges,
             rolledAt: local.rolledAt,
-            player: { username: null, name: 'You (local)' },
+            player: { username: routeUser ?? null, name: 'You (local)' },
             source: 'local',
           });
           return;
@@ -78,14 +88,14 @@ export function PublicRollScreen({
         });
         setError(
           e instanceof Error
-            ? `${e.message}. Cloud public rolls need an account + Push to cloud. Local-only rolls only open on this device.`
+            ? `${e.message}. Cloud public rolls need an account + cloud sync. Local-only rolls only open on this device.`
             : 'Failed',
         );
       });
     return () => {
       cancelled = true;
     };
-  }, [rollId, history]);
+  }, [rollId, routeUser, history]);
 
   if (error) {
     return (
@@ -109,6 +119,7 @@ export function PublicRollScreen({
 
   const asResult: RollResult = {
     id: roll.id,
+    shortCode: roll.shortCode ?? undefined,
     number: roll.number,
     totalEP: roll.totalEP,
     rarity: roll.rarity,
@@ -120,7 +131,9 @@ export function PublicRollScreen({
         : new Date(roll.rolledAt).toISOString(),
   };
 
-  const share = buildShareText(asResult);
+  const share = buildShareText(asResult, {
+    username: roll.player.username ?? routeUser,
+  });
 
   return (
     <div className="space-y-6">

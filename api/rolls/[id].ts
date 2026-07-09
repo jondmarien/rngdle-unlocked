@@ -1,6 +1,4 @@
-import { and, eq } from 'drizzle-orm';
 import { createDb } from '../../server/db/index.js';
-import { rolls, user } from '../../server/db/schema.js';
 import { requestUrl } from '../../server/http.js';
 import { createLogger } from '../../server/logger.js';
 import {
@@ -10,6 +8,7 @@ import {
   LIMITS,
   rateLimitedResponse,
 } from '../../server/rateLimit.js';
+import { findPublicRoll } from '../../server/rollLookup.js';
 import { defineHandler } from '../../server/vercel-adapter.js';
 
 const log = createLogger('api/rolls');
@@ -34,31 +33,16 @@ export default defineHandler(async (request) => {
 
     const url = requestUrl(request);
     const parts = url.pathname.split('/').filter(Boolean);
-    const id = decodeURIComponent(parts[parts.length - 1] ?? '');
-    if (!id) {
+    const key = decodeURIComponent(parts[parts.length - 1] ?? '');
+    const userHint =
+      url.searchParams.get('user') ?? url.searchParams.get('u') ?? undefined;
+    if (!key) {
       return Response.json({ error: 'Missing id' }, { status: 400 });
     }
 
-    log.info('lookup', { id });
+    log.info('lookup', { key, userHint });
 
-    const [row] = await db
-      .select({
-        id: rolls.id,
-        number: rolls.number,
-        totalEp: rolls.totalEp,
-        rarity: rolls.rarity,
-        percentile: rolls.percentile,
-        badgesJson: rolls.badgesJson,
-        rolledAt: rolls.rolledAt,
-        isPublic: rolls.isPublic,
-        username: user.username,
-        name: user.name,
-      })
-      .from(rolls)
-      .innerJoin(user, eq(user.id, rolls.userId))
-      .where(and(eq(rolls.id, id), eq(rolls.isPublic, true)))
-      .limit(1);
-
+    const row = await findPublicRoll(db, key, userHint);
     if (!row) {
       return Response.json({ error: 'Roll not found' }, { status: 404 });
     }
@@ -73,6 +57,7 @@ export default defineHandler(async (request) => {
     return Response.json({
       roll: {
         id: row.id,
+        shortCode: row.shortCode,
         number: row.number,
         totalEP: row.totalEp,
         rarity: row.rarity,

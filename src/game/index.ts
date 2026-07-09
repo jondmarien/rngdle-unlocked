@@ -30,7 +30,13 @@ export {
 export { percentileFromEP, topPercentFromPercentile } from './percentile';
 export { sumEP } from './score';
 export { evaluateBadges, NUMBER_BADGES, badgeById } from './badges';
-export { evaluateNumber, performRoll } from './evaluate';
+export { evaluateNumber, performRoll, ensureShortCode } from './evaluate';
+export {
+  makeShortCode,
+  newRollId,
+  isUuid,
+  vanityUserSegment,
+} from './ids';
 export {
   JOURNEY_THRESHOLDS,
   JOURNEY_BADGES,

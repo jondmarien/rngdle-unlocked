@@ -89,6 +89,8 @@ export const rolls = pgTable('rolls', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
   /** Public share page / OG */
   isPublic: boolean('is_public').notNull().default(true),
+  /** Short vanity code for /s/:user/:code */
+  shortCode: text('short_code').unique(),
 });
 
 /** Fixed-window rate limit counters (serverless-safe). */
