@@ -290,7 +290,7 @@ export function HomeScreen({
           <p className="text-sm text-red-700 dark:text-red-400">{saveError}</p>
         )}
 
-        <div className="w-full max-w-md pt-2">
+        <div className="w-full max-w-2xl pt-2">
           <CommunityHighlights
             onOpenProfile={onOpenProfile}
             onOpenRoll={onOpenRoll}
