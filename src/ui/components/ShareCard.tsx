@@ -93,17 +93,27 @@ export function SharePanel({
     }
   };
 
+  const renderPngDataUrl = async (): Promise<string | null> => {
+    if (!cardRef.current) return null;
+    return toPng(cardRef.current, {
+      cacheBust: true,
+      pixelRatio: 2,
+      backgroundColor:
+        getComputedStyle(document.documentElement)
+          .getPropertyValue('--surface')
+          .trim() || '#fff',
+    });
+  };
+
+  const dataUrlToPngBlob = async (dataUrl: string): Promise<Blob> => {
+    const res = await fetch(dataUrl);
+    return res.blob();
+  };
+
   const downloadPng = async () => {
-    if (!cardRef.current) return;
     try {
-      const dataUrl = await toPng(cardRef.current, {
-        cacheBust: true,
-        pixelRatio: 2,
-        backgroundColor:
-          getComputedStyle(document.documentElement)
-            .getPropertyValue('--surface')
-            .trim() || '#fff',
-      });
+      const dataUrl = await renderPngDataUrl();
+      if (!dataUrl) return;
       const a = document.createElement('a');
       a.download = `rngdle-unlocked-${roll.number}.png`;
       a.href = dataUrl;
@@ -111,6 +121,28 @@ export function SharePanel({
       setStatus('PNG downloaded.');
     } catch {
       setStatus('PNG failed — text copy still works.');
+    }
+  };
+
+  const copyPng = async () => {
+    try {
+      const dataUrl = await renderPngDataUrl();
+      if (!dataUrl) return;
+      const blob = await dataUrlToPngBlob(dataUrl);
+      if (
+        typeof ClipboardItem === 'undefined' ||
+        !navigator.clipboard?.write
+      ) {
+        setStatus('Copy PNG not supported here — use Download PNG.');
+        return;
+      }
+      await navigator.clipboard.write([
+        new ClipboardItem({ 'image/png': blob }),
+      ]);
+      log.info('copied share png', { rollId: roll.id });
+      setStatus('PNG copied — paste into Discord or chat.');
+    } catch {
+      setStatus('Could not copy PNG — try Download PNG instead.');
     }
   };
 
@@ -214,6 +246,13 @@ export function SharePanel({
             onClick={() => void nativeShare()}
           >
             Share…
+          </button>
+          <button
+            type="button"
+            className="border border-[var(--prose)] px-3 py-2 text-xs font-bold uppercase"
+            onClick={() => void copyPng()}
+          >
+            Copy PNG
           </button>
           <button
             type="button"
