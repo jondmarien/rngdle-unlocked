@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   JOURNEY_BADGES,
   NUMBER_BADGES,
@@ -11,9 +11,13 @@ import {
 import { FAMILY_ICON } from '../../lib/icons';
 import { useGame } from '../../state/GameProvider';
 
-type FilterId = BadgeFamily | 'all' | 'secret';
+type FilterId = BadgeFamily | 'all' | 'secret' | 'new';
+
+/** Window for Codex “NEW” filter — badges first earned in this span. */
+const NEW_WINDOW_MS = 5 * 60 * 1000;
 
 const FAMILIES: { id: FilterId; label: string }[] = [
+  { id: 'new', label: 'New' },
   { id: 'all', label: 'All' },
   { id: 'math', label: 'Math' },
   { id: 'pattern', label: 'Pattern' },
@@ -53,6 +57,24 @@ function formatUnlockedAt(iso: string | undefined): string | null {
   }
 }
 
+function isRecentUnlock(iso: string | undefined, now: number): boolean {
+  if (!iso) return false;
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t)) return false;
+  const age = now - t;
+  return age >= 0 && age <= NEW_WINDOW_MS;
+}
+
+function formatAgeMs(iso: string | undefined, now: number): string | null {
+  if (!iso) return null;
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t)) return null;
+  const sec = Math.max(0, Math.floor((now - t) / 1000));
+  if (sec < 60) return `${sec}s ago`;
+  const min = Math.floor(sec / 60);
+  return `${min}m ago`;
+}
+
 /** Badge encyclopedia — locked vs unlocked with spoiler-safe copy + secret tab. */
 export function CollectionScreen() {
   const { collection } = useGame();
@@ -69,6 +91,21 @@ export function CollectionScreen() {
   }, [collection]);
   const [filter, setFilter] = useState<FilterId>('all');
   const [showLocked, setShowLocked] = useState(true);
+  /** Tick so the 5-minute NEW window expires without a remount. */
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 15_000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const recentIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const e of collection) {
+      if (isRecentUnlock(e.firstEarnedAt, now)) set.add(e.badgeId);
+    }
+    return set;
+  }, [collection, now]);
 
   const numberUnlocked = NUMBER_BADGES.filter((b) => unlocked.has(b.id)).length;
   const journeyUnlocked = JOURNEY_BADGES.filter((b) =>
@@ -79,26 +116,60 @@ export function CollectionScreen() {
   const numberList = useMemo(() => {
     if (filter === 'journey' || filter === 'secret') return [];
     let list = NUMBER_BADGES;
-    if (filter !== 'all') {
+    if (filter === 'new') {
+      list = list
+        .filter((b) => recentIds.has(b.id))
+        .sort(
+          (a, b) =>
+            Date.parse(unlockedAt.get(b.id) ?? '') -
+            Date.parse(unlockedAt.get(a.id) ?? ''),
+        );
+    } else if (filter !== 'all') {
       list = list.filter((b) => b.family === filter);
     }
-    if (!showLocked) list = list.filter((b) => unlocked.has(b.id));
+    if (filter !== 'new' && !showLocked) {
+      list = list.filter((b) => unlocked.has(b.id));
+    }
     return list;
-  }, [filter, showLocked, unlocked]);
+  }, [filter, showLocked, unlocked, recentIds, unlockedAt]);
 
   const journeyList = useMemo(() => {
-    if (filter !== 'all' && filter !== 'journey') return [];
+    if (filter === 'secret' || (filter !== 'all' && filter !== 'journey' && filter !== 'new')) {
+      return [];
+    }
     let list = [...JOURNEY_BADGES];
-    if (!showLocked) list = list.filter((b) => unlocked.has(b.id));
+    if (filter === 'new') {
+      list = list
+        .filter((b) => recentIds.has(b.id))
+        .sort(
+          (a, b) =>
+            Date.parse(unlockedAt.get(b.id) ?? '') -
+            Date.parse(unlockedAt.get(a.id) ?? ''),
+        );
+    } else if (!showLocked) {
+      list = list.filter((b) => unlocked.has(b.id));
+    }
     return list;
-  }, [filter, showLocked, unlocked]);
+  }, [filter, showLocked, unlocked, recentIds, unlockedAt]);
 
   const secretList = useMemo(() => {
-    if (filter !== 'all' && filter !== 'secret') return [];
+    if (filter === 'journey' || (filter !== 'all' && filter !== 'secret' && filter !== 'new')) {
+      return [];
+    }
     let list = [...SECRET_BADGES];
-    if (!showLocked) list = list.filter((b) => unlocked.has(b.id));
+    if (filter === 'new') {
+      list = list
+        .filter((s) => recentIds.has(s.id))
+        .sort(
+          (a, b) =>
+            Date.parse(unlockedAt.get(b.id) ?? '') -
+            Date.parse(unlockedAt.get(a.id) ?? ''),
+        );
+    } else if (!showLocked) {
+      list = list.filter((b) => unlocked.has(b.id));
+    }
     return list;
-  }, [filter, showLocked, unlocked]);
+  }, [filter, showLocked, unlocked, recentIds, unlockedAt]);
 
   return (
     <div className="space-y-6">
@@ -117,39 +188,83 @@ export function CollectionScreen() {
 
       <div className="flex flex-wrap gap-1.5">
         {FAMILIES.map((f) => {
-          const icon = FAMILY_ICON[f.id];
+          const icon = f.id === 'new' ? null : FAMILY_ICON[f.id];
+          const isNewTab = f.id === 'new';
+          const selected = filter === f.id;
           return (
             <button
               key={f.id}
               type="button"
               onClick={() => setFilter(f.id)}
               className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-sm font-semibold ${
-                filter === f.id
-                  ? f.id === 'secret'
+                selected
+                  ? isNewTab
                     ? 'border-amber-400 bg-amber-400 text-black'
-                    : 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
-                  : f.id === 'secret'
-                    ? 'border-amber-500/40 text-amber-700 dark:text-amber-300'
-                    : 'border-[var(--outline)] text-[var(--prose-2)]'
+                    : f.id === 'secret'
+                      ? 'border-amber-400 bg-amber-400 text-black'
+                      : 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
+                  : isNewTab
+                    ? 'border-amber-500/50 text-amber-700 dark:text-amber-300'
+                    : f.id === 'secret'
+                      ? 'border-amber-500/40 text-amber-700 dark:text-amber-300'
+                      : 'border-[var(--outline)] text-[var(--prose-2)]'
               }`}
             >
-              {icon && (
-                <span className="icon-chip h-5 w-5 ring-1 ring-black/15 dark:ring-white/10">
-                  <img src={icon} alt="" aria-hidden />
+              {isNewTab ? (
+                <span
+                  className={`rounded px-1 py-0.5 text-[10px] font-black uppercase tracking-wider ${
+                    selected ? 'bg-black/15 text-black' : 'bg-amber-400 text-black'
+                  }`}
+                >
+                  New
+                </span>
+              ) : (
+                <>
+                  {icon && (
+                    <span className="icon-chip h-5 w-5 ring-1 ring-black/15 dark:ring-white/10">
+                      <img src={icon} alt="" aria-hidden />
+                    </span>
+                  )}
+                  {f.label}
+                </>
+              )}
+              {isNewTab && recentIds.size > 0 && (
+                <span
+                  className={`ml-0.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-bold ${
+                    selected
+                      ? 'bg-black/20 text-black'
+                      : 'bg-amber-400/25 text-amber-800 dark:text-amber-200'
+                  }`}
+                >
+                  {recentIds.size}
                 </span>
               )}
-              {f.label}
             </button>
           );
         })}
-        <button
-          type="button"
-          onClick={() => setShowLocked((v) => !v)}
-          className="rounded-md border border-[var(--outline)] px-2.5 py-1.5 text-sm font-semibold text-[var(--prose-2)]"
-        >
-          {showLocked ? 'Hide locked' : 'Show locked'}
-        </button>
+        {filter !== 'new' && (
+          <button
+            type="button"
+            onClick={() => setShowLocked((v) => !v)}
+            className="rounded-md border border-[var(--outline)] px-2.5 py-1.5 text-sm font-semibold text-[var(--prose-2)]"
+          >
+            {showLocked ? 'Hide locked' : 'Show locked'}
+          </button>
+        )}
       </div>
+
+      {filter === 'new' && (
+        <p className="rounded-lg border border-amber-500/35 bg-amber-500/10 px-3 py-2 text-sm text-[var(--prose-2)]">
+          First-time unlocks from the last{' '}
+          <span className="font-semibold text-amber-800 dark:text-amber-300">
+            5 minutes
+          </span>
+          {recentIds.size > 0
+            ? ` · ${recentIds.size} badge${recentIds.size === 1 ? '' : 's'} right now`
+            : ' · nothing new yet — go roll!'}
+          . Entries drop off when they age out.
+        </p>
+      )}
 
       {filter === 'secret' && (
         <p className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-sm text-[var(--prose-2)]">
@@ -161,19 +276,24 @@ export function CollectionScreen() {
       {numberList.length > 0 && (
         <section>
           <h2 className="mb-2 text-base font-bold text-[var(--prose)]">
-            Number badges
+            {filter === 'new' ? 'New number badges' : 'Number badges'}
           </h2>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {numberList.map((b) => {
               const has = unlocked.has(b.id);
-              const when = has
-                ? formatUnlockedAt(unlockedAt.get(b.id))
-                : null;
+              const at = unlockedAt.get(b.id);
+              const when = has ? formatUnlockedAt(at) : null;
+              const age = filter === 'new' ? formatAgeMs(at, now) : null;
+              const fresh = has && recentIds.has(b.id);
               return (
                 <article
                   key={b.id}
-                  className={`rounded-lg border border-[var(--outline)] p-3 text-left text-sm ${
-                    has ? 'bg-[var(--surface)]' : 'bg-[var(--bg)] opacity-70'
+                  className={`rounded-lg border p-3 text-left text-sm ${
+                    fresh
+                      ? 'border-amber-400/45 bg-[var(--surface)] shadow-[0_0_0_1px_rgba(251,191,36,0.08)]'
+                      : has
+                        ? 'border-[var(--outline)] bg-[var(--surface)]'
+                        : 'border-[var(--outline)] bg-[var(--bg)] opacity-70'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -184,6 +304,11 @@ export function CollectionScreen() {
                             {b.emoji}
                           </span>
                           {b.name}
+                          {fresh && (
+                            <span className="ml-1.5 inline-flex rounded bg-amber-400 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-black">
+                              New
+                            </span>
+                          )}
                         </>
                       ) : (
                         <>
@@ -207,13 +332,13 @@ export function CollectionScreen() {
                     <span>
                       {has ? `+${b.ep.toLocaleString()} EP` : 'Locked'}
                     </span>
-                    {when && (
+                    {(age || when) && (
                       <time
-                        dateTime={unlockedAt.get(b.id)}
+                        dateTime={at}
                         className="text-xs text-[var(--prose-3)]"
                         title="First unlocked"
                       >
-                        Unlocked {when}
+                        {age ? `Unlocked ${age}` : `Unlocked ${when}`}
                       </time>
                     )}
                   </div>
@@ -227,22 +352,29 @@ export function CollectionScreen() {
       {journeyList.length > 0 && (
         <section>
           <h2 className="mb-2 text-base font-bold text-[var(--prose)]">
-            Journey
+            {filter === 'new' ? 'New journey marks' : 'Journey'}
           </h2>
-          <p className="mb-2 text-sm text-[var(--prose-2)]">
-            Lifetime-only EP — does not change a single roll&apos;s rarity.
-          </p>
+          {filter !== 'new' && (
+            <p className="mb-2 text-sm text-[var(--prose-2)]">
+              Lifetime-only EP — does not change a single roll&apos;s rarity.
+            </p>
+          )}
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {journeyList.map((b) => {
               const has = unlocked.has(b.id);
-              const when = has
-                ? formatUnlockedAt(unlockedAt.get(b.id))
-                : null;
+              const at = unlockedAt.get(b.id);
+              const when = has ? formatUnlockedAt(at) : null;
+              const age = filter === 'new' ? formatAgeMs(at, now) : null;
+              const fresh = has && recentIds.has(b.id);
               return (
                 <article
                   key={b.id}
-                  className={`rounded-lg border border-[var(--outline)] p-3 text-left text-sm ${
-                    has ? 'bg-[var(--surface)]' : 'opacity-70'
+                  className={`rounded-lg border p-3 text-left text-sm ${
+                    fresh
+                      ? 'border-amber-400/45 bg-[var(--surface)]'
+                      : has
+                        ? 'border-[var(--outline)] bg-[var(--surface)]'
+                        : 'border-[var(--outline)] opacity-70'
                   }`}
                 >
                   <div className="font-bold tracking-tight">
@@ -252,6 +384,11 @@ export function CollectionScreen() {
                           {b.emoji}
                         </span>
                         {b.name}
+                        {fresh && (
+                          <span className="ml-1.5 inline-flex rounded bg-amber-400 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-black">
+                            New
+                          </span>
+                        )}
                       </>
                     ) : (
                       '????'
@@ -266,13 +403,13 @@ export function CollectionScreen() {
                         ? `+${b.ep.toLocaleString()} life EP`
                         : 'Locked milestone'}
                     </span>
-                    {when && (
+                    {(age || when) && (
                       <time
-                        dateTime={unlockedAt.get(b.id)}
+                        dateTime={at}
                         className="text-xs text-[var(--prose-3)]"
                         title="First unlocked"
                       >
-                        Unlocked {when}
+                        {age ? `Unlocked ${age}` : `Unlocked ${when}`}
                       </time>
                     )}
                   </div>
@@ -286,7 +423,7 @@ export function CollectionScreen() {
       {secretList.length > 0 && (
         <section>
           <h2 className="mb-2 text-base font-bold text-[var(--prose)]">
-            Secret masteries
+            {filter === 'new' ? 'New secret masteries' : 'Secret masteries'}
           </h2>
           <div className="grid grid-cols-1 gap-3">
             {secretList.map((s) => (
@@ -295,6 +432,12 @@ export function CollectionScreen() {
                 secret={s}
                 unlocked={unlocked}
                 unlockedAt={unlockedAt.get(s.id)}
+                isFresh={recentIds.has(s.id)}
+                ageLabel={
+                  filter === 'new'
+                    ? formatAgeMs(unlockedAt.get(s.id), now)
+                    : null
+                }
               />
             ))}
           </div>
@@ -305,7 +448,9 @@ export function CollectionScreen() {
         journeyList.length === 0 &&
         secretList.length === 0 && (
           <p className="text-sm text-[var(--prose-2)]">
-            Nothing in this filter — unlock badges or show locked entries.
+            {filter === 'new'
+              ? 'No first-time unlocks in the last 5 minutes. Roll something new!'
+              : 'Nothing in this filter — unlock badges or show locked entries.'}
           </p>
         )}
     </div>
@@ -316,10 +461,14 @@ function SecretCard({
   secret,
   unlocked,
   unlockedAt,
+  isFresh = false,
+  ageLabel = null,
 }: {
   secret: SecretBadgeDef;
   unlocked: Set<string>;
   unlockedAt?: string;
+  isFresh?: boolean;
+  ageLabel?: string | null;
 }) {
   const has = unlocked.has(secret.id);
   const isOmega = secret.tier === 'omega';
@@ -366,6 +515,11 @@ function SecretCard({
             </p>
             <div className="mt-1 text-xl font-bold tracking-tight sm:text-2xl">
               {has ? secret.name : '???? · ????'}
+              {isFresh && has && (
+                <span className="ml-2 inline-flex rounded bg-amber-400 px-1.5 py-0.5 align-middle text-[10px] font-black uppercase tracking-wider text-black">
+                  New
+                </span>
+              )}
             </div>
             <p className="mt-2 text-sm leading-relaxed text-[var(--prose-2)]">
               {has
@@ -378,13 +532,13 @@ function SecretCard({
                   ? `+${secret.ep.toLocaleString()} life EP`
                   : `${progress.have}/${progress.total} section secrets`}
               </span>
-              {when && (
+              {(ageLabel || when) && (
                 <time
                   dateTime={unlockedAt}
                   className="text-xs text-[var(--prose-3)]"
                   title="First unlocked"
                 >
-                  Unlocked {when}
+                  {ageLabel ? `Unlocked ${ageLabel}` : `Unlocked ${when}`}
                 </time>
               )}
             </div>
@@ -397,9 +551,11 @@ function SecretCard({
   return (
     <article
       className={`flex gap-3 rounded-xl border p-3 text-left sm:p-4 ${
-        has
-          ? 'border-violet-400/50 bg-gradient-to-br from-violet-500/10 to-transparent shadow-sm'
-          : 'border-[var(--outline)] bg-[var(--surface)] opacity-75'
+        isFresh && has
+          ? 'border-amber-400/50 bg-gradient-to-br from-amber-500/10 via-violet-500/10 to-transparent shadow-sm'
+          : has
+            ? 'border-violet-400/50 bg-gradient-to-br from-violet-500/10 to-transparent shadow-sm'
+            : 'border-[var(--outline)] bg-[var(--surface)] opacity-75'
       }`}
     >
       <div
@@ -424,6 +580,11 @@ function SecretCard({
         </p>
         <div className="mt-0.5 text-lg font-bold tracking-tight">
           {has ? secret.name : 'Hidden mastery'}
+          {isFresh && has && (
+            <span className="ml-2 inline-flex rounded bg-amber-400 px-1.5 py-0.5 align-middle text-[10px] font-black uppercase tracking-wider text-black">
+              New
+            </span>
+          )}
         </div>
         <p className="mt-1 text-sm text-[var(--prose-2)]">
           {has
@@ -436,13 +597,13 @@ function SecretCard({
               ? `+${secret.ep.toLocaleString()} life EP`
               : `${progress.have} / ${progress.total} badges`}
           </span>
-          {when && (
+          {(ageLabel || when) && (
             <time
               dateTime={unlockedAt}
               className="text-xs text-[var(--prose-3)]"
               title="First unlocked"
             >
-              Unlocked {when}
+              {ageLabel ? `Unlocked ${ageLabel}` : `Unlocked ${when}`}
             </time>
           )}
           {!has && progress.total > 0 && (
