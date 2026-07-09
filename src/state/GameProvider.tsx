@@ -38,6 +38,7 @@ import {
   buildExportPayload,
   clearState,
   defaultState,
+  backfillCollectionTimestamps,
   loadState,
   mergeCollection,
   parseImportPayload,
@@ -171,14 +172,19 @@ export function GameProvider({ children }: { children: ReactNode }) {
         new Date().toISOString(),
       );
       setState((prev) => {
+        const history = cloud.history;
+        const collection = backfillCollectionTimestamps(
+          secretMerge.collection,
+          history,
+        );
         const next: PersistedState = {
           ...prev,
           lifetimeEP: cloud.lifetimeEP + secretMerge.ep,
           lifetimeRollCount: cloud.lifetimeRollCount,
           journeyEP: cloud.journeyEP + secretMerge.ep,
-          collection: secretMerge.collection,
+          collection,
           stats: cloud.stats,
-          history: cloud.history,
+          history,
         };
         persist(next);
         return next;
@@ -510,7 +516,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
       );
       next = {
         ...next,
-        collection: secretMerge.collection,
+        collection: backfillCollectionTimestamps(
+          secretMerge.collection,
+          next.history,
+        ),
         lifetimeEP: next.lifetimeEP + secretMerge.ep,
         journeyEP: next.journeyEP + secretMerge.ep,
       };

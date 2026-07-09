@@ -78,11 +78,16 @@ export function loadState(): PersistedState {
   if (typeof localStorage === 'undefined') {
     return defaultState();
   }
-  const history = readJSON<RollResult[]>(KEYS.history, []);
+  const historyRaw = readJSON<RollResult[]>(KEYS.history, []);
+  const history = Array.isArray(historyRaw)
+    ? historyRaw.slice(0, HISTORY_CAP)
+    : [];
   const lifetimeEP = readJSON<number>(KEYS.lifetimeEP, 0);
   const lifetimeRollCount = readJSON<number>(KEYS.lifetimeRollCount, 0);
   const journeyEP = readJSON<number>(KEYS.journeyEP, 0);
-  const collection = readJSON<CollectionEntry[]>(KEYS.collection, []);
+  const collectionRaw = readJSON<CollectionEntry[]>(KEYS.collection, []);
+  const collectionIn = Array.isArray(collectionRaw) ? collectionRaw : [];
+  const collection = backfillCollectionTimestamps(collectionIn, history);
   const settings = {
     ...DEFAULT_SETTINGS,
     ...readJSON<Partial<AppSettings>>(KEYS.settings, {}),
@@ -91,15 +96,95 @@ export function loadState(): PersistedState {
     ...defaultPlayStats(),
     ...readJSON<Partial<PlayStats>>(KEYS.stats, {}),
   };
-  return {
-    history: Array.isArray(history) ? history.slice(0, HISTORY_CAP) : [],
+  const state: PersistedState = {
+    history,
     lifetimeEP: Number.isFinite(lifetimeEP) ? lifetimeEP : 0,
     lifetimeRollCount: Number.isFinite(lifetimeRollCount) ? lifetimeRollCount : 0,
     journeyEP: Number.isFinite(journeyEP) ? journeyEP : 0,
-    collection: Array.isArray(collection) ? collection : [],
+    collection,
     settings,
     stats,
   };
+  // Persist retroactive timestamps so Codex keeps them offline
+  if (collectionNeedsPersist(collectionIn, collection)) {
+    saveState(state);
+  }
+  return state;
+}
+
+function isValidIso(s: string | null | undefined): boolean {
+  if (!s || typeof s !== 'string') return false;
+  const t = Date.parse(s);
+  return Number.isFinite(t);
+}
+
+/**
+ * Ensure every collection entry has firstEarnedAt.
+ * Retroactive: prefer earliest history roll that earned the badge when known.
+ */
+export function backfillCollectionTimestamps(
+  collection: CollectionEntry[],
+  history: RollResult[],
+): CollectionEntry[] {
+  if (!collection.length) return collection;
+
+  const firstFromHistory = new Map<string, string>();
+  const chrono = [...history].sort((a, b) =>
+    a.rolledAt < b.rolledAt ? -1 : a.rolledAt > b.rolledAt ? 1 : 0,
+  );
+  for (const roll of chrono) {
+    const at = roll.rolledAt;
+    if (!isValidIso(at)) continue;
+    for (const b of roll.badges ?? []) {
+      if (!b?.id) continue;
+      if (!firstFromHistory.has(b.id)) {
+        firstFromHistory.set(b.id, at);
+      }
+    }
+  }
+
+  const oldestRoll = chrono.find((r) => isValidIso(r.rolledAt))?.rolledAt;
+  const fallback = oldestRoll ?? new Date().toISOString();
+
+  let changed = false;
+  const next = collection.map((e) => {
+    const stored = isValidIso(e.firstEarnedAt) ? e.firstEarnedAt : '';
+    const fromHist = firstFromHistory.get(e.badgeId);
+
+    let firstEarnedAt = stored;
+    if (!firstEarnedAt && fromHist) {
+      firstEarnedAt = fromHist;
+    } else if (!firstEarnedAt) {
+      firstEarnedAt = fallback;
+    } else if (fromHist && fromHist < firstEarnedAt) {
+      // History proves an earlier unlock than a late/sync timestamp
+      firstEarnedAt = fromHist;
+    }
+
+    if (firstEarnedAt !== e.firstEarnedAt || e.family == null) {
+      changed = true;
+      return {
+        badgeId: e.badgeId,
+        family: e.family,
+        firstEarnedAt,
+      };
+    }
+    return e;
+  });
+
+  return changed ? next : collection;
+}
+
+function collectionNeedsPersist(
+  before: CollectionEntry[],
+  after: CollectionEntry[],
+): boolean {
+  if (before.length !== after.length) return true;
+  const map = new Map(before.map((e) => [e.badgeId, e.firstEarnedAt]));
+  for (const e of after) {
+    if (map.get(e.badgeId) !== e.firstEarnedAt) return true;
+  }
+  return false;
 }
 
 export function prependHistory(history: RollResult[], roll: RollResult): RollResult[] {

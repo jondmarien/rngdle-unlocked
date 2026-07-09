@@ -90,6 +90,81 @@ describe('storage', () => {
     expect(b[0]?.firstEarnedAt).toBe('t1');
   });
 
+  it('backfillCollectionTimestamps uses earliest history roll', async () => {
+    const { backfillCollectionTimestamps } = await import('./storage');
+    const collection = [
+      {
+        badgeId: 'prime',
+        family: 'math' as const,
+        firstEarnedAt: '2026-07-08T12:00:00.000Z',
+      },
+      {
+        badgeId: 'even',
+        family: 'math' as const,
+        firstEarnedAt: '',
+      },
+    ];
+    const history = [
+      {
+        id: 'r2',
+        number: 4,
+        totalEP: 1,
+        rarity: 'common' as const,
+        percentile: 50,
+        rolledAt: '2026-07-02T00:00:00.000Z',
+        badges: [
+          {
+            id: 'even',
+            name: 'Even',
+            description: '',
+            ep: 1,
+            family: 'math' as const,
+            emoji: '',
+            highlights: [],
+            rarity: 'common' as const,
+          },
+        ],
+      },
+      {
+        id: 'r1',
+        number: 2,
+        totalEP: 1,
+        rarity: 'common' as const,
+        percentile: 50,
+        rolledAt: '2026-07-01T00:00:00.000Z',
+        badges: [
+          {
+            id: 'prime',
+            name: 'Prime',
+            description: '',
+            ep: 1,
+            family: 'math' as const,
+            emoji: '',
+            highlights: [],
+            rarity: 'common' as const,
+          },
+          {
+            id: 'even',
+            name: 'Even',
+            description: '',
+            ep: 1,
+            family: 'math' as const,
+            emoji: '',
+            highlights: [],
+            rarity: 'common' as const,
+          },
+        ],
+      },
+    ];
+    const next = backfillCollectionTimestamps(collection, history);
+    expect(next.find((c) => c.badgeId === 'prime')?.firstEarnedAt).toBe(
+      '2026-07-01T00:00:00.000Z',
+    );
+    expect(next.find((c) => c.badgeId === 'even')?.firstEarnedAt).toBe(
+      '2026-07-01T00:00:00.000Z',
+    );
+  });
+
   it('recovers from corrupt JSON', () => {
     localStorage.setItem('rngdle-unlocked:v1:history', '{not json');
     const loaded = loadState();

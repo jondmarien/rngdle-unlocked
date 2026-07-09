@@ -39,6 +39,20 @@ const FAMILY_HINT: Record<Exclude<BadgeFamily, 'secret'>, string> = {
   journey: 'Lifetime milestone — keep rolling.',
 };
 
+function formatUnlockedAt(iso: string | undefined): string | null {
+  if (!iso) return null;
+  try {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return null;
+    return d.toLocaleString(undefined, {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    });
+  } catch {
+    return null;
+  }
+}
+
 /** Badge encyclopedia — locked vs unlocked with spoiler-safe copy + secret tab. */
 export function CollectionScreen() {
   const { collection } = useGame();
@@ -46,6 +60,13 @@ export function CollectionScreen() {
     () => new Set(collection.map((c) => c.badgeId)),
     [collection],
   );
+  const unlockedAt = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const e of collection) {
+      if (e.badgeId && e.firstEarnedAt) map.set(e.badgeId, e.firstEarnedAt);
+    }
+    return map;
+  }, [collection]);
   const [filter, setFilter] = useState<FilterId>('all');
   const [showLocked, setShowLocked] = useState(true);
 
@@ -145,6 +166,9 @@ export function CollectionScreen() {
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {numberList.map((b) => {
               const has = unlocked.has(b.id);
+              const when = has
+                ? formatUnlockedAt(unlockedAt.get(b.id))
+                : null;
               return (
                 <article
                   key={b.id}
@@ -179,8 +203,19 @@ export function CollectionScreen() {
                       ? b.description
                       : FAMILY_HINT[b.family as Exclude<BadgeFamily, 'secret'>]}
                   </p>
-                  <div className="mt-1 text-sm text-[var(--prose-2)]">
-                    {has ? `+${b.ep.toLocaleString()} EP` : 'Locked'}
+                  <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 text-sm text-[var(--prose-2)]">
+                    <span>
+                      {has ? `+${b.ep.toLocaleString()} EP` : 'Locked'}
+                    </span>
+                    {when && (
+                      <time
+                        dateTime={unlockedAt.get(b.id)}
+                        className="text-xs text-[var(--prose-3)]"
+                        title="First unlocked"
+                      >
+                        Unlocked {when}
+                      </time>
+                    )}
                   </div>
                 </article>
               );
@@ -200,6 +235,9 @@ export function CollectionScreen() {
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {journeyList.map((b) => {
               const has = unlocked.has(b.id);
+              const when = has
+                ? formatUnlockedAt(unlockedAt.get(b.id))
+                : null;
               return (
                 <article
                   key={b.id}
@@ -222,10 +260,21 @@ export function CollectionScreen() {
                   <p className="mt-1 text-[var(--prose-2)]">
                     {has ? b.description : FAMILY_HINT.journey}
                   </p>
-                  <div className="mt-1 text-sm text-[var(--prose-2)]">
-                    {has
-                      ? `+${b.ep.toLocaleString()} life EP`
-                      : 'Locked milestone'}
+                  <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 text-sm text-[var(--prose-2)]">
+                    <span>
+                      {has
+                        ? `+${b.ep.toLocaleString()} life EP`
+                        : 'Locked milestone'}
+                    </span>
+                    {when && (
+                      <time
+                        dateTime={unlockedAt.get(b.id)}
+                        className="text-xs text-[var(--prose-3)]"
+                        title="First unlocked"
+                      >
+                        Unlocked {when}
+                      </time>
+                    )}
                   </div>
                 </article>
               );
@@ -241,7 +290,12 @@ export function CollectionScreen() {
           </h2>
           <div className="grid grid-cols-1 gap-3">
             {secretList.map((s) => (
-              <SecretCard key={s.id} secret={s} unlocked={unlocked} />
+              <SecretCard
+                key={s.id}
+                secret={s}
+                unlocked={unlocked}
+                unlockedAt={unlockedAt.get(s.id)}
+              />
             ))}
           </div>
         </section>
@@ -261,12 +315,15 @@ export function CollectionScreen() {
 function SecretCard({
   secret,
   unlocked,
+  unlockedAt,
 }: {
   secret: SecretBadgeDef;
   unlocked: Set<string>;
+  unlockedAt?: string;
 }) {
   const has = unlocked.has(secret.id);
   const isOmega = secret.tier === 'omega';
+  const when = has ? formatUnlockedAt(unlockedAt) : null;
   const progress =
     secret.section !== 'omega'
       ? sectionProgress(secret.section, unlocked)
@@ -321,6 +378,15 @@ function SecretCard({
                   ? `+${secret.ep.toLocaleString()} life EP`
                   : `${progress.have}/${progress.total} section secrets`}
               </span>
+              {when && (
+                <time
+                  dateTime={unlockedAt}
+                  className="text-xs text-[var(--prose-3)]"
+                  title="First unlocked"
+                >
+                  Unlocked {when}
+                </time>
+              )}
             </div>
           </div>
         </div>
@@ -364,12 +430,21 @@ function SecretCard({
             ? secret.description
             : 'Collect every badge in this codex section to reveal the seal.'}
         </p>
-        <div className="mt-2 flex flex-wrap gap-3 text-sm">
+        <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
           <span className="font-semibold text-[var(--prose)]">
             {has
               ? `+${secret.ep.toLocaleString()} life EP`
               : `${progress.have} / ${progress.total} badges`}
           </span>
+          {when && (
+            <time
+              dateTime={unlockedAt}
+              className="text-xs text-[var(--prose-3)]"
+              title="First unlocked"
+            >
+              Unlocked {when}
+            </time>
+          )}
           {!has && progress.total > 0 && (
             <div className="h-2 min-w-[5rem] flex-1 overflow-hidden rounded-full bg-[var(--surface-raised)]">
               <div
