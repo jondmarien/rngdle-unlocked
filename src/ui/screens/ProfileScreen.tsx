@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
   OMEGA_SECRET,
-  SECRET_BADGES,
   topPercentFromPercentile,
   type RarityTier,
 } from '../../game';
@@ -212,24 +211,12 @@ export function ProfileScreen({
   const theme = accentStyles(accent);
   const initial = (profile.username?.[0] ?? '?').toUpperCase();
   const best = profile.stats?.bestRoll;
-  // Full secret roster: API returns all secrets with unlocked flags when possible
-  const secretsFromApi = profile.secrets ?? [];
-  const secrets =
-    secretsFromApi.length > 0
-      ? secretsFromApi
-      : SECRET_BADGES.map((s) => ({
-          id: s.id,
-          name: s.name,
-          emoji: s.emoji,
-          tier: s.tier,
-          section: String(s.section),
-          ep: s.ep,
-          unlocked: false,
-        }));
-  const isUnlocked = (s: (typeof secrets)[number]) => s.unlocked === true;
-  const unlockedSecrets = secrets.filter((s) => isUnlocked(s));
+  // Only completed secret section seals (API already filters; keep unlocked-only here)
+  const unlockedSecrets = (profile.secrets ?? []).filter(
+    (s) => s.unlocked !== false,
+  );
   const hasOmega = unlockedSecrets.some((s) => s.id === OMEGA_SECRET.id);
-  const sectionSecrets = secrets.filter((s) => s.tier === 'section');
+  const sectionSecrets = unlockedSecrets.filter((s) => s.tier === 'section');
   const unlockedCount = unlockedSecrets.length;
 
   return (
@@ -341,110 +328,63 @@ export function ProfileScreen({
         </div>
       )}
 
-      {/* Secret masteries — always show full grid (section seals + omega) */}
-      <section className="space-y-3">
-        <div className="flex items-baseline justify-between gap-2">
-          <h2 className="text-base font-bold text-[var(--prose)]">
-            Secret masteries
-          </h2>
-          <span className="text-sm text-[var(--prose-2)]">
-            {unlockedCount}/{secrets.length || SECRET_BADGES.length}
-          </span>
-        </div>
-        <p className="text-sm text-[var(--prose-2)]">
-          Section seals for completing a whole codex category. Codex Absolute
-          appears only when every badge and every section seal is earned.
-        </p>
+      {/* Secret masteries — only completed section seals (+ omega if earned) */}
+      {unlockedCount > 0 && (
+        <section className="space-y-3">
+          <div className="flex items-baseline justify-between gap-2">
+            <h2 className="text-base font-bold text-[var(--prose)]">
+              Secret masteries
+            </h2>
+            <span className="text-sm text-[var(--prose-2)]">
+              {unlockedCount} earned
+            </span>
+          </div>
+          <p className="text-sm text-[var(--prose-2)]">
+            Seals for completing whole codex sections.
+          </p>
 
-        {/* Omega first when unlocked; otherwise a locked teaser */}
-        {(() => {
-          const omega =
-            secrets.find((s) => s.id === OMEGA_SECRET.id) ?? {
-              id: OMEGA_SECRET.id,
-              name: OMEGA_SECRET.name,
-              emoji: OMEGA_SECRET.emoji,
-              tier: 'omega' as const,
-              section: 'omega',
-              ep: OMEGA_SECRET.ep,
-              unlocked: false,
-            };
-          const open = hasOmega || isUnlocked(omega);
-          return (
-            <div
-              className={`rounded-xl border-2 p-4 ${
-                open
-                  ? 'border-amber-400/70 bg-gradient-to-br from-amber-500/20 via-violet-500/15 to-teal-500/20 shadow-[0_0_32px_rgba(251,191,36,0.2)]'
-                  : 'border-amber-500/25 bg-[var(--surface)] opacity-90'
-              }`}
-            >
+          {hasOmega && (
+            <div className="rounded-xl border-2 border-amber-400/70 bg-gradient-to-br from-amber-500/20 via-violet-500/15 to-teal-500/20 p-4 shadow-[0_0_32px_rgba(251,191,36,0.2)]">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">
                 Final seal
               </p>
               <p className="mt-1 text-xl font-bold tracking-tight">
-                {open ? (
-                  <>
-                    {OMEGA_SECRET.emoji} {OMEGA_SECRET.name}
-                  </>
-                ) : (
-                  <>✧ Locked · Codex Absolute</>
-                )}
+                {OMEGA_SECRET.emoji} {OMEGA_SECRET.name}
               </p>
               <p className="mt-1 text-sm text-[var(--prose-2)]">
-                {open
-                  ? OMEGA_SECRET.description
-                  : 'Unlock every number badge, journey mark, and section mastery.'}
+                {OMEGA_SECRET.description}
               </p>
-              {open && (
-                <p className="mt-2 text-sm font-semibold text-amber-800 dark:text-amber-300">
-                  +{OMEGA_SECRET.ep.toLocaleString()} life EP
-                </p>
-              )}
+              <p className="mt-2 text-sm font-semibold text-amber-800 dark:text-amber-300">
+                +{OMEGA_SECRET.ep.toLocaleString()} life EP
+              </p>
             </div>
-          );
-        })()}
+          )}
 
-        <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {sectionSecrets.map((s) => {
-            const open = isUnlocked(s);
-            return (
-              <li
-                key={s.id}
-                className={`rounded-xl border p-3 ${
-                  open
-                    ? 'border-violet-400/50 bg-gradient-to-br from-violet-500/15 to-transparent'
-                    : 'border-[var(--outline)] bg-[var(--surface)] opacity-70'
-                }`}
-              >
-                <p className="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
-                  {s.section}
-                </p>
-                <p className="font-bold tracking-tight">
-                  {open ? (
-                    <>
-                      <span className="mr-1" aria-hidden>
-                        {s.emoji}
-                      </span>
-                      {s.name}
-                    </>
-                  ) : (
-                    <>
-                      <span className="mr-1" aria-hidden>
-                        🔒
-                      </span>
-                      Hidden mastery
-                    </>
-                  )}
-                </p>
-                <p className="text-sm text-[var(--prose-2)]">
-                  {open
-                    ? `+${s.ep.toLocaleString()} life EP`
-                    : 'Complete this codex section'}
-                </p>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
+          {sectionSecrets.length > 0 && (
+            <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {sectionSecrets.map((s) => (
+                <li
+                  key={s.id}
+                  className="rounded-xl border border-violet-400/50 bg-gradient-to-br from-violet-500/15 to-transparent p-3"
+                >
+                  <p className="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+                    {s.section}
+                  </p>
+                  <p className="font-bold tracking-tight">
+                    <span className="mr-1" aria-hidden>
+                      {s.emoji}
+                    </span>
+                    {s.name}
+                  </p>
+                  <p className="text-sm text-amber-800 dark:text-amber-300">
+                    +{s.ep.toLocaleString()} life EP
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
 
       {/* Best roll — showcase style */}
       {best && (

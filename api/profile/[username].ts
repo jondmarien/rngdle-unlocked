@@ -1,4 +1,10 @@
 import { and, desc, eq } from 'drizzle-orm';
+import {
+  evaluateOwnedSecrets,
+  SECRET_BADGES,
+  sectionProgress,
+  type SectionFamily,
+} from '../../src/game/secrets.js';
 import { createDb } from '../../server/db/index.js';
 import { rolls, user, userProgress } from '../../server/db/schema.js';
 import { requestUrl } from '../../server/http.js';
@@ -86,55 +92,59 @@ export default defineHandler(async (request) => {
       .orderBy(desc(rolls.rolledAt))
       .limit(24);
 
-    const collection = progress
-      ? (JSON.parse(progress.collectionJson || '[]') as {
-          badgeId?: string;
-          family?: string;
-        }[])
-      : [];
+    let collectionRaw: unknown[] = [];
+    try {
+      const parsed = JSON.parse(progress?.collectionJson || '[]');
+      collectionRaw = Array.isArray(parsed) ? parsed : [];
+    } catch {
+      collectionRaw = [];
+    }
     const stats = progress ? JSON.parse(progress.statsJson || '{}') : {};
 
-    // Derive secret masteries from collection (section complete → secret earned)
-    const unlockedIds = new Set(
-      (Array.isArray(collection) ? collection : [])
-        .map((c) => c.badgeId)
-        .filter((id): id is string => Boolean(id)),
-    );
-    let secretRows: {
-      id: string;
-      name: string;
-      emoji: string;
-      tier: 'section' | 'omega';
-      section: string;
-      ep: number;
-      unlocked: boolean;
-    }[] = [];
-    try {
-      const {
-        SECRET_BADGES,
-        evaluateOwnedSecrets,
-      } = await import('../../src/game/secrets.js');
-      const earned = new Set(
-        evaluateOwnedSecrets(unlockedIds).map((s) => s.id),
-      );
-      // Also treat explicit secret ids in collection as unlocked
-      for (const id of unlockedIds) {
-        if (id.startsWith('secret-')) earned.add(id);
-      }
-      secretRows = SECRET_BADGES.map((s) => ({
-        id: s.id,
-        name: s.name,
-        emoji: s.emoji,
-        tier: s.tier,
-        section: String(s.section),
-        ep: s.ep,
-        unlocked: earned.has(s.id),
-      }));
-    } catch (e) {
-      log.warn('secret evaluate failed', {
-        err: e instanceof Error ? e.message : String(e),
-      });
+    // Collect badge ids (tolerate badgeId / id / badge_id shapes)
+    const unlockedIds = new Set<string>();
+    for (const entry of collectionRaw) {
+      if (!entry || typeof entry !== 'object') continue;
+      const o = entry as Record<string, unknown>;
+      const id = o.badgeId ?? o.id ?? o.badge_id;
+      if (typeof id === 'string' && id.length > 0) unlockedIds.add(id);
     }
+
+    // Section complete → secret earned (does not require secret id already stored)
+    const earned = evaluateOwnedSecrets(unlockedIds);
+    for (const id of unlockedIds) {
+      if (id.startsWith('secret-') && !earned.some((s) => s.id === id)) {
+        const def = SECRET_BADGES.find((s) => s.id === id);
+        if (def) earned.push(def);
+      }
+    }
+
+    // Only unlocked secret section seals (and omega) — never locked stubs
+    const secrets = earned.map((s) => ({
+      id: s.id,
+      name: s.name,
+      emoji: s.emoji,
+      tier: s.tier,
+      section: String(s.section),
+      ep: s.ep,
+      unlocked: true,
+    }));
+
+    // Debug aid for incomplete sections (not shown in UI)
+    const sectionDebug: Record<string, { have: number; total: number }> = {};
+    for (const s of SECRET_BADGES) {
+      if (s.section === 'omega') continue;
+      sectionDebug[s.section] = sectionProgress(
+        s.section as SectionFamily,
+        unlockedIds,
+      );
+    }
+    log.info('secrets', {
+      username,
+      collectionSize: unlockedIds.size,
+      secrets: secrets.map((s) => s.id),
+      element: sectionDebug.element,
+    });
 
     return Response.json({
       profile: {
@@ -148,8 +158,8 @@ export default defineHandler(async (request) => {
         lifetimeEP: progress?.lifetimeEp ?? 0,
         lifetimeRollCount: progress?.lifetimeRollCount ?? 0,
         journeyEP: progress?.journeyEp ?? 0,
-        badgeCount: Array.isArray(collection) ? collection.length : 0,
-        secrets: secretRows,
+        badgeCount: unlockedIds.size,
+        secrets,
         stats,
         recentRolls: recent.map((r) => {
           let topBadges: string[] = [];

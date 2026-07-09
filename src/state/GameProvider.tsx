@@ -155,30 +155,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Backfill secret masteries if collection already qualifies (import / older saves)
-  useEffect(() => {
-    setState((prev) => {
-      const { collection, unlocked, ep } = mergeSecretUnlocks(
-        prev.collection,
-        new Date().toISOString(),
-      );
-      if (unlocked.length === 0) return prev;
-      const next = {
-        ...prev,
-        collection,
-        lifetimeEP: prev.lifetimeEP + ep,
-        journeyEP: prev.journeyEP + ep,
-      };
-      persist(next);
-      setLastSecretUnlocks(secretHits(unlocked));
-      log.info('secrets:backfill', {
-        count: unlocked.length,
-        ids: unlocked.map((u) => u.id),
-      });
-      return next;
-    });
-  }, [persist]);
-
   const applyCloudPayload = useCallback(
     (cloud: {
       lifetimeEP: number;
@@ -251,6 +227,33 @@ export function GameProvider({ children }: { children: ReactNode }) {
     },
     [applyCloudPayload],
   );
+
+  // Backfill secret masteries if collection already qualifies; push to cloud for profile
+  useEffect(() => {
+    setState((prev) => {
+      const { collection, unlocked, ep } = mergeSecretUnlocks(
+        prev.collection,
+        new Date().toISOString(),
+      );
+      if (unlocked.length === 0) return prev;
+      const next = {
+        ...prev,
+        collection,
+        lifetimeEP: prev.lifetimeEP + ep,
+        journeyEP: prev.journeyEP + ep,
+      };
+      persist(next);
+      setLastSecretUnlocks(secretHits(unlocked));
+      log.info('secrets:backfill', {
+        count: unlocked.length,
+        ids: unlocked.map((u) => u.id),
+      });
+      if (loggedInRef.current) {
+        enqueueAutoSync(toCloudPayload(next));
+      }
+      return next;
+    });
+  }, [persist, enqueueAutoSync]);
 
   const roll = useCallback(async (): Promise<RollOutcome | null> => {
     if (rolling) return null;
