@@ -21,7 +21,7 @@ The [opus audit](docs/opus-report.md) (§§A–G historical; **§H** current) dr
 
 | Area    | What changed                                                                                                           |
 | ------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Tooling | Solution tsconfigs; `tsconfig.server.json` **NodeNext** / **nodenext**                                                 |
+| Tooling | Root `tsconfig.json` = api/server **NodeNext** (Vercel-safe); app/node stay separate                                   |
 | Server  | `apiGuards` (`requireUser` / `readJson` / `rateGuard`); read pipelines in `server/{leaderboard,profile,feed,ogSvg}.ts` |
 | Client  | Mandatory `lib/*-api.ts` wrappers; TanStack Query on key reads; Zod at import/sync/profile; `useSync` + three contexts |
 | Quality | Session typing; format/StatTile/SegmentedToggle/rarity dedupe; `storage-keys.ts`; dead-code sweep                      |
@@ -30,7 +30,7 @@ The [opus audit](docs/opus-report.md) (§§A–G historical; **§H** current) dr
 
 ### Landed as intended
 
-- **`tsconfig.server.json`** — API/server graph uses `NodeNext` + `nodenext` resolution; root `tsconfig.json` is a solution file referencing app/node/server projects.
+- **`tsconfig.json`** — API/server graph uses `NodeNext` + `nodenext` + `types: ["node"]` at the **root** (Vercel typechecks `/api` here and ignores project references). `tsconfig.server.json` extends it; app/Vite stay on `tsconfig.app.json` / `tsconfig.node.json`.
 - **`server/apiGuards.ts`** — `requireUser`, `readJson`, `rateGuard` adopted across handlers.
 - **TanStack Query + `src/lib/*-api.ts` client API wrappers** — UI must not raw-`fetch` `/api/*`; `GameProvider` split into `useSync`, settings reducer, and three contexts (`useGame` / `useGameSettings` / `useCloudSync`).
 - **Zod at trust boundaries** — `parseImportPayload`, `api/sync` body, `fetchProfile` response.

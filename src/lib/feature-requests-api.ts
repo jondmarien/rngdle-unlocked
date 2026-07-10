@@ -124,6 +124,7 @@ export const FEATURE_STATUS_LABELS: Record<FeatureRequestStatus, string> = {
   submitted: 'Submitted',
   under_review: 'Under review',
   planned: 'Planned',
+  in_progress: 'In progress',
   shipped: 'Shipped',
   declined: 'Declined',
 };

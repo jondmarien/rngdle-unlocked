@@ -222,7 +222,7 @@ export const adminAuditLog = pgTable('admin_audit_log', {
 
 /**
  * Player feature requests (Features tab).
- * status: submitted | under_review | planned | shipped | declined
+ * status: submitted | under_review | planned | in_progress | shipped | declined
  */
 export const featureRequests = pgTable('feature_requests', {
   id: text('id').primaryKey(),

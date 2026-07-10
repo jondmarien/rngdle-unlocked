@@ -82,7 +82,7 @@ npx vercel dev        # SPA + /api/* locally (social)
 pnpm db:push          # drizzle-kit push (can prompt truncate — avoid in prod blindly)
 ```
 
-**TypeScript projects:** root `tsconfig.json` is a solution file referencing `tsconfig.app.json` (bundler), `tsconfig.node.json`, and `tsconfig.server.json` (`module`/`moduleResolution`: **NodeNext** / **nodenext** for `api/**` + `server/**`).
+**TypeScript projects:** root `tsconfig.json` is the **api/server** config (`module`/`moduleResolution`: **NodeNext** / **nodenext**, `types: ["node"]`) — Vercel typechecks `/api` against the root config and **does not support project references**, so this cannot be an empty solution-style file. App/Vite use `tsconfig.app.json` (bundler) and `tsconfig.node.json`; `tsconfig.server.json` extends the root for `pnpm typecheck`.
 
 **Formatting:** Oxfmt via Vite+ (`vp fmt`). Repo standard is **single quotes** (`.oxfmtrc.json` + `vite.config.ts` `fmt.singleQuote`). Do not commit quote-only churn; re-running `pnpm fmt` should be a no-op.
 
@@ -351,7 +351,7 @@ These four checks require a **manual browser smoke** — automated `pnpm test` /
 | Feed                     | `server/feed.ts`, `api/feed.ts`                                                               |
 | Schema                   | `server/db/schema.ts`                                                                         |
 | Architecture             | `docs/ARCHITECTURE.md`, `docs/refactor-notes-2026-07.md`                                      |
-| Player What’s new        | `src/lib/whats-new.ts`, `WhatsNewScreen.tsx` (`/whats-new`)                               |
+| Player What’s new        | `src/lib/whats-new.ts`, `WhatsNewScreen.tsx` (`/whats-new`)                                   |
 | Developer changelog      | `CHANGELOG.md`                                                                                |
 
 ---

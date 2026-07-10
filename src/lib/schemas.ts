@@ -98,6 +98,7 @@ export const featureRequestStatusSchema = z.enum([
   'submitted',
   'under_review',
   'planned',
+  'in_progress',
   'shipped',
   'declined',
 ]);

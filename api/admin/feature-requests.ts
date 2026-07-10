@@ -9,7 +9,7 @@ const log = createLogger('api/admin/feature-requests');
 
 /**
  * PATCH — admin sets feature request status.
- * Body: { id, status: submitted|under_review|planned|shipped|declined }
+ * Body: { id, status: submitted|under_review|planned|in_progress|shipped|declined }
  */
 export default defineHandler(async (request) => {
   if (request.method !== 'PATCH') {

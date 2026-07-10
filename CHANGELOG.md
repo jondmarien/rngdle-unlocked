@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Feature request status **In progress** (`in_progress`) between Planned and Shipped.
+
+### Fixed
+
+- Root `tsconfig.json` is the api/server NodeNext config (not an empty project-references solution). Vercel ignores references when typechecking `/api`, which previously flooded builds with `process` / `Buffer` / discriminant-narrowing errors while still deploying.
+
 ## [0.6.0] - 2026-07-09
 
 ### Added

@@ -9,6 +9,7 @@ export const FEATURE_REQUEST_STATUSES = [
   'submitted',
   'under_review',
   'planned',
+  'in_progress',
   'shipped',
   'declined',
 ] as const;

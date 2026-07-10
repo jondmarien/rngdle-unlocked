@@ -54,7 +54,7 @@ export const WHATS_NEW: WhatsNewEntry[] = [
         body: 'Submit ideas, upvote others, and watch status move as requests get reviewed.',
         bullets: [
           '**Signed-in requests**: describe a feature; soft hourly submit limits apply.',
-          '**Upvotes**: bump ideas you want shipped; admins set status (planned, shipped, declined, and more).',
+          '**Upvotes**: bump ideas you want shipped; admins set status (planned, in progress, shipped, declined, and more).',
         ],
       },
       {
