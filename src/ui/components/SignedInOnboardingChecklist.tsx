@@ -1,7 +1,10 @@
+import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useSession } from '../../lib/auth-client';
+import { fetchFeatureRequests } from '../../lib/feature-requests-api';
 import { loadOnboarding, saveOnboarding } from '../../lib/onboarding';
 import type { TabId } from '../../lib/routes';
+import { useGame } from '../../state/GameProvider';
 
 type ChecklistNav = {
   onGoAccount?: () => void;
@@ -19,11 +22,20 @@ export function SignedInOnboardingChecklist({
   onSelectRanked,
 }: ChecklistNav) {
   const { data: session } = useSession();
+  const { history, collection } = useGame();
   const [show, setShow] = useState(false);
   const username =
     typeof session?.user?.username === 'string'
       ? session.user.username.trim()
       : '';
+
+  const featuresQuery = useQuery({
+    queryKey: ['feature-requests', 'top'],
+    queryFn: ({ signal }) =>
+      fetchFeatureRequests({ sort: 'top', limit: 50, signal }),
+    enabled: Boolean(session?.user) && show,
+    staleTime: 60_000,
+  });
 
   useEffect(() => {
     if (!session?.user) {
@@ -35,6 +47,13 @@ export function SignedInOnboardingChecklist({
   }, [session?.user]);
 
   if (!show || !session?.user) return null;
+
+  const hasRankedRoll = history.some((r) => r.source === 'ranked');
+  const hasJourneyBadge = collection.some(
+    (e) => e.family === 'journey' || e.badgeId.startsWith('rolls-'),
+  );
+  const hasUpvotedFeature =
+    featuresQuery.data?.items.some((i) => i.votedByMe) ?? false;
 
   const steps: {
     id: string;
@@ -54,21 +73,21 @@ export function SignedInOnboardingChecklist({
     },
     {
       id: 'ranked',
-      done: false,
+      done: hasRankedRoll,
       label: 'Try Ranked (server rolls + quota)',
       action: onSelectRanked,
       actionLabel: 'Ranked',
     },
     {
       id: 'journey',
-      done: false,
+      done: hasJourneyBadge,
       label: 'Browse Journey badges in Codex',
       action: onGoTab ? () => onGoTab('collection') : undefined,
       actionLabel: 'Codex',
     },
     {
       id: 'features',
-      done: false,
+      done: hasUpvotedFeature,
       label: 'Visit Features to upvote ideas',
       action: onGoTab ? () => onGoTab('features') : undefined,
       actionLabel: 'Features',

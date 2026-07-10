@@ -12,11 +12,11 @@ if (!process.env.DATABASE_URL) {
 const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
-const title = 'New Update! v0.8.0 — Smoother boards, clearer onboarding';
+const title = 'New Update! v0.8.1 — Checklist that checks, challenge timers';
 const body = [
-  'Signed-in players get a short Home checklist (username, sync, Ranked) you can dismiss anytime.',
-  'Board, Feed, Features, and Arcade show a Retry when a load fails; History and Features gained search; roll lists share clearer Free / Ranked / Challenge chips.',
-  'Keyboard focus and segmented toggles are easier to use — scoring and Ranked rules are unchanged.',
+  'Signed-in Getting started now checks off Ranked, Journey, and Features when you actually do them — not only your @username.',
+  'Daily and Weekly lock screens show a live Resets in … countdown to the next UTC reset.',
+  'Cloud sync keeps Ranked roll labels across devices, and large histories should no longer false-reject sync.',
   'Read the full player notes: https://rngdle-unlocked.chron0.tech/whats-new',
   'Open: /whats-new',
 ].join(' ');

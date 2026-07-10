@@ -417,6 +417,7 @@ The Account screen times out after a few seconds and shows the sign-in form. Che
 | Journey badge artwork (Collection + Profile section)                     | ✅ Shipped (`v0.7.3`)                                                             |
 | Codex search (spoiler-safe badge filter)                                 | ✅ Shipped (`v0.7.4`)                                                             |
 | Gap remediation (onboarding, Retry, a11y, shared roll rows, admin/trust) | ✅ Shipped (`v0.8.0`)                                                             |
+| Checklist detection + challenge reset countdown + sync integrity         | ✅ Shipped (`v0.8.1`)                                                             |
 | Server Ranked free play (`/api/ranked-roll`)                             | ✅ Shipped                                                                        |
 | Profiles (vanity + avatars) + follows                                    | ✅ Shipped                                                                        |
 | Activity unlocks + Ranked crown msgs + overtake notifs                   | ✅ Shipped                                                                        |

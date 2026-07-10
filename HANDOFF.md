@@ -2,14 +2,14 @@
 
 **For the next agent.** Read this + [`AGENTS.md`](./AGENTS.md) + [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) before large changes.
 
-|                            |                                                                                               |
-| -------------------------- | --------------------------------------------------------------------------------------------- |
-| **Repo**                   | `jondmarien/rngdle-unlocked`                                                                  |
-| **Live**                   | https://rngdle-unlocked.chron0.tech                                                           |
-| **Branch**                 | `main` (auto-deploys Vercel)                                                                  |
-| **Version**                | `0.8.0` (`package.json`; Settings uses `VITE_APP_VERSION`)                                    |
-| **Latest release**         | [v0.8.0](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.8.0) (cut when tagged) |
-| **Handoff commit context** | Opus audit refactor (`aa8e91e`…`fc4fa65` on `main`) + prior P0/P1 wave                        |
+|                            |                                                                             |
+| -------------------------- | --------------------------------------------------------------------------- |
+| **Repo**                   | `jondmarien/rngdle-unlocked`                                                |
+| **Live**                   | https://rngdle-unlocked.chron0.tech                                         |
+| **Branch**                 | `main` (auto-deploys Vercel)                                                |
+| **Version**                | `0.8.1` (`package.json`; Settings uses `VITE_APP_VERSION`)                  |
+| **Latest release**         | [v0.8.1](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.8.1) |
+| **Handoff commit context** | Opus audit refactor (`aa8e91e`…`fc4fa65` on `main`) + prior P0/P1 wave      |
 
 ---
 
@@ -237,6 +237,7 @@ node scripts/add-roll-source.mjs   # if source column missing
 - [x] **v0.7.3** — Journey badge artwork (Collection + Profile Journey section)
 - [x] **v0.7.4** — Codex search (spoiler-safe name/description filter)
 - [x] **v0.8.0** — Gap remediation: onboarding checklist, shared roll rows, Retry banners, a11y, admin/trust polish, Tailwind v4 canonical classes
+- [x] **v0.8.1** — Onboarding checklist detection, Daily/Weekly reset countdown, sync integrity + `rolls.source` on cloud pull
 
 ### Still open for you / ops
 

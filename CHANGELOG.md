@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-07-10
+
+### Fixed
+
+- **Signed-in onboarding checklist** — Ranked / Journey / Features steps now complete from real signals (`history.source === 'ranked'`, Journey collection unlocks, Features `votedByMe`) instead of hardcoded `done: false`.
+- **Cloud pull `rolls.source`** — `loadCloudSave` maps `source` so Ranked provenance survives sync across devices.
+- **Sync integrity lifetime roll count** — when client history is at `HISTORY_CAP` (500), skip `claimed ≤ cloud + newRolls + slack`; foreign-roll / best-roll / EP / collection checks unchanged (`assertLifetimeRollCountOk`).
+
+### Added
+
+- **Daily / Weekly challenge countdown** — locked helper shows live `Resets in …` until next UTC day / Monday 00:00 (`useCountdownToUtcReset`, 30s tick).
+
+### Notes
+
+- No schema migration required for this release.
+
 ## [0.8.0] - 2026-07-10
 
 ### Added

@@ -15,6 +15,15 @@ import { assertSyncIntegrity } from './syncIntegrity.js';
 
 const log = createLogger('sync');
 
+function rollSourceFromDb(
+  source: string | null | undefined,
+): RollResult['source'] {
+  if (source === 'ranked' || source === 'challenge' || source === 'client') {
+    return source;
+  }
+  return undefined;
+}
+
 export type CloudSavePayload = {
   lifetimeEP: number;
   lifetimeRollCount: number;
@@ -199,6 +208,7 @@ export async function loadCloudSave(
         badges,
         challengeKey: r.challengeKey ?? undefined,
         attestationSeal: r.attestationSeal ?? undefined,
+        source: rollSourceFromDb(r.source),
       };
     })
     .sort((a, b) => (a.rolledAt < b.rolledAt ? 1 : -1))

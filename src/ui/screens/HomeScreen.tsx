@@ -21,6 +21,7 @@ import { GenerateButton } from '../components/GenerateButton';
 import { LatestRunsPanel } from '../components/LatestRunsPanel';
 import { NumberDisplay } from '../components/NumberDisplay';
 import type { TabId } from '../../lib/routes';
+import { useCountdownToUtcReset } from '../../lib/useCountdownToUtcReset';
 import { OnboardingTip } from '../components/OnboardingTip';
 import { SignedInOnboardingChecklist } from '../components/SignedInOnboardingChecklist';
 import { RarityBadge } from '../components/RarityBadge';
@@ -243,6 +244,11 @@ export function HomeScreen({
   const challengeLockedLabel =
     rollMode === 'weekly' ? 'Done for this week' : 'Done for today';
 
+  const challengePeriod =
+    rollMode === 'daily' || rollMode === 'weekly' ? rollMode : null;
+  const { label: challengeResetLabel } =
+    useCountdownToUtcReset(challengePeriod);
+
   return (
     <div className="relative flex min-h-0 w-full flex-1 flex-col">
       {/* Fixed right rail under sticky header — does not squeeze the roll column */}
@@ -395,10 +401,8 @@ export function HomeScreen({
 
         {periodLocked && revealDone && (
           <p className="max-w-md text-sm text-(--prose-2)">
-            {rollMode === 'weekly'
-              ? 'Weekly challenge is locked until the next UTC week — same seed would only repeat this number.'
-              : 'Daily challenge is locked until the next UTC day — same seed would only repeat this number.'}{' '}
-            Free play and Ranked stay available.
+            {challengeResetLabel}. Same seed would only repeat this number. Free
+            play and Ranked stay available.
           </p>
         )}
 

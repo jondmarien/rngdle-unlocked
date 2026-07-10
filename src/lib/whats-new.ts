@@ -32,6 +32,26 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Checklist that checks, challenge timers',
+    date: '2026-07-10',
+    version: '0.8.1',
+    tags: ['UI', 'Account', 'Challenge', 'Sync'],
+    content: [
+      {
+        body: 'The signed-in Getting started list now notices when you actually try Ranked, unlock Journey, or upvote on Features — and Daily / Weekly lock screens tell you when the next roll unlocks.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'Small fixes that make Home feel finished after the 0.8.0 polish pass.',
+        bullets: [
+          '**Onboarding checklist** strikes through Ranked, Journey, and Features after you do those things (not only username).',
+          '**Daily / Weekly locked** copy shows a live **Resets in …** countdown to the next UTC reset.',
+          '**Cloud sync** keeps Ranked roll labels when progress pulls from the server; large histories no longer false-reject sync.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Smoother boards, clearer onboarding',
     date: '2026-07-10',
     version: '0.8.0',
