@@ -1,4 +1,4 @@
-import { eq, sql } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import type {
   CollectionEntry,
@@ -211,35 +211,34 @@ export async function loadCloudSave(
   const historyRows = await db
     .select()
     .from(rolls)
-    .where(eq(rolls.userId, userId));
+    .where(eq(rolls.userId, userId))
+    .orderBy(desc(rolls.rolledAt))
+    .limit(HISTORY_CAP);
 
-  const history: RollResult[] = historyRows
-    .map((r) => {
-      let badges: RollResult['badges'] = [];
-      try {
-        badges = JSON.parse(r.badgesJson || '[]');
-      } catch {
-        badges = [];
-      }
-      return {
-        id: r.id,
-        shortCode: r.shortCode ?? undefined,
-        number: r.number,
-        totalEP: r.totalEp,
-        rarity: r.rarity as RollResult['rarity'],
-        percentile: r.percentile,
-        rolledAt:
-          r.rolledAt instanceof Date
-            ? r.rolledAt.toISOString()
-            : String(r.rolledAt),
-        badges,
-        challengeKey: r.challengeKey ?? undefined,
-        attestationSeal: r.attestationSeal ?? undefined,
-        source: rollSourceFromDb(r.source),
-      };
-    })
-    .sort((a, b) => (a.rolledAt < b.rolledAt ? 1 : -1))
-    .slice(0, HISTORY_CAP);
+  const history: RollResult[] = historyRows.map((r) => {
+    let badges: RollResult['badges'] = [];
+    try {
+      badges = JSON.parse(r.badgesJson || '[]');
+    } catch {
+      badges = [];
+    }
+    return {
+      id: r.id,
+      shortCode: r.shortCode ?? undefined,
+      number: r.number,
+      totalEP: r.totalEp,
+      rarity: r.rarity as RollResult['rarity'],
+      percentile: r.percentile,
+      rolledAt:
+        r.rolledAt instanceof Date
+          ? r.rolledAt.toISOString()
+          : String(r.rolledAt),
+      badges,
+      challengeKey: r.challengeKey ?? undefined,
+      attestationSeal: r.attestationSeal ?? undefined,
+      source: rollSourceFromDb(r.source),
+    };
+  });
 
   let collection: CollectionEntry[] = [];
   try {

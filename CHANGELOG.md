@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Sync Neon history load** — `loadCloudSave` now `ORDER BY rolled_at DESC LIMIT 500` instead of selecting every lifetime roll then slicing in memory. Adds `rolls_user_rolled_at_idx` (`scripts/add-rolls-user-rolled-at-idx.mjs`). Cuts Neon egress for power users with >500 rolls (e.g. 1600+ lifetime rows → 500).
+
 ## [0.10.2] - 2026-07-10
 
 ### Added
