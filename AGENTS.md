@@ -31,6 +31,7 @@ Instructions for AI coding agents and humans working in this repository.
 
 - **Ranked** (`?scope=ranked`): sum public `source=ranked` rolls.
 - **Practice** (`?scope=practice`): all-time from `user_progress`; week from public non-ranked rolls.
+- **Metric view** (`?view=total|best`, default `total`): Total EP (existing) or Best Roll (`sortBy=ep|rarity`) — one personal best per player; Practice Best Roll uses public practice rolls.
 
 ### Feed & history lanes
 
@@ -54,13 +55,13 @@ docs/                ARCHITECTURE.md + refactor notes + design specs/plans
 scripts/             Migrations, diagnostics (prefer additive SQL over destructive push)
 ```
 
-| Path                     | Rules                                                                                              |
-| ------------------------ | -------------------------------------------------------------------------------------------------- |
-| `src/game/`              | Pure, testable, no React/DOM side effects at import time (except `fx.ts` intentionally uses Audio) |
-| `src/ui/` + `src/state/` | UI + persistence; call game engine, never reimplement scoring                                      |
-| `src/lib/*-api.ts`       | **Mandatory** client API wrappers — UI must not call `fetch('/api/...')` directly                  |
+| Path                     | Rules                                                                                               |
+| ------------------------ | --------------------------------------------------------------------------------------------------- |
+| `src/game/`              | Pure, testable, no React/DOM side effects at import time (except `fx.ts` intentionally uses Audio)  |
+| `src/ui/` + `src/state/` | UI + persistence; call game engine, never reimplement scoring                                       |
+| `src/lib/*-api.ts`       | **Mandatory** client API wrappers — UI must not call `fetch('/api/...')` directly                   |
 | `api/*`                  | Thin handlers → `server/*`; preamble via `server/apiGuards.ts`; `defineHandler` from vercel-adapter |
-| `server/db/schema.ts`    | Source of truth for tables; deploy schema carefully (see §6)                                       |
+| `server/db/schema.ts`    | Source of truth for tables; deploy schema carefully (see §6)                                        |
 
 Deep diagrams: [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md).
 
@@ -158,11 +159,11 @@ Vite resolves `.js` → `.ts` fine. Keep this pattern when adding game modules u
 
 Runtime schemas live primarily in [`src/lib/schemas.ts`](./src/lib/schemas.ts) (shared shapes) plus server sync validation:
 
-| Boundary | Where |
-| -------- | ----- |
-| Save **import** payload | `parseImportPayload` in `src/state/storage.ts` |
-| Cloud **sync** POST body | `api/sync.ts` + schema in `server/sync.ts` |
-| Public **profile** GET response | `src/lib/profile-api.ts` |
+| Boundary                        | Where                                          |
+| ------------------------------- | ---------------------------------------------- |
+| Save **import** payload         | `parseImportPayload` in `src/state/storage.ts` |
+| Cloud **sync** POST body        | `api/sync.ts` + schema in `server/sync.ts`     |
+| Public **profile** GET response | `src/lib/profile-api.ts`                       |
 
 Do not claim blanket Zod on every POST/query — only these trust boundaries are validated today.
 
@@ -227,24 +228,26 @@ Important tables: `user` (username, vanity profile fields), `user_progress`, `ro
 
 ## 7. API surface (agents)
 
-| Endpoint                              | Notes                                                  |
-| ------------------------------------- | ------------------------------------------------------ |
-| `/api/auth/*`                         | Better Auth (rewrites with `__path` for multi-segment) |
-| `/api/sync`                           | GET/POST cloud merge; soft per-minute burst only       |
-| `/api/ranked-roll`                    | POST Ranked free play (auth + username)                |
-| `/api/leaderboard`                    | `?scope=ranked\|practice&period=all\|week&sort=...`    |
-| `/api/highlights`                     | Community bests — **Ranked only**                      |
-| `/api/feed`                           | `?source=all\|ranked\|practice` — self + following     |
-| `/api/follow`                         | Follow graph                                           |
-| `/api/notifications`                  | Activity + system inbox                                |
-| `/api/system-messages`                | GET list; POST **admin session** (role=admin). Still live alongside `api/admin/broadcast.ts` — redundant POST not removed. |
-| `/api/admin/*`                        | Admin: broadcast, users search/wipe/ban, reports       |
-| `/api/reports`                        | Signed-in users file abuse / username reports          |
-| `/api/challenge`                      | Period seeds metadata                                  |
-| `/api/attest`                         | Optional HMAC seal on claim                            |
-| `/api/og`, `/api/share/*`, `/api/u/*`, `/api/page/*` | OG / share / profile / static-page HTML for bots |
-| `/api/rolls/:id`                      | Public roll lookup for share gate                      |
-| `/api/health`                         | Liveness + env presence                                |
+| Endpoint                                             | Notes                                                                                                                      |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `/api/auth/*`                                        | Better Auth (rewrites with `__path` for multi-segment)                                                                     |
+| `/api/sync`                                          | GET/POST cloud merge; soft per-minute burst only                                                                           |
+| `/api/ranked-roll`                                   | POST Ranked free play (auth + username)                                                                                    |
+| `/api/leaderboard`                                   | `?view=total\|best` (default total); `?scope=ranked\|practice&period=all\|week`; total: `sort=`; best: `sortBy=ep\|rarity` |
+| `/api/feature-requests`                              | GET list / POST submit (signed-in); vote via `/api/feature-requests/:id/vote`                                              |
+| `/api/admin/feature-requests`                        | PATCH status (`requireAdmin` + audit)                                                                                      |
+| `/api/highlights`                                    | Community bests — **Ranked only**                                                                                          |
+| `/api/feed`                                          | `?source=all\|ranked\|practice` — self + following                                                                         |
+| `/api/follow`                                        | Follow graph                                                                                                               |
+| `/api/notifications`                                 | Activity + system inbox                                                                                                    |
+| `/api/system-messages`                               | GET list; POST **admin session** (role=admin). Still live alongside `api/admin/broadcast.ts` — redundant POST not removed. |
+| `/api/admin/*`                                       | Admin: broadcast, users search/wipe/ban, reports                                                                           |
+| `/api/reports`                                       | Signed-in users file abuse / username reports                                                                              |
+| `/api/challenge`                                     | Period seeds metadata                                                                                                      |
+| `/api/attest`                                        | Optional HMAC seal on claim                                                                                                |
+| `/api/og`, `/api/share/*`, `/api/u/*`, `/api/page/*` | OG / share / profile / static-page HTML for bots                                                                           |
+| `/api/rolls/:id`                                     | Public roll lookup for share gate                                                                                          |
+| `/api/health`                                        | Liveness + env presence                                                                                                    |
 
 SPA routes: History API in `src/lib/routes.ts`; Vercel rewrites non-`/api` to `index.html`. Bot UA rewrites for `/s/:user/:code` and `/u/:username`.
 
@@ -253,10 +256,10 @@ SPA routes: History API in `src/lib/routes.ts`; Vercel rewrites non-`/api` to `i
 ## 8. Frontend conventions
 
 - **Styling:** Tailwind v4 utility classes + CSS vars (`--bg`, `--prose`, `--outline`, …) in `src/styles/global.css`.
-- **Segmented controls:** use `SegmentedToggle` for simple scope/lane chips (Leaderboard, History, Admin, Notifications). **Do not** migrate `RollModePicker` radio cards or `CollectionScreen` family-filter chips — those stay bespoke by design.
+- **Segmented controls:** use `SegmentedToggle` for simple scope/lane chips (Leaderboard Total EP/Best Roll, Features Top/Newest, History, Admin, Notifications). **Do not** migrate `RollModePicker` radio cards or `CollectionScreen` family-filter chips — those stay bespoke by design.
 - **Fonts:** Outfit (UI), Syne (display), JetBrains Mono (numbers).
 - **Client API wrappers:** screens and components must use `src/lib/*-api.ts` (`leaderboard-api`, `profile-api`, `me-api`, `roll-api`, `highlights-api`, `sync-api`, `notifications-api`, `admin-api`, …). **Never** call `fetch('/api/...')` directly from `src/ui/**` (blob/`dataUrl` fetches for PNG export are fine).
-- **TanStack Query:** `QueryClientProvider` in `src/main.tsx`. Use `useQuery` for cached reads — leaderboard, feed, highlights, profile, admin-check (`useIsAdmin`). Some screens (notifications, account) still use effects + wrappers; prefer Query when adding new reads. No broad `useMutation` adoption yet.
+- **TanStack Query:** `QueryClientProvider` in `src/main.tsx`. Use `useQuery` for cached reads — leaderboard, feed, highlights, profile, feature-requests, admin-check (`useIsAdmin`). Feature request submit/upvote use `useMutation` (optimistic upvote). Some screens (notifications, account) still use effects + wrappers.
 - **State:** `GameProvider` mounts three contexts — `useGame` (rolls/history/collection), `useGameSettings`, `useCloudSync`. Cloud sync orchestration lives in [`src/state/useSync.ts`](./src/state/useSync.ts) (`enqueueAutoSync`, `applyCloudPayload`, `syncToCloud`, `pullFromCloud`, `waitForCloudPublish`). Settings setters live in `src/state/settings.ts`.
 - **Logging:** `createLogger('area')` → `[rngdle:area]` in browser/Vercel logs. Optional `window.__rngdleLog`.
 - **Share:** no public vanity URL until `waitForCloudPublish` confirms the roll row exists.
@@ -295,22 +298,22 @@ These four checks require a **manual browser smoke** — automated `pnpm test` /
 - Default branch: `main` (production via Vercel).
 - Prefer small, focused commits with complete sentences in messages.
 - Do not force-push `main` unless the user explicitly requests it.
-- Version in `package.json` (currently **0.5.1**); Settings footer reads `VITE_APP_VERSION` from the build.
+- Version in `package.json` (currently **0.6.0**); Settings footer reads `VITE_APP_VERSION` from the build.
 - Releases: annotated tags (`v0.x.y`) + `gh release create` when the user asks.
 
 ---
 
 ## 11. Common failure modes (quick diagnosis)
 
-| Symptom                                                       | Likely cause                                    | Fix direction                                     |
-| ------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------- |
+| Symptom                                                       | Likely cause                                    | Fix direction                                                               |
+| ------------------------------------------------------------- | ----------------------------------------------- | --------------------------------------------------------------------------- |
 | Ranked `FUNCTION_INVOCATION_FAILED` / missing `rarity` module | ESM extensionless import in `src/game`          | Add `.js` extensions; `pnpm typecheck` (NodeNext) should fail before deploy |
-| Ranked 500 after auth                                         | Insert insert / missing `source` column         | Run `scripts/add-roll-source.mjs`                 |
-| Free play sync `429` hourly upload                            | Old hourly cap                                  | Removed — only soft per-minute sync burst remains |
-| Reel stuck on `?????` after Daily/Weekly                      | `lastRevealKey` collision                       | Remount reel + reset lastRevealKey (see §5.6)     |
-| Feed only one user / rare only                                | Old rare+ filter + no self                      | Feed includes self; all rarities; source toggles  |
-| Leaderboard empty                                             | Wrong scope / no username / no Ranked rolls yet | Check scope toggle + `@username` + mode           |
-| Share stuck “waiting for cloud”                               | Roll not in Neon                                | Sign in, sync; confirm `/api/rolls/:id`           |
+| Ranked 500 after auth                                         | Insert insert / missing `source` column         | Run `scripts/add-roll-source.mjs`                                           |
+| Free play sync `429` hourly upload                            | Old hourly cap                                  | Removed — only soft per-minute sync burst remains                           |
+| Reel stuck on `?????` after Daily/Weekly                      | `lastRevealKey` collision                       | Remount reel + reset lastRevealKey (see §5.6)                               |
+| Feed only one user / rare only                                | Old rare+ filter + no self                      | Feed includes self; all rarities; source toggles                            |
+| Leaderboard empty                                             | Wrong scope / no username / no Ranked rolls yet | Check scope toggle + `@username` + mode                                     |
+| Share stuck “waiting for cloud”                               | Roll not in Neon                                | Sign in, sync; confirm `/api/rolls/:id`                                     |
 
 ---
 
@@ -328,27 +331,28 @@ These four checks require a **manual browser smoke** — automated `pnpm test` /
 
 ## 13. Key files cheat sheet
 
-| Concern                 | Start here                                                              |
-| ----------------------- | ----------------------------------------------------------------------- |
-| Roll orchestration      | `src/state/GameProvider.tsx`                                            |
-| Cloud sync orchestration| `src/state/useSync.ts`, `useCloudSync`                                  |
-| Client API wrappers     | `src/lib/*-api.ts` (esp. `roll-api`, `leaderboard-api`, `profile-api`)  |
-| Zod schemas             | `src/lib/schemas.ts`, `server/sync.ts`                                  |
-| QueryClient             | `src/main.tsx`                                                          |
-| Handler guards          | `server/apiGuards.ts`                                                   |
-| Read pipelines          | `server/leaderboard.ts`, `profile.ts`, `feed.ts`, `ogSvg.ts`            |
-| Reel animation          | `src/ui/components/NumberDisplay.tsx`, `HomeScreen.tsx`                 |
-| Mode picker copy        | `src/ui/components/RollModePicker.tsx`                                  |
-| Badge catalog           | `src/game/badges/catalog.ts`                                            |
-| Ranked issue            | `server/rankedRoll.ts`, `api/ranked-roll.ts`                            |
-| Crowns / overtake       | `server/rollActivity.ts`                                                |
-| Sync merge              | `server/sync.ts`, `api/sync.ts`                                         |
-| Leaderboards            | `server/leaderboard.ts`, `api/leaderboard.ts`, `LeaderboardScreen.tsx`  |
-| Feed                    | `server/feed.ts`, `api/feed.ts`                                         |
-| Schema                  | `server/db/schema.ts`                                                   |
-| Architecture            | `docs/ARCHITECTURE.md`, `docs/refactor-notes-2026-07.md`                |
-| Player What’s new       | `src/lib/whats-new.ts`, `AboutScreen.tsx`                               |
-| Developer changelog     | `CHANGELOG.md`                                                          |
+| Concern                  | Start here                                                                                    |
+| ------------------------ | --------------------------------------------------------------------------------------------- |
+| Roll orchestration       | `src/state/GameProvider.tsx`                                                                  |
+| Cloud sync orchestration | `src/state/useSync.ts`, `useCloudSync`                                                        |
+| Client API wrappers      | `src/lib/*-api.ts` (esp. `roll-api`, `leaderboard-api`, `profile-api`)                        |
+| Zod schemas              | `src/lib/schemas.ts`, `server/sync.ts`                                                        |
+| QueryClient              | `src/main.tsx`                                                                                |
+| Handler guards           | `server/apiGuards.ts`                                                                         |
+| Read pipelines           | `server/leaderboard.ts`, `profile.ts`, `feed.ts`, `ogSvg.ts`                                  |
+| Reel animation           | `src/ui/components/NumberDisplay.tsx`, `HomeScreen.tsx`                                       |
+| Mode picker copy         | `src/ui/components/RollModePicker.tsx`                                                        |
+| Badge catalog            | `src/game/badges/catalog.ts`                                                                  |
+| Ranked issue             | `server/rankedRoll.ts`, `api/ranked-roll.ts`                                                  |
+| Crowns / overtake        | `server/rollActivity.ts`                                                                      |
+| Sync merge               | `server/sync.ts`, `api/sync.ts`                                                               |
+| Leaderboards             | `server/leaderboard.ts`, `api/leaderboard.ts`, `LeaderboardScreen.tsx` (Total EP + Best Roll) |
+| Feature requests         | `server/featureRequests.ts`, `api/feature-requests*`, `FeatureRequestsScreen.tsx`             |
+| Feed                     | `server/feed.ts`, `api/feed.ts`                                                               |
+| Schema                   | `server/db/schema.ts`                                                                         |
+| Architecture             | `docs/ARCHITECTURE.md`, `docs/refactor-notes-2026-07.md`                                      |
+| Player What’s new        | `src/lib/whats-new.ts`, `AboutScreen.tsx`                                                     |
+| Developer changelog      | `CHANGELOG.md`                                                                                |
 
 ---
 

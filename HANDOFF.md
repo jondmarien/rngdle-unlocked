@@ -2,14 +2,14 @@
 
 **For the next agent.** Read this + [`AGENTS.md`](./AGENTS.md) + [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) before large changes.
 
-|                            |                                                                                                        |
-| -------------------------- | ------------------------------------------------------------------------------------------------------ |
-| **Repo**                   | `jondmarien/rngdle-unlocked`                                                                           |
-| **Live**                   | https://rngdle-unlocked.chron0.tech                                                                    |
-| **Branch**                 | `main` (auto-deploys Vercel)                                                                           |
-| **Version**                | `0.5.1` (`package.json`; Settings uses `VITE_APP_VERSION`) |
-| **Latest release**         | [v0.5.1](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.5.1) |
-| **Handoff commit context** | Opus audit refactor (`aa8e91e`…`fc4fa65` on `main`) + prior P0/P1 wave |
+|                            |                                                                             |
+| -------------------------- | --------------------------------------------------------------------------- |
+| **Repo**                   | `jondmarien/rngdle-unlocked`                                                |
+| **Live**                   | https://rngdle-unlocked.chron0.tech                                         |
+| **Branch**                 | `main` (auto-deploys Vercel)                                                |
+| **Version**                | `0.6.0` (`package.json`; Settings uses `VITE_APP_VERSION`)                  |
+| **Latest release**         | [v0.6.0](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.6.0) |
+| **Handoff commit context** | Opus audit refactor (`aa8e91e`…`fc4fa65` on `main`) + prior P0/P1 wave      |
 
 ---
 
@@ -19,12 +19,12 @@ The [opus audit](docs/opus-report.md) (§§A–G historical; **§H** current) dr
 
 ### Changelog-style summary (this pass)
 
-| Area | What changed |
-| ---- | ------------ |
-| Tooling | Solution tsconfigs; `tsconfig.server.json` **NodeNext** / **nodenext** |
-| Server | `apiGuards` (`requireUser` / `readJson` / `rateGuard`); read pipelines in `server/{leaderboard,profile,feed,ogSvg}.ts` |
-| Client | Mandatory `lib/*-api.ts` wrappers; TanStack Query on key reads; Zod at import/sync/profile; `useSync` + three contexts |
-| Quality | Session typing; format/StatTile/SegmentedToggle/rarity dedupe; `storage-keys.ts`; dead-code sweep |
+| Area    | What changed                                                                                                           |
+| ------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Tooling | Solution tsconfigs; `tsconfig.server.json` **NodeNext** / **nodenext**                                                 |
+| Server  | `apiGuards` (`requireUser` / `readJson` / `rateGuard`); read pipelines in `server/{leaderboard,profile,feed,ogSvg}.ts` |
+| Client  | Mandatory `lib/*-api.ts` wrappers; TanStack Query on key reads; Zod at import/sync/profile; `useSync` + three contexts |
+| Quality | Session typing; format/StatTile/SegmentedToggle/rarity dedupe; `storage-keys.ts`; dead-code sweep                      |
 
 **New direct deps:** `@tanstack/react-query`, `zod` (see `package.json`).
 
@@ -40,13 +40,13 @@ The [opus audit](docs/opus-report.md) (§§A–G historical; **§H** current) dr
 
 ### Intentional deltas from the audit plan
 
-| Area | Actual behavior |
-| ---- | ---------------- |
-| **`PATCH /api/me` malformed JSON** | Returns **HTTP 400** (`Invalid JSON`) via `readJson`, not a generic 500. |
-| **Save import validation** | Corrupt/hand-edited saves throw `Invalid save file: …` (e.g. corrupt roll history / badge collection). Valid legacy exports still import. |
-| **`SegmentedToggle` migration** | **Not** applied to `RollModePicker` rich radio cards or `CollectionScreen` family-filter chips — those UIs stay bespoke. |
-| **`POST /api/system-messages`** | **Still live** (admin-session POST). Not removed; `api/admin/broadcast.ts` is the day-to-day path but the redundant surface was left untouched. |
-| **Not landed** | `useSaveTransfer`, `badgeJson`/`routeParams`, `game/history.ts`, path aliases, full TanStack/`useMutation`, Zod on all POSTs |
+| Area                               | Actual behavior                                                                                                                                 |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`PATCH /api/me` malformed JSON** | Returns **HTTP 400** (`Invalid JSON`) via `readJson`, not a generic 500.                                                                        |
+| **Save import validation**         | Corrupt/hand-edited saves throw `Invalid save file: …` (e.g. corrupt roll history / badge collection). Valid legacy exports still import.       |
+| **`SegmentedToggle` migration**    | **Not** applied to `RollModePicker` rich radio cards or `CollectionScreen` family-filter chips — those UIs stay bespoke.                        |
+| **`POST /api/system-messages`**    | **Still live** (admin-session POST). Not removed; `api/admin/broadcast.ts` is the day-to-day path but the redundant surface was left untouched. |
+| **Not landed**                     | `useSaveTransfer`, `badgeJson`/`routeParams`, `game/history.ts`, path aliases, full TanStack/`useMutation`, Zod on all POSTs                    |
 
 ### Still required — not verified in-repo
 
@@ -119,14 +119,14 @@ Rough chronological product work across this multi-turn session (and immediate p
 
 ### Resolved (architecture refactor)
 
-| Issue | Resolution |
-| ----- | ---------- |
+| Issue                                                                                     | Resolution                                                                                                                                                   |
+| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Recurring Ranked outage from extensionless ESM imports typechecking green under `bundler` | **`tsconfig.server.json` NodeNext** — `pnpm typecheck` fails on missing `.js` extensions in the api/server graph (still keep `.js` discipline in `src/game`) |
-| Fat read handlers / duplicated auth-parse-rate boilerplate | `server/apiGuards.ts` + `server/{leaderboard,profile,feed,ogSvg}.ts` |
-| Screens bypassing `lib/*-api.ts` with raw `fetch` | Client API wrappers mandatory; TanStack Query on leaderboard/feed/highlights/profile/admin-check |
-| Blind casts at import/sync/profile | Zod at those trust boundaries |
-| Monolithic GameProvider sync + settings | `useSync.ts` + settings reducer + three contexts |
-| Confetti origin left/top-left | Center burst in `Celebration.tsx` (was listed as open; fixed this wave) |
+| Fat read handlers / duplicated auth-parse-rate boilerplate                                | `server/apiGuards.ts` + `server/{leaderboard,profile,feed,ogSvg}.ts`                                                                                         |
+| Screens bypassing `lib/*-api.ts` with raw `fetch`                                         | Client API wrappers mandatory; TanStack Query on leaderboard/feed/highlights/profile/admin-check                                                             |
+| Blind casts at import/sync/profile                                                        | Zod at those trust boundaries                                                                                                                                |
+| Monolithic GameProvider sync + settings                                                   | `useSync.ts` + settings reducer + three contexts                                                                                                             |
+| Confetti origin left/top-left                                                             | Center burst in `Celebration.tsx` (was listed as open; fixed this wave)                                                                                      |
 
 ### Docs / agent files
 
@@ -157,30 +157,31 @@ Daily/Weekly            →  seed challenge    →  source=challenge
 
 ## 4. Key files
 
-| Area                   | Path                                                                           |
-| ---------------------- | ------------------------------------------------------------------------------ |
-| Roll orchestration     | `src/state/GameProvider.tsx`                                                   |
-| Cloud sync             | `src/state/useSync.ts`, `useCloudSync`                                         |
-| Settings               | `src/state/settings.ts`, `useGameSettings`                                     |
-| Client API wrappers    | `src/lib/*-api.ts` (`roll-api`, `leaderboard-api`, `profile-api`, …)           |
-| Zod schemas            | `src/lib/schemas.ts`                                                           |
-| QueryClient            | `src/main.tsx`                                                                 |
-| Handler guards         | `server/apiGuards.ts`                                                          |
-| Read pipelines         | `server/leaderboard.ts`, `profile.ts`, `feed.ts`, `ogSvg.ts`                   |
-| Home reel + mode reset | `src/ui/screens/HomeScreen.tsx`, `NumberDisplay.tsx`                           |
-| Latest runs            | `src/ui/components/LatestRunsPanel.tsx`                                        |
-| Mode copy              | `src/ui/components/RollModePicker.tsx`                                         |
-| Celebrate FX           | `src/ui/components/Celebration.tsx`, `src/styles/global.css`, `src/game/fx.ts` |
-| Ranked issue           | `server/rankedRoll.ts`, `api/ranked-roll.ts`                                   |
-| Crowns / overtake      | `server/rollActivity.ts`                                                       |
-| Sync                   | `server/sync.ts`, `api/sync.ts`                                                |
-| Leaderboard            | `server/leaderboard.ts`, `api/leaderboard.ts`, `LeaderboardScreen.tsx`         |
-| Feed                   | `server/feed.ts`, `api/feed.ts`                                                |
-| Schema                 | `server/db/schema.ts` (`rolls.source`)                                         |
-| Badge catalog          | `src/game/badges/catalog.ts`                                                   |
-| Absolute Ceiling art   | `public/badges/ceiling.jpg`                                                    |
-| Migrations             | `scripts/add-roll-source.mjs`, `scripts/migrate-feature-wave.mjs`              |
-| Refactor notes         | `docs/refactor-notes-2026-07.md`, `docs/opus-report.md` §H                     |
+| Area                   | Path                                                                                          |
+| ---------------------- | --------------------------------------------------------------------------------------------- |
+| Roll orchestration     | `src/state/GameProvider.tsx`                                                                  |
+| Cloud sync             | `src/state/useSync.ts`, `useCloudSync`                                                        |
+| Settings               | `src/state/settings.ts`, `useGameSettings`                                                    |
+| Client API wrappers    | `src/lib/*-api.ts` (`roll-api`, `leaderboard-api`, `profile-api`, …)                          |
+| Zod schemas            | `src/lib/schemas.ts`                                                                          |
+| QueryClient            | `src/main.tsx`                                                                                |
+| Handler guards         | `server/apiGuards.ts`                                                                         |
+| Read pipelines         | `server/leaderboard.ts`, `profile.ts`, `feed.ts`, `ogSvg.ts`, `featureRequests.ts`            |
+| Home reel + mode reset | `src/ui/screens/HomeScreen.tsx`, `NumberDisplay.tsx`                                          |
+| Latest runs            | `src/ui/components/LatestRunsPanel.tsx`                                                       |
+| Mode copy              | `src/ui/components/RollModePicker.tsx`                                                        |
+| Celebrate FX           | `src/ui/components/Celebration.tsx`, `src/styles/global.css`, `src/game/fx.ts`                |
+| Ranked issue           | `server/rankedRoll.ts`, `api/ranked-roll.ts`                                                  |
+| Crowns / overtake      | `server/rollActivity.ts`                                                                      |
+| Sync                   | `server/sync.ts`, `api/sync.ts`                                                               |
+| Leaderboard            | `server/leaderboard.ts`, `api/leaderboard.ts`, `LeaderboardScreen.tsx` (Total EP + Best Roll) |
+| Feature requests       | `server/featureRequests.ts`, `api/feature-requests*`, `FeatureRequestsScreen.tsx`             |
+| Feed                   | `server/feed.ts`, `api/feed.ts`                                                               |
+| Schema                 | `server/db/schema.ts` (`rolls.source`)                                                        |
+| Badge catalog          | `src/game/badges/catalog.ts`                                                                  |
+| Absolute Ceiling art   | `public/badges/ceiling.jpg`                                                                   |
+| Migrations             | `scripts/add-roll-source.mjs`, `scripts/migrate-feature-wave.mjs`, `scripts/migrate-features-and-best-roll.mjs` |
+| Refactor notes         | `docs/refactor-notes-2026-07.md`, `docs/opus-report.md` §H                                    |
 
 ---
 
@@ -227,6 +228,7 @@ node scripts/add-roll-source.mjs   # if source column missing
 - [x] Discord + GitHub OAuth wiring + [`docs/oauth-setup.md`](./docs/oauth-setup.md)
 - [x] Commit diagnostic scripts; bump `0.4.1`
 - [x] Cut annotated **`v0.5.0`** (architecture refactor docs + version)
+- [x] **v0.6.0** — Best Roll leaderboard + Features request tab
 
 ### Still open for you / ops
 

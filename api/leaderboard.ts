@@ -9,9 +9,11 @@ const log = createLogger('api/leaderboard');
 
 /**
  * GET /api/leaderboard
+ * ?view=total|best     (default total — Total EP board)
  * ?scope=ranked|practice  (default ranked)
  * ?period=all|week
- * ?sort=ep|rolls|badges  (badges mainly for practice all-time)
+ * ?sort=ep|rolls|badges  (total view; badges mainly for practice all-time)
+ * ?sortBy=ep|rarity      (best view only)
  *
  * Query pipelines live in server/leaderboard.ts.
  */

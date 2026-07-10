@@ -1,4 +1,9 @@
 import { createLogger, withTimeout } from './logger';
+import {
+  bestRollLeaderboardResponseSchema,
+  type bestRollLeaderboardEntrySchema,
+} from './schemas';
+import type { z } from 'zod';
 
 const log = createLogger('leaderboard-api');
 const FETCH_MS = 15_000;
@@ -12,9 +17,14 @@ export type LeaderboardEntry = {
   badgeCount: number | null;
 };
 
+export type BestRollLeaderboardEntry = z.infer<
+  typeof bestRollLeaderboardEntrySchema
+>;
+
 export type LeaderboardScope = 'ranked' | 'practice';
 export type LeaderboardPeriod = 'all' | 'week';
 export type LeaderboardSort = 'ep' | 'rolls' | 'badges';
+export type BestRollSortBy = 'ep' | 'rarity';
 
 export type FeedSource = 'all' | 'ranked' | 'practice';
 
@@ -65,6 +75,54 @@ export async function fetchLeaderboard(opts: {
   };
   if (!res.ok) throw new Error(data.error ?? 'Failed to load');
   return { entries: data.entries ?? [], me: data.me ?? null };
+}
+
+export async function fetchBestRollLeaderboard(opts: {
+  scope: LeaderboardScope;
+  period: LeaderboardPeriod;
+  sortBy: BestRollSortBy;
+  limit?: number;
+  signal?: AbortSignal;
+}): Promise<{
+  entries: BestRollLeaderboardEntry[];
+  me: BestRollLeaderboardEntry | null;
+}> {
+  const q = new URLSearchParams({
+    view: 'best',
+    scope: opts.scope,
+    period: opts.period,
+    sortBy: opts.sortBy,
+    limit: String(opts.limit ?? 50),
+  });
+  log.info('fetch:best:start', {
+    scope: opts.scope,
+    period: opts.period,
+    sortBy: opts.sortBy,
+  });
+  const res = await withTimeout(
+    fetch(`/api/leaderboard?${q}`, {
+      signal: opts.signal,
+      credentials: 'include',
+    }),
+    FETCH_MS,
+    'best-roll leaderboard fetch',
+  );
+  const raw: unknown = await res.json();
+  if (!res.ok) {
+    const err =
+      raw && typeof raw === 'object' && 'error' in raw
+        ? String((raw as { error?: string }).error ?? 'Failed to load')
+        : 'Failed to load';
+    throw new Error(err);
+  }
+  const parsed = bestRollLeaderboardResponseSchema.safeParse(raw);
+  if (!parsed.success) {
+    throw new Error('Invalid best-roll leaderboard response');
+  }
+  return {
+    entries: parsed.data.entries,
+    me: parsed.data.me ?? null,
+  };
 }
 
 export async function fetchFeed(opts: {

@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-07-09
+
+### Added
+
+- **Best Roll leaderboard** — `GET /api/leaderboard?view=best` with `sortBy=ep|rarity`; Ranked + Practice; all-time / week; one personal best per player. Total EP board (`view=total`, default) unchanged.
+- Leaderboard UI: **Total EP** / **Best Roll** and **By EP** / **By Rarity** `SegmentedToggle`s; Zod on best-roll response.
+- **Features tab** (`/features`) — signed-in list, submit, upvote; admin inline status (`submitted` → `declined`); optimistic upvote UX.
+- API: `GET|POST /api/feature-requests`, `POST /api/feature-requests/:id/vote`, `PATCH /api/admin/feature-requests` (audit logged).
+- Schema: `feature_requests`, `feature_request_votes`; migration/indexes via `scripts/migrate-features-and-best-roll.mjs`.
+- Rate limits: feature submit 5/hour, vote 30/min, list 60/min.
+- Open Graph for `/features`; leaderboard OG copy mentions Best Roll.
+
+### Notes
+
+- After deploy, run: `node --env-file=.env.local scripts/migrate-features-and-best-roll.mjs`
+
 ## [0.5.1] - 2026-07-09
 
 ### Added
@@ -121,6 +137,7 @@ First **social multiplayer** release on top of the unlimited solo playground.
 - Public rolls + Discord OG via share APIs.
 - SPA path-based routes; Vercel Node adapter for serverless APIs.
 
+[0.6.0]: https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.6.0
 [0.5.1]: https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.5.1
 [0.5.0]: https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.5.0
 [0.4.0]: https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.4.0

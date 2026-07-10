@@ -219,3 +219,33 @@ export const adminAuditLog = pgTable('admin_audit_log', {
   ip: text('ip'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
+
+/**
+ * Player feature requests (Features tab).
+ * status: submitted | under_review | planned | shipped | declined
+ */
+export const featureRequests = pgTable('feature_requests', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  status: text('status').notNull().default('submitted'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+/** One upvote per user per feature request (PK blocks double votes). */
+export const featureRequestVotes = pgTable(
+  'feature_request_votes',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    requestId: text('request_id')
+      .notNull()
+      .references(() => featureRequests.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.requestId] })],
+);

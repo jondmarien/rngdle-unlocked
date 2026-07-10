@@ -1,4 +1,5 @@
-import { and, desc, eq, gte, isNotNull, ne, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, isNotNull, ne, sql } from 'drizzle-orm';
+import { RARITY_ORDER } from '../src/game/rarity.js';
 import { createAuth } from './auth.js';
 import type { Db } from './db/index.js';
 import { rolls, user, userProgress } from './db/schema.js';
@@ -17,13 +18,53 @@ type Entry = {
   userId?: string;
 };
 
+type BestRollEntry = {
+  rank: number;
+  username: string | null;
+  name: string;
+  number: number;
+  totalEP: number;
+  rarity: string;
+  rolledAt: string;
+  userId?: string;
+};
+
 type Scope = 'ranked' | 'practice';
+type BestSortBy = 'ep' | 'rarity';
+
+/** Competitive fairness filters for Ranked surfaces. */
+export function rankedRollFilters() {
+  return and(
+    isNotNull(user.username),
+    eq(rolls.isPublic, true),
+    eq(rolls.source, 'ranked'),
+  );
+}
+
+/** Practice (honor-system) public non-ranked rolls. */
+export function practiceRollFilters() {
+  return and(
+    isNotNull(user.username),
+    eq(rolls.isPublic, true),
+    ne(rolls.source, 'ranked'),
+  );
+}
+
+/** SQL CASE rank from RARITY_ORDER (trash=0 … mythic=N). */
+function rarityRankSql() {
+  const cases = RARITY_ORDER.map((tier, i) =>
+    sql.raw(`WHEN '${tier}' THEN ${i}`),
+  );
+  return sql`(CASE ${rolls.rarity} ${sql.join(cases, sql.raw(' '))} ELSE 0 END)`;
+}
 
 /**
  * Board query pipeline (moved verbatim from api/leaderboard.ts).
  *
  * Ranked  = server free-play rolls only (fair competition)
  * Practice = synced progress / public free-play activity (social / honor-system)
+ *
+ * Optional `?view=best` switches to personal-best roll ranking (Total EP default).
  */
 export async function leaderboardResponse(
   db: Db,
@@ -36,7 +77,10 @@ export async function leaderboardResponse(
     scopeParam === 'practice' || scopeParam === 'local' ? 'practice' : 'ranked';
   const period = url.searchParams.get('period') === 'week' ? 'week' : 'all';
   const sort = url.searchParams.get('sort') ?? 'ep';
-  log.info('query', { scope, period, sort });
+  const view = url.searchParams.get('view') === 'best' ? 'best' : 'total';
+  const sortByParam = url.searchParams.get('sortBy');
+  const sortBy: BestSortBy = sortByParam === 'rarity' ? 'rarity' : 'ep';
+  log.info('query', { view, scope, period, sort, sortBy });
   const limit = Math.min(
     100,
     Math.max(1, Number(url.searchParams.get('limit') ?? 50) || 50),
@@ -64,6 +108,18 @@ export async function leaderboardResponse(
     /* ignore session errors */
   }
 
+  if (view === 'best') {
+    return bestRollBoard(db, {
+      scope,
+      period,
+      sortBy,
+      limit,
+      meUserId,
+      meUsername,
+      started,
+    });
+  }
+
   if (scope === 'ranked') {
     return rankedBoard(db, {
       period,
@@ -82,6 +138,104 @@ export async function leaderboardResponse(
     meUserId,
     meUsername,
     started,
+  });
+}
+
+async function bestRollBoard(
+  db: Db,
+  opts: {
+    scope: Scope;
+    period: 'all' | 'week';
+    sortBy: BestSortBy;
+    limit: number;
+    meUserId: string | null;
+    meUsername: string | null;
+    started: number;
+  },
+) {
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const periodFilter =
+    opts.period === 'week' ? gte(rolls.rolledAt, weekAgo) : undefined;
+  const scopeFilter =
+    opts.scope === 'ranked' ? rankedRollFilters() : practiceRollFilters();
+
+  const rankExpr = rarityRankSql();
+
+  // Personal best per user: DISTINCT ON (user_id) with sort-mode ordering.
+  // Fetch a wide pool then rank in app for stable me/find + limit.
+  const personalBestOrder =
+    opts.sortBy === 'rarity'
+      ? [desc(rankExpr), desc(rolls.totalEp), asc(rolls.rolledAt)]
+      : [desc(rolls.totalEp), asc(rolls.rolledAt)];
+
+  const candidates = await db
+    .select({
+      userId: rolls.userId,
+      username: user.username,
+      name: user.name,
+      number: rolls.number,
+      totalEp: rolls.totalEp,
+      rarity: rolls.rarity,
+      rolledAt: rolls.rolledAt,
+      rarityRank: sql<number>`${rankExpr}`.mapWith(Number),
+    })
+    .from(rolls)
+    .innerJoin(user, eq(user.id, rolls.userId))
+    .where(and(scopeFilter, ...(periodFilter ? [periodFilter] : [])))
+    .orderBy(...personalBestOrder)
+    .limit(5000);
+
+  const bestByUser = new Map<string, (typeof candidates)[number]>();
+  for (const row of candidates) {
+    if (!bestByUser.has(row.userId)) {
+      bestByUser.set(row.userId, row);
+    }
+  }
+
+  const all: BestRollEntry[] = [...bestByUser.values()]
+    .sort((a, b) => {
+      if (opts.sortBy === 'rarity') {
+        if (b.rarityRank !== a.rarityRank) return b.rarityRank - a.rarityRank;
+      }
+      if (b.totalEp !== a.totalEp) return b.totalEp - a.totalEp;
+      const at = a.rolledAt instanceof Date ? a.rolledAt.getTime() : 0;
+      const bt = b.rolledAt instanceof Date ? b.rolledAt.getTime() : 0;
+      return at - bt;
+    })
+    .map((r, i) => ({
+      rank: i + 1,
+      username: r.username,
+      name: r.name,
+      number: r.number,
+      totalEP: r.totalEp,
+      rarity: r.rarity,
+      rolledAt:
+        r.rolledAt instanceof Date
+          ? r.rolledAt.toISOString()
+          : String(r.rolledAt),
+      userId: r.userId,
+    }));
+
+  const me = findBestMe(all, opts.meUserId, opts.meUsername);
+  const entries = all.slice(0, opts.limit).map(publicBestEntry);
+
+  log.info('ok', {
+    view: 'best',
+    scope: opts.scope,
+    period: opts.period,
+    sortBy: opts.sortBy,
+    count: entries.length,
+    meRank: me?.rank ?? null,
+    ms: Date.now() - opts.started,
+  });
+
+  return Response.json({
+    view: 'best',
+    period: opts.period,
+    sortBy: opts.sortBy,
+    scope: opts.scope,
+    entries,
+    me,
   });
 }
 
@@ -112,14 +266,7 @@ async function rankedBoard(
     })
     .from(rolls)
     .innerJoin(user, eq(user.id, rolls.userId))
-    .where(
-      and(
-        isNotNull(user.username),
-        eq(rolls.isPublic, true),
-        eq(rolls.source, 'ranked'),
-        ...(periodFilter ? [periodFilter] : []),
-      ),
-    )
+    .where(and(rankedRollFilters(), ...(periodFilter ? [periodFilter] : [])))
     .groupBy(rolls.userId, user.username, user.name)
     .orderBy(
       opts.sort === 'rolls'
@@ -189,15 +336,7 @@ async function practiceBoard(
       })
       .from(rolls)
       .innerJoin(user, eq(user.id, rolls.userId))
-      .where(
-        and(
-          gte(rolls.rolledAt, weekAgo),
-          isNotNull(user.username),
-          eq(rolls.isPublic, true),
-          // Practice week = client free play + challenges (honor-system social)
-          ne(rolls.source, 'ranked'),
-        ),
-      )
+      .where(and(gte(rolls.rolledAt, weekAgo), practiceRollFilters()))
       .groupBy(rolls.userId, user.username, user.name)
       .orderBy(desc(sql`sum(${rolls.totalEp})`))
       .limit(Math.max(opts.limit, 500));
@@ -304,6 +443,11 @@ function publicEntry(e: Entry): Omit<Entry, 'userId'> {
   return rest;
 }
 
+function publicBestEntry(e: BestRollEntry): Omit<BestRollEntry, 'userId'> {
+  const { userId: _u, ...rest } = e;
+  return rest;
+}
+
 function findMe(
   all: Entry[],
   meUserId: string | null,
@@ -319,4 +463,21 @@ function findMe(
   );
   if (!hit) return null;
   return publicEntry(hit);
+}
+
+function findBestMe(
+  all: BestRollEntry[],
+  meUserId: string | null,
+  meUsername: string | null,
+): Omit<BestRollEntry, 'userId'> | null {
+  if (!meUserId && !meUsername) return null;
+  const hit = all.find(
+    (e) =>
+      (meUserId && e.userId === meUserId) ||
+      (meUsername &&
+        e.username &&
+        e.username.toLowerCase() === meUsername.toLowerCase()),
+  );
+  if (!hit) return null;
+  return publicBestEntry(hit);
 }

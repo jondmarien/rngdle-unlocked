@@ -6,6 +6,7 @@
 export type PageOgSlug =
   | 'home'
   | 'leaderboard'
+  | 'features'
   | 'about'
   | 'collection'
   | 'showcase'
@@ -40,9 +41,18 @@ export const PAGE_OG: Record<PageOgSlug, PageOgMeta> = {
     path: '/leaderboard',
     title: 'Leaderboard · RNGdle Unlocked',
     description:
-      'Ranked board (server free play) and Practice board (synced Free play). Follow friends and browse the Feed.',
+      'Ranked and Practice boards — Total EP or Best Roll (by EP or rarity). Follow friends and browse the Feed.',
     cardHeadline: 'Leaderboard',
-    cardLabel: 'Ranked + Practice boards',
+    cardLabel: 'Total EP · Best Roll · Ranked + Practice',
+  },
+  features: {
+    slug: 'features',
+    path: '/features',
+    title: 'Features · RNGdle Unlocked',
+    description:
+      'Submit and upvote feature requests for RNGdle Unlocked. Sign in to participate.',
+    cardHeadline: 'Features',
+    cardLabel: 'Requests · upvotes · roadmap',
   },
   about: {
     slug: 'about',
@@ -107,6 +117,7 @@ const PATH_TO_SLUG: Record<string, PageOgSlug> = {
   roll: 'home',
   leaderboard: 'leaderboard',
   board: 'leaderboard',
+  features: 'features',
   about: 'about',
   collection: 'collection',
   showcase: 'showcase',

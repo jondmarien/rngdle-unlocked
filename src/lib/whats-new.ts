@@ -12,6 +12,16 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '0.6.0',
+    date: '2026-07-09',
+    title: 'Best Roll board & Features tab',
+    highlights: [
+      'Leaderboard Best Roll — see who hit the highest single roll by EP or by rarity (Ranked and Practice).',
+      'Total EP board is unchanged; switch views with the new toggle.',
+      'New Features tab — submit ideas, upvote others, and track status as requests move along.',
+    ],
+  },
+  {
     version: '0.5.1',
     date: '2026-07-09',
     title: 'Richer link previews & What’s new',

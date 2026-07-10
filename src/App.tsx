@@ -18,6 +18,7 @@ import { AdminScreen } from './ui/screens/AdminScreen';
 import { CollectionScreen } from './ui/screens/CollectionScreen';
 import { HistoryScreen } from './ui/screens/HistoryScreen';
 import { HomeScreen } from './ui/screens/HomeScreen';
+import { FeatureRequestsScreen } from './ui/screens/FeatureRequestsScreen';
 import { LeaderboardScreen } from './ui/screens/LeaderboardScreen';
 import { ProfileScreen } from './ui/screens/ProfileScreen';
 import { PublicRollScreen } from './ui/screens/PublicRollScreen';
@@ -188,6 +189,9 @@ function AppRoutes() {
       {route.kind === 'tab' && tab === 'stats' && <StatsScreen />}
       {route.kind === 'tab' && tab === 'leaderboard' && (
         <LeaderboardScreen onOpenProfile={goProfile} />
+      )}
+      {route.kind === 'tab' && tab === 'features' && (
+        <FeatureRequestsScreen onGoAccount={() => goTab('account')} />
       )}
       {route.kind === 'tab' && tab === 'notifications' && (
         <NotificationsScreen

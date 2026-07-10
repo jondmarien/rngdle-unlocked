@@ -45,7 +45,9 @@ export function AboutScreen() {
                 <span className="font-mono text-xs font-semibold tabular-nums text-[var(--prose)]">
                   v{entry.version}
                 </span>
-                <span className="text-xs text-[var(--prose-3)]">{entry.date}</span>
+                <span className="text-xs text-[var(--prose-3)]">
+                  {entry.date}
+                </span>
                 <span className="text-sm font-semibold text-[var(--prose)]">
                   {entry.title}
                 </span>

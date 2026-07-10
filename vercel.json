@@ -60,6 +60,17 @@
       "destination": "/api/page/leaderboard"
     },
     {
+      "source": "/features",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(bot|crawl|slurp|discord|twitter|facebook|slack|linkedin|telegram|whatsapp|preview|embed).*"
+        }
+      ],
+      "destination": "/api/page/features"
+    },
+    {
       "source": "/board",
       "has": [
         {

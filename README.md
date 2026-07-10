@@ -170,7 +170,8 @@ Switch modes anytime (board fully resets). Badges, EP, history, and share work a
 - **Email + password** auth (Better Auth)
 - **@username** public identity
 - **Auto cloud sync** on Free play / challenges when signed in (merge-safe; cannot forge `source=ranked`)
-- **Dual leaderboard** — **Ranked** (server free play) · **Practice** (synced free play / overall progress); all-time / week; Practice all-time can sort EP / rolls / badges
+- **Dual leaderboard** — **Ranked** (server free play) · **Practice** (synced free play / overall progress); **Total EP** or **Best Roll** (by EP / by rarity); all-time / week; Practice all-time Total EP can sort EP / rolls / badges
+- **Features tab** — signed-in feature requests with upvotes and admin status workflow
 - **Community highlights** — today’s + weekly best **Ranked** rolls on the home tab when idle (`/api/highlights`)
 - **You on the board** — rank highlighted + sticky card if outside top list (per active board)
 - **Follows + Feed** — Board (+), Find search, or profile; **all public rarities** (All / Ranked / Free play toggles)
@@ -213,34 +214,35 @@ rngdle-unlocked/
 └── vercel.json          SPA + bot OG rewrites for /s and /u
 ```
 
-| Area                     | Role                                              | Stack                                      |
-| ------------------------ | ------------------------------------------------- | ------------------------------------------ |
-| **`src/game/`**          | Pure game rules — testable without React          | TypeScript                                 |
-| **`src/ui/` + `state/`** | SPA experience + persistence                      | React 19 · Tailwind v4 · TanStack Query    |
-| **`src/lib/*-api.ts`**   | Mandatory client API wrappers (no raw UI `fetch`) | fetch + Zod at trust boundaries            |
-| **`api/` + `server/`**   | Social backend on Vercel                          | Better Auth · Drizzle · Neon · apiGuards   |
-| **`docs/`**              | Living architecture + historical specs/plans      | Markdown                                   |
+| Area                     | Role                                              | Stack                                    |
+| ------------------------ | ------------------------------------------------- | ---------------------------------------- |
+| **`src/game/`**          | Pure game rules — testable without React          | TypeScript                               |
+| **`src/ui/` + `state/`** | SPA experience + persistence                      | React 19 · Tailwind v4 · TanStack Query  |
+| **`src/lib/*-api.ts`**   | Mandatory client API wrappers (no raw UI `fetch`) | fetch + Zod at trust boundaries          |
+| **`api/` + `server/`**   | Social backend on Vercel                          | Better Auth · Drizzle · Neon · apiGuards |
+| **`docs/`**              | Living architecture + historical specs/plans      | Markdown                                 |
 
 ## 🗺️ Routes (SPA)
 
-| Path             | Screen                                                            |
-| ---------------- | ----------------------------------------------------------------- |
-| `/`              | Roll (Free / Ranked / Daily / Weekly)                             |
-| `/history`       | History + share                                                   |
-| `/collection`    | Badge **codex** (encyclopedia, unlock times, **New** 5‑min tab)   |
-| `/showcase`      | Best rolls & streaks                                              |
-| `/stats`         | Rarity histogram, EP/hour, calendar                               |
-| `/leaderboard`   | **Ranked** + **Practice** boards · Feed · **Find**                |
-| `/notifications` | Alerts (Activity + System)                                        |
-| `/account`       | Auth, username, profile look (avatar/accent/flair/bio), push/pull |
-| `/about`         | How to play, social, fairness                                     |
-| `/settings`      | Theme, effects, tips, export/import                               |
-| `/u/:username`   | Public profile (+ follow)                                         |
-| `/s/:user/:code` | Vanity public roll (SPA)                                          |
-| `/r/:id`         | Legacy public roll path                                           |
+| Path             | Screen                                                             |
+| ---------------- | ------------------------------------------------------------------ |
+| `/`              | Roll (Free / Ranked / Daily / Weekly)                              |
+| `/history`       | History + share                                                    |
+| `/collection`    | Badge **codex** (encyclopedia, unlock times, **New** 5‑min tab)    |
+| `/showcase`      | Best rolls & streaks                                               |
+| `/stats`         | Rarity histogram, EP/hour, calendar                                |
+| `/leaderboard`   | **Ranked** + **Practice** · Total EP / Best Roll · Feed · **Find** |
+| `/features`      | Feature requests (sign-in) — submit, upvote, status                |
+| `/notifications` | Alerts (Activity + System)                                         |
+| `/account`       | Auth, username, profile look (avatar/accent/flair/bio), push/pull  |
+| `/about`         | How to play, social, fairness                                      |
+| `/settings`      | Theme, effects, tips, export/import                                |
+| `/u/:username`   | Public profile (+ follow)                                          |
+| `/s/:user/:code` | Vanity public roll (SPA)                                           |
+| `/r/:id`         | Legacy public roll path                                            |
 
 **API (serverless):**  
-`/api/auth/*`, `/api/me`, `/api/sync`, `/api/ranked-roll`, `/api/leaderboard?scope=ranked|practice`, `/api/highlights`, `/api/follow`, `/api/feed`, `/api/users/search`, `/api/notifications`, `/api/system-messages`, `/api/admin/*`, `/api/reports`, `/api/challenge`, `/api/attest`, `/api/og`, `/api/profile/:user`, `/api/u/:user`, `/api/rolls/:id`, `/api/share/:id`, `/api/health`.
+`/api/auth/*`, `/api/me`, `/api/sync`, `/api/ranked-roll`, `/api/leaderboard?view=total|best&scope=ranked|practice`, `/api/feature-requests`, `/api/feature-requests/:id/vote`, `/api/admin/feature-requests`, `/api/highlights`, `/api/follow`, `/api/feed`, `/api/users/search`, `/api/notifications`, `/api/system-messages`, `/api/admin/*`, `/api/reports`, `/api/challenge`, `/api/attest`, `/api/og`, `/api/profile/:user`, `/api/u/:user`, `/api/rolls/:id`, `/api/share/:id`, `/api/health`.
 
 Bot user-agents: `/s/:user/:code` → `/api/share/:code`; `/u/:username` → `/api/u/:username` for OG HTML + image.
 
@@ -341,7 +343,7 @@ Full diagrams: **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)**. Refactor summ
 - **Auth multi-segment paths** rewritten to `/api/auth?__path=…` (no Next-style catch-all); Node `(req, res)` adapter in `server/vercel-adapter.ts`.
 - **Merge-safe sync** — max counters, union collections (earliest `firstEarnedAt`), merge histories by id; integrity gate rejects cloned progress dumps.
 - **Ranked rolls** (`POST /api/ranked-roll`, `server/rankedRoll.ts`) — server CSPRNG + score; `rolls.source = ranked`.
-- **Leaderboard scopes** — `?scope=ranked|practice` (default ranked).
+- **Leaderboard scopes** — `?scope=ranked|practice` (default ranked); `?view=total|best` (default total); best view uses `?sortBy=ep|rarity`.
 - **Roll activity** (`server/rollActivity.ts`) — unlock notifications; Ranked-only crowns + overtake alerts.
 - **Share publish** polls `/api/rolls/:key` (`waitForCloudPublish`) before enabling vanity links.
 - **Attestation** — optional HMAC on a claim (does not prove Free-play client RNG honesty).
@@ -375,27 +377,28 @@ The Account screen times out after a few seconds and shows the sign-in form. Che
 
 ## 📌 Status & roadmap
 
-| Area                                                   | Status                                                                            |
-| ------------------------------------------------------ | --------------------------------------------------------------------------------- |
-| Solo unlimited playground                              | ✅ Shipped                                                                        |
-| Reel / cascade / EP count-up UX                        | ✅ Shipped                                                                        |
-| Badges / EP / journey / secrets                        | ✅ Shipped                                                                        |
-| Codex unlock times + 5‑min New tab                     | ✅ Shipped                                                                        |
-| Accounts + auto cloud sync                             | ✅ Shipped                                                                        |
-| Community today/week bests (Ranked)                    | ✅ Shipped                                                                        |
-| Dual leaderboards (Ranked + Practice) + follows + feed | ✅ Shipped                                                                        |
-| Server Ranked free play (`/api/ranked-roll`)           | ✅ Shipped                                                                        |
-| Profiles (vanity + avatars) + follows                  | ✅ Shipped                                                                        |
-| Activity unlocks + Ranked crown msgs + overtake notifs | ✅ Shipped                                                                        |
-| Cloud-gated vanity share + OG (rolls + profiles)       | ✅ Shipped                                                                        |
-| Daily/weekly challenge + attestation                   | ✅ Shipped                                                                        |
-| Custom fonts + rarity/family icon art                  | ✅ Shipped                                                                        |
-| OAuth (Discord/GitHub)                                 | ✅ Wired — finish portal setup via [`docs/oauth-setup.md`](./docs/oauth-setup.md) |
-| Email verification + magic link (Resend)               | ✅ New signups must verify; OAuth preferred                                       |
-| Cloned-progress profile pills + sync integrity         | ✅ Best-roll ownership + EP/collection checks                                     |
-| Turnstile / EP velocity                                | 🔮 Later                                                                          |
-| Admin panel (role-gated)                               | ✅ Shipped (`/admin`)                                                             |
-| Architecture refactor (NodeNext, apiGuards, lib wrappers, Zod, useSync) | ✅ Landed on `main` — see [refactor notes](docs/refactor-notes-2026-07.md) |
+| Area                                                                    | Status                                                                            |
+| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Solo unlimited playground                                               | ✅ Shipped                                                                        |
+| Reel / cascade / EP count-up UX                                         | ✅ Shipped                                                                        |
+| Badges / EP / journey / secrets                                         | ✅ Shipped                                                                        |
+| Codex unlock times + 5‑min New tab                                      | ✅ Shipped                                                                        |
+| Accounts + auto cloud sync                                              | ✅ Shipped                                                                        |
+| Community today/week bests (Ranked)                                     | ✅ Shipped                                                                        |
+| Dual leaderboards (Ranked + Practice) + follows + feed                  | ✅ Shipped                                                                        |
+| Best Roll board (EP / rarity) + Features tab                            | ✅ Shipped (`v0.6.0`)                                                             |
+| Server Ranked free play (`/api/ranked-roll`)                            | ✅ Shipped                                                                        |
+| Profiles (vanity + avatars) + follows                                   | ✅ Shipped                                                                        |
+| Activity unlocks + Ranked crown msgs + overtake notifs                  | ✅ Shipped                                                                        |
+| Cloud-gated vanity share + OG (rolls + profiles)                        | ✅ Shipped                                                                        |
+| Daily/weekly challenge + attestation                                    | ✅ Shipped                                                                        |
+| Custom fonts + rarity/family icon art                                   | ✅ Shipped                                                                        |
+| OAuth (Discord/GitHub)                                                  | ✅ Wired — finish portal setup via [`docs/oauth-setup.md`](./docs/oauth-setup.md) |
+| Email verification + magic link (Resend)                                | ✅ New signups must verify; OAuth preferred                                       |
+| Cloned-progress profile pills + sync integrity                          | ✅ Best-roll ownership + EP/collection checks                                     |
+| Turnstile / EP velocity                                                 | 🔮 Later                                                                          |
+| Admin panel (role-gated)                                                | ✅ Shipped (`/admin`)                                                             |
+| Architecture refactor (NodeNext, apiGuards, lib wrappers, Zod, useSync) | ✅ Landed on `main` — see [refactor notes](docs/refactor-notes-2026-07.md)        |
 
 Design docs:
 

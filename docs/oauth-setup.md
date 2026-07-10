@@ -187,14 +187,14 @@ Then sign out/in and open `/admin` (or Account → Admin panel).
 
 ## 6. Common failures
 
-| Symptom                                  | Likely cause                                                          | Fix                                                            |
-| ---------------------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `redirect_uri` mismatch                  | Callback URL not exact (http vs https, port, trailing slash)          | Match portal redirects to table above                          |
-| Works locally, fails on prod             | Vercel missing env or `BETTER_AUTH_URL` still localhost               | Set Production env; redeploy                                   |
-| GitHub `email_not_found`                 | Private email / GitHub App missing Email Read-only                    | OAuth App + `user:email`, or fix GitHub App permission         |
-| Cookies / session missing after redirect | Mixed origins (SPA on 5173, API on 3000) without proxy                | Use `npx vercel dev` single origin                             |
-| Discord null email                       | Phone-only Discord account                                            | Need code fallback; contact maintainer                         |
-| Buttons missing in UI                    | OAuth env empty so providers not registered                           | Finish this guide; redeploy after setting Client ID/Secret     |
+| Symptom                                  | Likely cause                                                 | Fix                                                        |
+| ---------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------- |
+| `redirect_uri` mismatch                  | Callback URL not exact (http vs https, port, trailing slash) | Match portal redirects to table above                      |
+| Works locally, fails on prod             | Vercel missing env or `BETTER_AUTH_URL` still localhost      | Set Production env; redeploy                               |
+| GitHub `email_not_found`                 | Private email / GitHub App missing Email Read-only           | OAuth App + `user:email`, or fix GitHub App permission     |
+| Cookies / session missing after redirect | Mixed origins (SPA on 5173, API on 3000) without proxy       | Use `npx vercel dev` single origin                         |
+| Discord null email                       | Phone-only Discord account                                   | Need code fallback; contact maintainer                     |
+| Buttons missing in UI                    | OAuth env empty so providers not registered                  | Finish this guide; redeploy after setting Client ID/Secret |
 
 ---
 

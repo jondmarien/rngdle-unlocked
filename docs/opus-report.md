@@ -207,18 +207,18 @@ Items 1, 2, 4, 7, 9 are small and mostly independent — a strong first PR. Item
 
 The prioritized top-10 refactor **was implemented** in 11 commits (`aa8e91e`…`fc4fa65`). This section records **actual end-state deltas** — do not quote §D–G above as a pending to-do list.
 
-| Audit item | Status |
-| ---------- | ------ |
-| G1 NodeNext for api/server | **Done** — `tsconfig.server.json` + solution root |
-| #2 `apiGuards` | **Done** |
-| #3 lib `*-api.ts` + React Query | **Done** |
-| #4 Zod trust boundaries | **Done** — import, sync, profile |
-| #5 read-side `server/*` pipelines | **Done** |
-| #6 `useSync` + context split | **Done** |
-| #7 session type extension | **Done** |
-| #8 format / StatTile / SegmentedToggle / rarity | **Partial** — see below |
-| #9 constants + `storage-keys.ts` | **Done** |
-| #10 dead code sweep | **Done** |
+| Audit item                                      | Status                                            |
+| ----------------------------------------------- | ------------------------------------------------- |
+| G1 NodeNext for api/server                      | **Done** — `tsconfig.server.json` + solution root |
+| #2 `apiGuards`                                  | **Done**                                          |
+| #3 lib `*-api.ts` + React Query                 | **Done**                                          |
+| #4 Zod trust boundaries                         | **Done** — import, sync, profile                  |
+| #5 read-side `server/*` pipelines               | **Done**                                          |
+| #6 `useSync` + context split                    | **Done**                                          |
+| #7 session type extension                       | **Done**                                          |
+| #8 format / StatTile / SegmentedToggle / rarity | **Partial** — see below                           |
+| #9 constants + `storage-keys.ts`                | **Done**                                          |
+| #10 dead code sweep                             | **Done**                                          |
 
 **Intentional deviations (not bugs):**
 

@@ -73,3 +73,53 @@ export const collectionEntrySchema = z.object({
   firstEarnedAt: isoDateSchema.or(z.literal('')).optional(),
   family: badgeFamilySchema.optional(),
 });
+
+/** Best-roll leaderboard row (GET /api/leaderboard?view=best). */
+export const bestRollLeaderboardEntrySchema = z.object({
+  rank: z.number(),
+  username: z.string().nullable(),
+  name: z.string(),
+  number: z.number(),
+  totalEP: z.number(),
+  rarity: rarityTierSchema.or(z.string()),
+  rolledAt: isoDateSchema,
+});
+
+export const bestRollLeaderboardResponseSchema = z.object({
+  view: z.literal('best'),
+  period: z.enum(['all', 'week']),
+  sortBy: z.enum(['ep', 'rarity']),
+  scope: z.enum(['ranked', 'practice']),
+  entries: z.array(bestRollLeaderboardEntrySchema),
+  me: bestRollLeaderboardEntrySchema.nullable().optional(),
+});
+
+export const featureRequestStatusSchema = z.enum([
+  'submitted',
+  'under_review',
+  'planned',
+  'shipped',
+  'declined',
+]);
+
+export const featureRequestSubmitSchema = z.object({
+  title: z.string().trim().min(3).max(200),
+  description: z.string().trim().min(1).max(2000),
+});
+
+export const featureRequestItemSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string(),
+  status: z.string(),
+  createdAt: isoDateSchema,
+  voteCount: z.number(),
+  votedByMe: z.boolean(),
+  username: z.string().nullable(),
+  name: z.string(),
+});
+
+export const featureRequestListResponseSchema = z.object({
+  items: z.array(featureRequestItemSchema),
+  sort: z.enum(['top', 'newest']).optional(),
+});

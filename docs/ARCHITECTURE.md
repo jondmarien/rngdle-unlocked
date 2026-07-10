@@ -111,12 +111,13 @@ sequenceDiagram
 
 - **Mandatory `src/lib/*-api.ts` wrappers** — UI must not call `fetch('/api/...')` directly (PNG `dataUrl` blob fetches are fine).
 - **TanStack Query** (`QueryClientProvider` in `src/main.tsx`) caches leaderboard, feed, highlights, profile, and admin-check reads. Some screens still use effects + wrappers (notifications, account).
-- **Zod** validates save import payloads, cloud sync POST bodies, and public profile GET responses — not every endpoint.
+- **Zod** validates save import payloads, cloud sync POST bodies, public profile GET responses, and best-roll / feature-request API payloads — not every endpoint.
+- **TanStack Query** also caches feature-request list reads; upvote uses optimistic `useMutation`.
 
 ## Server handler pattern
 
 - Thin `api/*` entrypoints use `defineHandler` + [`server/apiGuards.ts`](../server/apiGuards.ts) (`requireUser` / `readJson` / `rateGuard`).
-- **Read pipelines** live in `server/{leaderboard,profile,feed,ogSvg,notifications}.ts`.
+- **Read pipelines** live in `server/{leaderboard,profile,feed,ogSvg,notifications,featureRequests}.ts`.
 - Some write handlers (`follow`, `me`, `attest`, sync orchestration) still keep more logic inline — prefer extracting when touching them.
 - **`tsconfig.server.json`** uses **NodeNext** / **nodenext** so extensionless relative imports fail `pnpm typecheck` before deploy.
 
@@ -128,14 +129,23 @@ flowchart LR
   Ranked[Ranked API rolls] --> RankedBoard[Leaderboard Ranked]
   Ranked --> Crowns[Community crowns + overtakes]
   Free -.->|does not| Crowns
+  RankedBoard --> TotalEP[Total EP view]
+  RankedBoard --> BestRoll[Best Roll view]
+  Practice --> TotalEP
+  Practice --> BestRoll
 ```
 
-- **Practice all-time** — `user_progress` lifetime EP / rolls / badge counts (synced free play).
-- **Practice week** — public rolls with `source != ranked`.
-- **Ranked all-time / week** — sum of public `source=ranked` rolls only.
+- **Practice all-time (Total EP)** — `user_progress` lifetime EP / rolls / badge counts (synced free play).
+- **Practice week (Total EP)** — public rolls with `source != ranked`.
+- **Ranked all-time / week (Total EP)** — sum of public `source=ranked` rolls only.
+- **Best Roll (`?view=best`)** — one personal best per player from public rolls matching scope/period; sort by EP or rarity (`RARITY_ORDER`); earliest `rolled_at` ties. Practice all-time Best Roll uses public practice rolls (not `user_progress`).
 - Client sync **cannot** set `source=ranked` (server preserves ranked on conflict).
 - Sync **rejects** payloads that claim another user’s roll ids or inflate EP/collection without matching rolls (`SyncIntegrityError` → 409).
 - Public profiles expose progress provenance pills (`cloud_sync` / `cloned_local` / `local_progress`) from best-roll ownership.
+
+## Feature requests
+
+Signed-in **Features** tab (`/features`): `feature_requests` + `feature_request_votes` (unique upvote per user). List/submit/vote via `server/featureRequests.ts`; admin status PATCH audits like other admin mutations.
 
 ## Badge unlock & notifications
 
@@ -164,7 +174,7 @@ flowchart TB
   HTML --> Img["/api/og SVG"]
   Profile["/u/:user"] -->|bot UA| UHTML["/api/u · profile OG"]
   UHTML --> Img
-  Pages["/ · /leaderboard · /about · …"] -->|bot UA| PageHTML["/api/page/:slug"]
+  Pages["/ · /leaderboard · /features · /about · …"] -->|bot UA| PageHTML["/api/page/:slug"]
   PageHTML --> PageImg["/api/og?type=page"]
 ```
 
@@ -172,15 +182,15 @@ Static SPA routes use [`server/pageOg.ts`](../server/pageOg.ts) titles/descripti
 
 ## Key directories
 
-| Path              | Responsibility                                                                 |
-| ----------------- | ------------------------------------------------------------------------------ |
-| `src/game/`       | Pure rules: RNG, badges, rarity, secrets, challenges, share text               |
-| `src/state/`      | `GameProvider` contexts, `useSync`, settings reducer, localStorage             |
-| `src/lib/`        | `*-api.ts` wrappers, `schemas.ts`, auth client, routes, themes                 |
-| `src/ui/`         | Screens & motion (reel, cascade, codex, dual boards)                           |
-| `api/`            | Thin Vercel route entrypoints                                                  |
-| `server/`         | `apiGuards`, auth, DB, merge, ranked issue, read pipelines, rate limits, OG    |
-| `public/`         | Icons, avatars, secret art, Absolute Ceiling badge, PWA                        |
+| Path         | Responsibility                                                              |
+| ------------ | --------------------------------------------------------------------------- |
+| `src/game/`  | Pure rules: RNG, badges, rarity, secrets, challenges, share text            |
+| `src/state/` | `GameProvider` contexts, `useSync`, settings reducer, localStorage          |
+| `src/lib/`   | `*-api.ts` wrappers, `schemas.ts`, auth client, routes, themes              |
+| `src/ui/`    | Screens & motion (reel, cascade, codex, dual boards)                        |
+| `api/`       | Thin Vercel route entrypoints                                               |
+| `server/`    | `apiGuards`, auth, DB, merge, ranked issue, read pipelines, rate limits, OG |
+| `public/`    | Icons, avatars, secret art, Absolute Ceiling badge, PWA                     |
 
 ## Trust model (honest)
 
