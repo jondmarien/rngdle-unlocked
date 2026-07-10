@@ -7,6 +7,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit && vite build",
+    "build:vercel": "pnpm typecheck && vite build && pnpm bundle:api",
+    "bundle:api": "node scripts/bundle-api.mjs",
     "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.server.json --noEmit",
     "postinstall": "node scripts/patch-typescript-api.cjs",
     "lint": "vp lint",

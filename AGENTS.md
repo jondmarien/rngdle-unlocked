@@ -75,6 +75,8 @@ pnpm dev              # SPA only (game works offline)
 pnpm test             # vite-plus / vitest
 pnpm typecheck        # app + node + tsconfig.server.json (NodeNext for api/server)
 pnpm build            # app + node typecheck, then Vite production build (server graph is typecheck’s job)
+pnpm build:vercel     # full typecheck + Vite + esbuild-bundle api/** → .js (Vercel buildCommand; strips .ts so Node builder skips per-function tsc)
+pnpm bundle:api       # esbuild each api entry (set BUNDLE_API_STRIP=1 to delete .ts after, as on Vercel)
 pnpm lint
 pnpm fmt              # Oxfmt write (single quotes — .oxfmtrc.json)
 pnpm fmt:check        # format check (should be a no-op after fmt)
@@ -154,6 +156,7 @@ Vite resolves `.js` → `.ts` fine. Keep this pattern when adding game modules u
   - There is **no** hourly free-play roll-upload cap (removed).
   - Ranked still has `rankedRollsPerHour` (server cost).
 - Prefer **lazy `import()`** of heavy game/rollActivity code after auth when cold-start risk is high.
+- **Vercel deploy:** `buildCommand` is `pnpm build:vercel` — after the SPA build, `scripts/bundle-api.mjs` esbuild-bundles each `api/**/*.ts` into a colocated `.js` and **deletes the `.ts`** (`VERCEL=1`). That skips the Node builder’s per-function TypeScript Language Service (the slow “Using TypeScript…” loop). Local `vercel dev` still runs TypeScript sources; do not commit generated `api/**/*.js`.
 
 ### 5.4b Zod at trust boundaries
 

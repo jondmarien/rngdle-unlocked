@@ -2,6 +2,7 @@ import { rateGuard, requireUser } from '../server/apiGuards.js';
 import { createDb } from '../server/db/index.js';
 import { createLogger } from '../server/logger.js';
 import { LIMITS } from '../server/rateLimit.js';
+import { getUsername, issueRankedRoll } from '../server/rankedRoll.js';
 import { defineHandler } from '../server/vercel-adapter.js';
 
 const log = createLogger('api/ranked-roll');
@@ -41,11 +42,6 @@ export default defineHandler(async (request) => {
       log.warn('rate limited', { userId });
       return limited;
     }
-
-    // Lazy-load heavy game + roll logic so auth/rate-limit errors still work
-    // if the scoring graph misbehaves.
-    const { getUsername, issueRankedRoll } =
-      await import('../server/rankedRoll.js');
 
     const username = await getUsername(db, userId);
     if (!username) {

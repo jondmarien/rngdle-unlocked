@@ -15,6 +15,7 @@ import type { RollResult } from '../src/game/types.js';
 import type { Db } from './db/index.js';
 import { rolls, user, userProgress } from './db/schema.js';
 import { createLogger } from './logger.js';
+import { processRollActivity } from './rollActivity.js';
 
 const log = createLogger('ranked-roll');
 
@@ -134,9 +135,8 @@ export async function issueRankedRoll(
     });
   }
 
-  // Crowns / overtake (lazy import so module load stays lighter)
+  // Crowns / overtake — non-fatal if activity side-effects fail
   try {
-    const { processRollActivity } = await import('./rollActivity.js');
     await processRollActivity(db, {
       userId: opts.userId,
       prevCollection: [],

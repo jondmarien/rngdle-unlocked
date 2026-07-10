@@ -10,6 +10,7 @@ import { defaultPlayStats } from '../src/game/stats.js';
 import type { Db } from './db/index.js';
 import { rolls, userProgress } from './db/schema.js';
 import { createLogger } from './logger.js';
+import { processRollActivity } from './rollActivity.js';
 import { assertSyncIntegrity } from './syncIntegrity.js';
 
 const log = createLogger('sync');
@@ -437,9 +438,8 @@ export async function saveCloudMerge(
     newRolls: newlySeenRolls.length,
   });
 
-  // Side-effects must never fail the sync (dynamic import keeps cold path light)
+  // Side-effects must never fail the sync
   try {
-    const { processRollActivity } = await import('./rollActivity.js');
     await processRollActivity(db, {
       userId,
       prevCollection,
