@@ -34,6 +34,7 @@ export {
   rarityRank,
   RARITY_ORDER,
   RARITY_THRESHOLDS,
+  BADGE_RARITY_THRESHOLDS,
   RARITY_LABELS,
 } from './rarity.js';
 export {

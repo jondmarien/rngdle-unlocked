@@ -1,25 +1,62 @@
+import {
+  BADGE_RARITY_THRESHOLDS,
+  RARITY_LABELS,
+  RARITY_ORDER,
+  RARITY_THRESHOLDS,
+  type RarityTier,
+} from '../../game';
 import { WHATS_NEW } from '../../lib/whats-new';
+import { RarityBadge } from '../components/RarityBadge';
 
 const ROLL_MAX = '1,000,000';
 
+/** Player-facing score bands aligned to percentile.ts anchors (Top X% of scores). */
+const NUMBER_RARITY_BAND: Record<RarityTier, { minEp: number; band: string }> =
+  {
+    trash: { minEp: 0, band: 'Lower scores' },
+    common: { minEp: 1_650, band: 'About top 82%+' },
+    uncommon: { minEp: 2_200, band: 'About top 60%+' },
+    rare: { minEp: 3_500, band: 'About top 38%+' },
+    epic: { minEp: 6_500, band: 'About top 12%+' },
+    anomaly: { minEp: 8_000, band: 'About top 5%+' },
+    mythic: { minEp: 11_000, band: 'About top 1%+' },
+  };
+
+/** Soft badge-EP ladder (catalog weight), not published hit rates. */
+const BADGE_RARITY_BAND: Record<RarityTier, { minEp: number; note: string }> = {
+  trash: { minEp: 0, note: 'Tiny chip EP' },
+  common: { minEp: 40, note: 'Common chip weight' },
+  uncommon: { minEp: 250, note: 'Mid chip weight' },
+  rare: { minEp: 900, note: 'Strong chip weight' },
+  epic: { minEp: 2_500, note: 'Heavy chip weight' },
+  anomaly: { minEp: 4_000, note: 'Very heavy chip' },
+  mythic: { minEp: 8_000, note: 'Heaviest chips' },
+};
+
+function thresholdMin(
+  table: { tier: RarityTier; minEP: number }[],
+  tier: RarityTier,
+) {
+  return table.find((r) => r.tier === tier)?.minEP ?? 0;
+}
+
 export function AboutScreen() {
   return (
-    <article className="space-y-8 text-sm leading-relaxed text-[var(--prose-2)]">
-      <header className="space-y-2">
-        <h1 className="text-xl font-bold uppercase tracking-wider text-[var(--prose)]">
+    <article className="mx-auto max-w-3xl space-y-10 text-sm leading-relaxed text-[var(--prose-2)]">
+      <header className="space-y-3">
+        <h1 className="font-display text-2xl font-bold tracking-tight text-[var(--prose)] sm:text-3xl">
           About
         </h1>
-        <p className="text-base text-[var(--prose)]">
+        <p className="max-w-[65ch] text-base text-[var(--prose)]">
           <strong>RNGdle Unlocked</strong> is an unlimited random-number game:
           roll <span className="font-mono tabular-nums">0–{ROLL_MAX}</span>,
-          collect badges, score EP, climb rarity — with{' '}
-          <em className="text-[var(--prose)]">no 24-hour lock</em>.
+          collect badges, score EP, climb rarity, with no 24-hour lock.
         </p>
-        <p>
+        <p className="max-w-[65ch]">
           Solo by default (everything stays in your browser). Optional cloud
           accounts unlock usernames, auto-sync, dual leaderboards (Ranked +
-          Practice), follows, public profiles, share links, challenges, and roll
-          seals.
+          Practice), Best Roll boards, Features requests, follows, public
+          profiles, share links, challenges, and roll seals.
         </p>
         <p className="text-xs text-[var(--prose-3)]">
           Version{' '}
@@ -31,11 +68,11 @@ export function AboutScreen() {
 
       <section className="space-y-4">
         <div className="space-y-1">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--prose)]">
+          <h2 className="font-display text-lg font-bold text-[var(--prose)]">
             What&apos;s new
           </h2>
           <p className="text-xs text-[var(--prose-3)]">
-            Highlights for players — not a full engineering changelog.
+            Highlights for players, not a full engineering changelog.
           </p>
         </div>
         <ol className="space-y-5">
@@ -75,7 +112,7 @@ export function AboutScreen() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--prose)]">
+        <h2 className="font-display text-lg font-bold text-[var(--prose)]">
           How to play
         </h2>
         <ol className="list-decimal space-y-2 pl-5">
@@ -140,8 +177,8 @@ export function AboutScreen() {
           </li>
           <li>
             <strong className="text-[var(--prose)]">Rarity &amp; EP</strong> —
-            total EP maps to a rarity tier and a score percentile (“top X% of
-            roll scores,” not lottery odds).
+            total EP maps to a rarity tier and a score percentile (top X% of
+            roll scores, not lottery odds). See the ladders below.
           </li>
           <li>
             <strong className="text-[var(--prose)]">Journey</strong> — lifetime
@@ -167,7 +204,130 @@ export function AboutScreen() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--prose)]">
+        <h2 className="font-display text-lg font-bold text-[var(--prose)]">
+          Number rarity
+        </h2>
+        <p className="max-w-[65ch]">
+          Your roll&apos;s overall rarity comes from{' '}
+          <strong className="text-[var(--prose)]">total EP</strong> (sum of
+          badge weights on that number), then a score percentile curve. Higher
+          EP ranks rarer. This is <em>not</em> the same as lottery odds of
+          landing the number.
+        </p>
+        <div className="overflow-hidden rounded-lg border border-[var(--outline)] bg-[var(--surface)]">
+          <ul className="divide-y divide-[var(--outline)]">
+            {[...RARITY_ORDER].reverse().map((tier) => {
+              const band = NUMBER_RARITY_BAND[tier];
+              const minEp = thresholdMin(RARITY_THRESHOLDS, tier) || band.minEp;
+              return (
+                <li
+                  key={tier}
+                  className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5"
+                >
+                  <RarityBadge rarity={tier} />
+                  <div className="text-right text-xs sm:text-sm">
+                    <div className="font-mono tabular-nums text-[var(--prose)]">
+                      ≥ {minEp.toLocaleString()} EP
+                    </div>
+                    <div className="text-[var(--prose-3)]">{band.band}</div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+        <p className="text-xs text-[var(--prose-3)]">
+          Compared with{' '}
+          <a
+            className="underline"
+            href="https://www.rngdle.com/about"
+            target="_blank"
+            rel="noreferrer"
+          >
+            rngdle.com
+          </a>
+          : they label tiers with population bands (e.g. Mythic = top 1%). We
+          use the same seven tier names, but thresholds are{' '}
+          <strong className="text-[var(--prose-2)]">EP-calibrated</strong> for
+          this catalog (dense badge stacking), and we show{' '}
+          <strong className="text-[var(--prose-2)]">Top X% of scores</strong>{' '}
+          from our curve, not their published bottom/top cutoffs.
+        </p>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="font-display text-lg font-bold text-[var(--prose)]">
+          Badge rarity
+        </h2>
+        <p className="max-w-[65ch]">
+          Each badge chip has a rarity from its{' '}
+          <strong className="text-[var(--prose)]">individual EP weight</strong>{' '}
+          in our catalog (heavier badges score higher chips). Full-roll rarity
+          uses the sum of chips, not the rarest chip alone.
+        </p>
+        <div className="overflow-hidden rounded-lg border border-[var(--outline)] bg-[var(--surface)]">
+          <ul className="divide-y divide-[var(--outline)]">
+            {[...RARITY_ORDER].reverse().map((tier) => {
+              const band = BADGE_RARITY_BAND[tier];
+              const minEp =
+                thresholdMin(BADGE_RARITY_THRESHOLDS, tier) || band.minEp;
+              return (
+                <li
+                  key={`badge-${tier}`}
+                  className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5"
+                >
+                  <RarityBadge rarity={tier} />
+                  <div className="text-right text-xs sm:text-sm">
+                    <div className="font-mono tabular-nums text-[var(--prose)]">
+                      ≥ {minEp.toLocaleString()} EP on that badge
+                    </div>
+                    <div className="text-[var(--prose-3)]">{band.note}</div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+        <p className="text-xs text-[var(--prose-3)]">
+          On rngdle.com, badge rarity is labeled by{' '}
+          <strong className="text-[var(--prose-2)]">hit probability</strong>{' '}
+          (e.g. Mythic &lt; 0.001% of rolls). We do not publish per-badge hit
+          rates here; chip tiers follow catalog EP instead. Names overlap; math
+          does not.
+        </p>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="font-display text-lg font-bold text-[var(--prose)]">
+          Can you roll a single digit?
+        </h2>
+        <p className="max-w-[65ch]">
+          Yes. Free play and Ranked draw uniformly from{' '}
+          <span className="font-mono tabular-nums">0–{ROLL_MAX}</span> (
+          <span className="font-mono tabular-nums">1,000,001</span> outcomes).
+          Any specific value like <span className="font-mono">2</span> is about{' '}
+          <strong className="text-[var(--prose)]">1 in a million</strong>. Any
+          of <span className="font-mono">1–9</span> is about{' '}
+          <strong className="text-[var(--prose)]">9 in a million</strong> (~1 in
+          111k). That is why a &ldquo;4&rdquo; can feel like a personal low
+          while a &ldquo;2&rdquo; on another site still looks wild: rare draws
+          stack huge badge EP on tiny numbers (primes, powers of two, Fibonacci,
+          Single Digit, and more).
+        </p>
+        <p className="max-w-[65ch] text-xs text-[var(--prose-3)]">
+          Example under our catalog: <span className="font-mono">2</span>{' '}
+          currently lands as{' '}
+          <span className="rarity-mythic font-semibold">
+            {RARITY_LABELS.mythic}
+          </span>{' '}
+          (~15k+ EP) when all matching chips fire. Other catalogs (including
+          rngdle.com) use different weights, so their EP totals will not match
+          ours.
+        </p>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="font-display text-lg font-bold text-[var(--prose)]">
           Social &amp; cloud
         </h2>
         <p>
@@ -185,7 +345,7 @@ export function AboutScreen() {
             <strong className="text-[var(--prose)]">
               Every new roll auto-syncs
             </strong>{' '}
-            to the cloud (merge-safe — local + cloud never blind-overwrite).
+            to the cloud (merge-safe; local + cloud never blind-overwrite).
           </li>
           <li>
             Set a public{' '}
@@ -193,10 +353,12 @@ export function AboutScreen() {
             <a className="underline" href="/leaderboard">
               leaderboard
             </a>{' '}
-            (both <strong className="text-[var(--prose)]">Ranked</strong> and{' '}
-            <strong className="text-[var(--prose)]">Practice</strong> boards),
-            profiles at <code className="text-xs">/u/you</code>, and vanity
-            share paths.
+            (Ranked and Practice; Total EP and Best Roll), profiles at{' '}
+            <code className="text-xs">/u/you</code>, and vanity share paths.
+          </li>
+          <li>
+            <strong className="text-[var(--prose)]">Features</strong> — submit
+            and upvote requests under the Features tab (admins update status).
           </li>
           <li>
             <strong className="text-[var(--prose)]">Public profile look</strong>{' '}
@@ -210,9 +372,9 @@ export function AboutScreen() {
           <li>
             <strong className="text-[var(--prose)]">Follow friends</strong> —
             Board → Find (username search), + on a leaderboard row, or Follow on
-            a profile. Rare rolls show under Board → Feed. They get an in-app
-            alert when you follow them; optional browser notifications can be
-            enabled under Alerts.
+            a profile. Rolls show under Board → Feed. They get an in-app alert
+            when you follow them; optional browser notifications can be enabled
+            under Alerts.
           </li>
           <li>
             <strong className="text-[var(--prose)]">Alerts</strong> — Activity
@@ -236,7 +398,7 @@ export function AboutScreen() {
             Share links look like{' '}
             <code className="text-xs">/s/yourname/xK9m2pQ3</code>. Public links
             appear only after the roll is confirmed in the cloud. Without an
-            account you can still copy roll text — no dead vanity URL.
+            account you can still copy roll text; no dead vanity URL.
           </li>
           <li>
             Discord previews get{' '}
@@ -247,29 +409,29 @@ export function AboutScreen() {
         </ul>
         <p className="text-xs text-[var(--prose-3)]">
           You can still export/import a save file offline under Settings. Cloud
-          is optional — solo mode never requires an account.
+          is optional; solo mode never requires an account.
         </p>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--prose)]">
+        <h2 className="font-display text-lg font-bold text-[var(--prose)]">
           Sharing rules (so links work)
         </h2>
         <ol className="list-decimal space-y-1.5 pl-5">
           <li>Sign in and set a public @username.</li>
           <li>Roll (auto-sync runs while signed in).</li>
           <li>
-            Open Share — wait for “cloud ready,” then copy the vanity link or
-            Discord text.
+            Open Share; wait for &ldquo;cloud ready,&rdquo; then copy the vanity
+            link or Discord text.
           </li>
           <li>
-            Logged out: only local Discord-style text / PNG — no public URL.
+            Logged out: only local Discord-style text / PNG; no public URL.
           </li>
         </ol>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--prose)]">
+        <h2 className="font-display text-lg font-bold text-[var(--prose)]">
           Randomness
         </h2>
         <p>
@@ -290,18 +452,18 @@ export function AboutScreen() {
         </p>
         <p>
           Challenge mode is different again: a shared period seed plus your
-          account id produces a deterministic personal number you can re-verify
-          — still not a lottery.
+          account id produces a deterministic personal number you can re-verify;
+          still not a lottery.
         </p>
         <p className="text-xs text-[var(--prose-3)]">
           This is not hardware TRNG. Attestation seals prove the server saw a
-          roll claim for free-play/client rows — not that client CSPRNG was
+          roll claim for free-play/client rows; not that client CSPRNG was
           honest. Use Ranked when you care about competitive fairness.
         </p>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--prose)]">
+        <h2 className="font-display text-lg font-bold text-[var(--prose)]">
           Fairness (honest version)
         </h2>
         <ul className="list-disc space-y-1.5 pl-5">
@@ -328,7 +490,7 @@ export function AboutScreen() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--prose)]">
+        <h2 className="font-display text-lg font-bold text-[var(--prose)]">
           Tabs at a glance
         </h2>
         <ul className="list-disc space-y-1 pl-5 text-xs sm:text-sm">
@@ -353,8 +515,12 @@ export function AboutScreen() {
             &amp; calendar
           </li>
           <li>
-            <strong className="text-[var(--prose)]">Board</strong> — ranks +
-            friends feed + Find
+            <strong className="text-[var(--prose)]">Board</strong> — Total EP /
+            Best Roll, Ranked + Practice, feed, Find
+          </li>
+          <li>
+            <strong className="text-[var(--prose)]">Features</strong> — submit
+            and upvote requests
           </li>
           <li>
             <strong className="text-[var(--prose)]">Alerts</strong> — activity
@@ -368,7 +534,7 @@ export function AboutScreen() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--prose)]">
+        <h2 className="font-display text-lg font-bold text-[var(--prose)]">
           Stack
         </h2>
         <p>
@@ -409,8 +575,64 @@ export function AboutScreen() {
         </p>
       </section>
 
+      <section className="space-y-3">
+        <h2 className="font-display text-lg font-bold text-[var(--prose)]">
+          Privacy &amp; account safety
+        </h2>
+        <p className="max-w-[65ch]">
+          Cloud accounts are optional. When you use them, here is what we
+          actually protect today (not a copy of another site&apos;s privacy
+          marketing):
+        </p>
+        <ul className="list-disc space-y-1.5 pl-5">
+          <li>
+            <strong className="text-[var(--prose)]">HTTPS</strong> in production
+            (traffic encrypted in transit).
+          </li>
+          <li>
+            <strong className="text-[var(--prose)]">Password hashing</strong>{' '}
+            (Better Auth / scrypt) when you choose email + password. We never
+            store your password in plaintext.
+          </li>
+          <li>
+            <strong className="text-[var(--prose)]">Magic links</strong> expire
+            after 10 minutes; email signup also requires verification.
+          </li>
+          <li>
+            <strong className="text-[var(--prose)]">
+              Soft API rate limits
+            </strong>{' '}
+            reduce spam bursts on sync, Ranked, and social endpoints.
+          </li>
+          <li>
+            <strong className="text-[var(--prose)]">Optional roll seals</strong>{' '}
+            use HMAC on a roll claim. That is not email hashing, and it does not
+            prove Free-play client RNG honesty.
+          </li>
+          <li>
+            <strong className="text-[var(--prose)]">Delete your account</strong>{' '}
+            from{' '}
+            <a className="underline" href="/account">
+              Account
+            </a>{' '}
+            (confirm via email). Cloud identity, synced progress, and related
+            social rows are removed; clear browser site data separately for
+            local saves.
+          </li>
+        </ul>
+        <p className="max-w-[65ch] text-xs text-[var(--prose-3)]">
+          We do <em>not</em> hash emails for storage (login and mail need the
+          address), and we do not claim session IP / user-agent hashing. Full
+          wording lives in the{' '}
+          <a className="underline" href="/privacy">
+            Privacy Policy
+          </a>
+          .
+        </p>
+      </section>
+
       <section className="space-y-3 border-t border-[var(--outline)] pt-6">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--prose)]">
+        <h2 className="font-display text-lg font-bold text-[var(--prose)]">
           Disclaimer
         </h2>
         <p>
@@ -424,7 +646,7 @@ export function AboutScreen() {
             rngdle.com
           </a>
           . Inspired by the genre; badge names, weights, branding, and code are
-          original. Built for fun — not gambling, not financial advice, not a
+          original. Built for fun; not gambling, not financial advice, not a
           security product.
         </p>
         <p className="flex flex-wrap gap-3 text-xs">

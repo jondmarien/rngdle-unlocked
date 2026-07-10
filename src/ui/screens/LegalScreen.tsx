@@ -263,13 +263,19 @@ function PrivacyBody() {
           6. Retention &amp; deletion
         </h2>
         <p>
-          We keep account and progress data while your account exists. You may
-          request deletion by emailing{' '}
+          We keep account and progress data while your account exists. You can
+          permanently delete your cloud account from{' '}
+          <a className="underline" href="/account">
+            Account
+          </a>{' '}
+          (email confirmation required). That removes your auth identity, synced
+          progress, rolls, and related social data we store for the account.
+          Local browser data is separate: clear site data / localStorage
+          anytime. If self-serve delete fails, email{' '}
           <a className="underline" href={`mailto:${CONTACT}`}>
             {CONTACT}
           </a>
-          . Local browser data can be cleared by you anytime (clear site data /
-          localStorage).
+          .
         </p>
       </section>
 

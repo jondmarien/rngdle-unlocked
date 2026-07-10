@@ -47,6 +47,8 @@ export function AccountScreen({
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [waitTimedOut, setWaitTimedOut] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState('');
   const { isAdmin } = useIsAdmin(session?.user?.id);
   const [linkedAccounts, setLinkedAccounts] = useState<LinkedAccount[]>([]);
 
@@ -335,6 +337,52 @@ export function AccountScreen({
         err: err instanceof Error ? err.message : String(err),
       });
       setMsg(err instanceof Error ? err.message : 'Sign out failed');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onRequestAccountDelete = async () => {
+    if (deleteConfirm.trim().toUpperCase() !== 'DELETE') {
+      setMsg('Type DELETE to confirm account deletion.');
+      return;
+    }
+    const ok = window.confirm(
+      'Permanently delete your cloud account? You will get a confirmation email. Local browser saves stay until you clear site data.',
+    );
+    if (!ok) return;
+    setBusy(true);
+    setMsg(null);
+    log.info('delete-account:start');
+    try {
+      const payload: { callbackURL: string; password?: string } = {
+        callbackURL: '/',
+      };
+      if (deletePassword.trim()) payload.password = deletePassword;
+      const res = await withTimeout(
+        authClient.deleteUser(payload),
+        AUTH_TIMEOUT_MS,
+        'deleteUser',
+      );
+      if (res.error) {
+        throw new Error(res.error.message ?? 'Account deletion failed');
+      }
+      setDeletePassword('');
+      setDeleteConfirm('');
+      setMsg(
+        'Check your email for a confirmation link to finish deleting your account. If you already used a fresh password confirm, you may be signed out already.',
+      );
+      await withTimeout(refetch(), 10_000, 'session.refetch').catch(() => {});
+      log.info('delete-account:ok');
+    } catch (err) {
+      log.error('delete-account:fail', {
+        err: err instanceof Error ? err.message : String(err),
+      });
+      setMsg(
+        err instanceof Error
+          ? err.message
+          : 'Account deletion failed. Sign in again (fresh session) and retry, or email jon@chron0.tech.',
+      );
     } finally {
       setBusy(false);
     }
@@ -869,6 +917,51 @@ export function AccountScreen({
                 {syncError}
               </p>
             )}
+          </div>
+
+          <div className="space-y-3 rounded-xl border border-red-500/40 bg-[var(--surface)] p-4">
+            <h2 className="text-sm font-bold text-[var(--prose)]">
+              Delete account
+            </h2>
+            <p className="text-xs text-[var(--prose-3)]">
+              Permanently removes your cloud account, synced rolls, and related
+              social data. Local browser saves are separate: clear site data if
+              you want those gone too. We send a confirmation link to{' '}
+              <span className="font-mono">{session.user.email}</span>.
+            </p>
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-[var(--prose-2)]">
+                Type DELETE to confirm
+              </label>
+              <input
+                value={deleteConfirm}
+                onChange={(e) => setDeleteConfirm(e.target.value)}
+                autoComplete="off"
+                placeholder="DELETE"
+                className="w-full border border-[var(--outline)] bg-[var(--bg)] px-3 py-2 text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-[var(--prose-2)]">
+                Password (only if this account uses email + password)
+              </label>
+              <input
+                type="password"
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                autoComplete="current-password"
+                placeholder="Optional"
+                className="w-full border border-[var(--outline)] bg-[var(--bg)] px-3 py-2 text-sm"
+              />
+            </div>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void onRequestAccountDelete()}
+              className="border border-red-600 px-3 py-2 text-xs font-bold uppercase text-red-700 disabled:opacity-50 dark:text-red-400"
+            >
+              Email me a delete confirmation
+            </button>
           </div>
         </div>
       )}

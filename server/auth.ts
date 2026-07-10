@@ -126,6 +126,23 @@ export function createAuth() {
           input: false,
         },
       },
+      deleteUser: {
+        enabled: true,
+        sendDeleteAccountVerification: async ({
+          user,
+          url,
+        }: {
+          user: { email: string };
+          url: string;
+        }) => {
+          void sendEmail({
+            to: user.email,
+            subject: 'Confirm RNGdle Unlocked account deletion',
+            text: `Confirm permanent deletion of your RNGdle Unlocked account:\n\n${url}\n\nThis removes your cloud account, synced rolls, and related social data. Local browser data is separate (clear site data if you want that gone too).\n\nIf you did not request this, ignore this message.`,
+            html: `<p>Confirm permanent deletion of your <strong>RNGdle Unlocked</strong> account.</p><p><a href="${url}">Click here to delete your account</a></p><p>This removes your cloud account, synced rolls, and related social data. Local browser data is separate (clear site data if you want that gone too).</p><p>If you did not request this, ignore this message.</p>`,
+          });
+        },
+      },
     },
     plugins: [
       magicLink({
