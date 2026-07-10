@@ -6,6 +6,7 @@ import {
   JOURNEY_BADGES,
   NUMBER_BADGES,
   OMEGA_SECRET,
+  STREAK_SECRETS,
   topPercentFromEP,
   type BadgeFamily,
 } from '../../game';
@@ -96,7 +97,9 @@ export function ProfileScreen({
   const myUsername = session?.user.username ?? null;
   const [codexFilter, setCodexFilter] = useState<BadgeFamily | 'all'>('all');
   const [openJourney, setOpenJourney] = useState(true);
+  const [showAllJourney, setShowAllJourney] = useState(false);
   const [openSecrets, setOpenSecrets] = useState(true);
+  const [openStreakSecrets, setOpenStreakSecrets] = useState(true);
   const [openCodex, setOpenCodex] = useState(true);
   const [openBest, setOpenBest] = useState(true);
   const [openRecent, setOpenRecent] = useState(true);
@@ -164,7 +167,7 @@ export function ProfileScreen({
       });
   }, [profile?.collection]);
 
-  /** Unlocked journey milestones only (dedicated art section). */
+  /** Unlocked journey milestones only (dedicated art section). Catalog order = ascending. */
   const unlockedJourney = useMemo(() => {
     const rows = profile?.collection ?? [];
     const ids = new Set(
@@ -173,6 +176,31 @@ export function ProfileScreen({
         .map((e) => e.badgeId),
     );
     return JOURNEY_BADGES.filter((b) => ids.has(b.id));
+  }, [profile?.collection]);
+
+  /** Highest unlocked journey badge (last in ascending catalog order). */
+  const latestJourney = unlockedJourney[unlockedJourney.length - 1] ?? null;
+  const visibleJourney =
+    showAllJourney || unlockedJourney.length <= 1
+      ? unlockedJourney
+      : latestJourney
+        ? [latestJourney]
+        : [];
+
+  /** Streak / giant secret badges from synced collection (not section masteries). */
+  const unlockedStreakSecrets = useMemo(() => {
+    const rows = profile?.collection ?? [];
+    const ids = new Set(
+      rows
+        .filter(
+          (e) =>
+            e.family === 'secret' ||
+            e.badgeId.startsWith('secret-streak-') ||
+            e.badgeId === 'secret-giant-numbers',
+        )
+        .map((e) => e.badgeId),
+    );
+    return STREAK_SECRETS.filter((s) => ids.has(s.id));
   }, [profile?.collection]);
 
   const codexFiltered = useMemo(() => {
@@ -492,22 +520,30 @@ export function ProfileScreen({
         </div>
       )}
 
-      {/* Journey badges — unlocked lifetime milestones with custom art */}
+      {/* Journey badges — latest by default; expand to show all earned */}
       {unlockedJourney.length > 0 && (
         <section className="space-y-3">
           <SectionHeader
             title="Journey badges"
-            meta={`${unlockedJourney.length} earned`}
+            meta={
+              unlockedJourney.length === 1
+                ? '1 earned'
+                : showAllJourney
+                  ? `${unlockedJourney.length} earned`
+                  : `Latest of ${unlockedJourney.length}`
+            }
             open={openJourney}
             onToggle={() => setOpenJourney((v) => !v)}
           />
           {openJourney && (
             <>
               <p className="text-sm text-(--prose-2)">
-                Lifetime roll milestones @{profile.username} has reached.
+                {showAllJourney || unlockedJourney.length === 1
+                  ? `Lifetime roll milestones @${profile.username} has reached.`
+                  : `Highest journey milestone @${profile.username} has reached.`}
               </p>
               <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {unlockedJourney.map((b) => (
+                {visibleJourney.map((b) => (
                   <li
                     key={b.id}
                     className="flex gap-3 rounded-xl border border-amber-400/45 bg-linear-to-br from-amber-500/15 via-teal-500/10 to-transparent p-3"
@@ -529,10 +565,66 @@ export function ProfileScreen({
                     <div className="min-w-0">
                       <p className="text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
                         Journey
+                        {!showAllJourney && unlockedJourney.length > 1
+                          ? ' · latest'
+                          : ''}
                       </p>
                       <p className="font-bold tracking-tight">{b.name}</p>
                       <p className="text-sm text-amber-800 dark:text-amber-300">
                         +{b.ep.toLocaleString()} life EP
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              {unlockedJourney.length > 1 && (
+                <button
+                  type="button"
+                  className="text-sm font-medium text-amber-800 underline-offset-2 hover:underline dark:text-amber-300"
+                  onClick={() => setShowAllJourney((v) => !v)}
+                >
+                  {showAllJourney
+                    ? 'Show latest only'
+                    : `Show all ${unlockedJourney.length} journey badges`}
+                </button>
+              )}
+            </>
+          )}
+        </section>
+      )}
+
+      {/* Secret badges — streak / giant meta unlocks */}
+      {unlockedStreakSecrets.length > 0 && (
+        <section className="space-y-3">
+          <SectionHeader
+            title="Secret badges"
+            meta={`${unlockedStreakSecrets.length} earned`}
+            open={openStreakSecrets}
+            onToggle={() => setOpenStreakSecrets((v) => !v)}
+          />
+          {openStreakSecrets && (
+            <>
+              <p className="text-sm text-(--prose-2)">
+                Streak and window secrets @{profile.username} has unlocked.
+              </p>
+              <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {unlockedStreakSecrets.map((s) => (
+                  <li
+                    key={s.id}
+                    className="flex gap-3 rounded-xl border border-fuchsia-400/45 bg-linear-to-br from-fuchsia-500/15 via-violet-500/10 to-transparent p-3"
+                  >
+                    <img
+                      src={s.image}
+                      alt={s.name}
+                      className="h-20 w-20 shrink-0 rounded-lg border border-fuchsia-400/50 object-cover"
+                    />
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-fuchsia-800 dark:text-fuchsia-300">
+                        Streak secret
+                      </p>
+                      <p className="font-bold tracking-tight">{s.name}</p>
+                      <p className="text-sm text-amber-800 dark:text-amber-300">
+                        +{s.ep.toLocaleString()} life EP
                       </p>
                     </div>
                   </li>

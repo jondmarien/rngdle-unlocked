@@ -32,6 +32,26 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Profile polish + streak seal fix',
+    date: '2026-07-10',
+    version: '0.10.1',
+    tags: ['Profile', 'Secrets', 'UI'],
+    content: [
+      {
+        body: 'Profiles lead with your highest Journey badge (expand to see the rest), show streak secrets in their own section, and Home unlock toasts finally show the right streak seal art.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'Small profile and celebration fixes on top of 0.10.0.',
+        bullets: [
+          '**Journey on profiles** — latest milestone by default; tap to show every earned journey badge.',
+          '**Secret badges** — Very Odd and friends appear on public profiles (separate from section masteries).',
+          '**Streak unlock toast** — Home celebration uses the real seal image again.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Bases, cats, streak secrets, and The Worst',
     date: '2026-07-10',
     version: '0.10.0',

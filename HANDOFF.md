@@ -7,8 +7,8 @@
 | **Repo**                   | `jondmarien/rngdle-unlocked`                                                  |
 | **Live**                   | https://rngdle-unlocked.chron0.tech                                           |
 | **Branch**                 | `main` (auto-deploys Vercel)                                                  |
-| **Version**                | `0.10.0` (`package.json`; Settings uses `VITE_APP_VERSION`)                   |
-| **Latest release**         | [v0.10.0](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.10.0) |
+| **Version**                | `0.10.1` (`package.json`; Settings uses `VITE_APP_VERSION`)                   |
+| **Latest release**         | [v0.10.1](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.10.1) |
 | **Handoff commit context** | Opus audit refactor (`aa8e91e`…`fc4fa65` on `main`) + prior P0/P1 wave        |
 
 ---
@@ -240,6 +240,7 @@ node scripts/add-roll-source.mjs   # if source column missing
 - [x] **v0.8.1** — Onboarding checklist detection, Daily/Weekly reset countdown, sync integrity + `rolls.source` on cloud pull
 - [x] **v0.9.0** — Divine rarity; Two Trips / Three Pair / Full Quads; badge equation proofs; Latest Runs spoiler eye; Twin Gate length-2
 - [x] **v0.10.0** — Bases family + Radix Crown; cat / Ultimeme; The Worst; odd/even streak + Giant Numbers secrets; equation proofs v3; parity streak sync recompute
+- [x] **v0.10.1** — Profile journey latest-by-default + Secret badges section; Home streak seal image fix
 
 ### Still open for you / ops
 

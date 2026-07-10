@@ -7,9 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-07-10
+
 ### Fixed
 
 - **Streak secret unlock art on Home** — celebration card used a `secret-master-*` path heuristic, so streak ids resolved to missing files (e.g. `/secrets/secret-streak-odd-5.jpg`). Now prefers each secret’s `image` field from `secretHits`.
+
+### Changed
+
+- **Profile Journey badges** — show only the highest earned milestone by default; “Show all N journey badges” expands the full list.
+- **Profile Secret badges** — new section for streak / Giant Numbers secrets from synced collection (separate from section masteries).
 
 ## [0.10.0] - 2026-07-10
 

@@ -420,6 +420,7 @@ The Account screen times out after a few seconds and shows the sign-in form. Che
 | Checklist detection + challenge reset countdown + sync integrity          | ✅ Shipped (`v0.8.1`)                                                             |
 | Divine rarity + poker hand fixes + badge equation proofs                  | ✅ Shipped (`v0.9.0`)                                                             |
 | Bases family, cat/Ultimeme, streak secrets, The Worst, equation proofs v3 | ✅ Shipped (`v0.10.0`)                                                            |
+| Profile journey collapse + Secret badges; streak unlock art fix           | ✅ Shipped (`v0.10.1`)                                                            |
 | Server Ranked free play (`/api/ranked-roll`)                              | ✅ Shipped                                                                        |
 | Profiles (vanity + avatars) + follows                                     | ✅ Shipped                                                                        |
 | Activity unlocks + Ranked crown msgs + overtake notifs                    | ✅ Shipped                                                                        |

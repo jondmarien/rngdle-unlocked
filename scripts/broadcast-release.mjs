@@ -12,11 +12,10 @@ if (!process.env.DATABASE_URL) {
 const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
-const title =
-  'New Update! v0.10.0 — Bases, cats, streak secrets, and The Worst';
+const title = 'New Update! v0.10.1 — Profile polish + streak seal fix';
 const body = [
-  'A new Bases family (and Radix Crown), cat / Ultimeme badges, and streak secrets for odd/even runs plus Giant Numbers.',
-  'The Worst is a joke badge for when your other badges sum to exactly 1,758 EP — and more cards show math proofs.',
+  'Profiles now lead with your highest Journey badge (expand to see them all) and show streak secrets in a Secret badges section.',
+  'Home unlock toasts also show the correct streak seal art again.',
   'Read the full player notes: https://rngdle-unlocked.chron0.tech/whats-new',
   'Open: /whats-new',
 ].join(' ');
