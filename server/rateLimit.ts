@@ -106,4 +106,10 @@ export const LIMITS = {
   featureRequestVotePerMinute: 30,
   /** Soft burst on feature request list GET. */
   featureRequestListPerMinute: 60,
+  /** Arcade Mode — higher frequency than Ranked (run rolls). */
+  arcadeRollsPerHour: 120,
+  /** Arcade start / buy / cash-out / abandon / arm active. */
+  arcadeMutatePerMinute: 40,
+  /** Arcade leaderboard GET. */
+  arcadeLeaderboardPerMinute: 60,
 } as const;
