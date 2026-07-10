@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+import { coerceRarity } from '../../game';
+import { fetchArcadeLeaderboard } from '../../lib/arcade-api';
 import { useSession } from '../../lib/auth-client';
 import { formatDateTime } from '../../lib/format';
 import {
@@ -8,19 +10,51 @@ import {
   fetchLeaderboard,
   type BestRollSortBy,
   type FeedSource,
+  type LeaderboardSort,
 } from '../../lib/leaderboard-api';
 import {
   fetchFollowingUsernames,
   followUser,
   unfollowUser,
 } from '../../lib/notifications-api';
-import { coerceRarity } from '../../game';
 import { FindPlayers } from '../components/FindPlayers';
 import { RarityBadge } from '../components/RarityBadge';
 import { SegmentedToggle } from '../components/SegmentedToggle';
 
-type BoardView = 'board' | 'feed' | 'find';
-type MetricView = 'total' | 'best';
+/** Mode-first primary tabs (replaces Board/Feed/Find + nested Ranked/Practice). */
+type BoardView = 'ranked' | 'practice' | 'arcade' | 'feed' | 'find';
+
+/** Collapsed metric + sort for Ranked / Practice. */
+type BoardMetricKey =
+  | 'total-ep'
+  | 'total-rolls'
+  | 'total-badges'
+  | 'best-ep'
+  | 'best-rarity';
+
+function metricToState(key: BoardMetricKey): {
+  metric: 'total' | 'best';
+  sort: LeaderboardSort;
+  sortBy: BestRollSortBy;
+} {
+  switch (key) {
+    case 'total-ep':
+      return { metric: 'total', sort: 'ep', sortBy: 'ep' };
+    case 'total-rolls':
+      return { metric: 'total', sort: 'rolls', sortBy: 'ep' };
+    case 'total-badges':
+      return { metric: 'total', sort: 'badges', sortBy: 'ep' };
+    case 'best-ep':
+      return { metric: 'best', sort: 'ep', sortBy: 'ep' };
+    case 'best-rarity':
+      return { metric: 'best', sort: 'ep', sortBy: 'rarity' };
+    default: {
+      const _exhaustive: never = key;
+      void _exhaustive;
+      return { metric: 'total', sort: 'ep', sortBy: 'ep' };
+    }
+  }
+}
 
 export function LeaderboardScreen({
   onOpenProfile,
@@ -30,28 +64,40 @@ export function LeaderboardScreen({
   const { data: session } = useSession();
   const myUsername = session?.user.username ?? null;
 
-  const [view, setView] = useState<BoardView>('board');
-  const [metric, setMetric] = useState<MetricView>('total');
-  /** Ranked = server free play · Practice = synced free-play / overall progress */
-  const [scope, setScope] = useState<'ranked' | 'practice'>('ranked');
+  const [view, setView] = useState<BoardView>('ranked');
+  const [metricKey, setMetricKey] = useState<BoardMetricKey>('total-ep');
   const [period, setPeriod] = useState<'all' | 'week'>('all');
-  const [sort, setSort] = useState<'ep' | 'rolls' | 'badges'>('ep');
-  const [sortBy, setSortBy] = useState<BestRollSortBy>('ep');
-  /** Feed lane: all · Ranked server · Free play / practice client */
   const [feedSource, setFeedSource] = useState<FeedSource>('all');
   const [following, setFollowing] = useState<Set<string>>(new Set());
   const [followBusy, setFollowBusy] = useState<string | null>(null);
 
+  const { metric, sort, sortBy } = metricToState(metricKey);
+  const scope = view === 'practice' ? 'practice' : 'ranked';
+  const onEpBoard = view === 'ranked' || view === 'practice';
+
+  // Ranked has no badges sort — coerce if needed
+  const effectiveSort: LeaderboardSort =
+    scope === 'ranked' && sort === 'badges' ? 'ep' : sort;
+  const effectiveMetricKey: BoardMetricKey =
+    scope === 'ranked' && metricKey === 'total-badges' ? 'total-ep' : metricKey;
+
   useEffect(() => {
-    if (!session?.user) {
+    if (session?.user) {
+      void fetchFollowingUsernames().then(setFollowing);
+    } else {
       setFollowing(new Set());
-      return;
     }
-    void fetchFollowingUsernames().then(setFollowing);
   }, [session?.user]);
 
-  // Ranked board only supports ep/rolls
-  const effectiveSort = scope === 'ranked' && sort === 'badges' ? 'ep' : sort;
+  useEffect(() => {
+    if (
+      metricKey === 'total-badges' &&
+      (scope === 'ranked' || period !== 'all')
+    ) {
+      setMetricKey('total-ep');
+    }
+  }, [metricKey, scope, period]);
+
   const boardQuery = useQuery({
     queryKey: ['leaderboard', scope, period, effectiveSort],
     queryFn: ({ signal }) =>
@@ -62,7 +108,7 @@ export function LeaderboardScreen({
         limit: 50,
         signal,
       }),
-    enabled: view === 'board' && metric === 'total',
+    enabled: onEpBoard && metric === 'total',
   });
   const bestQuery = useQuery({
     queryKey: ['leaderboard-best', scope, period, sortBy],
@@ -74,21 +120,39 @@ export function LeaderboardScreen({
         limit: 50,
         signal,
       }),
-    enabled: view === 'board' && metric === 'best',
+    enabled: onEpBoard && metric === 'best',
+  });
+
+  const arcadeQuery = useQuery({
+    queryKey: ['arcade-leaderboard'],
+    queryFn: ({ signal }) => fetchArcadeLeaderboard({ limit: 50, signal }),
+    enabled: view === 'arcade',
   });
 
   const entries = boardQuery.data?.entries ?? [];
   const me = boardQuery.data?.me ?? null;
   const bestEntries = bestQuery.data?.entries ?? [];
   const bestMe = bestQuery.data?.me ?? null;
+  const arcadeEntries = arcadeQuery.data?.entries ?? [];
+  const arcadeMe = arcadeQuery.data?.me ?? null;
 
   const activeQuery = metric === 'best' ? bestQuery : boardQuery;
-  const loading = view === 'board' && activeQuery.isPending;
-  const error = activeQuery.error
-    ? activeQuery.error instanceof Error
-      ? activeQuery.error.message
-      : 'Failed'
-    : null;
+  const loading =
+    (onEpBoard && activeQuery.isPending) ||
+    (view === 'arcade' && arcadeQuery.isPending);
+  const error = (() => {
+    if (view === 'arcade' && arcadeQuery.error) {
+      return arcadeQuery.error instanceof Error
+        ? arcadeQuery.error.message
+        : 'Failed';
+    }
+    if (onEpBoard && activeQuery.error) {
+      return activeQuery.error instanceof Error
+        ? activeQuery.error.message
+        : 'Failed';
+    }
+    return null;
+  })();
 
   const feedQuery = useQuery({
     queryKey: ['feed', feedSource],
@@ -105,8 +169,7 @@ export function LeaderboardScreen({
       ? feedQuery.error instanceof Error
         ? feedQuery.error.message
         : 'Failed'
-      : // Soft tip (e.g. only showing self) — keep as non-blocking note
-        (feedQuery.data?.message ?? null);
+      : (feedQuery.data?.message ?? null);
 
   const toggleFollow = async (username: string) => {
     if (!session?.user) return;
@@ -132,40 +195,58 @@ export function LeaderboardScreen({
   };
 
   const meOnPage =
-    metric === 'best'
-      ? bestMe &&
-        bestEntries.some(
+    view === 'arcade'
+      ? arcadeMe &&
+        arcadeEntries.some(
           (e) =>
             e.username &&
-            bestMe.username &&
-            e.username.toLowerCase() === bestMe.username.toLowerCase(),
+            arcadeMe.username &&
+            e.username.toLowerCase() === arcadeMe.username.toLowerCase(),
         )
-      : me &&
-        entries.some(
-          (e) =>
-            e.username &&
-            me.username &&
-            e.username.toLowerCase() === me.username.toLowerCase(),
-        );
+      : metric === 'best'
+        ? bestMe &&
+          bestEntries.some(
+            (e) =>
+              e.username &&
+              bestMe.username &&
+              e.username.toLowerCase() === bestMe.username.toLowerCase(),
+          )
+        : me &&
+          entries.some(
+            (e) =>
+              e.username &&
+              me.username &&
+              e.username.toLowerCase() === me.username.toLowerCase(),
+          );
+
+  const metricOptions: { id: BoardMetricKey; label: string }[] = [
+    { id: 'total-ep', label: 'Total EP' },
+    { id: 'total-rolls', label: 'Total · Rolls' },
+    ...(scope === 'practice' && period === 'all'
+      ? [{ id: 'total-badges' as const, label: 'Total · Badges' }]
+      : []),
+    { id: 'best-ep', label: 'Best Roll · EP' },
+    { id: 'best-rarity', label: 'Best Roll · Rarity' },
+  ];
 
   return (
     <div className="space-y-4">
       <div>
         <h1 className="text-xl font-bold tracking-tight">Leaderboard</h1>
         <p className="text-sm text-[var(--prose-2)]">
-          Two boards: <strong className="text-[var(--prose)]">Ranked</strong>{' '}
-          (from Roll → Ranked — server free play, fair competition) and{' '}
-          <strong className="text-[var(--prose)]">Practice</strong> (from Roll →
-          Free play sync — overall progress, social honor system). Switch{' '}
-          <strong className="text-[var(--prose)]">Total EP</strong> vs{' '}
-          <strong className="text-[var(--prose)]">Best Roll</strong>. Feed and
-          Find are separate.
+          <strong className="text-[var(--prose)]">Ranked</strong> (server free
+          play) and <strong className="text-[var(--prose)]">Practice</strong>{' '}
+          (synced Free play) use EP.{' '}
+          <strong className="text-[var(--prose)]">Arcade</strong> ranks best
+          Digits run — separate from EP. Feed and Find stay social.
         </p>
       </div>
 
       <SegmentedToggle
         options={[
-          { id: 'board', label: 'Board' },
+          { id: 'ranked', label: 'Ranked', accent: 'amber' },
+          { id: 'practice', label: 'Practice' },
+          { id: 'arcade', label: 'Arcade' },
           { id: 'feed', label: 'Feed' },
           { id: 'find', label: 'Find' },
         ]}
@@ -213,7 +294,7 @@ export function LeaderboardScreen({
           {!feedLoading && feed.length === 0 && !feedError && (
             <p className="text-sm text-[var(--prose-2)]">
               No public rolls in this lane yet. Roll Free or Ranked, or follow
-              players from Board / Find.
+              players from Ranked / Practice / Find.
             </p>
           )}
           <ul className="divide-y divide-[var(--outline)] border border-[var(--outline)]">
@@ -278,39 +359,152 @@ export function LeaderboardScreen({
         </div>
       )}
 
-      {view === 'board' && (
+      {view === 'arcade' && (
         <>
-          <SegmentedToggle
-            options={[
-              { id: 'total', label: 'Total EP' },
-              { id: 'best', label: 'Best Roll' },
-            ]}
-            value={metric}
-            onChange={setMetric}
-          />
-
-          <SegmentedToggle
-            options={[
-              { id: 'ranked', label: 'Ranked' },
-              { id: 'practice', label: 'Practice' },
-            ]}
-            value={scope}
-            onChange={(next) => {
-              setScope(next);
-              if (next === 'ranked' && sort === 'badges') setSort('ep');
-            }}
-          />
           <p className="text-xs leading-snug text-[var(--prose-3)]">
-            {scope === 'ranked'
-              ? 'Only rolls from Roll → Ranked (server CSPRNG). Sign-in + @username required. Crowns use this board too.'
-              : metric === 'best'
-                ? 'Public Free play + challenge rolls (not Ranked). One personal best per player.'
-                : 'Synced Free play progress (all-time) and public practice rolls this week. Social — not anti-cheat competitive.'}
+            Best single Arcade run (Digits). Separate from EP — play from the
+            Arcade tab.
           </p>
 
-          <div className="flex flex-wrap gap-2">
+          {arcadeMe && (
+            <div
+              className={`rounded-lg border-2 px-3 py-2 text-sm ${
+                meOnPage
+                  ? 'border-[var(--accent)] bg-[var(--surface-raised)]'
+                  : 'border-[var(--outline)] bg-[var(--surface)]'
+              }`}
+            >
+              <span className="text-sm font-semibold text-[var(--prose-2)]">
+                You on the board
+              </span>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="font-bold">
+                  #{arcadeMe.rank}{' '}
+                  {arcadeMe.username ? `@${arcadeMe.username}` : arcadeMe.name}
+                  <span className="ml-2 rounded bg-[var(--prose)] px-1.5 py-0.5 text-xs text-[var(--bg)]">
+                    you
+                  </span>
+                </span>
+                <span className="text-sm text-[var(--prose-2)]">
+                  {arcadeMe.bestRunScore.toLocaleString()} Digits ·{' '}
+                  {arcadeMe.totalRunsCompleted.toLocaleString()} runs
+                </span>
+              </div>
+            </div>
+          )}
+
+          {session?.user && !loading && !arcadeMe && (
+            <p className="text-sm text-[var(--prose-2)]">
+              Claim @username and complete an Arcade run to place here.
+            </p>
+          )}
+
+          {loading && <p className="text-sm text-[var(--prose-2)]">Loading…</p>}
+          {error && (
+            <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+          )}
+
+          <ol className="divide-y divide-[var(--outline)] border border-[var(--outline)]">
+            {arcadeEntries.map((e) => {
+              const isMe =
+                (myUsername &&
+                  e.username &&
+                  e.username.toLowerCase() === myUsername.toLowerCase()) ||
+                (arcadeMe?.username &&
+                  e.username &&
+                  e.username.toLowerCase() === arcadeMe.username.toLowerCase());
+              const uname = e.username?.toLowerCase() ?? '';
+              const isFollowing = uname ? following.has(uname) : false;
+              return (
+                <li
+                  key={`arcade-${e.rank}-${e.username}`}
+                  className={`flex flex-wrap items-center justify-between gap-2 px-3 py-2 ${
+                    isMe
+                      ? 'bg-[color-mix(in_srgb,var(--accent)_18%,transparent)] ring-1 ring-inset ring-[var(--accent)]'
+                      : ''
+                  }`}
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="mono-number w-8 text-[var(--prose-2)]">
+                      #{e.rank}
+                    </span>
+                    <button
+                      type="button"
+                      className="truncate text-left font-bold hover:underline"
+                      onClick={() => e.username && onOpenProfile(e.username)}
+                      disabled={!e.username}
+                    >
+                      {e.username ? `@${e.username}` : e.name}
+                      {isMe && (
+                        <span className="ml-2 text-xs font-bold text-[var(--accent)]">
+                          you
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="text-sm text-[var(--prose-2)]">
+                      <span className="font-semibold text-amber-700 dark:text-amber-400">
+                        {e.bestRunScore.toLocaleString()} Digits
+                      </span>
+                      {' · '}
+                      {e.totalRunsCompleted.toLocaleString()} runs
+                    </div>
+                    {session?.user && e.username && !isMe && (
+                      <button
+                        type="button"
+                        title={isFollowing ? 'Unfollow' : 'Follow'}
+                        disabled={followBusy === uname}
+                        onClick={() => void toggleFollow(e.username!)}
+                        className={`flex h-8 w-8 items-center justify-center rounded-md border text-lg font-bold leading-none ${
+                          isFollowing
+                            ? 'border-[var(--outline)] text-[var(--prose-2)]'
+                            : 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
+                        }`}
+                      >
+                        {isFollowing ? '✓' : '+'}
+                      </button>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        </>
+      )}
+
+      {onEpBoard && (
+        <>
+          <div className="space-y-2">
+            <label className="block text-xs font-semibold uppercase tracking-wide text-[var(--prose-3)]">
+              Metric
+            </label>
+            <select
+              className="w-full max-w-md rounded-md border border-[var(--outline)] bg-[var(--surface)] px-2.5 py-2 text-sm font-semibold"
+              value={effectiveMetricKey}
+              onChange={(e) => setMetricKey(e.target.value as BoardMetricKey)}
+            >
+              {metricOptions.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs leading-snug text-[var(--prose-3)]">
+              {view === 'ranked'
+                ? 'Only rolls from Roll → Ranked (server CSPRNG). Sign-in + @username required. Crowns use this board too.'
+                : metric === 'best'
+                  ? 'Public Free play + challenge rolls (not Ranked). One personal best per player.'
+                  : 'Synced Free play progress (all-time) and public practice rolls this week. Social — not anti-cheat competitive.'}
+            </p>
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-xs font-semibold uppercase tracking-wide text-[var(--prose-3)]">
+              Period
+            </span>
             <SegmentedToggle
-              className="contents"
+              chipClassName="rounded-md border px-2 py-1 text-xs font-semibold"
               options={[
                 { id: 'all', label: 'All-time' },
                 { id: 'week', label: 'This week' },
@@ -318,32 +512,6 @@ export function LeaderboardScreen({
               value={period}
               onChange={setPeriod}
             />
-            {metric === 'best' ? (
-              <SegmentedToggle
-                className="contents"
-                options={[
-                  { id: 'ep', label: 'By EP' },
-                  { id: 'rarity', label: 'By Rarity' },
-                ]}
-                value={sortBy}
-                onChange={setSortBy}
-              />
-            ) : (
-              period === 'all' && (
-                <SegmentedToggle
-                  className="contents"
-                  options={[
-                    { id: 'ep', label: 'EP' },
-                    { id: 'rolls', label: 'Rolls' },
-                    ...(scope === 'practice'
-                      ? [{ id: 'badges' as const, label: 'Badges' }]
-                      : []),
-                  ]}
-                  value={sort}
-                  onChange={setSort}
-                />
-              )
-            )}
           </div>
 
           {metric === 'total' && me && (
@@ -403,7 +571,7 @@ export function LeaderboardScreen({
             !loading &&
             ((metric === 'total' && !me) || (metric === 'best' && !bestMe)) && (
               <p className="text-sm text-[var(--prose-2)]">
-                {scope === 'ranked'
+                {view === 'ranked'
                   ? 'Claim @username and generate Ranked free-play rolls to place here.'
                   : metric === 'best'
                     ? 'Set a public @username and make a public Free play roll to appear.'
