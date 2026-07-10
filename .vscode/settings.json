@@ -25,5 +25,8 @@
   "oxc.enable": true,
   "oxc.fmt.configPath": ".oxfmtrc.json",
   "js/ts.tsdk.path": "node_modules/typescript/lib",
-  "js/ts.tsdk.promptToUseWorkspaceVersion": true
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true,
+  "[markdown]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  }
 }
