@@ -32,6 +32,34 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Clearer Alerts and Features',
+    date: '2026-07-10',
+    version: '0.7.1',
+    tags: ['UI', 'Alerts', 'Features'],
+    content: [
+      {
+        body: 'Notifications and the Features board are easier to scan — less duplicate crown noise, clearer status, same underlying data.',
+      },
+      {
+        heading: 'Alerts',
+        body: 'Activity and System messages show type at a glance, with unread weight and relative times.',
+        bullets: [
+          '**One crown event**: today / week / all-time overtake or community crown notices from the same roll collapse into a single card with period tags.',
+          '**Unread counts**: the Alerts badge matches the cards you see, not three rows for one moment.',
+          '**System density**: headline first; stats and badge detail stay secondary.',
+        ],
+      },
+      {
+        heading: 'Features',
+        body: 'Status colors are dedicated to the Features board (not badge rarity).',
+        bullets: [
+          '**Active vs archive**: open requests stay up top; Shipped and Declined fold under their own headers (always listed, even at zero).',
+          '**Closed votes**: shipped and declined show the final upvote count without a live vote button.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Arcade Mode and a clearer Board',
     date: '2026-07-09',
     version: '0.7.0',

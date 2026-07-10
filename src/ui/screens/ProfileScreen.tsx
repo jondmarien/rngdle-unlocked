@@ -21,8 +21,9 @@ import {
 import { fetchProfile } from '../../lib/profile-api';
 import { profileAvatarSrc } from '../../lib/profile-avatars';
 import { accentStyles, normalizeAccent } from '../../lib/profile-theme';
-import { RarityBadge } from '../components/RarityBadge';
 import { EPPill } from '../components/EPPill';
+import { RarityBadge } from '../components/RarityBadge';
+import { SectionHeader } from '../components/SectionHeader';
 import { StatTile } from '../components/StatTile';
 
 const BADGE_CATALOG = (() => {
@@ -74,37 +75,6 @@ const CODEX_FAMILY_FILTERS: { id: BadgeFamily | 'all'; label: string }[] = [
 ];
 
 const PREVIEW_LIMIT = 10;
-
-function SectionHeader({
-  title,
-  meta,
-  open,
-  onToggle,
-}: {
-  title: string;
-  meta?: string;
-  open: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      className="flex w-full items-baseline justify-between gap-2 text-left"
-      aria-expanded={open}
-    >
-      <h2 className="text-base font-bold text-[var(--prose)]">
-        <span className="mr-1.5 inline-block w-4 text-center text-sm text-[var(--prose-3)]">
-          {open ? '▾' : '▸'}
-        </span>
-        {title}
-      </h2>
-      {meta && (
-        <span className="shrink-0 text-sm text-[var(--prose-2)]">{meta}</span>
-      )}
-    </button>
-  );
-}
 
 export function ProfileScreen({
   username,

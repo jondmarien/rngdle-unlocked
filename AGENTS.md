@@ -212,6 +212,7 @@ Known footgun (fixed once; do not reintroduce):
 - **System:** broadcasts + Ranked crown messages.
 - Opening **System messages** should mark the **whole** system inbox read (no per-item click required).
 - Activity stays manual mark-read.
+- **Display-layer crown grouping** (`src/lib/inboxPresentation.ts`): same-roll today/week/all-time `overtake-*` / `best-*` rows render as one card; mark-read PATCHes all member ids. Unread tab / Alerts badge counts use grouped presentations. Do not change server writers for this UX.
 
 ### 5.8 Product refusals
 
@@ -308,7 +309,7 @@ These four checks require a **manual browser smoke** — automated `pnpm test` /
 - Default branch: `main` (production via Vercel).
 - Prefer small, focused commits with complete sentences in messages.
 - Do not force-push `main` unless the user explicitly requests it.
-- Version in `package.json` (currently **0.7.0**); Settings footer reads `VITE_APP_VERSION` from the build.
+- Version in `package.json` (currently **0.7.1**); Settings footer reads `VITE_APP_VERSION` from the build.
 - Releases: annotated tags (`v0.x.y`) + `gh release create` when the user asks.
 
 ---
@@ -364,6 +365,8 @@ These four checks require a **manual browser smoke** — automated `pnpm test` /
 | Schema                   | `server/db/schema.ts`                                                                                               |
 | Architecture             | `docs/ARCHITECTURE.md`, `docs/refactor-notes-2026-07.md`                                                            |
 | Player What’s new        | `src/lib/whats-new.ts`, `WhatsNewScreen.tsx` (`/whats-new`)                                                         |
+| Notifications inbox UI   | `NotificationsScreen.tsx`, `NotificationRow.tsx`, `src/lib/inboxPresentation.ts`                                    |
+| Features board UI        | `FeatureRequestsScreen.tsx`, `--feature-*` tokens in `global.css`, shared `SectionHeader`                           |
 | Developer changelog      | `CHANGELOG.md`                                                                                                      |
 
 ---

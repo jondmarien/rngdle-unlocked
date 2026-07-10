@@ -1,6 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSession } from '../../lib/auth-client';
-import { formatDateTime } from '../../lib/format';
+import {
+  countGroupedUnread,
+  groupInboxItems,
+} from '../../lib/inboxPresentation';
 import {
   ensureNotificationPermission,
   fetchNotifications,
@@ -9,6 +12,10 @@ import {
   saveWebNotifyPref,
   type InboxItem,
 } from '../../lib/notifications-api';
+import {
+  NotificationRow,
+  NotificationSkeleton,
+} from '../components/NotificationRow';
 import { SegmentedToggle } from '../components/SegmentedToggle';
 
 type Tab = 'activity' | 'system';
@@ -24,7 +31,6 @@ export function NotificationsScreen({
   const [tab, setTab] = useState<Tab>('activity');
   const [activity, setActivity] = useState<InboxItem[]>([]);
   const [system, setSystem] = useState<InboxItem[]>([]);
-  const [unread, setUnread] = useState({ activity: 0, system: 0, total: 0 });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [webNotify, setWebNotify] = useState(() => loadWebNotifyPref());
@@ -39,7 +45,6 @@ export function NotificationsScreen({
       const data = await fetchNotifications();
       setActivity(data.activity);
       setSystem(data.system);
-      setUnread(data.unread);
       return data;
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed');
@@ -57,48 +62,61 @@ export function NotificationsScreen({
     void reload();
   }, [session?.user, reload]);
 
+  const activityPresentations = useMemo(
+    () => groupInboxItems(activity),
+    [activity],
+  );
+  const systemPresentations = useMemo(() => groupInboxItems(system), [system]);
+  const displayUnread = useMemo(
+    () => countGroupedUnread({ activity, system }),
+    [activity, system],
+  );
+
   /**
    * Viewing System messages marks the whole system inbox read —
    * no need to click each crown notice.
    */
   const clearSystemOnView = useCallback(async () => {
     if (clearingSystem.current) return;
-    if (unread.system <= 0 && system.every((s) => s.read)) return;
+    if (displayUnread.system <= 0 && system.every((s) => s.read)) return;
     clearingSystem.current = true;
     try {
       await markNotificationsRead({ markAll: true, tab: 'system' });
-      // Optimistic UI + badge
       setSystem((prev) => prev.map((s) => ({ ...s, read: true })));
-      setUnread((u) => ({
-        activity: u.activity,
-        system: 0,
-        total: u.activity,
-      }));
-      // Refresh so shell poll / server state stay aligned
       await reload();
     } catch {
       /* keep unread if mark failed */
     } finally {
       clearingSystem.current = false;
     }
-  }, [reload, system, unread.system]);
+  }, [reload, system, displayUnread.system]);
 
   useEffect(() => {
     if (!session?.user || tab !== 'system' || loading) return;
-    if (unread.system <= 0) return;
+    if (displayUnread.system <= 0) return;
     void clearSystemOnView();
-  }, [session?.user, tab, loading, unread.system, clearSystemOnView]);
+  }, [session?.user, tab, loading, displayUnread.system, clearSystemOnView]);
 
-  const items = tab === 'activity' ? activity : system;
+  const presentations =
+    tab === 'activity' ? activityPresentations : systemPresentations;
+  const rawItems = tab === 'activity' ? activity : system;
 
-  const markOne = async (item: InboxItem) => {
-    if (item.read) return;
-    try {
-      await markNotificationsRead({ ids: [item.id], tab: item.tab });
-      await reload();
-    } catch {
-      /* ignore */
+  const markMany = async (ids: string[], href: string | null, itemTab: Tab) => {
+    const unreadIds = ids.filter((id) => {
+      const row = (itemTab === 'activity' ? activity : system).find(
+        (i) => i.id === id,
+      );
+      return row && !row.read;
+    });
+    if (unreadIds.length > 0) {
+      try {
+        await markNotificationsRead({ ids: unreadIds, tab: itemTab });
+        await reload();
+      } catch {
+        /* ignore */
+      }
     }
+    if (href && onOpenHref) onOpenHref(href);
   };
 
   const markAll = async () => {
@@ -149,9 +167,9 @@ export function NotificationsScreen({
         {tab === 'activity' && (
           <button
             type="button"
-            disabled={busy || items.every((i) => i.read)}
+            disabled={busy || rawItems.every((i) => i.read)}
             onClick={() => void markAll()}
-            className="rounded-md border border-[var(--outline)] px-3 py-2 text-sm font-semibold disabled:opacity-40"
+            className="rounded-md border border-[var(--outline)] px-3 py-2 text-sm font-semibold transition-opacity hover:border-[var(--prose-2)] disabled:opacity-40"
           >
             Mark activity read
           </button>
@@ -194,11 +212,11 @@ export function NotificationsScreen({
           options={[
             {
               id: 'activity',
-              label: `Activity${unread.activity > 0 ? ` (${unread.activity})` : ''}`,
+              label: `Activity${displayUnread.activity > 0 ? ` (${displayUnread.activity})` : ''}`,
             },
             {
               id: 'system',
-              label: `System messages${unread.system > 0 ? ` (${unread.system})` : ''}`,
+              label: `System messages${displayUnread.system > 0 ? ` (${displayUnread.system})` : ''}`,
             },
           ]}
           value={tab}
@@ -206,55 +224,34 @@ export function NotificationsScreen({
         />
       </div>
 
-      {loading && <p className="text-sm text-[var(--prose-2)]">Loading…</p>}
+      {loading && <NotificationSkeleton />}
       {error && (
         <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
       )}
 
-      {!loading && items.length === 0 && (
-        <p className="text-sm text-[var(--prose-2)]">
-          {tab === 'activity'
-            ? 'No activity yet. Follows, unlocks, and overtake alerts show up here.'
-            : 'No system messages yet.'}
-        </p>
+      {!loading && presentations.length === 0 && (
+        <div className="rounded-lg border border-[var(--outline)] bg-[var(--surface)] px-4 py-6 text-center">
+          <p className="text-sm text-[var(--prose-2)]">
+            {tab === 'activity'
+              ? 'No activity yet. Follows, unlocks, and overtake alerts land here.'
+              : 'No system messages yet.'}
+          </p>
+        </div>
       )}
 
-      <ul className="divide-y divide-[var(--outline)] border border-[var(--outline)] rounded-lg">
-        {items.map((item) => (
-          <li key={`${item.tab}-${item.id}`}>
-            <button
-              type="button"
-              className={`w-full px-3 py-3 text-left hover:bg-[var(--surface-raised)] ${
-                item.read ? 'opacity-70' : ''
-              }`}
-              onClick={() => {
-                void markOne(item);
-                if (item.href && onOpenHref) onOpenHref(item.href);
-              }}
-            >
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-sm font-semibold text-[var(--prose)]">
-                  {!item.read && (
-                    <span
-                      className="mr-2 inline-block h-2 w-2 rounded-full bg-[var(--accent)]"
-                      aria-label="Unread"
-                    />
-                  )}
-                  {item.title}
-                </p>
-                <time className="shrink-0 text-xs text-[var(--prose-2)]">
-                  {formatDateTime(item.createdAt)}
-                </time>
-              </div>
-              {item.body && (
-                <p className="mt-1 text-sm leading-snug text-[var(--prose-2)]">
-                  {item.body}
-                </p>
-              )}
-            </button>
-          </li>
-        ))}
-      </ul>
+      {!loading && presentations.length > 0 && (
+        <ul className="divide-y divide-[var(--outline)] overflow-hidden rounded-lg border border-[var(--outline)]">
+          {presentations.map((p) => (
+            <NotificationRow
+              key={p.key}
+              presentation={p}
+              onActivate={(ids, href, itemTab) =>
+                void markMany(ids, href, itemTab)
+              }
+            />
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

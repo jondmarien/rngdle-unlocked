@@ -184,11 +184,11 @@ Switch modes anytime (board fully resets). Badges, EP, history, and share work a
 - **Dual EP leaderboard** — **Ranked** (server free play) · **Practice** (synced free play / overall progress); **Total EP** or **Best Roll** (by EP / by rarity); all-time / week; Practice all-time Total EP can sort EP / rolls / badges
 - **Arcade Mode** — `/arcade` Digits runs (upgrades, cash out / bust); **Leaderboard → Arcade** ranks best Digits run (never EP)
 - **Mode-first Board tabs** — Ranked | Practice | Arcade | Feed | Find
-- **Features tab** — signed-in feature requests with upvotes and admin status workflow
+- **Features tab** — signed-in feature requests with upvotes; Active / Shipped / Declined sections; admin status workflow
 - **Community highlights** — today’s + weekly best **Ranked** rolls on the home tab when idle (`/api/highlights`)
 - **You on the board** — rank highlighted + sticky card if outside top list (per active board)
 - **Follows + Feed** — Board (+), Find search, or profile; **all public rarities** (All / Ranked / Free play toggles)
-- **In-app notifications** — Activity (follows, unlocks, **overtaken** on Ranked crowns); System (broadcasts + Ranked crown notices)
+- **In-app notifications** — Activity (follows, unlocks, **overtaken** on Ranked crowns); System (broadcasts + Ranked crown notices); same-roll crown periods grouped into one card
 - **System messages** — developer broadcasts (`POST /api/system-messages` + admin session / `api/admin/broadcast`); auto crowns for Ranked day/week/all-time EP #1
 - **Profiles** — `/u/:username` with accent, flair, bio, **preset emblem avatars**, secret seals, recent rolls + Follow
 - **Vanity share URLs** — `/s/:username/:shortCode`
@@ -308,19 +308,19 @@ Logged out: Discord-style text / PNG only — no public URL, with a create-accou
 
 ## 🧰 Commands
 
-| Command                                 | Purpose                                             |
-| --------------------------------------- | --------------------------------------------------- |
-| `pnpm dev`                              | Vite dev server (SPA)                               |
-| `pnpm build`                            | App + node typecheck, then Vite build → `dist/`     |
-| `pnpm typecheck`                        | App, node, and `tsconfig.server.json` (NodeNext)    |
-| `pnpm preview`                          | Preview `dist/`                                     |
-| `pnpm test`                             | Unit tests (`vp test`)                              |
-| `pnpm lint`                             | Lint via Vite+                                      |
-| `pnpm db:push`                          | Push Drizzle schema to Neon                         |
-| `pnpm db:studio`                        | Drizzle Studio                                      |
-| `node scripts/migrate-feature-wave.mjs` | Additive SQL migration (follows, seals, short_code) |
+| Command                                 | Purpose                                               |
+| --------------------------------------- | ----------------------------------------------------- |
+| `pnpm dev`                              | Vite dev server (SPA)                                 |
+| `pnpm build`                            | App + node typecheck, then Vite build → `dist/`       |
+| `pnpm typecheck`                        | App, node, and `tsconfig.server.json` (NodeNext)      |
+| `pnpm preview`                          | Preview `dist/`                                       |
+| `pnpm test`                             | Unit tests (`vp test`)                                |
+| `pnpm lint`                             | Lint via Vite+                                        |
+| `pnpm db:push`                          | Push Drizzle schema to Neon                           |
+| `pnpm db:studio`                        | Drizzle Studio                                        |
+| `node scripts/migrate-feature-wave.mjs` | Additive SQL migration (follows, seals, short_code)   |
 | `node scripts/migrate-arcade.mjs`       | Additive Arcade tables (`arcade_meta` / runs / rolls) |
-| `npx vercel dev`                        | Local SPA + serverless APIs                         |
+| `npx vercel dev`                        | Local SPA + serverless APIs                           |
 
 ### Debug logging (browser)
 
@@ -412,6 +412,7 @@ The Account screen times out after a few seconds and shows the sign-in form. Che
 | Dual leaderboards (Ranked + Practice) + follows + feed                  | ✅ Shipped                                                                        |
 | Best Roll board (EP / rarity) + Features tab                            | ✅ Shipped (`v0.6.0`)                                                             |
 | Arcade Mode (Digits runs) + mode-first Board tabs                       | ✅ Shipped (`v0.7.0`)                                                             |
+| Alerts hierarchy + crown grouping; Features status sections             | ✅ Shipped (`v0.7.1`)                                                             |
 | Server Ranked free play (`/api/ranked-roll`)                            | ✅ Shipped                                                                        |
 | Profiles (vanity + avatars) + follows                                   | ✅ Shipped                                                                        |
 | Activity unlocks + Ranked crown msgs + overtake notifs                  | ✅ Shipped                                                                        |

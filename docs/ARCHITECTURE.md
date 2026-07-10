@@ -210,7 +210,7 @@ flowchart LR
 
 ## Feature requests
 
-Signed-in **Features** tab (`/features`): `feature_requests` + `feature_request_votes` (unique upvote per user). List/submit/vote via `server/featureRequests.ts`; admin status PATCH audits like other admin mutations.
+Signed-in **Features** tab (`/features`): `feature_requests` + `feature_request_votes` (unique upvote per user). List/submit/vote via `server/featureRequests.ts`; admin status PATCH audits like other admin mutations. UI splits Active vs collapsible Shipped / Declined (client-only); status accents use dedicated `--feature-*` CSS tokens (not rarity).
 
 ## Badge unlock & notifications
 
@@ -226,6 +226,8 @@ flowchart LR
   Crown -->|yes| Sys[System crown broadcast]
   Crown -->|overtook other| Over[Activity overtaken]
 ```
+
+Client inbox (`src/lib/inboxPresentation.ts`) may **group** same-roll `overtake-*` / `best-*` period rows for display; writers still insert one row per period.
 
 ## Share & OG
 
@@ -247,16 +249,16 @@ Static SPA routes use [`server/pageOg.ts`](../server/pageOg.ts) titles/descripti
 
 ## Key directories
 
-| Path               | Responsibility                                                              |
-| ------------------ | --------------------------------------------------------------------------- |
-| `src/game/`        | Pure rules: RNG, badges, rarity, secrets, challenges, share text            |
-| `src/game/arcade/` | Digits economy, upgrades, shop, meta unlocks (shared with server)           |
-| `src/state/`       | `GameProvider` contexts, `useSync`, settings reducer, localStorage          |
-| `src/lib/`         | `*-api.ts` wrappers (incl. `arcade-api`), `schemas.ts`, auth, routes        |
-| `src/ui/`          | Screens & motion (reel, cascade, codex, boards, `ArcadeScreen`)             |
-| `api/`             | Thin Vercel route entrypoints (incl. `api/arcade/*`)                        |
-| `server/`          | `apiGuards`, auth, DB, merge, ranked, **arcade**, boards, rate limits, OG   |
-| `public/`          | Icons, avatars, secret art, Absolute Ceiling badge, PWA                     |
+| Path               | Responsibility                                                            |
+| ------------------ | ------------------------------------------------------------------------- |
+| `src/game/`        | Pure rules: RNG, badges, rarity, secrets, challenges, share text          |
+| `src/game/arcade/` | Digits economy, upgrades, shop, meta unlocks (shared with server)         |
+| `src/state/`       | `GameProvider` contexts, `useSync`, settings reducer, localStorage        |
+| `src/lib/`         | `*-api.ts` wrappers (incl. `arcade-api`), `schemas.ts`, auth, routes      |
+| `src/ui/`          | Screens & motion (reel, cascade, codex, boards, `ArcadeScreen`)           |
+| `api/`             | Thin Vercel route entrypoints (incl. `api/arcade/*`)                      |
+| `server/`          | `apiGuards`, auth, DB, merge, ranked, **arcade**, boards, rate limits, OG |
+| `public/`          | Icons, avatars, secret art, Absolute Ceiling badge, PWA                   |
 
 ## Trust model (honest)
 

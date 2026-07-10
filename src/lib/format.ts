@@ -38,7 +38,10 @@ export function formatDateTimeMedium(iso: string | undefined): string | null {
   }
 }
 
-/** Coarse relative age ("42s ago" / "12m ago"); null when missing/invalid. */
+/**
+ * Relative age for inbox / collection rails.
+ * Just now → s → m → h → d → compact date for older; null when missing/invalid.
+ */
 export function formatRelative(
   iso: string | undefined,
   now: number = Date.now(),
@@ -47,7 +50,13 @@ export function formatRelative(
   const t = Date.parse(iso);
   if (!Number.isFinite(t)) return null;
   const sec = Math.max(0, Math.floor((now - t) / 1000));
+  if (sec < 10) return 'Just now';
   if (sec < 60) return `${sec}s ago`;
   const min = Math.floor(sec / 60);
-  return `${min}m ago`;
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  const day = Math.floor(hr / 24);
+  if (day < 7) return `${day}d ago`;
+  return formatDateTimeCompact(iso);
 }

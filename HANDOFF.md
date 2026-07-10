@@ -7,8 +7,8 @@
 | **Repo**                   | `jondmarien/rngdle-unlocked`                                                                  |
 | **Live**                   | https://rngdle-unlocked.chron0.tech                                                           |
 | **Branch**                 | `main` (auto-deploys Vercel)                                                                  |
-| **Version**                | `0.7.0` (`package.json`; Settings uses `VITE_APP_VERSION`)                                    |
-| **Latest release**         | [v0.7.0](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.7.0) (cut when tagged) |
+| **Version**                | `0.7.1` (`package.json`; Settings uses `VITE_APP_VERSION`)                                    |
+| **Latest release**         | [v0.7.1](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.7.1) (cut when tagged) |
 | **Handoff commit context** | Opus audit refactor (`aa8e91e`…`fc4fa65` on `main`) + prior P0/P1 wave                        |
 
 ---
@@ -231,6 +231,7 @@ node scripts/add-roll-source.mjs   # if source column missing
 - [x] Cut annotated **`v0.5.0`** (architecture refactor docs + version)
 - [x] **v0.6.0** — Best Roll leaderboard + Features request tab
 - [x] **v0.7.0** — Arcade Mode (Digits runs) + mode-first Leaderboard (Ranked | Practice | Arcade | Feed | Find)
+- [x] **v0.7.1** — Notifications hierarchy + crown grouping; Features status sections (`--feature-*` tokens)
 
 ### Still open for you / ops
 

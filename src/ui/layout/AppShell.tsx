@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useSession } from '../../lib/auth-client';
+import { countGroupedUnread } from '../../lib/inboxPresentation';
 import {
   fetchNotifications,
   loadWebNotifyPref,
@@ -65,7 +66,11 @@ export function AppShell({
       try {
         const data = await fetchNotifications();
         if (cancelled) return;
-        const total = data.unread.total;
+        const grouped = countGroupedUnread({
+          activity: data.activity,
+          system: data.system,
+        });
+        const total = grouped.total;
         if (
           total > lastUnread.current &&
           lastUnread.current >= 0 &&

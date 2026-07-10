@@ -6,7 +6,11 @@ import {
   topPercentFromEP,
   type RollResult,
 } from '../../game';
-import { playRollSound, shouldCelebrate, shouldTrashCrack } from '../../game/fx';
+import {
+  playRollSound,
+  shouldCelebrate,
+  shouldTrashCrack,
+} from '../../game/fx';
 import { createLogger } from '../../lib/logger';
 import { useGame, useGameSettings } from '../../state/GameProvider';
 import { BadgeBreakdown } from '../components/BadgeCard';

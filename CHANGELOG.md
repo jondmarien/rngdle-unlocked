@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-07-10
+
+### Changed
+
+- **Notifications inbox** — per-type accent chips and unread treatment; relative timestamps; denser system crown copy (headline vs detail).
+- **Crown consolidation** — same-roll today / week / all-time overtake and system crown rows render as one card with period tags (display layer only; mark-read clears all member ids). Unread tab and Alerts badge counts match grouped cards.
+- **Features tab** — dedicated `--feature-*` status colors (not rarity tokens); Active list plus always-visible collapsible Shipped / Declined sections; static upvote count on closed items.
+- Shared `SectionHeader` extracted from Profile for Features (and Profile).
+
+### Notes
+
+- No changes to notification triggers, storage, feature-request status writes, or upvote APIs — presentation only.
+
 ## [0.7.0] - 2026-07-09
 
 ### Added
@@ -176,6 +189,7 @@ First **social multiplayer** release on top of the unlimited solo playground.
 - Public rolls + Discord OG via share APIs.
 - SPA path-based routes; Vercel Node adapter for serverless APIs.
 
+[0.7.1]: https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.7.1
 [0.7.0]: https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.7.0
 [0.6.0]: https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.6.0
 [0.5.1]: https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.5.1
