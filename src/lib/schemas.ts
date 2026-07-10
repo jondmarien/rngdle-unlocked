@@ -124,3 +124,75 @@ export const featureRequestListResponseSchema = z.object({
   items: z.array(featureRequestItemSchema),
   sort: z.enum(['top', 'newest']).optional(),
 });
+
+/** Arcade Mode — best-run leaderboard (Digits, not EP). */
+export const arcadeLeaderboardEntrySchema = z.object({
+  rank: z.number(),
+  username: z.string().nullable(),
+  name: z.string(),
+  bestRunScore: z.number(),
+  totalRunsCompleted: z.number(),
+});
+
+export const arcadeLeaderboardResponseSchema = z.object({
+  entries: z.array(arcadeLeaderboardEntrySchema),
+  me: arcadeLeaderboardEntrySchema.nullable().optional(),
+});
+
+export const arcadeUpgradeIdSchema = z.enum([
+  'floor_raise',
+  'rare_amp',
+  'epic_surge',
+  'combo_chain',
+  'badge_magnet',
+  'double_or_nothing',
+  'reroll',
+  'rarity_lock',
+  'currency_surge',
+  'bonus_spin',
+]);
+
+export const arcadeShopOfferSchema = z.object({
+  upgradeId: arcadeUpgradeIdSchema,
+  price: z.number(),
+});
+
+export const arcadeRunSchema = z.object({
+  id: z.string(),
+  status: z.enum(['active', 'cashed', 'busted']),
+  digits: z.number(),
+  peakDigits: z.number(),
+  rollCount: z.number(),
+  comboStreak: z.number(),
+  ownedUpgrades: z.array(arcadeUpgradeIdSchema),
+  cooldowns: z.record(z.string(), z.number()),
+  surgeRollsRemaining: z.number(),
+  pending: z.object({
+    donArmed: z.boolean().optional(),
+    rarityLockArmed: z.boolean().optional(),
+    skipShopOnce: z.boolean().optional(),
+  }),
+  shopOffers: z.array(arcadeShopOfferSchema),
+  runScore: z.number().nullable(),
+  startedAt: isoDateSchema,
+  endedAt: isoDateSchema.nullable(),
+});
+
+export const arcadeMetaSchema = z.object({
+  unlockedUpgrades: z.array(arcadeUpgradeIdSchema),
+  totalRunsCompleted: z.number(),
+  bestRunScore: z.number(),
+  lifetimeDigitsCashed: z.number(),
+  newlyUnlocked: z.array(arcadeUpgradeIdSchema).optional(),
+});
+
+export const arcadeRollSchema = z.object({
+  id: z.string(),
+  number: z.number(),
+  totalEP: z.number(),
+  rarity: rarityTierSchema,
+  badges: z.array(badgeHitSchema),
+  digitsAwarded: z.number(),
+  percentile: z.number(),
+  rolledAt: isoDateSchema,
+});

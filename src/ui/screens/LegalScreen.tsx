@@ -111,6 +111,11 @@ function TermsBody() {
             limits, harass players, or exploit the service may result in bans or
             account removal.
           </li>
+          <li>
+            <strong className="text-[var(--prose)]">Arcade</strong> Digits runs
+            are server-authoritative and never convertible to EP. Do not treat
+            Arcade high scores as interchangeable with Ranked or Practice EP.
+          </li>
         </ul>
       </section>
 

@@ -71,6 +71,17 @@
       "destination": "/api/page/features"
     },
     {
+      "source": "/arcade",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(bot|crawl|slurp|discord|twitter|facebook|slack|linkedin|telegram|whatsapp|preview|embed).*"
+        }
+      ],
+      "destination": "/api/page/arcade"
+    },
+    {
       "source": "/board",
       "has": [
         {

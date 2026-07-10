@@ -10,7 +10,7 @@ Instructions for AI coding agents and humans working in this repository.
 
 ## 1. Product in one page
 
-**RNGdle Unlocked** is an unlimited random-number game (0–1,000,000): badges, EP, rarity, history, codex. Progress is **local-first** (`localStorage`). Cloud is **optional** (auth, sync, social, competitive Ranked).
+**RNGdle Unlocked** is an unlimited random-number game (0–1,000,000): badges, EP, rarity, history, codex. Progress is **local-first** (`localStorage`). Cloud is **optional** (auth, sync, social, competitive Ranked). **Arcade Mode** (`/arcade`) is a separate Digits run layer — never interchangeable with EP.
 
 **Not affiliated with rngdle.com.** Do not copy proprietary badge names/assets from that site.
 
@@ -21,17 +21,20 @@ Instructions for AI coding agents and humans working in this repository.
 | **Free play**      | Browser CSPRNG (`src/game/rng.ts`)      | Leaderboard → **Practice** (synced progress) | No                            |
 | **Ranked**         | Server CSPRNG (`POST /api/ranked-roll`) | Leaderboard → **Ranked**                     | Yes (today / week / all-time) |
 | **Daily / Weekly** | Deterministic seed + subject id         | Challenge flavor; not Ranked crowns          | No                            |
+| **Arcade**         | Server CSPRNG (run loop; not Home mode) | Leaderboard → **Arcade** (best Digits run)   | No (Digits ≠ EP)              |
 
 - Free play stays unlimited and offline-capable.
 - Ranked requires **signed-in user + public `@username`**.
 - Client sync **must never** write `rolls.source = 'ranked'` (server only). On conflict, preserve `ranked`.
 - Absolute Ceiling `1_000_000` has a uniform chance in range plus an independent **1-in-100M** jackpot (client Free + server Ranked).
+- Arcade lives on `/arcade` (not `RollModePicker`); Digits never convert to EP; Arcade does not write `rolls`.
 
-### Dual leaderboards
+### Dual leaderboards (+ Arcade)
 
 - **Ranked** (`?scope=ranked`): sum public `source=ranked` rolls.
 - **Practice** (`?scope=practice`): all-time from `user_progress`; week from public non-ranked rolls.
 - **Metric view** (`?view=total|best`, default `total`): Total EP (existing) or Best Roll (`sortBy=ep|rarity`) — one personal best per player; Practice Best Roll uses public practice rolls.
+- **Arcade** (`GET /api/arcade/leaderboard`): best Digits run score — separate from EP; UI tab on Leaderboard (mode-first: Ranked | Practice | Arcade | Feed | Find).
 
 ### Feed & history lanes
 
@@ -44,15 +47,15 @@ Instructions for AI coding agents and humans working in this repository.
 
 ```
 api/                 Vercel serverless entrypoints (Node adapter) — thin handlers
-server/              Shared backend: apiGuards, auth, db, sync, rankedRoll, rollActivity,
+server/              Shared backend: apiGuards, auth, db, sync, rankedRoll, arcade,
                      rateLimit, leaderboard, profile, feed, ogSvg, notifications
-src/game/            Pure TS engine (no React) — RNG, badges, rarity, secrets, challenge
+src/game/            Pure TS engine (no React) — RNG, badges, rarity, secrets, challenge, arcade/
 src/state/           GameProvider (contexts) + useSync + localStorage + settings reducer
-src/ui/              Screens + reel/cascade components
+src/ui/              Screens + reel/cascade components (+ ArcadeScreen)
 src/lib/             Auth client, routes, *-api.ts wrappers, schemas.ts, themes, format
 public/              Avatars, rarity/family icons, secrets art, Absolute Ceiling badge
 docs/                ARCHITECTURE.md + refactor notes + design specs/plans
-scripts/             Migrations, diagnostics (prefer additive SQL over destructive push)
+scripts/             Migrations (incl. migrate-arcade), diagnostics (prefer additive SQL)
 ```
 
 | Path                     | Rules                                                                                               |
@@ -109,6 +112,7 @@ See [`.env.example`](./.env.example). Typical vars:
 | `BETTER_AUTH_SECRET`                          | Auth + HMAC attestations                                                                           |
 | `BETTER_AUTH_URL`                             | Site origin (production must match real domain)                                                    |
 | `VITE_APP_URL`                                | Client trusted origin                                                                              |
+| `EXTRA_TRUSTED_ORIGINS`                       | Optional comma-separated extra Better Auth origins (prod + beta chron0.tech already hardcoded)     |
 | `RESEND_API_KEY`                              | Outbound mail (magic link + email verification) — see [`docs/email-auth.md`](./docs/email-auth.md) |
 | `EMAIL_FROM`                                  | Optional; default `RNGdle Unlocked <noreply@outreach.chron0.tech>`                                 |
 | `ADMIN_SECRET`                                | Optional; bootstrap only (`scripts/promote-admin.mjs`) — not for browser admin                     |
@@ -219,7 +223,7 @@ Do **not** implement hate-symbol or white-supremacy easter eggs / badges (e.g. 1
 
 Primary schema: `server/db/schema.ts`.
 
-Important tables: `user` (username, vanity profile fields), `user_progress`, `rolls` (+ `source`, `short_code`, attestation, `challenge_key`), `follows`, `notifications`, `system_messages`, `system_message_reads`, `rate_limits`, Better Auth tables.
+Important tables: `user` (username, vanity profile fields), `user_progress`, `rolls` (+ `source`, `short_code`, attestation, `challenge_key`), `arcade_meta`, `arcade_runs`, `arcade_run_rolls`, `follows`, `notifications`, `system_messages`, `system_message_reads`, `rate_limits`, Better Auth tables.
 
 **Production safety:**
 
@@ -231,26 +235,29 @@ Important tables: `user` (username, vanity profile fields), `user_progress`, `ro
 
 ## 7. API surface (agents)
 
-| Endpoint                                             | Notes                                                                                                                      |
-| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `/api/auth/*`                                        | Better Auth (rewrites with `__path` for multi-segment)                                                                     |
-| `/api/sync`                                          | GET/POST cloud merge; soft per-minute burst only                                                                           |
-| `/api/ranked-roll`                                   | POST Ranked free play (auth + username)                                                                                    |
-| `/api/leaderboard`                                   | `?view=total\|best` (default total); `?scope=ranked\|practice&period=all\|week`; total: `sort=`; best: `sortBy=ep\|rarity` |
-| `/api/feature-requests`                              | GET list / POST submit (signed-in); vote via `/api/feature-requests/:id/vote`                                              |
-| `/api/admin/feature-requests`                        | PATCH status (`requireAdmin` + audit)                                                                                      |
-| `/api/highlights`                                    | Community bests — **Ranked only**                                                                                          |
-| `/api/feed`                                          | `?source=all\|ranked\|practice` — self + following                                                                         |
-| `/api/follow`                                        | Follow graph                                                                                                               |
-| `/api/notifications`                                 | Activity + system inbox                                                                                                    |
-| `/api/system-messages`                               | GET list; POST **admin session** (role=admin). Still live alongside `api/admin/broadcast.ts` — redundant POST not removed. |
-| `/api/admin/*`                                       | Admin: broadcast, users search/wipe/ban, reports                                                                           |
-| `/api/reports`                                       | Signed-in users file abuse / username reports                                                                              |
-| `/api/challenge`                                     | Period seeds metadata                                                                                                      |
-| `/api/attest`                                        | Optional HMAC seal on claim                                                                                                |
-| `/api/og`, `/api/share/*`, `/api/u/*`, `/api/page/*` | OG / share / profile / static-page HTML for bots                                                                           |
-| `/api/rolls/:id`                                     | Public roll lookup for share gate                                                                                          |
-| `/api/health`                                        | Liveness + env presence                                                                                                    |
+| Endpoint                                               | Notes                                                                                                                      |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| `/api/auth/*`                                          | Better Auth (rewrites with `__path` for multi-segment)                                                                     |
+| `/api/sync`                                            | GET/POST cloud merge; soft per-minute burst only                                                                           |
+| `/api/ranked-roll`                                     | POST Ranked free play (auth + username)                                                                                    |
+| `/api/leaderboard`                                     | `?view=total\|best` (default total); `?scope=ranked\|practice&period=all\|week`; total: `sort=`; best: `sortBy=ep\|rarity` |
+| `/api/arcade`                                          | GET meta + active run (auth)                                                                                               |
+| `/api/arcade/start\|roll\|buy\|arm\|cash-out\|abandon` | Arcade run mutations (auth + @username for start/roll)                                                                     |
+| `/api/arcade/leaderboard`                              | Best Digits run score (optional auth for `me`)                                                                             |
+| `/api/feature-requests`                                | GET list / POST submit (signed-in); vote via `/api/feature-requests/:id/vote`                                              |
+| `/api/admin/feature-requests`                          | PATCH status (`requireAdmin` + audit)                                                                                      |
+| `/api/highlights`                                      | Community bests — **Ranked only**                                                                                          |
+| `/api/feed`                                            | `?source=all\|ranked\|practice` — self + following                                                                         |
+| `/api/follow`                                          | Follow graph                                                                                                               |
+| `/api/notifications`                                   | Activity + system inbox                                                                                                    |
+| `/api/system-messages`                                 | GET list; POST **admin session** (role=admin). Still live alongside `api/admin/broadcast.ts` — redundant POST not removed. |
+| `/api/admin/*`                                         | Admin: broadcast, users search/wipe/ban, reports                                                                           |
+| `/api/reports`                                         | Signed-in users file abuse / username reports                                                                              |
+| `/api/challenge`                                       | Period seeds metadata                                                                                                      |
+| `/api/attest`                                          | Optional HMAC seal on claim                                                                                                |
+| `/api/og`, `/api/share/*`, `/api/u/*`, `/api/page/*`   | OG / share / profile / static-page HTML for bots                                                                           |
+| `/api/rolls/:id`                                       | Public roll lookup for share gate                                                                                          |
+| `/api/health`                                          | Liveness + env presence                                                                                                    |
 
 SPA routes: History API in `src/lib/routes.ts`; Vercel rewrites non-`/api` to `index.html`. Bot UA rewrites for `/s/:user/:code` and `/u/:username`.
 
@@ -301,7 +308,7 @@ These four checks require a **manual browser smoke** — automated `pnpm test` /
 - Default branch: `main` (production via Vercel).
 - Prefer small, focused commits with complete sentences in messages.
 - Do not force-push `main` unless the user explicitly requests it.
-- Version in `package.json` (currently **0.6.0**); Settings footer reads `VITE_APP_VERSION` from the build.
+- Version in `package.json` (currently **0.7.0**); Settings footer reads `VITE_APP_VERSION` from the build.
 - Releases: annotated tags (`v0.x.y`) + `gh release create` when the user asks.
 
 ---
@@ -335,28 +342,29 @@ These four checks require a **manual browser smoke** — automated `pnpm test` /
 
 ## 13. Key files cheat sheet
 
-| Concern                  | Start here                                                                                    |
-| ------------------------ | --------------------------------------------------------------------------------------------- |
-| Roll orchestration       | `src/state/GameProvider.tsx`                                                                  |
-| Cloud sync orchestration | `src/state/useSync.ts`, `useCloudSync`                                                        |
-| Client API wrappers      | `src/lib/*-api.ts` (esp. `roll-api`, `leaderboard-api`, `profile-api`)                        |
-| Zod schemas              | `src/lib/schemas.ts`, `server/sync.ts`                                                        |
-| QueryClient              | `src/main.tsx`                                                                                |
-| Handler guards           | `server/apiGuards.ts`                                                                         |
-| Read pipelines           | `server/leaderboard.ts`, `profile.ts`, `feed.ts`, `ogSvg.ts`                                  |
-| Reel animation           | `src/ui/components/NumberDisplay.tsx`, `HomeScreen.tsx`                                       |
-| Mode picker copy         | `src/ui/components/RollModePicker.tsx`                                                        |
-| Badge catalog            | `src/game/badges/catalog.ts`                                                                  |
-| Ranked issue             | `server/rankedRoll.ts`, `api/ranked-roll.ts`                                                  |
-| Crowns / overtake        | `server/rollActivity.ts`                                                                      |
-| Sync merge               | `server/sync.ts`, `api/sync.ts`                                                               |
-| Leaderboards             | `server/leaderboard.ts`, `api/leaderboard.ts`, `LeaderboardScreen.tsx` (Total EP + Best Roll) |
-| Feature requests         | `server/featureRequests.ts`, `api/feature-requests*`, `FeatureRequestsScreen.tsx`             |
-| Feed                     | `server/feed.ts`, `api/feed.ts`                                                               |
-| Schema                   | `server/db/schema.ts`                                                                         |
-| Architecture             | `docs/ARCHITECTURE.md`, `docs/refactor-notes-2026-07.md`                                      |
-| Player What’s new        | `src/lib/whats-new.ts`, `WhatsNewScreen.tsx` (`/whats-new`)                                   |
-| Developer changelog      | `CHANGELOG.md`                                                                                |
+| Concern                  | Start here                                                                                                          |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| Roll orchestration       | `src/state/GameProvider.tsx`                                                                                        |
+| Cloud sync orchestration | `src/state/useSync.ts`, `useCloudSync`                                                                              |
+| Client API wrappers      | `src/lib/*-api.ts` (esp. `roll-api`, `leaderboard-api`, `profile-api`)                                              |
+| Zod schemas              | `src/lib/schemas.ts`, `server/sync.ts`                                                                              |
+| QueryClient              | `src/main.tsx`                                                                                                      |
+| Handler guards           | `server/apiGuards.ts`                                                                                               |
+| Read pipelines           | `server/leaderboard.ts`, `profile.ts`, `feed.ts`, `ogSvg.ts`                                                        |
+| Reel animation           | `src/ui/components/NumberDisplay.tsx`, `HomeScreen.tsx`                                                             |
+| Mode picker copy         | `src/ui/components/RollModePicker.tsx`                                                                              |
+| Badge catalog            | `src/game/badges/catalog.ts`                                                                                        |
+| Ranked issue             | `server/rankedRoll.ts`, `api/ranked-roll.ts`                                                                        |
+| Crowns / overtake        | `server/rollActivity.ts`                                                                                            |
+| Sync merge               | `server/sync.ts`, `api/sync.ts`                                                                                     |
+| Leaderboards             | `server/leaderboard.ts`, `api/leaderboard.ts`, `LeaderboardScreen.tsx` (Ranked/Practice/Arcade)                     |
+| Feature requests         | `server/featureRequests.ts`, `api/feature-requests*`, `FeatureRequestsScreen.tsx`                                   |
+| Arcade Mode              | `src/game/arcade/`, `server/arcade.ts`, `arcadeLeaderboard.ts`, `api/arcade/*`, `ArcadeScreen.tsx`, `arcade-api.ts` |
+| Feed                     | `server/feed.ts`, `api/feed.ts`                                                                                     |
+| Schema                   | `server/db/schema.ts`                                                                                               |
+| Architecture             | `docs/ARCHITECTURE.md`, `docs/refactor-notes-2026-07.md`                                                            |
+| Player What’s new        | `src/lib/whats-new.ts`, `WhatsNewScreen.tsx` (`/whats-new`)                                                         |
+| Developer changelog      | `CHANGELOG.md`                                                                                                      |
 
 ---
 

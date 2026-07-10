@@ -4,7 +4,7 @@
 
 ### Unlimited CSPRNG rolls · badges · EP · cloud social — _no 24-hour lock._
 
-Inspired by the daily number-game genre, but **unlocked**: roll as often as you want, keep a lifetime collection, and optionally sync to Neon for accounts, **Ranked + Practice leaderboards**, follows, challenges, and shareable rolls.
+Inspired by the daily number-game genre, but **unlocked**: roll as often as you want, keep a lifetime collection, and optionally sync to Neon for accounts, **Ranked + Practice leaderboards**, **Arcade Digits runs**, follows, challenges, and shareable rolls.
 
 **[Live Site](https://rngdle-unlocked.chron0.tech)**
 
@@ -32,10 +32,10 @@ Unlike a classic daily lock, you can roll **unlimited** times. Progress defaults
 
 > **Not affiliated with [rngdle.com](https://www.rngdle.com/).** Badge names, scoring, and implementation are original.
 
-| Mode                | What you get                                                                                                                                                                                                                            |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Solo (default)**  | Fortified browser CSPRNG Free play, reel animation, badges, EP, history, codex, showcase, stats, export/import — offline-capable                                                                                                        |
-| **Social (opt-in)** | Email sign-up, `@username`, auto cloud sync, **Leaderboard → Practice** (synced free play) + **Leaderboard → Ranked** (server free play), community crowns (Ranked only), follows/feed, profiles, alerts, share + OG, challenges, seals |
+| Mode                | What you get                                                                                                                                                                                                                                                      |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Solo (default)**  | Fortified browser CSPRNG Free play, reel animation, badges, EP, history, codex, showcase, stats, export/import — offline-capable                                                                                                                                  |
+| **Social (opt-in)** | Email sign-up, `@username`, auto cloud sync, **Leaderboard → Practice** (synced free play) + **Leaderboard → Ranked** (server free play) + **Arcade** Digits board, community crowns (Ranked only), follows/feed, profiles, alerts, share + OG, challenges, seals |
 
 ## 📋 Table of contents
 
@@ -162,6 +162,7 @@ Or `pnpm dev` for the SPA only and point APIs at a deployed preview.
 | **Ranked**    | Server CSPRNG (`POST /api/ranked-roll`) | **Ranked** board + today/week/all-time crowns + overtakes. Needs sign-in + `@username`. |
 | **Daily**     | `hash(daySeed + yourId)`                | Challenge number; Free/Ranked stay available.                                           |
 | **Weekly**    | `hash(weekSeed + yourId)`               | Same idea for the ISO week.                                                             |
+| **Arcade**    | Server CSPRNG inside Digits run loop    | **Arcade** board (best Digits run). Separate tab `/arcade` — Digits ≠ EP.               |
 
 Switch modes anytime (board fully resets). Badges, EP, history, and share work after you have a number. Absolute Ceiling jackpot (1 in 100M) exists on Free and Ranked.
 
@@ -170,7 +171,9 @@ Switch modes anytime (board fully resets). Badges, EP, history, and share work a
 - **Email + password** auth (Better Auth)
 - **@username** public identity
 - **Auto cloud sync** on Free play / challenges when signed in (merge-safe; cannot forge `source=ranked`)
-- **Dual leaderboard** — **Ranked** (server free play) · **Practice** (synced free play / overall progress); **Total EP** or **Best Roll** (by EP / by rarity); all-time / week; Practice all-time Total EP can sort EP / rolls / badges
+- **Dual EP leaderboard** — **Ranked** (server free play) · **Practice** (synced free play / overall progress); **Total EP** or **Best Roll** (by EP / by rarity); all-time / week; Practice all-time Total EP can sort EP / rolls / badges
+- **Arcade Mode** — `/arcade` Digits runs (upgrades, cash out / bust); **Leaderboard → Arcade** ranks best Digits run (never EP)
+- **Mode-first Board tabs** — Ranked | Practice | Arcade | Feed | Find
 - **Features tab** — signed-in feature requests with upvotes and admin status workflow
 - **Community highlights** — today’s + weekly best **Ranked** rolls on the home tab when idle (`/api/highlights`)
 - **You on the board** — rank highlighted + sticky card if outside top list (per active board)
@@ -197,21 +200,21 @@ Switch modes anytime (board fully resets). Badges, EP, history, and share work a
 rngdle-unlocked/
 ├── api/                 ⚡ Thin Vercel handlers (Node adapter → Web Request)
 │   ├── auth.ts · me.ts · sync.ts · health.ts · ranked-roll.ts
-│   ├── leaderboard.ts · feed.ts · profile/[username].ts · og.ts · …
+│   ├── leaderboard.ts · arcade/* · feed.ts · profile/[username].ts · og.ts · …
 │   └── admin/* · reports.ts · follow.ts · notifications.ts · …
 ├── server/              🧠 Shared API logic
-│   ├── apiGuards · auth · db/schema · sync · rankedRoll · rollActivity
-│   ├── leaderboard · profile · feed · ogSvg · notifications
+│   ├── apiGuards · auth · db/schema · sync · rankedRoll · arcade · rollActivity
+│   ├── leaderboard · arcadeLeaderboard · profile · feed · ogSvg · notifications
 │   ├── rateLimit · vercel-adapter · ogHtml · …
 ├── src/
-│   ├── game/            Pure TS engine (rng, badges, secrets, challenge)
+│   ├── game/            Pure TS engine (rng, badges, secrets, challenge, arcade/)
 │   ├── state/           GameProvider (contexts) + useSync + settings + localStorage
-│   ├── lib/             *-api.ts wrappers, schemas.ts, auth, routes, themes
-│   └── ui/              Screens + reel / cascade components
+│   ├── lib/             *-api.ts wrappers (incl. arcade-api), schemas.ts, auth, routes
+│   └── ui/              Screens + reel / cascade (+ ArcadeScreen)
 ├── public/              Avatars, rarity/family icons, secret art, PWA
 ├── docs/                ARCHITECTURE.md + refactor notes + historical specs
-├── scripts/             migrate-feature-wave, check-db, TS7 API patch
-└── vercel.json          SPA + bot OG rewrites for /s and /u
+├── scripts/             migrate-arcade, migrate-feature-wave, check-db, TS7 API patch
+└── vercel.json          SPA + bot OG rewrites for /s, /u, /arcade, …
 ```
 
 | Area                     | Role                                              | Stack                                    |
@@ -224,27 +227,28 @@ rngdle-unlocked/
 
 ## 🗺️ Routes (SPA)
 
-| Path             | Screen                                                             |
-| ---------------- | ------------------------------------------------------------------ |
-| `/`              | Roll (Free / Ranked / Daily / Weekly)                              |
-| `/history`       | History + share                                                    |
-| `/collection`    | Badge **codex** (encyclopedia, unlock times, **New** 5‑min tab)    |
-| `/showcase`      | Best rolls & streaks                                               |
-| `/stats`         | Rarity histogram, EP/hour, calendar                                |
-| `/leaderboard`   | **Ranked** + **Practice** · Total EP / Best Roll · Feed · **Find** |
-| `/features`      | Feature requests (sign-in) — submit, upvote, status                |
-| `/notifications` | Alerts (Activity + System)                                         |
-| `/account`       | Auth, username, profile look (avatar/accent/flair/bio), push/pull  |
-| `/about`         | How to play, social, fairness                                      |
-| `/settings`      | Theme, effects, tips, export/import                                |
-| `/u/:username`   | Public profile (+ follow)                                          |
-| `/s/:user/:code` | Vanity public roll (SPA)                                           |
-| `/r/:id`         | Legacy public roll path                                            |
+| Path             | Screen                                                                |
+| ---------------- | --------------------------------------------------------------------- |
+| `/`              | Roll (Free / Ranked / Daily / Weekly)                                 |
+| `/history`       | History + share                                                       |
+| `/collection`    | Badge **codex** (encyclopedia, unlock times, **New** 5‑min tab)       |
+| `/showcase`      | Best rolls & streaks                                                  |
+| `/stats`         | Rarity histogram, EP/hour, calendar                                   |
+| `/leaderboard`   | **Ranked** · **Practice** · **Arcade** · Feed · **Find** (mode-first) |
+| `/arcade`        | Arcade Digits runs (shop, cash out / bust) — sign-in + `@username`    |
+| `/features`      | Feature requests (sign-in) — submit, upvote, status                   |
+| `/notifications` | Alerts (Activity + System)                                            |
+| `/account`       | Auth, username, profile look (avatar/accent/flair/bio), push/pull     |
+| `/about`         | How to play, social, fairness                                         |
+| `/settings`      | Theme, effects, tips, export/import                                   |
+| `/u/:username`   | Public profile (+ follow)                                             |
+| `/s/:user/:code` | Vanity public roll (SPA)                                              |
+| `/r/:id`         | Legacy public roll path                                               |
 
 **API (serverless):**  
-`/api/auth/*`, `/api/me`, `/api/sync`, `/api/ranked-roll`, `/api/leaderboard?view=total|best&scope=ranked|practice`, `/api/feature-requests`, `/api/feature-requests/:id/vote`, `/api/admin/feature-requests`, `/api/highlights`, `/api/follow`, `/api/feed`, `/api/users/search`, `/api/notifications`, `/api/system-messages`, `/api/admin/*`, `/api/reports`, `/api/challenge`, `/api/attest`, `/api/og`, `/api/profile/:user`, `/api/u/:user`, `/api/rolls/:id`, `/api/share/:id`, `/api/health`.
+`/api/auth/*`, `/api/me`, `/api/sync`, `/api/ranked-roll`, `/api/leaderboard?view=total|best&scope=ranked|practice`, `/api/arcade` (+ `/start` `/roll` `/buy` `/arm` `/cash-out` `/abandon` `/leaderboard`), `/api/feature-requests`, `/api/feature-requests/:id/vote`, `/api/admin/feature-requests`, `/api/highlights`, `/api/follow`, `/api/feed`, `/api/users/search`, `/api/notifications`, `/api/system-messages`, `/api/admin/*`, `/api/reports`, `/api/challenge`, `/api/attest`, `/api/og`, `/api/profile/:user`, `/api/u/:user`, `/api/rolls/:id`, `/api/share/:id`, `/api/health`.
 
-Bot user-agents: `/s/:user/:code` → `/api/share/:code`; `/u/:username` → `/api/u/:username` for OG HTML + image.
+Bot user-agents: `/s/:user/:code` → `/api/share/:code`; `/u/:username` → `/api/u/:username`; `/arcade` → `/api/page/arcade` for OG HTML + image.
 
 ## ☁️ Social / cloud setup
 
@@ -256,7 +260,9 @@ Bot user-agents: `/s/:user/:code` → `/api/share/:code`; `/u/:username` → `/a
   - `pnpm db:push`, **or**
   - `node scripts/migrate-feature-wave.mjs` (additive: `short_code`, attestation columns, `follows` — avoids truncate prompts)
 
-Tables include: `user` (incl. vanity: accent, bio, flair, avatar), `session`, `account`, `verification`, `user_progress`, `rolls`, `follows`, `notifications`, `system_messages`, `system_message_reads`, `rate_limits`.
+Tables include: `user` (incl. vanity: accent, bio, flair, avatar), `session`, `account`, `verification`, `user_progress`, `rolls`, `arcade_meta`, `arcade_runs`, `arcade_run_rolls`, `follows`, `notifications`, `system_messages`, `system_message_reads`, `rate_limits`.
+
+Arcade tables: `node --env-file=.env.local scripts/migrate-arcade.mjs`
 
 ### 2. Better Auth env
 
@@ -343,7 +349,8 @@ Full diagrams: **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)**. Refactor summ
 - **Auth multi-segment paths** rewritten to `/api/auth?__path=…` (no Next-style catch-all); Node `(req, res)` adapter in `server/vercel-adapter.ts`.
 - **Merge-safe sync** — max counters, union collections (earliest `firstEarnedAt`), merge histories by id; integrity gate rejects cloned progress dumps.
 - **Ranked rolls** (`POST /api/ranked-roll`, `server/rankedRoll.ts`) — server CSPRNG + score; `rolls.source = ranked`.
-- **Leaderboard scopes** — `?scope=ranked|practice` (default ranked); `?view=total|best` (default total); best view uses `?sortBy=ep|rarity`.
+- **Leaderboard scopes** — `?scope=ranked|practice` (default ranked); `?view=total|best` (default total); best view uses `?sortBy=ep|rarity`. Arcade Digits board is `GET /api/arcade/leaderboard` (separate from EP).
+- **Arcade** (`server/arcade.ts`, `src/game/arcade/`) — Digits economy; server is source of truth; never writes `rolls` / EP.
 - **Roll activity** (`server/rollActivity.ts`) — unlock notifications; Ranked-only crowns + overtake alerts.
 - **Share publish** polls `/api/rolls/:key` (`waitForCloudPublish`) before enabling vanity links.
 - **Attestation** — optional HMAC on a claim (does not prove Free-play client RNG honesty).
@@ -364,7 +371,10 @@ The roll must exist in Neon (`rolls` table). Sign in so auto-sync runs, or Accou
 Need `follows` table — run `node scripts/migrate-feature-wave.mjs` on that database. Sign in required.
 
 **Leaderboard empty / “you” missing**  
-Needs a **username**. **Ranked** board: generate via Roll → Ranked. **Practice** board: Free play + sync. Toggle boards on the Leaderboard screen.
+Needs a **username**. **Ranked** board: generate via Roll → Ranked. **Practice** board: Free play + sync. **Arcade** board: complete a Digits run on `/arcade`. Toggle boards on the Leaderboard screen (Ranked | Practice | Arcade | Feed | Find).
+
+**Arcade start rejected / “run in progress”**  
+One active run per user — Continue or Cash out (or two-step Abandon) from the Arcade tab.
 
 **Ranked roll 500 / “Ranked roll failed”**  
 Needs signed-in session + `@username`. Check Vercel function logs for `/api/ranked-roll`. Schema needs `rolls.source` (`node scripts/add-roll-source.mjs`). Extensionless `src/game` imports used to break production while typecheck stayed green — `tsconfig.server.json` **NodeNext** now fails `pnpm typecheck` on that class of bug.
@@ -387,6 +397,7 @@ The Account screen times out after a few seconds and shows the sign-in form. Che
 | Community today/week bests (Ranked)                                     | ✅ Shipped                                                                        |
 | Dual leaderboards (Ranked + Practice) + follows + feed                  | ✅ Shipped                                                                        |
 | Best Roll board (EP / rarity) + Features tab                            | ✅ Shipped (`v0.6.0`)                                                             |
+| Arcade Mode (Digits runs) + mode-first Board tabs                       | ✅ Shipped (`v0.7.0`)                                                             |
 | Server Ranked free play (`/api/ranked-roll`)                            | ✅ Shipped                                                                        |
 | Profiles (vanity + avatars) + follows                                   | ✅ Shipped                                                                        |
 | Activity unlocks + Ranked crown msgs + overtake notifs                  | ✅ Shipped                                                                        |
@@ -404,6 +415,7 @@ Design docs:
 
 - [**Architecture (mermaid)**](docs/ARCHITECTURE.md)
 - [**Refactor notes (July 2026)**](docs/refactor-notes-2026-07.md)
+- [Arcade Mode design](docs/superpowers/specs/2026-07-09-arcade-mode-design.md)
 - [Solo design](docs/superpowers/specs/2026-07-08-rngdle-unlocked-design.md) _(historical)_
 - [Part 2 social design](docs/superpowers/specs/2026-07-09-mvp-part2-social-design.md) _(historical)_
 - [Feature wave plan](docs/superpowers/plans/2026-07-09-feature-wave.md) _(historical)_

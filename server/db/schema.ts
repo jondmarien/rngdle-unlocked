@@ -249,3 +249,67 @@ export const featureRequestVotes = pgTable(
   },
   (t) => [primaryKey({ columns: [t.userId, t.requestId] })],
 );
+
+/**
+ * Arcade Mode — permanent meta-progression (Digits economy; never EP).
+ * Isolated from rolls / user_progress.
+ */
+export const arcadeMeta = pgTable('arcade_meta', {
+  userId: text('user_id')
+    .primaryKey()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  /** JSON string[] of ArcadeUpgradeId */
+  unlockedUpgradeIds: text('unlocked_upgrade_ids').notNull().default('[]'),
+  totalRunsCompleted: integer('total_runs_completed').notNull().default(0),
+  bestRunScore: integer('best_run_score').notNull().default(0),
+  lifetimeDigitsCashed: integer('lifetime_digits_cashed').notNull().default(0),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+/**
+ * Arcade run session. status: active | cashed | busted (abandon → busted).
+ * Digits / peak / owned upgrades live here — not on rolls.
+ */
+export const arcadeRuns = pgTable('arcade_runs', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  /** active | cashed | busted */
+  status: text('status').notNull().default('active'),
+  digits: integer('digits').notNull().default(0),
+  peakDigits: integer('peak_digits').notNull().default(0),
+  rollCount: integer('roll_count').notNull().default(0),
+  /** Consecutive non-trash for combo_chain passive (not a bust counter). */
+  comboStreak: integer('combo_streak').notNull().default(0),
+  /** JSON ArcadeUpgradeId[] — unique, no stacking */
+  ownedUpgradesJson: text('owned_upgrades_json').notNull().default('[]'),
+  /** JSON Record<upgradeId, rollsRemaining> */
+  cooldownsJson: text('cooldowns_json').notNull().default('{}'),
+  surgeRollsRemaining: integer('surge_rolls_remaining').notNull().default(0),
+  /** JSON pending actives: { donArmed?, rarityLockArmed?, skipShopOnce? } */
+  pendingActiveJson: text('pending_active_json').notNull().default('{}'),
+  /** JSON ShopOffer[] */
+  shopOfferJson: text('shop_offer_json').notNull().default('[]'),
+  /** Set on end: peak (bust/abandon) or digits (cash-out) */
+  runScore: integer('run_score'),
+  startedAt: timestamp('started_at').notNull().defaultNow(),
+  endedAt: timestamp('ended_at'),
+});
+
+/** Per-roll audit trail inside an Arcade run (not the public rolls table). */
+export const arcadeRunRolls = pgTable('arcade_run_rolls', {
+  id: text('id').primaryKey(),
+  runId: text('run_id')
+    .notNull()
+    .references(() => arcadeRuns.id, { onDelete: 'cascade' }),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  number: integer('number').notNull(),
+  totalEp: integer('total_ep').notNull(),
+  rarity: text('rarity').notNull(),
+  badgesJson: text('badges_json').notNull().default('[]'),
+  digitsAwarded: integer('digits_awarded').notNull().default(0),
+  rolledAt: timestamp('rolled_at').notNull().defaultNow(),
+});

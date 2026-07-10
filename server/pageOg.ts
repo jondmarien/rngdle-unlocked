@@ -6,6 +6,7 @@
 export type PageOgSlug =
   | 'home'
   | 'leaderboard'
+  | 'arcade'
   | 'features'
   | 'whats-new'
   | 'about'
@@ -33,18 +34,27 @@ export const PAGE_OG: Record<PageOgSlug, PageOgMeta> = {
     path: '/',
     title: 'RNGdle Unlocked — unlimited rolls',
     description:
-      'Roll 0–1,000,000 anytime. Collect badges, score EP, climb rarity — Free play, Ranked, Daily & Weekly. Not affiliated with rngdle.com.',
+      'Roll 0–1,000,000 anytime. Collect badges, score EP, climb rarity — Free play, Ranked, Arcade Digits, Daily & Weekly. Not affiliated with rngdle.com.',
     cardHeadline: 'Unlimited rolls',
-    cardLabel: 'CSPRNG · badges · EP · Ranked',
+    cardLabel: 'CSPRNG · badges · EP · Arcade',
   },
   leaderboard: {
     slug: 'leaderboard',
     path: '/leaderboard',
     title: 'Leaderboard · RNGdle Unlocked',
     description:
-      'Ranked and Practice boards — Total EP or Best Roll (by EP or rarity). Follow friends and browse the Feed.',
+      'Ranked, Practice, and Arcade boards — EP Total / Best Roll, or best Digits run. Follow friends and browse the Feed.',
     cardHeadline: 'Leaderboard',
-    cardLabel: 'Total EP · Best Roll · Ranked + Practice',
+    cardLabel: 'Ranked · Practice · Arcade · Feed',
+  },
+  arcade: {
+    slug: 'arcade',
+    path: '/arcade',
+    title: 'Arcade · RNGdle Unlocked',
+    description:
+      'Roguelite Digits runs — buy upgrades between rolls, cash out or bust on Double or Nothing. Separate from EP.',
+    cardHeadline: 'Arcade Mode',
+    cardLabel: 'Digits · upgrades · cash out',
   },
   features: {
     slug: 'features',
@@ -60,7 +70,7 @@ export const PAGE_OG: Record<PageOgSlug, PageOgMeta> = {
     path: '/whats-new',
     title: "What's new · RNGdle Unlocked",
     description:
-      'Player-facing release highlights for RNGdle Unlocked: Ranked, boards, Features, account tools, and more.',
+      'Player-facing release highlights for RNGdle Unlocked: Arcade Digits runs, Ranked/Practice boards, Features, and more.',
     cardHeadline: "What's new",
     cardLabel: 'Release chronicle · player notes',
   },
@@ -69,9 +79,9 @@ export const PAGE_OG: Record<PageOgSlug, PageOgMeta> = {
     path: '/about',
     title: 'About · RNGdle Unlocked',
     description:
-      'How to play Free, Ranked, Daily & Weekly, rarity ladders, fairness notes, and stack. Unlimited random numbers, no 24-hour lock.',
+      'How to play Free, Ranked, Daily & Weekly, Arcade Digits runs, rarity ladders, fairness notes, and stack. Unlimited random numbers, no 24-hour lock.',
     cardHeadline: 'About',
-    cardLabel: 'How to play · rarity · fairness',
+    cardLabel: 'How to play · Arcade · fairness',
   },
   collection: {
     slug: 'collection',
@@ -127,6 +137,7 @@ const PATH_TO_SLUG: Record<string, PageOgSlug> = {
   roll: 'home',
   leaderboard: 'leaderboard',
   board: 'leaderboard',
+  arcade: 'arcade',
   features: 'features',
   'whats-new': 'whats-new',
   changelog: 'whats-new',

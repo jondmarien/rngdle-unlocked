@@ -7,14 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-07-09
+
 ### Added
 
+- **Arcade Mode** (`/arcade`) — server-authoritative Digits runs: shop upgrades (5 passive / 5 active), Double or Nothing bust, cash-out / two-step abandon, meta unlocks. Digits never convert to EP; no writes to `rolls` / `user_progress`.
+- Arcade economy config (`src/game/arcade/economy.ts`) — tunable Digits curve, cooldowns, shop prices, unlock milestones.
+- Schema: `arcade_meta`, `arcade_runs`, `arcade_run_rolls` + `scripts/migrate-arcade.mjs`.
+- API: `/api/arcade`, `/start`, `/roll`, `/buy`, `/arm`, `/cash-out`, `/abandon`, `/leaderboard` (`requireUser` + rate limits).
+- Leaderboard primary tabs: **Ranked | Practice | Arcade | Feed | Find**; metric+sort collapsed to one control; Arcade best-run Digits board with “You on the board”.
+- Open Graph for `/arcade` (bot rewrite + page card).
 - Admin **Users** tab lists all accounts (paginated) with live search filter — TanStack Table + server `page`/`limit`/`total`.
 - Admin **Edit** username (`POST /api/admin/users/username`) + `scripts/backfill-usernames.mjs` for accounts with `username IS NULL` (missing `@` → excluded from leaderboards).
 - Feature request status **In progress** (`in_progress`) between Planned and Shipped.
 
 ### Changed
 
+- Leaderboard IA is mode-first (scope no longer a second equal-weight pill row under Board).
 - **Vite 8.1** + `@vitejs/plugin-react` 6 (Rolldown/Oxc). Vendor splits via `build.rolldownOptions.output.codeSplitting`. Local `vite build` ~0.4s (was ~3s on Vite 6).
 - **Bundle size:** route-level lazy loading for secondary screens, deferred share/confetti/html-to-image chunks, and vendor chunks — main entry JS ~59 KB (was ~639 KB).
 - **Vercel API deploy:** `pnpm build:vercel` esbuild-bundles each `api/**/*.ts` into `api/_bundles/` and (on Vercel) replaces sources with thin `@ts-nocheck` stubs so the Node builder no longer typechecks the full server/game graph per handler (`scripts/bundle-api.mjs`).
@@ -23,6 +32,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Daily / Weekly challenges lock after one Generate per UTC period (same seed would only repeat the number). Button shows “Done for today/week”; engine skips duplicate history/EP.
 - Root `tsconfig.json` is the api/server NodeNext config (not an empty project-references solution). Vercel ignores references when typechecking `/api`, which previously flooded builds with `process` / `Buffer` / discriminant-narrowing errors while still deploying.
+
+### Notes
+
+- After deploy, run: `node --env-file=.env.local scripts/migrate-arcade.mjs`
 
 ## [0.6.0] - 2026-07-09
 
@@ -163,6 +176,7 @@ First **social multiplayer** release on top of the unlimited solo playground.
 - Public rolls + Discord OG via share APIs.
 - SPA path-based routes; Vercel Node adapter for serverless APIs.
 
+[0.7.0]: https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.7.0
 [0.6.0]: https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.6.0
 [0.5.1]: https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.5.1
 [0.5.0]: https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.5.0
