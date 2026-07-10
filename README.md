@@ -8,6 +8,7 @@ Inspired by the daily number-game genre, but **unlocked**: roll as often as you 
 
 **[Live Site](https://rngdle-unlocked.chron0.tech)**
 
+[![Version](https://img.shields.io/badge/version-0.11.0-8b5cf6)](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.11.0)
 [![React 19](https://img.shields.io/badge/UI-React_19-61dafb?logo=react&logoColor=black)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/lang-TypeScript_7-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite 6](https://img.shields.io/badge/build-Vite_Plus-646cff?logo=vite&logoColor=white)](https://vitejs.dev)

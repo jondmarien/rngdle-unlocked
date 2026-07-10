@@ -46,7 +46,7 @@ Release Progress:
 - [ ] 2. Bump package.json
 - [ ] 3. CHANGELOG.md
 - [ ] 4. src/lib/whats-new.ts
-- [ ] 5. README.md + AGENTS.md + HANDOFF.md
+- [ ] 5. README.md (version badge + shipped table) + AGENTS.md + HANDOFF.md
 - [ ] 6. Sweep other docs / in-app copy
 - [ ] 7. Update scripts/broadcast-release.mjs
 - [ ] 8. Verify (typecheck if code changed; fmt)
@@ -90,7 +90,7 @@ Do **not** dump raw CHANGELOG bullets. About links here via `getWhatsNew()[0]`.
 
 | File         | What to update                                                                                        |
 | ------------ | ----------------------------------------------------------------------------------------------------- |
-| `README.md`  | Roadmap / shipped table rows for this release; any feature blurbs that mention the new version        |
+| `README.md`  | **Version badge** at top (see below); roadmap / shipped table rows; feature blurbs that cite the new version |
 | `AGENTS.md`  | “Version in `package.json` (currently **X.Y.Z**)” and any cheat-sheet lines that cite the old version |
 | `HANDOFF.md` | Header **Version** + **Latest release** link; add a Done-wave checkbox for this release               |
 
@@ -98,6 +98,13 @@ Latest release link shape:
 
 `https://github.com/jondmarien/rngdle-unlocked/releases/tag/vX.Y.Z`
 
+**README version badge** (first shield under Live Site) — replace the previous SemVer in both the badge label and the href:
+
+```markdown
+[![Version](https://img.shields.io/badge/version-X.Y.Z-8b5cf6)](https://github.com/jondmarien/rngdle-unlocked/releases/tag/vX.Y.Z)
+```
+
+Do not leave a stale `version-0.PREV.Z` badge after a release.
 ### 6. Sweep related docs / site copy
 
 Search the repo for the **previous** version string and stale release claims:
