@@ -7,11 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-
-- **What’s new** moved to a dedicated chronicle timeline at `/whats-new` (nav tab; `/changelog` alias). Layout inspired by the CTFD scoreboard chronicle: date + version rail, tags, section headings. About now links out instead of embedding the full list.
-- Open Graph + bot rewrite for `/whats-new` (and `/changelog`).
-
 ## [0.6.0] - 2026-07-09
 
 ### Added
@@ -23,6 +18,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Schema: `feature_requests`, `feature_request_votes`; migration/indexes via `scripts/migrate-features-and-best-roll.mjs`.
 - Rate limits: feature submit 5/hour, vote 30/min, list 60/min.
 - Open Graph for `/features`; leaderboard OG copy mentions Best Roll.
+- **What’s new** chronicle at `/whats-new` (nav tab; `/changelog` alias) — timeline with date/version rail, tags, and sections. Open Graph + bot rewrite for `/whats-new` and `/changelog`.
+- About: number/badge rarity ladders, single-digit odds explainer, honest “what we protect” privacy notes.
+- Self-serve **account deletion** (Better Auth `deleteUser` + confirmation email); Account UI + Privacy Policy wording.
+- Smoke tests for single-digit badge scoring (`src/game/rarity-digits.smoke.test.ts`).
+
+### Changed
+
+- About no longer embeds the full What’s new list; it links to `/whats-new` instead.
+- Exported `BADGE_RARITY_THRESHOLDS` from the game barrel for About rarity tables.
 
 ### Notes
 
