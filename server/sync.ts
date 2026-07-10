@@ -15,6 +15,25 @@ import { assertSyncIntegrity } from './syncIntegrity.js';
 
 const log = createLogger('sync');
 
+export const MAX_SYNC_PAYLOAD_BYTES = 256 * 1024;
+
+export function jsonByteLength(value: unknown): number {
+  return new TextEncoder().encode(JSON.stringify(value)).byteLength;
+}
+
+export function syncPayloadTooLargeResponse(sizeBytes: number): Response {
+  return Response.json(
+    {
+      error: 'Sync payload too large',
+      detail: `Sync payload is ${sizeBytes} bytes; max is ${MAX_SYNC_PAYLOAD_BYTES} bytes. Pull from cloud or wait for the next incremental sync.`,
+      code: 'SYNC_PAYLOAD_TOO_LARGE',
+      maxBytes: MAX_SYNC_PAYLOAD_BYTES,
+      sizeBytes,
+    },
+    { status: 413 },
+  );
+}
+
 function rollSourceFromDb(
   source: string | null | undefined,
 ): RollResult['source'] {
