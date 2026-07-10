@@ -140,6 +140,14 @@ export function mergeStats(
       (right.bestConsecutive?.length ?? 0)
         ? (left.bestConsecutive ?? [])
         : (right.bestConsecutive ?? []),
+    // Current parity streaks are never Math.max'd — client recomputes from history.
+    oddStreak: 0,
+    evenStreak: 0,
+    bestOddStreak: Math.max(left.bestOddStreak ?? 0, right.bestOddStreak ?? 0),
+    bestEvenStreak: Math.max(
+      left.bestEvenStreak ?? 0,
+      right.bestEvenStreak ?? 0,
+    ),
   };
 }
 

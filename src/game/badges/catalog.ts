@@ -2,6 +2,7 @@ import type { BadgeDef } from '../types.js';
 import {
   hasConsecutiveSequence,
   maskAll,
+  maskAnySubstring,
   maskBookends,
   maskConsecutiveSequence,
   maskDigit,
@@ -12,15 +13,18 @@ import {
   uniqueDigitCount,
 } from '../highlights.js';
 import {
+  bookendPrimeEquation,
   cubeEquation,
   digitSum10Equation,
   digitSum21Equation,
   digitSumHighEquation,
   digitSumLowEquation,
+  fibonacciEquation,
   fixedDivEquation,
   fourthPowerEquation,
   harshadEquation,
   powerOfTwoEquation,
+  primeEquation,
   pronicEquation,
   squareEquation,
 } from './equation.js';
@@ -36,19 +40,26 @@ import {
   digitsOf,
   endsWith,
   hasBookends,
+  hasHexSpeak,
   isAlternating,
+  isAllOnesBinary,
   isAllSameDigits,
   isBalanced,
+  isBinaryPalindromeForm,
   isCube,
   isDivisibleBy,
   isEven,
   isFactorialDigitSum,
   isFibonacci,
   isHarshad,
+  isHexPalindromeForm,
+  isHexRepdigit,
+  isHexTwin,
   isMirroredHalves,
   isMountain,
   isNonDecreasing,
   isNonIncreasing,
+  isOctalPalindromeForm,
   isOdd,
   isPalindrome,
   isPowerOfTwo,
@@ -68,6 +79,7 @@ import {
   maxDigit,
   minDigit,
   pokerHand,
+  popcount,
   startsWith,
   zeroCount,
 } from './matchers.js';
@@ -148,6 +160,18 @@ const elementBadges: BadgeDef[] = ELEMENT_META.flatMap(
     },
   ],
 );
+
+/**
+ * Sum EP of every number badge that matches `n`, excluding `excludeId`.
+ * Used by The Worst so its own EP is never part of the trigger sum.
+ */
+export function sumMatchingEPExcluding(n: number, excludeId: string): number {
+  let sum = 0;
+  for (const b of NUMBER_BADGES) {
+    if (b.id !== excludeId && b.matches(n)) sum += b.ep;
+  }
+  return sum;
+}
 
 /** Inspired original number badges — not a copy of RNGdle IP. */
 export const NUMBER_BADGES: BadgeDef[] = [
@@ -291,6 +315,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'math',
     emoji: '🔷',
     matches: isPrime,
+    equation: primeEquation,
   },
   {
     id: 'palindrome',
@@ -349,6 +374,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'math',
     emoji: '🐚',
     matches: isFibonacci,
+    equation: fibonacciEquation,
   },
   {
     id: 'triangular',
@@ -645,6 +671,59 @@ export const NUMBER_BADGES: BadgeDef[] = [
   containsSub('zoom-444', 'Triple Fours', '444', 800, '4️⃣'),
   containsSub('zoom-555', 'Triple Fives', '555', 800, '5️⃣'),
   containsSub('zoom-999', 'Triple Nines', '999', 900, '9️⃣'),
+
+  // ========== cat / ultimeme (Workstream G) ==========
+  containsSub('cat-3', ':3', '83', 600, '🐱', 'Contains "83".'),
+  containsSub('cat-33', ':33', '833', 900, '🐱', 'Contains "833".'),
+  {
+    id: 'kitty-power',
+    name: 'Kitty Power',
+    description: 'Contains "8383" or "8333".',
+    ep: 2_800,
+    family: 'cultural',
+    emoji: '😺',
+    matches: (n) => contains(n, '8383') || contains(n, '8333'),
+    highlight: (n) => maskAnySubstring(n, ['8383', '8333']),
+  },
+  containsSub('cat-3333', ':3333', '83333', 5_000, '😻', 'Contains "83333".'),
+  {
+    id: 'felis-catus',
+    name: 'Felis Catus',
+    description: 'Exactly 838,383 or 833,333.',
+    ep: 7_000,
+    family: 'cultural',
+    emoji: '🐈',
+    matches: (n) => n === 838383 || n === 833333,
+  },
+  exact('exact-cat-3', 'Exact :3', 83, 2_200, '😼', 'Exactly 83.'),
+  {
+    id: 'ultimeme',
+    name: 'Ultimeme',
+    description: 'Contains "69420" or "42069".',
+    ep: 4_500,
+    family: 'cultural',
+    emoji: '🔥',
+    matches: (n) => contains(n, '69420') || contains(n, '42069'),
+    highlight: (n) => maskAnySubstring(n, ['69420', '42069']),
+  },
+  {
+    id: 'exact-ultimeme',
+    name: 'Exact Ultimeme',
+    description: 'Exactly 69,420 or 42,069.',
+    ep: 5_500,
+    family: 'cultural',
+    emoji: '💯',
+    matches: (n) => n === 69420 || n === 42069,
+  },
+  {
+    id: 'the-worst',
+    name: 'The Worst',
+    description: 'Your other badges sum to exactly 1,758 EP.',
+    ep: 2_200,
+    family: 'cultural',
+    emoji: '💀',
+    matches: (n) => sumMatchingEPExcluding(n, 'the-worst') === 1758,
+  },
 
   // ========== patterns / sequences ==========
   {
@@ -1254,6 +1333,8 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'math',
     emoji: '🚪',
     matches: (n) => isPrime(n) && hasBookends(n),
+    highlight: maskBookends,
+    equation: bookendPrimeEquation,
   },
   {
     id: 'lucky-streak-num',
@@ -1311,6 +1392,99 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'cultural',
     emoji: '📅',
     matches: (n) => n === new Date().getFullYear(),
+  },
+
+  // ========== bases (Workstream I) ==========
+  {
+    id: 'base-hex-twin',
+    name: 'Hex Twin',
+    description: 'Hex representation has a consecutive repeated digit.',
+    ep: 100,
+    family: 'bases',
+    emoji: '👯',
+    matches: isHexTwin,
+  },
+  {
+    id: 'base-bin-run',
+    name: 'Bit Streak',
+    description: 'Binary representation has eight or more consecutive 1-bits.',
+    ep: 450,
+    family: 'bases',
+    emoji: '📶',
+    matches: (n) => /1{8,}/.test(n.toString(2)),
+  },
+  {
+    id: 'base-pop-dense',
+    name: 'Bit Dense',
+    description: 'Binary popcount is at least 15.',
+    ep: 700,
+    family: 'bases',
+    emoji: '🧱',
+    matches: (n) => popcount(n) >= 15,
+  },
+  {
+    id: 'base-hex-palindrome',
+    name: 'Hex Mirror',
+    description: 'Hexadecimal representation is a palindrome (length ≥ 2).',
+    ep: 1_800,
+    family: 'bases',
+    emoji: '🪞',
+    matches: isHexPalindromeForm,
+  },
+  {
+    id: 'base-oct-palindrome',
+    name: 'Oct Mirror',
+    description: 'Octal representation is a palindrome (length ≥ 2).',
+    ep: 2_000,
+    family: 'bases',
+    emoji: '🪞',
+    matches: isOctalPalindromeForm,
+  },
+  {
+    id: 'base-bin-palindrome',
+    name: 'Binary Mirror',
+    description: 'Binary representation is a palindrome (length ≥ 2).',
+    ep: 2_600,
+    family: 'bases',
+    emoji: '🪞',
+    matches: isBinaryPalindromeForm,
+  },
+  {
+    id: 'base-hex-word',
+    name: 'Hex Speak',
+    description:
+      'Hex representation contains a curated hex-speak word (dead, beef, cafe, …).',
+    ep: 3_500,
+    family: 'bases',
+    emoji: '🗣️',
+    matches: hasHexSpeak,
+  },
+  {
+    id: 'base-hex-repdigit',
+    name: 'Hex Repdigit',
+    description: 'Hex representation is all the same digit (length ≥ 2).',
+    ep: 4_500,
+    family: 'bases',
+    emoji: '🔁',
+    matches: isHexRepdigit,
+  },
+  {
+    id: 'base-bin-ones',
+    name: 'Mersenne Bits',
+    description: 'Binary representation is all 1-bits (a Mersenne number).',
+    ep: 5_000,
+    family: 'bases',
+    emoji: '1️⃣',
+    matches: isAllOnesBinary,
+  },
+  {
+    id: 'base-pop-max',
+    name: 'Bit Saturate',
+    description: 'Binary popcount is 19 — the maximum in range.',
+    ep: 7_000,
+    family: 'bases',
+    emoji: '🔋',
+    matches: (n) => popcount(n) === 19,
   },
 ];
 

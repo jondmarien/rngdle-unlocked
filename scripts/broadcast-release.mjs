@@ -13,11 +13,10 @@ const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
 const title =
-  'New Update! v0.9.0 — Divine rarity, sharper poker hands, badge proofs';
+  'New Update! v0.10.0 — Bases, cats, streak secrets, and The Worst';
 const body = [
-  'Divine is a new rarity above Mythic for ultra-high EP rolls — gold treatment and a bigger celebration.',
-  'Poker scoring now recognizes Two Trips, Three Pair, and Full Quads (new rolls only; past history unchanged).',
-  'More badge cards show math proofs, and Latest Runs has an optional spoiler-eye toggle.',
+  'A new Bases family (and Radix Crown), cat / Ultimeme badges, and streak secrets for odd/even runs plus Giant Numbers.',
+  'The Worst is a joke badge for when your other badges sum to exactly 1,758 EP — and more cards show math proofs.',
   'Read the full player notes: https://rngdle-unlocked.chron0.tech/whats-new',
   'Open: /whats-new',
 ].join(' ');

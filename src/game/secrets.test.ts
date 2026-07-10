@@ -9,6 +9,25 @@ import {
   newlyUnlockedSecrets,
   sectionProgress,
 } from './secrets';
+import {
+  mergeStreakUnlocks,
+  newlyUnlockedStreakSecrets,
+  STREAK_SECRETS,
+} from './streakSecrets';
+import { defaultPlayStats } from './stats';
+import type { PlayStats, RollResult } from './types';
+
+function roll(number: number): RollResult {
+  return {
+    id: `r-${number}`,
+    number,
+    badges: [],
+    totalEP: 1,
+    rarity: 'trash',
+    percentile: 1,
+    rolledAt: new Date().toISOString(),
+  };
+}
 
 describe('secrets', () => {
   it('section incomplete when empty', () => {
@@ -40,6 +59,20 @@ describe('secrets', () => {
     expect(nu.map((s) => s.id)).toEqual([OMEGA_SECRET.id]);
   });
 
+  it('omega unlocks without any streak secrets owned', () => {
+    const ids = new Set([
+      ...NUMBER_BADGES.map((b) => b.id),
+      ...JOURNEY_BADGES.map((b) => b.id),
+      ...SECTION_SECRETS.map((s) => s.id),
+    ]);
+    for (const s of STREAK_SECRETS) {
+      expect(ids.has(s.id)).toBe(false);
+    }
+    expect(newlyUnlockedSecrets(ids).map((s) => s.id)).toEqual([
+      OMEGA_SECRET.id,
+    ]);
+  });
+
   it('mergeSecretUnlocks is idempotent', () => {
     const ids = NUMBER_BADGES.filter((b) => b.family === 'void').map(
       (b) => b.id,
@@ -52,6 +85,58 @@ describe('secrets', () => {
     const once = mergeSecretUnlocks(base);
     expect(once.unlocked.length).toBeGreaterThan(0);
     const twice = mergeSecretUnlocks(once.collection);
+    expect(twice.unlocked.length).toBe(0);
+  });
+
+  it('omega blocked when missing one bases badge', () => {
+    const bases = NUMBER_BADGES.filter((b) => b.family === 'bases');
+    expect(bases.length).toBe(10);
+    const ids = new Set([
+      ...NUMBER_BADGES.filter((b) => b.family !== 'bases').map((b) => b.id),
+      ...bases.slice(0, -1).map((b) => b.id),
+      ...JOURNEY_BADGES.map((b) => b.id),
+      ...SECTION_SECRETS.map((s) => s.id),
+    ]);
+    expect(
+      newlyUnlockedSecrets(ids).some((s) => s.id === OMEGA_SECRET.id),
+    ).toBe(false);
+    expect(isSectionComplete('bases', ids)).toBe(false);
+  });
+
+  it('radix crown unlocks when bases complete', () => {
+    const ids = new Set(
+      NUMBER_BADGES.filter((b) => b.family === 'bases').map((b) => b.id),
+    );
+    const nu = newlyUnlockedSecrets(ids);
+    expect(nu.some((s) => s.id === 'secret-master-bases')).toBe(true);
+  });
+});
+
+describe('streak secrets', () => {
+  it('unlocks Very Odd at oddStreak 5', () => {
+    const stats: PlayStats = { ...defaultPlayStats(), oddStreak: 5 };
+    const nu = newlyUnlockedStreakSecrets(stats, [], new Set());
+    expect(nu.map((s) => s.id)).toContain('secret-streak-odd-5');
+    expect(nu.map((s) => s.id)).not.toContain('secret-streak-odd-10');
+  });
+
+  it('unlocks Giant Numbers on sliding last-5 number sum', () => {
+    const history = [900_001, 900_002, 900_003, 900_004, 900_005].map(roll);
+    const nu = newlyUnlockedStreakSecrets(
+      defaultPlayStats(),
+      history,
+      new Set(),
+    );
+    expect(nu.map((s) => s.id)).toContain('secret-giant-numbers');
+  });
+
+  it('mergeStreakUnlocks is add-only and idempotent', () => {
+    const stats: PlayStats = { ...defaultPlayStats(), evenStreak: 10 };
+    const once = mergeStreakUnlocks([], stats, []);
+    expect(once.unlocked.map((s) => s.id)).toEqual(
+      expect.arrayContaining(['secret-streak-even-5', 'secret-streak-even-10']),
+    );
+    const twice = mergeStreakUnlocks(once.collection, stats, []);
     expect(twice.unlocked.length).toBe(0);
   });
 });

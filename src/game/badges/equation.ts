@@ -1,9 +1,10 @@
 /**
- * Badge equation proofs for cards (Workstreams D + E).
+ * Badge equation proofs for cards (Workstreams D + E + V3).
  * Pure helpers — no scoring side effects.
  */
 
-import { digitArray, digitSum } from './matchers.js';
+import { ROLL_MAX } from '../rng.js';
+import { digitArray, digitSum, digitsOf, isPrime } from './matchers.js';
 
 export type ProductEquation = {
   kind?: 'product';
@@ -30,11 +31,51 @@ export type DigitSumEquation = {
   threshold?: number;
 };
 
+/** Abbreviated primality witness: no factor ≤ ⌊√n⌋. */
+export type PrimeEquation = {
+  kind: 'prime';
+  bound: number;
+};
+
+/** Fibonacci recurrence: left + right = n (F(k-1) + F(k-2)). */
+export type FibonacciEquation = {
+  kind: 'fibonacci';
+  left: number;
+  right: number;
+};
+
+/** Prime with matching bookend digits (Twin Gate Prime). */
+export type BookendPrimeEquation = {
+  kind: 'bookendPrime';
+  digit: number;
+};
+
 export type BadgeEquation =
   | ProductEquation
   | PowerEquation
   | PronicEquation
-  | DigitSumEquation;
+  | DigitSumEquation
+  | PrimeEquation
+  | FibonacciEquation
+  | BookendPrimeEquation;
+
+/** Predecessors for Fibonacci recurrence display (skips 0). */
+const FIB_PREDECESSORS: ReadonlyMap<number, { left: number; right: number }> =
+  (() => {
+    const map = new Map<number, { left: number; right: number }>();
+    let a = 0;
+    let b = 1;
+    while (b <= ROLL_MAX) {
+      const c = a + b;
+      if (c > ROLL_MAX) break;
+      map.set(c, { left: b, right: a });
+      a = b;
+      b = c;
+    }
+    // F(1)=1 and F(2)=1 share value 1 — show 0 + 1 = 1
+    map.set(1, { left: 1, right: 0 });
+    return map;
+  })();
 
 const FIXED_DIVISORS: Readonly<Record<string, number>> = {
   div3: 3,
@@ -89,6 +130,10 @@ export function equationForBadge(
   if (id === 'digit-sum-21') return digitSumEqEquation(n, 21);
   if (id === 'digit-sum-high') return digitSumCompareEquation(n, 'gte', 40);
   if (id === 'digit-sum-low') return digitSumCompareEquation(n, 'lte', 5);
+
+  if (id === 'prime') return primeEquation(n);
+  if (id === 'fibonacci') return fibonacciEquation(n);
+  if (id === 'twin-prime-adjacent') return bookendPrimeEquation(n);
 
   return undefined;
 }
@@ -171,6 +216,25 @@ export function digitSumHighEquation(n: number): BadgeEquation | undefined {
 
 export function digitSumLowEquation(n: number): BadgeEquation | undefined {
   return digitSumCompareEquation(n, 'lte', 5);
+}
+
+export function primeEquation(n: number): BadgeEquation | undefined {
+  if (!isPrime(n)) return undefined;
+  return { kind: 'prime', bound: Math.floor(Math.sqrt(n)) };
+}
+
+export function fibonacciEquation(n: number): BadgeEquation | undefined {
+  if (n === 0) return undefined;
+  const pred = FIB_PREDECESSORS.get(n);
+  if (!pred) return undefined;
+  return { kind: 'fibonacci', left: pred.left, right: pred.right };
+}
+
+export function bookendPrimeEquation(n: number): BadgeEquation | undefined {
+  if (!isPrime(n)) return undefined;
+  const s = digitsOf(n);
+  if (s.length < 2 || s[0] !== s[s.length - 1]) return undefined;
+  return { kind: 'bookendPrime', digit: Number(s[0]) };
 }
 
 /** True when equation is (or looks like) a legacy/v1 product proof. */

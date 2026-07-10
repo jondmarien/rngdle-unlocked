@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { writeFileSync } from 'node:fs';
 import { NUMBER_BADGES } from '../src/game/badges/catalog.ts';
 import { JOURNEY_BADGES } from '../src/game/journey.ts';
@@ -11,6 +12,7 @@ const sections = [
   'sequence',
   'poker',
   'element',
+  'bases',
 ] as const;
 
 const out: Record<string, string[]> = {};

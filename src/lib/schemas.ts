@@ -34,6 +34,7 @@ export const badgeFamilySchema = z.enum([
   'sequence',
   'poker',
   'element',
+  'bases',
   'journey',
   'secret',
 ]);
@@ -59,6 +60,19 @@ export const badgeEquationSchema = z.union([
     total: z.number(),
     compare: z.enum(['eq', 'gte', 'lte']).optional(),
     threshold: z.number().optional(),
+  }),
+  z.object({
+    kind: z.literal('prime'),
+    bound: z.number(),
+  }),
+  z.object({
+    kind: z.literal('fibonacci'),
+    left: z.number(),
+    right: z.number(),
+  }),
+  z.object({
+    kind: z.literal('bookendPrime'),
+    digit: z.number(),
   }),
 ]);
 

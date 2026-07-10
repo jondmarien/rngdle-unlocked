@@ -3,7 +3,7 @@ import { maskAll } from '../highlights.js';
 import type { BadgeHit } from '../types.js';
 import { NUMBER_BADGES } from './catalog.js';
 
-export { NUMBER_BADGES, badgeById } from './catalog.js';
+export { NUMBER_BADGES, badgeById, sumMatchingEPExcluding } from './catalog.js';
 
 export function evaluateBadges(n: number): BadgeHit[] {
   const hits: BadgeHit[] = [];

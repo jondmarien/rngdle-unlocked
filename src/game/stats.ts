@@ -37,6 +37,10 @@ export function defaultPlayStats(): PlayStats {
     lastPlayDate: null,
     bestRoll: null,
     bestConsecutive: [],
+    oddStreak: 0,
+    bestOddStreak: 0,
+    evenStreak: 0,
+    bestEvenStreak: 0,
   };
 }
 
@@ -64,6 +68,17 @@ export function applyStreaks(
     );
   } else {
     next.qualityStreak = 0;
+  }
+
+  // Parity streaks (0 is even)
+  if (roll.number % 2 === 1) {
+    next.oddStreak = stats.oddStreak + 1;
+    next.evenStreak = 0;
+    next.bestOddStreak = Math.max(stats.bestOddStreak, next.oddStreak);
+  } else {
+    next.evenStreak = stats.evenStreak + 1;
+    next.oddStreak = 0;
+    next.bestEvenStreak = Math.max(stats.bestEvenStreak, next.evenStreak);
   }
 
   // Day streak
@@ -135,4 +150,68 @@ export function recomputeBestConsecutive(
     }
   }
   return found;
+}
+
+export type ParityStreaks = {
+  oddStreak: number;
+  evenStreak: number;
+  bestOddStreak: number;
+  bestEvenStreak: number;
+};
+
+/** Recompute current + best parity streaks from newest-first history. */
+export function recomputeParityStreaks(
+  historyNewestFirst: Pick<RollResult, 'number'>[],
+): ParityStreaks {
+  const chrono = [...historyNewestFirst].reverse();
+  let oddStreak = 0;
+  let evenStreak = 0;
+  let bestOddStreak = 0;
+  let bestEvenStreak = 0;
+
+  for (const r of chrono) {
+    if (r.number % 2 === 1) {
+      oddStreak += 1;
+      evenStreak = 0;
+      bestOddStreak = Math.max(bestOddStreak, oddStreak);
+    } else {
+      evenStreak += 1;
+      oddStreak = 0;
+      bestEvenStreak = Math.max(bestEvenStreak, evenStreak);
+    }
+  }
+
+  return { oddStreak, evenStreak, bestOddStreak, bestEvenStreak };
+}
+
+/**
+ * Patch bestConsecutive + parity currents/bests from history.
+ * Call after sync/import merge so current streaks never flash to 0 in UI.
+ */
+export function finalizeStatsFromHistory(
+  stats: PlayStats,
+  historyNewestFirst: RollResult[],
+): PlayStats {
+  const parity = recomputeParityStreaks(historyNewestFirst);
+  return {
+    ...stats,
+    bestConsecutive: recomputeBestConsecutive(
+      historyNewestFirst,
+      stats.bestConsecutive,
+    ),
+    oddStreak: parity.oddStreak,
+    evenStreak: parity.evenStreak,
+    bestOddStreak: Math.max(stats.bestOddStreak, parity.bestOddStreak),
+    bestEvenStreak: Math.max(stats.bestEvenStreak, parity.bestEvenStreak),
+  };
+}
+
+/** Sum of `number` over the most recent 5 rolls (newest-first) > 4_000_000. */
+export function giantNumbersHit(
+  historyNewestFirst: Pick<RollResult, 'number'>[],
+): boolean {
+  if (historyNewestFirst.length < 5) return false;
+  let sum = 0;
+  for (let i = 0; i < 5; i++) sum += historyNewestFirst[i]!.number;
+  return sum > 4_000_000;
 }

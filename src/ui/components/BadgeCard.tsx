@@ -116,6 +116,53 @@ function BadgeEquationLine({
         </p>
       );
     }
+    case 'prime':
+      return (
+        <p
+          className="mono-number mt-1.5 text-xs font-semibold tracking-tight sm:text-sm"
+          aria-label={`${number.toLocaleString()} is prime with no factor at most ${equation.bound.toLocaleString()}`}
+        >
+          <span className="text-(--prose)">{number.toLocaleString()}</span>
+          <span className="text-(--prose-2)"> · no factor ≤ </span>
+          <span className="text-emerald-600 dark:text-emerald-400">
+            {equation.bound.toLocaleString()}
+          </span>
+        </p>
+      );
+    case 'fibonacci':
+      return (
+        <p
+          className="mono-number mt-1.5 text-xs font-semibold tracking-tight sm:text-sm"
+          aria-label={`${equation.left.toLocaleString()} plus ${equation.right.toLocaleString()} equals ${number.toLocaleString()}`}
+        >
+          <span className="text-emerald-600 dark:text-emerald-400">
+            {equation.left.toLocaleString()}
+          </span>
+          <span className="text-(--prose-2)"> + </span>
+          <span className="text-sky-600 dark:text-sky-400">
+            {equation.right.toLocaleString()}
+          </span>
+          <span className="text-(--prose-2)"> = </span>
+          <span className="text-(--prose)">{number.toLocaleString()}</span>
+        </p>
+      );
+    case 'bookendPrime':
+      return (
+        <p
+          className="mono-number mt-1.5 text-xs font-semibold tracking-tight sm:text-sm"
+          aria-label={`${number.toLocaleString()} is prime with bookend digit ${equation.digit}`}
+        >
+          <span className="text-(--prose)">{number.toLocaleString()}</span>
+          <span className="text-(--prose-2)"> · bookends </span>
+          <span className="text-emerald-600 dark:text-emerald-400">
+            {equation.digit}
+          </span>
+          <span className="text-(--prose-2)">…</span>
+          <span className="text-sky-600 dark:text-sky-400">
+            {equation.digit}
+          </span>
+        </p>
+      );
     default: {
       const _exhaustive: never = equation;
       void _exhaustive;

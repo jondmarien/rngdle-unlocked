@@ -17,6 +17,7 @@ import {
   performRoll,
   journeyHits,
   mergeSecretUnlocks,
+  mergeStreakUnlocks,
   newlyUnlockedJourney,
   secretHits,
   sumJourneyEP,
@@ -29,7 +30,7 @@ import {
   type RollResult,
   type ThemeMode,
 } from '../game';
-import { applyStreaks, recomputeBestConsecutive } from '../game/stats';
+import { applyStreaks, finalizeStatsFromHistory } from '../game/stats';
 import { useSession } from '../lib/auth-client';
 import { createLogger } from '../lib/logger';
 import {
@@ -179,26 +180,43 @@ export function GameProvider({ children }: { children: ReactNode }) {
   });
   const { enqueueAutoSync } = sync;
 
-  // Backfill secret masteries if collection already qualifies; push to cloud for profile
+  // Backfill secret masteries + streak secrets if collection/stats already qualify
   useEffect(() => {
     setState((prev) => {
-      const { collection, unlocked, ep } = mergeSecretUnlocks(
+      const stats = finalizeStatsFromHistory(prev.stats, prev.history);
+      const sectionMerge = mergeSecretUnlocks(
         prev.collection,
         new Date().toISOString(),
       );
-      if (unlocked.length === 0) return prev;
+      const streakMerge = mergeStreakUnlocks(
+        sectionMerge.collection,
+        stats,
+        prev.history,
+        new Date().toISOString(),
+      );
+      const unlocked = [...sectionMerge.unlocked, ...streakMerge.unlocked];
+      const ep = sectionMerge.ep + streakMerge.ep;
+      const statsChanged =
+        stats.oddStreak !== prev.stats.oddStreak ||
+        stats.evenStreak !== prev.stats.evenStreak ||
+        stats.bestOddStreak !== prev.stats.bestOddStreak ||
+        stats.bestEvenStreak !== prev.stats.bestEvenStreak;
+      if (unlocked.length === 0 && !statsChanged) return prev;
       const next = {
         ...prev,
-        collection,
+        stats,
+        collection: streakMerge.collection,
         lifetimeEP: prev.lifetimeEP + ep,
         journeyEP: prev.journeyEP + ep,
       };
       persist(next);
-      setLastSecretUnlocks(secretHits(unlocked));
-      log.info('secrets:backfill', {
-        count: unlocked.length,
-        ids: unlocked.map((u) => u.id),
-      });
+      if (unlocked.length > 0) {
+        setLastSecretUnlocks(secretHits(unlocked));
+        log.info('secrets:backfill', {
+          count: unlocked.length,
+          ids: unlocked.map((u) => u.id),
+        });
+      }
       if (loggedInRef.current) {
         enqueueAutoSync(toCloudPayload(next));
       }
@@ -335,19 +353,18 @@ export function GameProvider({ children }: { children: ReactNode }) {
       // Compute next state synchronously so auto-sync pushes this roll, not stale state
       const history = prependHistory(base.history, result);
       let stats = applyStreaks(base.stats, result);
-      stats = {
-        ...stats,
-        bestConsecutive: recomputeBestConsecutive(
-          history,
-          stats.bestConsecutive,
-        ),
-      };
+      stats = finalizeStatsFromHistory(stats, history);
       const ownedBefore = new Set(base.collection.map((c) => c.badgeId));
       let collection = mergeCollection(base.collection, collectionAdds, at);
       const secretMerge = mergeSecretUnlocks(collection, at);
       collection = secretMerge.collection;
-      const secretsUnlocked = secretHits(secretMerge.unlocked);
-      const secretsEPGained = secretMerge.ep;
+      const streakMerge = mergeStreakUnlocks(collection, stats, history, at);
+      collection = streakMerge.collection;
+      const secretsUnlocked = secretHits([
+        ...secretMerge.unlocked,
+        ...streakMerge.unlocked,
+      ]);
+      const secretsEPGained = secretMerge.ep + streakMerge.ep;
 
       const newBadgeIds = [
         ...result.badges.map((b) => b.id),
@@ -500,31 +517,34 @@ export function GameProvider({ children }: { children: ReactNode }) {
         throw new Error('File is not valid JSON');
       }
       let next = parseImportPayload(parsed);
-      next.stats = {
-        ...next.stats,
-        bestConsecutive: recomputeBestConsecutive(
-          next.history,
-          next.stats.bestConsecutive,
-        ),
+      const at = new Date().toISOString();
+      next = {
+        ...next,
+        stats: finalizeStatsFromHistory(next.stats, next.history),
       };
-      const secretMerge = mergeSecretUnlocks(
-        next.collection,
-        new Date().toISOString(),
+      const secretMerge = mergeSecretUnlocks(next.collection, at);
+      const streakMerge = mergeStreakUnlocks(
+        secretMerge.collection,
+        next.stats,
+        next.history,
+        at,
       );
       next = {
         ...next,
         collection: backfillCollectionTimestamps(
-          secretMerge.collection,
+          streakMerge.collection,
           next.history,
         ),
-        lifetimeEP: next.lifetimeEP + secretMerge.ep,
-        journeyEP: next.journeyEP + secretMerge.ep,
+        lifetimeEP: next.lifetimeEP + secretMerge.ep + streakMerge.ep,
+        journeyEP: next.journeyEP + secretMerge.ep + streakMerge.ep,
       };
       persist(next);
       setState(next);
       setLastRoll(next.history[0] ?? null);
       setLastJourneyUnlocks([]);
-      setLastSecretUnlocks(secretHits(secretMerge.unlocked));
+      setLastSecretUnlocks(
+        secretHits([...secretMerge.unlocked, ...streakMerge.unlocked]),
+      );
     },
     [persist],
   );

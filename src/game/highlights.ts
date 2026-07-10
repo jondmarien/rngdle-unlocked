@@ -1,6 +1,6 @@
 /**
  * Highlight helpers use natural decimal digits (String(n)).
- * The reel display may zero-pad; BadgeCard maps highlights onto the padded form.
+ * BadgeCard maps highlights onto the same natural form from formatRollDigits.
  */
 export function digitsStr(n: number): string {
   return String(n);
@@ -46,6 +46,16 @@ export function maskSubstring(n: number, sub: string): boolean[] {
     from = idx + 1;
   }
   return m;
+}
+
+/** OR of several substring masks (first match wins per digit). */
+export function maskAnySubstring(
+  n: number,
+  subs: readonly string[],
+): boolean[] {
+  const masks = subs.map((sub) => maskSubstring(n, sub));
+  if (masks.length === 0) return maskNone(n);
+  return masks[0]!.map((_, i) => masks.some((m) => m[i]!));
 }
 
 export function maskBookends(n: number): boolean[] {

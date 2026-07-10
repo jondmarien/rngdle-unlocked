@@ -24,6 +24,7 @@ export const FAMILY_ICON: Partial<
   sequence: '/icons/family/sequence.jpg',
   poker: '/icons/family/poker.jpg',
   element: '/icons/family/element.jpg',
+  bases: '/icons/family/bases.jpg',
   journey: '/icons/family/journey.jpg',
   secret: '/secrets/omega.jpg',
 };

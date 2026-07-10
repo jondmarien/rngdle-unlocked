@@ -1,6 +1,7 @@
 import { NUMBER_BADGES } from './badges/catalog.js';
 import { JOURNEY_BADGES } from './journey.js';
 import { badgeRarityFromEP } from './rarity.js';
+import { STREAK_SECRETS } from './streakSecrets.js';
 import type { BadgeFamily, BadgeHit, CollectionEntry } from './types.js';
 
 /** Number families that grant a section mastery secret when fully collected. */
@@ -13,6 +14,7 @@ export const SECTION_FAMILIES = [
   'sequence',
   'poker',
   'element',
+  'bases',
 ] as const satisfies readonly Exclude<BadgeFamily, 'journey' | 'secret'>[];
 
 export type SectionFamily = (typeof SECTION_FAMILIES)[number] | 'journey';
@@ -26,10 +28,10 @@ export type SecretBadgeDef = {
   emoji: string;
   /** Public path to custom Grok Imagine art under /public/secrets */
   image: string;
-  /** Codex section this secret completes; omega completes all sections. */
-  section: SectionFamily | 'omega';
+  /** Codex section this secret completes; omega / streak are meta. */
+  section: SectionFamily | 'omega' | 'streak';
   /** Fancy tier for UI chrome */
-  tier: 'section' | 'omega';
+  tier: 'section' | 'omega' | 'streak';
 };
 
 const SECTION_META: Record<
@@ -107,6 +109,14 @@ const SECTION_META: Record<
     blurb: 'The full table of element badges is complete.',
     image: '/secrets/element.jpg',
   },
+  bases: {
+    id: 'secret-master-bases',
+    name: 'Radix Crown',
+    emoji: '🔢',
+    ep: 2_500,
+    blurb: 'Every numeral-base pattern in the codex is yours.',
+    image: '/secrets/bases.jpg',
+  },
   journey: {
     id: 'secret-master-journey',
     name: 'Path Eternal',
@@ -149,6 +159,7 @@ export const SECTION_SECRETS: SecretBadgeDef[] = (
 
 export const SECRET_BADGES: SecretBadgeDef[] = [
   ...SECTION_SECRETS,
+  ...STREAK_SECRETS,
   OMEGA_SECRET,
 ];
 
@@ -193,6 +204,7 @@ export function evaluateOwnedSecrets(
   for (const secret of SECTION_SECRETS) {
     if (
       secret.section !== 'omega' &&
+      secret.section !== 'streak' &&
       isSectionComplete(secret.section, unlockedIds)
     ) {
       owned.push(secret);

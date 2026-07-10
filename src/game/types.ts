@@ -21,6 +21,7 @@ export type BadgeFamily =
   | 'sequence'
   | 'poker'
   | 'element'
+  | 'bases'
   | 'journey'
   | 'secret';
 
@@ -146,6 +147,12 @@ export type PlayStats = {
   bestRoll: RollHighlight | null;
   /** Best consecutive windows (3 / 5 / 10). */
   bestConsecutive: ConsecutiveHighlight[];
+  /** Consecutive odd rolls (n % 2 === 1); resets on even. */
+  oddStreak: number;
+  bestOddStreak: number;
+  /** Consecutive even rolls (incl. 0); resets on odd. */
+  evenStreak: number;
+  bestEvenStreak: number;
 };
 
 export function rollToHighlight(roll: RollResult): RollHighlight {

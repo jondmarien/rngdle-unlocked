@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { evaluateBadges, NUMBER_BADGES } from './badges';
+import { ROLL_MAX } from './rng';
+import {
+  evaluateBadges,
+  NUMBER_BADGES,
+  sumMatchingEPExcluding,
+} from './badges';
 
 function ids(n: number): string[] {
   return evaluateBadges(n).map((b) => b.id);
@@ -159,10 +164,17 @@ describe('badge fixtures', () => {
       threshold: 10,
     });
   });
-  it('prime has no equation proof', () => {
+  it('prime fibonacci and twin-gate expose equation proofs', () => {
+    expect(evaluateBadges(97).find((h) => h.id === 'prime')?.equation).toEqual({
+      kind: 'prime',
+      bound: 9,
+    });
     expect(
-      evaluateBadges(97).find((h) => h.id === 'prime')?.equation,
-    ).toBeUndefined();
+      evaluateBadges(832040).find((h) => h.id === 'fibonacci')?.equation,
+    ).toEqual({ kind: 'fibonacci', left: 514229, right: 317811 });
+    expect(
+      evaluateBadges(11).find((h) => h.id === 'twin-prime-adjacent')?.equation,
+    ).toEqual({ kind: 'bookendPrime', digit: 1 });
   });
   it('twin-gate-prime fires for length-2 bookends (11)', () => {
     expect(ids(11)).toContain('twin-prime-adjacent');
@@ -181,4 +193,81 @@ describe('badge fixtures', () => {
     expect(nice?.highlights.length).toBe(2);
     expect(nice?.rarity).toBeTruthy();
   });
+
+  // Workstream G — cat / ultimeme
+  it('cat-3 contains 83; near-miss 38 does not', () => {
+    expect(ids(183)).toContain('cat-3');
+    expect(ids(138)).not.toContain('cat-3');
+  });
+  it('cat-33 and kitty-power stack; exact felis stacks the ladder', () => {
+    expect(ids(833)).toContain('cat-33');
+    expect(ids(833)).toContain('cat-3');
+    const kitty = ids(8383);
+    expect(kitty).toContain('kitty-power');
+    expect(kitty).toContain('cat-3');
+    const felis = ids(833333);
+    expect(felis).toContain('felis-catus');
+    expect(felis).toContain('cat-3333');
+    expect(felis).toContain('kitty-power');
+    expect(felis).toContain('cat-33');
+    expect(felis).toContain('cat-3');
+  });
+  it('exact-cat-3 is 83 and also fires cat-3', () => {
+    expect(ids(83)).toContain('exact-cat-3');
+    expect(ids(83)).toContain('cat-3');
+  });
+  it('ultimeme contains and exact stack', () => {
+    expect(ids(169420)).toContain('ultimeme');
+    expect(ids(69420)).toContain('ultimeme');
+    expect(ids(69420)).toContain('exact-ultimeme');
+    expect(ids(42069)).toContain('exact-ultimeme');
+    expect(ids(69421)).not.toContain('ultimeme');
+  });
+
+  // Workstream I — bases
+  it('hex twin and binary mirror fire on known values', () => {
+    expect(ids(255)).toContain('base-hex-twin');
+    expect(ids(255)).toContain('base-hex-repdigit');
+    expect(ids(9)).toContain('base-bin-palindrome'); // 1001
+    expect(ids(17)).toContain('base-hex-palindrome'); // 11
+  });
+  it('hex speak dead and mersenne bits', () => {
+    expect(ids(57005)).toContain('base-hex-word'); // dead
+    expect(ids(1023)).toContain('base-bin-ones');
+    expect(ids(1022)).not.toContain('base-bin-ones');
+  });
+  it('bit saturate is popcount 19', () => {
+    // 0b1111111111111111111 = 524287 has 19 ones
+    expect(ids(524287)).toContain('base-pop-max');
+    expect(ids(524287)).toContain('base-bin-ones');
+  });
+
+  // Workstream H — The Worst
+  it('the-worst fires when other-badge EP is exactly 1758', () => {
+    expect(sumMatchingEPExcluding(2624, 'the-worst')).toBe(1758);
+    expect(ids(2624)).toContain('the-worst');
+    const hit = evaluateBadges(2624).find((h) => h.id === 'the-worst');
+    expect(hit?.ep).toBe(2_200);
+  });
+  it('the-worst does not fire on a near-miss other-EP', () => {
+    expect(sumMatchingEPExcluding(10105, 'the-worst')).not.toBe(1758);
+    expect(ids(10105)).not.toContain('the-worst');
+  });
+  it(
+    'the-worst full-range: every other-EP===1758 roll fires; set non-empty',
+    { timeout: 120_000 },
+    () => {
+      const hits: number[] = [];
+      for (let n = 0; n <= ROLL_MAX; n++) {
+        if (sumMatchingEPExcluding(n, 'the-worst') === 1758) hits.push(n);
+      }
+      expect(hits.length).toBeGreaterThan(0);
+      expect(hits).toContain(2624);
+      for (const n of hits) {
+        expect(ids(n)).toContain('the-worst');
+      }
+      // Near-miss control
+      expect(hits).not.toContain(10105);
+    },
+  );
 });

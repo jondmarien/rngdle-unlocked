@@ -77,6 +77,7 @@ const CODEX_FAMILY_FILTERS: { id: BadgeFamily | 'all'; label: string }[] = [
   { id: 'sequence', label: 'Seq' },
   { id: 'poker', label: 'Poker' },
   { id: 'element', label: 'Element' },
+  { id: 'bases', label: 'Bases' },
 ];
 
 const PREVIEW_LIMIT = 10;

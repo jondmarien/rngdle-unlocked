@@ -28,6 +28,7 @@ const FAMILIES: { id: FilterId; label: string }[] = [
   { id: 'sequence', label: 'Seq' },
   { id: 'poker', label: 'Poker' },
   { id: 'element', label: 'Element' },
+  { id: 'bases', label: 'Bases' },
   { id: 'journey', label: 'Journey' },
   { id: 'secret', label: 'Secret' },
 ];
@@ -41,6 +42,7 @@ const FAMILY_HINT: Record<Exclude<BadgeFamily, 'secret'>, string> = {
   sequence: 'Order and runs of digits.',
   poker: 'Hand-like digit combinations.',
   element: 'Periodic-table vibes.',
+  bases: 'A numeral-base pattern hides here.',
   journey: 'Lifetime milestone — keep rolling.',
 };
 
@@ -105,6 +107,9 @@ function journeyLockedHaystack(): string[] {
 function secretLockedHaystack(secret: SecretBadgeDef): string[] {
   if (secret.tier === 'omega') {
     return [OMEGA_LOCKED_TITLE, OMEGA_LOCKED_BODY, 'Final seal'];
+  }
+  if (secret.tier === 'streak') {
+    return ['????', 'Hit a streak or giant window', 'Locked'];
   }
   return [SECRET_LOCKED_TITLE, SECRET_LOCKED_BODY];
 }
@@ -631,14 +636,17 @@ function SecretCard({
 }) {
   const has = unlocked.has(secret.id);
   const isOmega = secret.tier === 'omega';
+  const isStreak = secret.tier === 'streak';
   const when = has ? formatDateTimeMedium(unlockedAt) : null;
   const progress =
-    secret.section !== 'omega'
-      ? sectionProgress(secret.section, unlocked)
-      : {
+    secret.section === 'omega'
+      ? {
           have: SECTION_SECRETS.filter((s) => unlocked.has(s.id)).length,
           total: SECTION_SECRETS.length,
-        };
+        }
+      : secret.section === 'streak'
+        ? { have: has ? 1 : 0, total: 1 }
+        : sectionProgress(secret.section, unlocked);
 
   if (isOmega) {
     return (
@@ -733,10 +741,10 @@ function SecretCard({
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
-          Section mastery · {secret.section}
+          {isStreak ? 'Streak secret' : `Section mastery · ${secret.section}`}
         </p>
         <div className="mt-0.5 text-lg font-bold tracking-tight">
-          {has ? secret.name : SECRET_LOCKED_TITLE}
+          {has ? secret.name : isStreak ? '????' : SECRET_LOCKED_TITLE}
           {isFresh && has && (
             <span className="ml-2 inline-flex rounded bg-amber-400 px-1.5 py-0.5 align-middle text-[10px] font-black uppercase tracking-wider text-black">
               New
@@ -744,13 +752,19 @@ function SecretCard({
           )}
         </div>
         <p className="mt-1 text-sm text-(--prose-2)">
-          {has ? secret.description : SECRET_LOCKED_BODY}
+          {has
+            ? secret.description
+            : isStreak
+              ? 'Hit a streak or giant window.'
+              : SECRET_LOCKED_BODY}
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
           <span className="font-semibold text-(--prose)">
             {has
               ? `+${secret.ep.toLocaleString()} life EP`
-              : `${progress.have} / ${progress.total} badges`}
+              : isStreak
+                ? 'Locked'
+                : `${progress.have} / ${progress.total} badges`}
           </span>
           {(ageLabel || when) && (
             <time
@@ -761,7 +775,7 @@ function SecretCard({
               {ageLabel ? `Unlocked ${ageLabel}` : `Unlocked ${when}`}
             </time>
           )}
-          {!has && progress.total > 0 && (
+          {!has && !isStreak && progress.total > 0 && (
             <div className="h-2 min-w-20 flex-1 overflow-hidden rounded-full bg-(--surface-raised)">
               <div
                 className="h-full rounded-full bg-violet-500/70"

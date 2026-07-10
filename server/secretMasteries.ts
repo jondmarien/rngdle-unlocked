@@ -88,6 +88,14 @@ const SECTION_SEALS: {
     ep: 2_500,
   },
   {
+    section: 'bases',
+    id: 'secret-master-bases',
+    name: 'Radix Crown',
+    emoji: '🔢',
+    image: '/secrets/bases.jpg',
+    ep: 2_500,
+  },
+  {
     section: 'journey',
     id: 'secret-master-journey',
     name: 'Path Eternal',

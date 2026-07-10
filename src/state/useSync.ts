@@ -6,7 +6,8 @@ import {
   type RefObject,
   type SetStateAction,
 } from 'react';
-import { mergeSecretUnlocks, secretHits } from '../game';
+import { mergeSecretUnlocks, mergeStreakUnlocks, secretHits } from '../game';
+import { finalizeStatsFromHistory } from '../game/stats';
 import type { BadgeHit, RollResult } from '../game/types';
 import { createLogger } from '../lib/logger';
 import { isRollPublished } from '../lib/roll-api';
@@ -76,30 +77,37 @@ export function useSync(opts: {
 
   const applyCloudPayload = useCallback(
     (cloud: CloudSavePayload) => {
-      const secretMerge = mergeSecretUnlocks(
-        cloud.collection,
-        new Date().toISOString(),
+      const at = new Date().toISOString();
+      const history = cloud.history;
+      const stats = finalizeStatsFromHistory(cloud.stats, history);
+      const secretMerge = mergeSecretUnlocks(cloud.collection, at);
+      const streakMerge = mergeStreakUnlocks(
+        secretMerge.collection,
+        stats,
+        history,
+        at,
       );
+      const unlocked = [...secretMerge.unlocked, ...streakMerge.unlocked];
+      const ep = secretMerge.ep + streakMerge.ep;
       setState((prev) => {
-        const history = cloud.history;
         const collection = backfillCollectionTimestamps(
-          secretMerge.collection,
+          streakMerge.collection,
           history,
         );
         const next: PersistedState = {
           ...prev,
-          lifetimeEP: cloud.lifetimeEP + secretMerge.ep,
+          lifetimeEP: cloud.lifetimeEP + ep,
           lifetimeRollCount: cloud.lifetimeRollCount,
-          journeyEP: cloud.journeyEP + secretMerge.ep,
+          journeyEP: cloud.journeyEP + ep,
           collection,
-          stats: cloud.stats,
+          stats,
           history,
         };
         persist(next);
         return next;
       });
-      if (secretMerge.unlocked.length > 0) {
-        onSecretUnlocks(secretHits(secretMerge.unlocked));
+      if (unlocked.length > 0) {
+        onSecretUnlocks(secretHits(unlocked));
       }
       // Do not restore lastRoll from cloud — home stays a fresh slot until the
       // player rolls this session (history/stats still update).

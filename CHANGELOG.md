@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-07-10
+
+### Added
+
+- **Badge equation proofs (v3)** — prime (abbreviated `no factor ≤ √n`), Fibonacci recurrence (`F(k−1) + F(k−2) = N`), and Twin Gate Prime bookend proof. Palindrome / void trailing-zero equations deferred.
+- **Cat & Ultimeme cultural badges** — `:3` / `:33` / Kitty Power / `:3333` / Felis Catus / Exact `:3` / Ultimeme / Exact Ultimeme (contains + exact stack per existing precedent).
+- **Bases family** — 10 numeral-base badges (Hex Twin through Bit Saturate) + **Radix Crown** section mastery. Existing Codex Absolute holders grandfathered; new earners must collect Bases. Family icon + Radix Crown seal art shipped under `public/icons/family/bases.jpg` and `public/secrets/bases.jpg`.
+- **Workstream H cheap wins** — **The Worst** (other badges sum to exactly 1,758 EP); streak secrets Very Odd / Extremely Odd / Uneven / Very Uneven (5/10 odd or even); **Giant Numbers** (last five roll values sum > 4,000,000). Parity current streaks recompute from history on sync/import (never `Math.max` of client counters). Streak seal art under `public/secrets/streak-*.jpg` and `giant-numbers.jpg`.
+
+### Notes
+
+- Bases / cat / equation v3 / H are **forward-only**. No schema migration. Regenerate `sectionBadgeIds` via `scripts/dump-section-ids.mts` (already applied).
+- **Deferred / cut (H):** Been There / Seen That, Ascended / Withered, Lucky Burst.
+
 ## [0.9.0] - 2026-07-10
 
 ### Added

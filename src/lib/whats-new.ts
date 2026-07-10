@@ -32,6 +32,28 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Bases, cats, streak secrets, and The Worst',
+    date: '2026-07-10',
+    version: '0.10.0',
+    tags: ['Badges', 'Codex', 'Secrets', 'Sync'],
+    content: [
+      {
+        body: 'A whole new Bases family, meme cat / Ultimeme badges, streak secrets for odd/even runs and Giant Numbers, plus The Worst — the joke badge for a perfectly mediocre EP sum. More badge cards show math proofs too.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'New badges and secrets only; past rolls keep their old scoring.',
+        bullets: [
+          '**Bases** — hex, binary, and bit-pattern badges, capped by the **Radix Crown** section seal.',
+          '**Cat & Ultimeme** — from `:3` up through Felis Catus and the classic 69420 / 42069 stack.',
+          '**Streak secrets** — Very Odd / Extremely Odd / Uneven / Very Uneven, plus **Giant Numbers** when your last five rolls are huge.',
+          '**The Worst** — hit when your other badges sum to exactly 1,758 EP (yes, really).',
+          '**Badge proofs** — primes, Fibonacci, and Twin Gate Prime show equations on the card.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Divine rarity, sharper poker hands, badge proofs',
     date: '2026-07-10',
     version: '0.9.0',

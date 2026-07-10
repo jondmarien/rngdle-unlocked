@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vite-plus/test';
 import {
   applyStreaks,
   defaultPlayStats,
+  finalizeStatsFromHistory,
+  giantNumbersHit,
   isQualityRarity,
   recomputeBestConsecutive,
+  recomputeParityStreaks,
 } from './stats';
 import type { RollResult } from './types';
 
@@ -98,5 +101,74 @@ describe('best consecutive', () => {
     const best = recomputeBestConsecutive(history, []);
     const w3 = best.find((b) => b.windowSize === 3);
     expect(w3?.totalEP).toBe(300);
+  });
+});
+
+describe('parity streaks', () => {
+  it('increments odd and resets on even', () => {
+    let s = defaultPlayStats();
+    s = applyStreaks(s, roll({ totalEP: 10, rarity: 'trash', number: 1 }));
+    s = applyStreaks(s, roll({ totalEP: 10, rarity: 'trash', number: 3 }));
+    s = applyStreaks(s, roll({ totalEP: 10, rarity: 'trash', number: 5 }));
+    expect(s.oddStreak).toBe(3);
+    expect(s.evenStreak).toBe(0);
+    s = applyStreaks(s, roll({ totalEP: 10, rarity: 'trash', number: 0 }));
+    expect(s.oddStreak).toBe(0);
+    expect(s.evenStreak).toBe(1);
+    expect(s.bestOddStreak).toBe(3);
+  });
+
+  it('recomputeParityStreaks matches history (ignores inflated stored)', () => {
+    const history = [
+      roll({ totalEP: 1, rarity: 'trash', number: 7 }),
+      roll({ totalEP: 1, rarity: 'trash', number: 5 }),
+      roll({ totalEP: 1, rarity: 'trash', number: 3 }),
+      roll({ totalEP: 1, rarity: 'trash', number: 1 }),
+    ];
+    const parity = recomputeParityStreaks(history);
+    expect(parity.oddStreak).toBe(4);
+    expect(parity.evenStreak).toBe(0);
+    expect(parity.bestOddStreak).toBe(4);
+
+    const finalized = finalizeStatsFromHistory(
+      { ...defaultPlayStats(), oddStreak: 0, bestOddStreak: 99 },
+      history,
+    );
+    expect(finalized.oddStreak).toBe(4);
+    expect(finalized.bestOddStreak).toBe(99);
+  });
+
+  it('merge-then-finalize rejects inflated current oddStreak', () => {
+    // Mirrors server mergeStats: currents → 0, bests → max; client finalizes.
+    const history = [
+      roll({ totalEP: 1, rarity: 'trash', number: 9 }),
+      roll({ totalEP: 1, rarity: 'trash', number: 7 }),
+      roll({ totalEP: 1, rarity: 'trash', number: 5 }),
+    ];
+    const merged = {
+      ...defaultPlayStats(),
+      oddStreak: 0,
+      evenStreak: 0,
+      bestOddStreak: 99,
+      bestEvenStreak: 0,
+    };
+    const next = finalizeStatsFromHistory(merged, history);
+    expect(next.oddStreak).toBe(3);
+    expect(next.oddStreak).not.toBe(99);
+    expect(next.bestOddStreak).toBe(99);
+  });
+});
+
+describe('giantNumbersHit', () => {
+  it('requires five rolls summing over 4e6 by number value', () => {
+    expect(giantNumbersHit([])).toBe(false);
+    const small = Array.from({ length: 5 }, (_, i) =>
+      roll({ totalEP: 1, rarity: 'trash', number: 100_000 + i }),
+    );
+    expect(giantNumbersHit(small)).toBe(false);
+    const big = Array.from({ length: 5 }, (_, i) =>
+      roll({ totalEP: 1, rarity: 'trash', number: 900_000 + i }),
+    );
+    expect(giantNumbersHit(big)).toBe(true);
   });
 });

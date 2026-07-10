@@ -5,7 +5,7 @@ import type {
   PlayStats,
   RollResult,
 } from '../game/types';
-import { defaultPlayStats } from '../game/stats';
+import { defaultPlayStats, finalizeStatsFromHistory } from '../game/stats';
 import { collectionEntrySchema, rollResultSchema } from '../lib/schemas';
 import { STORAGE_KEYS } from '../lib/storage-keys';
 
@@ -103,10 +103,13 @@ export function loadState(): PersistedState {
     ...DEFAULT_SETTINGS,
     ...readJSON<Partial<AppSettings>>(KEYS.settings, {}),
   };
-  const stats = {
-    ...defaultPlayStats(),
-    ...readJSON<Partial<PlayStats>>(KEYS.stats, {}),
-  };
+  const stats = finalizeStatsFromHistory(
+    {
+      ...defaultPlayStats(),
+      ...readJSON<Partial<PlayStats>>(KEYS.stats, {}),
+    },
+    history,
+  );
   const state: PersistedState = {
     history,
     lifetimeEP: Number.isFinite(lifetimeEP) ? lifetimeEP : 0,

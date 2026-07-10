@@ -57,6 +57,9 @@ export {
 export {
   applyStreaks,
   recomputeBestConsecutive,
+  recomputeParityStreaks,
+  finalizeStatsFromHistory,
+  giantNumbersHit,
   defaultPlayStats,
   isQualityRarity,
   localDateKey,
@@ -94,3 +97,10 @@ export {
   type SecretBadgeDef,
   type SectionFamily,
 } from './secrets.js';
+export {
+  STREAK_SECRETS,
+  newlyUnlockedStreakSecrets,
+  mergeStreakUnlocks,
+  streakSecretHits,
+  sumStreakSecretEP,
+} from './streakSecrets.js';

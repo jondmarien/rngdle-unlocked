@@ -152,7 +152,7 @@ Or `pnpm dev` for the SPA only and point APIs at a deployed preview.
 - **Reel animation** — all digits scramble, then lock with rarity glow; `??? EP` while spinning; badges cascade in; EP counts up
 - **Fresh reel on refresh** — home does not restore the last roll; History/Codex keep progress
 - **Roll mode picker** — Free play · Ranked · Daily · Weekly with plain-language board placement copy
-- **185 number badges** + journey + secret masteries (section seals + Codex Absolute)
+- **207 number badges** + journey + secret masteries (section seals including Bases / Radix Crown, streak secrets, + Codex Absolute)
 - **Badge codex** — spoiler-safe locked entries, **unlock timestamps**, **New** tab (first unlocks in the last 5 minutes)
 - **NEW ribbons** on first-time unlocks in the roll breakdown
 - **Family-colored badge pills** + custom rarity/family icon art
@@ -401,36 +401,37 @@ The Account screen times out after a few seconds and shows the sign-in form. Che
 
 ## 📌 Status & roadmap
 
-| Area                                                                     | Status                                                                            |
-| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
-| Solo unlimited playground                                                | ✅ Shipped                                                                        |
-| Reel / cascade / EP count-up UX                                          | ✅ Shipped                                                                        |
-| Badges / EP / journey / secrets                                          | ✅ Shipped                                                                        |
-| Codex unlock times + 5‑min New tab                                       | ✅ Shipped                                                                        |
-| Accounts + auto cloud sync                                               | ✅ Shipped                                                                        |
-| Community today/week bests (Ranked)                                      | ✅ Shipped                                                                        |
-| Dual leaderboards (Ranked + Practice) + follows + feed                   | ✅ Shipped                                                                        |
-| Best Roll board (EP / rarity) + Features tab                             | ✅ Shipped (`v0.6.0`)                                                             |
-| Arcade Mode (Digits runs) + mode-first Board tabs                        | ✅ Shipped (`v0.7.0`)                                                             |
-| Alerts hierarchy + crown grouping; Features status sections              | ✅ Shipped (`v0.7.1`)                                                             |
-| Ranked quota indicator (remaining + window reset)                        | ✅ Shipped (`v0.7.2`)                                                             |
-| Journey badge artwork (Collection + Profile section)                     | ✅ Shipped (`v0.7.3`)                                                             |
-| Codex search (spoiler-safe badge filter)                                 | ✅ Shipped (`v0.7.4`)                                                             |
-| Gap remediation (onboarding, Retry, a11y, shared roll rows, admin/trust) | ✅ Shipped (`v0.8.0`)                                                             |
-| Checklist detection + challenge reset countdown + sync integrity         | ✅ Shipped (`v0.8.1`)                                                             |
-| Divine rarity + poker hand fixes + badge equation proofs                 | ✅ Shipped (`v0.9.0`)                                                             |
-| Server Ranked free play (`/api/ranked-roll`)                             | ✅ Shipped                                                                        |
-| Profiles (vanity + avatars) + follows                                    | ✅ Shipped                                                                        |
-| Activity unlocks + Ranked crown msgs + overtake notifs                   | ✅ Shipped                                                                        |
-| Cloud-gated vanity share + OG (rolls + profiles)                         | ✅ Shipped                                                                        |
-| Daily/weekly challenge + attestation                                     | ✅ Shipped                                                                        |
-| Custom fonts + rarity/family icon art                                    | ✅ Shipped                                                                        |
-| OAuth (Discord/GitHub)                                                   | ✅ Wired — finish portal setup via [`docs/oauth-setup.md`](./docs/oauth-setup.md) |
-| Email verification + magic link (Resend)                                 | ✅ New signups must verify; OAuth preferred                                       |
-| Cloned-progress profile pills + sync integrity                           | ✅ Best-roll ownership + EP/collection checks                                     |
-| Turnstile / EP velocity                                                  | 🔮 Later                                                                          |
-| Admin panel (role-gated)                                                 | ✅ Shipped (`/admin`)                                                             |
-| Architecture refactor (NodeNext, apiGuards, lib wrappers, Zod, useSync)  | ✅ Landed on `main` — see [refactor notes](docs/refactor-notes-2026-07.md)        |
+| Area                                                                      | Status                                                                            |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Solo unlimited playground                                                 | ✅ Shipped                                                                        |
+| Reel / cascade / EP count-up UX                                           | ✅ Shipped                                                                        |
+| Badges / EP / journey / secrets                                           | ✅ Shipped                                                                        |
+| Codex unlock times + 5‑min New tab                                        | ✅ Shipped                                                                        |
+| Accounts + auto cloud sync                                                | ✅ Shipped                                                                        |
+| Community today/week bests (Ranked)                                       | ✅ Shipped                                                                        |
+| Dual leaderboards (Ranked + Practice) + follows + feed                    | ✅ Shipped                                                                        |
+| Best Roll board (EP / rarity) + Features tab                              | ✅ Shipped (`v0.6.0`)                                                             |
+| Arcade Mode (Digits runs) + mode-first Board tabs                         | ✅ Shipped (`v0.7.0`)                                                             |
+| Alerts hierarchy + crown grouping; Features status sections               | ✅ Shipped (`v0.7.1`)                                                             |
+| Ranked quota indicator (remaining + window reset)                         | ✅ Shipped (`v0.7.2`)                                                             |
+| Journey badge artwork (Collection + Profile section)                      | ✅ Shipped (`v0.7.3`)                                                             |
+| Codex search (spoiler-safe badge filter)                                  | ✅ Shipped (`v0.7.4`)                                                             |
+| Gap remediation (onboarding, Retry, a11y, shared roll rows, admin/trust)  | ✅ Shipped (`v0.8.0`)                                                             |
+| Checklist detection + challenge reset countdown + sync integrity          | ✅ Shipped (`v0.8.1`)                                                             |
+| Divine rarity + poker hand fixes + badge equation proofs                  | ✅ Shipped (`v0.9.0`)                                                             |
+| Bases family, cat/Ultimeme, streak secrets, The Worst, equation proofs v3 | ✅ Shipped (`v0.10.0`)                                                            |
+| Server Ranked free play (`/api/ranked-roll`)                              | ✅ Shipped                                                                        |
+| Profiles (vanity + avatars) + follows                                     | ✅ Shipped                                                                        |
+| Activity unlocks + Ranked crown msgs + overtake notifs                    | ✅ Shipped                                                                        |
+| Cloud-gated vanity share + OG (rolls + profiles)                          | ✅ Shipped                                                                        |
+| Daily/weekly challenge + attestation                                      | ✅ Shipped                                                                        |
+| Custom fonts + rarity/family icon art                                     | ✅ Shipped                                                                        |
+| OAuth (Discord/GitHub)                                                    | ✅ Wired — finish portal setup via [`docs/oauth-setup.md`](./docs/oauth-setup.md) |
+| Email verification + magic link (Resend)                                  | ✅ New signups must verify; OAuth preferred                                       |
+| Cloned-progress profile pills + sync integrity                            | ✅ Best-roll ownership + EP/collection checks                                     |
+| Turnstile / EP velocity                                                   | 🔮 Later                                                                          |
+| Admin panel (role-gated)                                                  | ✅ Shipped (`/admin`)                                                             |
+| Architecture refactor (NodeNext, apiGuards, lib wrappers, Zod, useSync)   | ✅ Landed on `main` — see [refactor notes](docs/refactor-notes-2026-07.md)        |
 
 Design docs:
 

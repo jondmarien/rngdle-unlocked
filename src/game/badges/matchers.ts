@@ -368,3 +368,74 @@ export function isFactorialDigitSum(n: number): boolean {
   // 145 = 1!+4!+5!, 40585, etc. — rare curiosities we hardcode known ≤ 1e6
   return n === 1 || n === 2 || n === 145 || n === 40585;
 }
+
+/** Hamming weight — number of 1-bits in binary representation. */
+export function popcount(n: number): number {
+  let x = n >>> 0;
+  let c = 0;
+  while (x) {
+    c += x & 1;
+    x >>>= 1;
+  }
+  return c;
+}
+
+export function isBinaryPalindromeForm(n: number): boolean {
+  const s = n.toString(2);
+  return s.length >= 2 && s === [...s].reverse().join('');
+}
+
+export function isHexPalindromeForm(n: number): boolean {
+  const s = n.toString(16);
+  return s.length >= 2 && s === [...s].reverse().join('');
+}
+
+export function isOctalPalindromeForm(n: number): boolean {
+  const s = n.toString(8);
+  return s.length >= 2 && s === [...s].reverse().join('');
+}
+
+/** Hex has a consecutive repeated digit (e.g. ff, aa, 00). */
+export function isHexTwin(n: number): boolean {
+  const s = n.toString(16);
+  return s.length >= 2 && /(.)\1/.test(s);
+}
+
+export function isHexRepdigit(n: number): boolean {
+  const s = n.toString(16);
+  return s.length >= 2 && /^([0-9a-f])\1+$/.test(s);
+}
+
+/** Binary representation is all 1-bits (Mersenne number 2^k−1). */
+export function isAllOnesBinary(n: number): boolean {
+  return n > 0 && /^1+$/.test(n.toString(2));
+}
+
+/** Curated hex-speak words reachable at ≤ ROLL_MAX. */
+export const HEX_SPEAK_WORDS = [
+  'dead',
+  'beef',
+  'cafe',
+  'babe',
+  'face',
+  'fade',
+  'deed',
+  'feed',
+  'bead',
+  'deaf',
+  'bade',
+  'aced',
+  'c0de',
+  'd00d',
+  'f00d',
+  'b00b',
+] as const;
+
+export function hexSpeakWord(n: number): string | undefined {
+  const h = n.toString(16);
+  return HEX_SPEAK_WORDS.find((w) => h.includes(w));
+}
+
+export function hasHexSpeak(n: number): boolean {
+  return hexSpeakWord(n) !== undefined;
+}
