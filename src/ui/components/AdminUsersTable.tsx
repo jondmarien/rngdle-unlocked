@@ -10,6 +10,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   banUser,
   searchAdminUsers,
+  setAdminUsername,
   wipeUser,
   type AdminUserRow,
 } from '../../lib/admin-api';
@@ -96,6 +97,43 @@ export function AdminUsersTable({
     [listQuery, setBusy, setMsg],
   );
 
+  const onEditUsername = useCallback(
+    async (u: AdminUserRow) => {
+      const suggested =
+        u.username ??
+        u.name
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9_]+/g, '_')
+          .replace(/^_+|_+$/g, '')
+          .slice(0, 24);
+      const raw = window.prompt(
+        `Public @username for ${u.email}\n(3–24 chars: a-z, 0-9, _)`,
+        suggested || '',
+      );
+      if (raw === null) return;
+      const username = raw.trim().toLowerCase().replace(/^@+/, '');
+      if (!username) {
+        setMsg('Username required');
+        return;
+      }
+      setBusy(true);
+      const res = await setAdminUsername(u.id, username);
+      setBusy(false);
+      if (!res.ok) {
+        setMsg(res.error);
+        return;
+      }
+      setMsg(
+        res.data.unchanged
+          ? `@${res.data.username} unchanged`
+          : `Set @${res.data.username} for ${u.email}`,
+      );
+      void listQuery.refetch();
+    },
+    [listQuery, setBusy, setMsg],
+  );
+
   const columns = useMemo(
     () => [
       columnHelper.accessor('username', {
@@ -105,7 +143,16 @@ export function AdminUsersTable({
           return (
             <div>
               <p className="font-semibold text-[var(--prose)]">
-                {u.username ? `@${u.username}` : u.name}
+                {u.username ? (
+                  `@${u.username}`
+                ) : (
+                  <>
+                    <span className="text-[var(--prose-2)]">{u.name}</span>
+                    <span className="ml-2 text-[10px] font-bold uppercase tracking-wide text-amber-600">
+                      No @username
+                    </span>
+                  </>
+                )}
                 {u.banned && (
                   <span className="ml-2 text-xs font-bold text-rose-600">
                     BANNED
@@ -143,6 +190,14 @@ export function AdminUsersTable({
             <div className="flex flex-wrap justify-end gap-2">
               <button
                 type="button"
+                disabled={busy}
+                className="rounded-md border border-[var(--outline)] px-2 py-1 text-xs font-semibold disabled:opacity-40"
+                onClick={() => void onEditUsername(u)}
+              >
+                Edit
+              </button>
+              <button
+                type="button"
                 disabled={busy || u.role === 'admin'}
                 className="rounded-md border border-[var(--outline)] px-2 py-1 text-xs font-semibold disabled:opacity-40"
                 onClick={() => void onBan(u, !u.banned)}
@@ -162,7 +217,7 @@ export function AdminUsersTable({
         },
       }),
     ],
-    [busy, onBan, onWipe],
+    [busy, onBan, onEditUsername, onWipe],
   );
 
   const table = useReactTable({

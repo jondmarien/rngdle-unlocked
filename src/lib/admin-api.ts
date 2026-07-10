@@ -14,7 +14,7 @@ async function adminFetch<T>(
       ...init,
       headers: {
         'Content-Type': 'application/json',
-        ...(init?.headers ?? {}),
+        ...init?.headers,
       },
     });
     const data = (await res.json().catch(() => ({}))) as T & { error?: string };
@@ -108,6 +108,16 @@ export function banUser(userId: string, banned: boolean, reason?: string) {
     method: 'POST',
     body: JSON.stringify({ userId, banned, reason }),
   });
+}
+
+export function setAdminUsername(userId: string, username: string) {
+  return adminFetch<{ ok: boolean; username: string; unchanged?: boolean }>(
+    '/api/admin/users/username',
+    {
+      method: 'POST',
+      body: JSON.stringify({ userId, username }),
+    },
+  );
 }
 
 export function listReports(status = 'open') {

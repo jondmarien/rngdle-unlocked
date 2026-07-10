@@ -10,13 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Admin **Users** tab lists all accounts (paginated) with live search filter — TanStack Table + server `page`/`limit`/`total`.
+- Admin **Edit** username (`POST /api/admin/users/username`) + `scripts/backfill-usernames.mjs` for accounts with `username IS NULL` (missing `@` → excluded from leaderboards).
 - Feature request status **In progress** (`in_progress`) between Planned and Shipped.
 
 ### Changed
 
 - **Vite 8.1** + `@vitejs/plugin-react` 6 (Rolldown/Oxc). Vendor splits via `build.rolldownOptions.output.codeSplitting`. Local `vite build` ~0.4s (was ~3s on Vite 6).
 - **Bundle size:** route-level lazy loading for secondary screens, deferred share/confetti/html-to-image chunks, and vendor chunks — main entry JS ~59 KB (was ~639 KB).
-- **Vercel API deploy:** `pnpm build:vercel` esbuild-bundles each `api/**/*.ts` to `.js` and strips sources so the Node builder no longer typechecks ~30 handlers one-by-one (`scripts/bundle-api.mjs`).
+- **Vercel API deploy:** `pnpm build:vercel` esbuild-bundles each `api/**/*.ts` to `.js` and (on Vercel) replaces sources with thin re-exports so the Node builder no longer typechecks ~30 handlers one-by-one (`scripts/bundle-api.mjs`).
 
 ### Fixed
 

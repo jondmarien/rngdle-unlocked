@@ -5,6 +5,7 @@ import { createDb } from '../server/db/index.js';
 import { user } from '../server/db/schema.js';
 import { getLinkedSocialAccounts } from '../server/linkedAccounts.js';
 import { createLogger } from '../server/logger.js';
+import { isValidUsername, normalizeUsername } from '../server/username.js';
 import { defineHandler } from '../server/vercel-adapter.js';
 
 const log = createLogger('api/me');
@@ -115,9 +116,9 @@ export default defineHandler(async (request) => {
     } = { updatedAt: new Date() };
 
     if (body.username !== undefined) {
-      const username = body.username?.trim().toLowerCase();
+      const username = normalizeUsername(body.username ?? '');
       log.info('username patch', { userId: me.id, username });
-      if (!username || !/^[a-z0-9_]{3,24}$/.test(username)) {
+      if (!username || !isValidUsername(username)) {
         return Response.json(
           { error: 'Username must be 3–24 chars: a-z, 0-9, _' },
           { status: 400 },

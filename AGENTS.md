@@ -75,7 +75,7 @@ pnpm dev              # SPA only (game works offline)
 pnpm test             # vite-plus / vitest
 pnpm typecheck        # app + node + tsconfig.server.json (NodeNext for api/server)
 pnpm build            # app + node typecheck, then Vite production build (server graph is typecheck’s job)
-pnpm build:vercel     # full typecheck + Vite + esbuild-bundle api/** → .js (Vercel buildCommand; strips .ts so Node builder skips per-function tsc)
+pnpm build:vercel     # full typecheck + Vite + esbuild-bundle api/** → .js (Vercel buildCommand; thin .ts re-exports so Node builder skips per-function tsc)
 pnpm bundle:api       # esbuild each api entry (set BUNDLE_API_STRIP=1 to delete .ts after, as on Vercel)
 pnpm lint
 pnpm fmt              # Oxfmt write (single quotes — .oxfmtrc.json)
@@ -156,7 +156,7 @@ Vite resolves `.js` → `.ts` fine. Keep this pattern when adding game modules u
   - There is **no** hourly free-play roll-upload cap (removed).
   - Ranked still has `rankedRollsPerHour` (server cost).
 - Prefer keeping handler graphs esbuild-friendly (static imports) so `scripts/bundle-api.mjs` can emit one `.js` per entry. Dynamic `import()` of local modules is avoided for the Vercel prebundle path.
-- **Vercel deploy:** `buildCommand` is `pnpm build:vercel` — after the SPA build, `scripts/bundle-api.mjs` esbuild-bundles each `api/**/*.ts` into a colocated `.js` and **deletes the `.ts`** (`VERCEL=1`). That skips the Node builder’s per-function TypeScript Language Service (the slow “Using TypeScript…” loop). Local `vercel dev` still runs TypeScript sources; do not commit generated `api/**/*.js`.
+- **Vercel deploy:** `buildCommand` is `pnpm build:vercel` — after the SPA build, `scripts/bundle-api.mjs` esbuild-bundles each `api/**/*.ts` into a colocated `.js` and, on `VERCEL=1`, replaces each `.ts` with a thin `export { default } from './name.js'` stub. Deleting `.ts` breaks deploy (“File not found: …/ban.ts”) because Vercel already registered those entry paths. Local `vercel dev` / `bundle:api` keep real TypeScript sources; do not commit generated `api/**/*.js`.
 
 ### 5.4b Zod at trust boundaries
 
@@ -308,15 +308,16 @@ These four checks require a **manual browser smoke** — automated `pnpm test` /
 
 ## 11. Common failure modes (quick diagnosis)
 
-| Symptom                                                       | Likely cause                                    | Fix direction                                                               |
-| ------------------------------------------------------------- | ----------------------------------------------- | --------------------------------------------------------------------------- |
-| Ranked `FUNCTION_INVOCATION_FAILED` / missing `rarity` module | ESM extensionless import in `src/game`          | Add `.js` extensions; `pnpm typecheck` (NodeNext) should fail before deploy |
-| Ranked 500 after auth                                         | Insert insert / missing `source` column         | Run `scripts/add-roll-source.mjs`                                           |
-| Free play sync `429` hourly upload                            | Old hourly cap                                  | Removed — only soft per-minute sync burst remains                           |
-| Reel stuck on `?????` after Daily/Weekly                      | `lastRevealKey` collision                       | Remount reel + reset lastRevealKey (see §5.6)                               |
-| Feed only one user / rare only                                | Old rare+ filter + no self                      | Feed includes self; all rarities; source toggles                            |
-| Leaderboard empty                                             | Wrong scope / no username / no Ranked rolls yet | Check scope toggle + `@username` + mode                                     |
-| Share stuck “waiting for cloud”                               | Roll not in Neon                                | Sign in, sync; confirm `/api/rolls/:id`                                     |
+| Symptom                                                       | Likely cause                                    | Fix direction                                                                         |
+| ------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Ranked `FUNCTION_INVOCATION_FAILED` / missing `rarity` module | ESM extensionless import in `src/game`          | Add `.js` extensions; `pnpm typecheck` (NodeNext) should fail before deploy           |
+| Ranked 500 after auth                                         | Insert insert / missing `source` column         | Run `scripts/add-roll-source.mjs`                                                     |
+| Free play sync `429` hourly upload                            | Old hourly cap                                  | Removed — only soft per-minute sync burst remains                                     |
+| Reel stuck on `?????` after Daily/Weekly                      | `lastRevealKey` collision                       | Remount reel + reset lastRevealKey (see §5.6)                                         |
+| Feed only one user / rare only                                | Old rare+ filter + no self                      | Feed includes self; all rarities; source toggles                                      |
+| Leaderboard empty                                             | Wrong scope / no username / no Ranked rolls yet | Check scope toggle + `@username` + mode                                               |
+| Admin Users shows name without `@` / missing from boards      | `user.username` null (OAuth `name` only)        | Admin **Edit** or `node --env-file=.env.local scripts/backfill-usernames.mjs --apply` |
+| Share stuck “waiting for cloud”                               | Roll not in Neon                                | Sign in, sync; confirm `/api/rolls/:id`                                               |
 
 ---
 

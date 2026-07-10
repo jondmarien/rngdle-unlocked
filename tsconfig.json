@@ -16,6 +16,6 @@
     "resolveJsonModule": true,
     "noEmit": true
   },
-  "include": ["api/**/*.ts", "server/**/*.ts"],
+  "include": ["api/**/*.ts", "server/**/*.ts", "server/env.d.ts"],
   "exclude": ["node_modules", "dist"]
 }

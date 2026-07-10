@@ -1,16 +1,19 @@
 /**
  * Bundle each api TypeScript entry into a single ESM .js next to the source.
- * On Vercel (VERCEL=1), also remove the .ts so the Node builder skips
- * per-function TypeScript typechecking.
  *
- * Local vercel dev still uses .ts sources (this script only runs on Vercel /
- * via pnpm bundle:api). Authoring stays TypeScript; pnpm typecheck remains
- * the type gate.
+ * On Vercel (`VERCEL=1`), replace each `.ts` with a thin re-export of the
+ * colocated `.js`. Vercel discovers function paths like
+ * `api/admin/users/ban.ts` up front — deleting those files caused
+ * “File not found: …/ban.ts”. Thin stubs keep the path while skipping the
+ * Node builder’s per-function typecheck of the full server/game graph.
+ *
+ * Locally, `.ts` sources are left untouched (this script only emits `.js`).
+ * Authoring stays TypeScript; `pnpm typecheck` is the type gate.
  *
  * Usage: node scripts/bundle-api.mjs
  */
 import { build } from 'esbuild';
-import { readdir, unlink, writeFile } from 'node:fs/promises';
+import { readdir, writeFile } from 'node:fs/promises';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -55,23 +58,32 @@ async function main() {
     logLevel: 'warning',
   });
 
+  const rewriteTs =
+    process.env.VERCEL === '1' || process.env.BUNDLE_API_REWRITE === '1';
+  if (rewriteTs) {
+    for (const tsPath of entries) {
+      const name = tsPath
+        .replace(/\\/g, '/')
+        .split('/')
+        .pop()
+        .replace(/\.ts$/, '');
+      await writeFile(
+        tsPath,
+        `export { default } from './${name}.js';\n`,
+        'utf8',
+      );
+    }
+  }
+
   await writeFile(
     join(apiRoot, '.bundled'),
     `bundled ${entries.length} entries at ${new Date().toISOString()}\n`,
     'utf8',
   );
 
-  const stripTs =
-    process.env.VERCEL === '1' || process.env.BUNDLE_API_STRIP === '1';
-  if (stripTs) {
-    for (const tsPath of entries) {
-      await unlink(tsPath);
-    }
-  }
-
   const rel = entries.map((p) => relative(root, p).replace(/\\/g, '/'));
   console.log(
-    `[bundle-api] wrote ${entries.length} .js${stripTs ? ', removed .ts' : ' (kept .ts)'} in ${Date.now() - started}ms`,
+    `[bundle-api] wrote ${entries.length} .js${rewriteTs ? ' + thin .ts re-exports' : ' (kept .ts sources)'} in ${Date.now() - started}ms`,
   );
   for (const r of rel.slice(0, 5)) {
     console.log(`  - ${r} → ${r.replace(/\.ts$/, '.js')}`);
