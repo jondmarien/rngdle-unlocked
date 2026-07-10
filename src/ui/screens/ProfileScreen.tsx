@@ -520,6 +520,38 @@ export function ProfileScreen({
         </div>
       )}
 
+      {/* Best roll — showcase style (above journey + secrets) */}
+      {best && (
+        <section className="space-y-2">
+          <SectionHeader
+            title="Best roll"
+            open={openBest}
+            onToggle={() => setOpenBest((v) => !v)}
+          />
+          {openBest && (
+            <div
+              className={`rounded-xl border bg-(--surface) p-4 ${theme.soft}`}
+            >
+              <div className="mono-number text-3xl font-bold sm:text-4xl">
+                {best.number.toLocaleString()}
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <RarityBadge rarity={coerceRarity(best.rarity)} />
+                <EPPill ep={best.totalEP} />
+                <span className="text-sm text-(--prose-2)">
+                  Top {topPercentFromEP(best.totalEP)}%
+                </span>
+              </div>
+              {best.topBadges && best.topBadges.length > 0 && (
+                <p className="mt-2 text-sm text-(--prose-2)">
+                  {best.topBadges.join(' · ')}
+                </p>
+              )}
+            </div>
+          )}
+        </section>
+      )}
+
       {/* Journey badges — latest by default; expand to show all earned */}
       {unlockedJourney.length > 0 && (
         <section className="space-y-3">
@@ -589,38 +621,6 @@ export function ProfileScreen({
                 </button>
               )}
             </>
-          )}
-        </section>
-      )}
-
-      {/* Best roll — showcase style (above secrets) */}
-      {best && (
-        <section className="space-y-2">
-          <SectionHeader
-            title="Best roll"
-            open={openBest}
-            onToggle={() => setOpenBest((v) => !v)}
-          />
-          {openBest && (
-            <div
-              className={`rounded-xl border bg-(--surface) p-4 ${theme.soft}`}
-            >
-              <div className="mono-number text-3xl font-bold sm:text-4xl">
-                {best.number.toLocaleString()}
-              </div>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <RarityBadge rarity={coerceRarity(best.rarity)} />
-                <EPPill ep={best.totalEP} />
-                <span className="text-sm text-(--prose-2)">
-                  Top {topPercentFromEP(best.totalEP)}%
-                </span>
-              </div>
-              {best.topBadges && best.topBadges.length > 0 && (
-                <p className="mt-2 text-sm text-(--prose-2)">
-                  {best.topBadges.join(' · ')}
-                </p>
-              )}
-            </div>
           )}
         </section>
       )}

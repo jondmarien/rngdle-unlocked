@@ -45,7 +45,7 @@ export const WHATS_NEW: WhatsNewEntry[] = [
         body: 'Small profile and celebration fixes on top of 0.10.0.',
         bullets: [
           '**Journey on profiles** — latest milestone by default; tap to show every earned journey badge.',
-          '**Best roll** — sits above Secret badges so the highlight is easy to find.',
+          '**Best roll** — sits at the top of the badge stack, above Journey.',
           '**Secret badges** — Very Odd and friends appear on public profiles (separate from section masteries).',
           '**Codex unlocks** — collapsed by default; expand when you want the full list.',
           '**Streak unlock toast** — Home celebration uses the real seal image again.',

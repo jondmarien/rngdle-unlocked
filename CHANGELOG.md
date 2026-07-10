@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Profile Journey badges** — show only the highest earned milestone by default; “Show all N journey badges” expands the full list.
 - **Profile Secret badges** — new section for streak / Giant Numbers secrets from synced collection (separate from section masteries).
-- **Profile section order** — Best roll sits above Secret badges (was below Codex).
+- **Profile section order** — Best roll sits above Journey badges (then secrets; Codex stays below).
 - **Profile Codex unlocks** — collapsed by default; expand to browse.
 
 ## [0.10.0] - 2026-07-10
