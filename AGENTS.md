@@ -240,7 +240,8 @@ Important tables: `user` (username, vanity profile fields), `user_progress`, `ro
 | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
 | `/api/auth/*`                                          | Better Auth (rewrites with `__path` for multi-segment)                                                                     |
 | `/api/sync`                                            | GET/POST cloud merge; soft per-minute burst only                                                                           |
-| `/api/ranked-roll`                                     | POST Ranked free play (auth + username)                                                                                    |
+| `/api/ranked-roll`                                     | POST Ranked free play (auth + username); response includes `quota` metadata                                                |
+| `/api/ranked-roll/quota`                               | GET read-only Ranked remaining / reset (auth; soft burst `rankedQuotaPerMinute`)                                           |
 | `/api/leaderboard`                                     | `?view=total\|best` (default total); `?scope=ranked\|practice&period=all\|week`; total: `sort=`; best: `sortBy=ep\|rarity` |
 | `/api/arcade`                                          | GET meta + active run (auth)                                                                                               |
 | `/api/arcade/start\|roll\|buy\|arm\|cash-out\|abandon` | Arcade run mutations (auth + @username for start/roll)                                                                     |
@@ -309,7 +310,7 @@ These four checks require a **manual browser smoke** — automated `pnpm test` /
 - Default branch: `main` (production via Vercel).
 - Prefer small, focused commits with complete sentences in messages.
 - Do not force-push `main` unless the user explicitly requests it.
-- Version in `package.json` (currently **0.7.1**); Settings footer reads `VITE_APP_VERSION` from the build.
+- Version in `package.json` (currently **0.7.2**); Settings footer reads `VITE_APP_VERSION` from the build.
 - Releases: annotated tags (`v0.x.y`) + `gh release create` when the user asks.
 
 ---
@@ -355,7 +356,7 @@ These four checks require a **manual browser smoke** — automated `pnpm test` /
 | Reel animation           | `src/ui/components/NumberDisplay.tsx`, `HomeScreen.tsx`                                                             |
 | Mode picker copy         | `src/ui/components/RollModePicker.tsx`                                                                              |
 | Badge catalog            | `src/game/badges/catalog.ts`                                                                                        |
-| Ranked issue             | `server/rankedRoll.ts`, `api/ranked-roll.ts`                                                                        |
+| Ranked issue             | `server/rankedRoll.ts`, `api/ranked-roll/index.ts`, quota: `api/ranked-roll/quota.ts` + `server/rankedQuota.ts`     |
 | Crowns / overtake        | `server/rollActivity.ts`                                                                                            |
 | Sync merge               | `server/sync.ts`, `api/sync.ts`                                                                                     |
 | Leaderboards             | `server/leaderboard.ts`, `api/leaderboard.ts`, `LeaderboardScreen.tsx` (Ranked/Practice/Arcade)                     |

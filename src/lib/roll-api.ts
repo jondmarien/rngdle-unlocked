@@ -1,11 +1,31 @@
 import type { BadgeHit, RarityTier, RollResult } from '../game/types';
 import { createLogger } from './logger';
+import {
+  rankedQuotaResponseSchema,
+  rankedQuotaSchema,
+  type RankedQuota,
+} from './schemas';
 
 const log = createLogger('roll-api');
 
+export type { RankedQuota };
+
+export const RANKED_QUOTA_QUERY_KEY = ['ranked-quota'] as const;
+
 export type RankedRollResponse =
-  | { ok: true; roll: RollResult }
-  | { ok: false; status: number; error?: string; body?: unknown };
+  | { ok: true; roll: RollResult; quota?: RankedQuota }
+  | {
+      ok: false;
+      status: number;
+      error?: string;
+      body?: unknown;
+      quota?: RankedQuota;
+    };
+
+function parseQuota(raw: unknown): RankedQuota | undefined {
+  const parsed = rankedQuotaSchema.safeParse(raw);
+  return parsed.success ? parsed.data : undefined;
+}
 
 /** POST /api/ranked-roll — server CSPRNG roll (auth + username required). */
 export async function requestRankedRoll(): Promise<RankedRollResponse> {
@@ -17,11 +37,52 @@ export async function requestRankedRoll(): Promise<RankedRollResponse> {
     roll?: RollResult;
     error?: string;
     code?: string;
+    quota?: unknown;
   };
+  const quota = parseQuota(body.quota);
   if (!res.ok || !body.roll) {
-    return { ok: false, status: res.status, error: body.error, body };
+    return { ok: false, status: res.status, error: body.error, body, quota };
   }
-  return { ok: true, roll: body.roll };
+  return { ok: true, roll: body.roll, quota };
+}
+
+/**
+ * GET /api/ranked-roll/quota — read-only remaining / reset.
+ * Soft-fails (returns null) on any error including the soft burst 429 so the
+ * UI never shows a second rate-limit message for this peek endpoint.
+ */
+export async function fetchRankedQuota(): Promise<RankedQuota | null> {
+  try {
+    const res = await fetch('/api/ranked-roll/quota', {
+      credentials: 'include',
+    });
+    if (!res.ok) {
+      log.debug('ranked quota soft-fail', { status: res.status });
+      return null;
+    }
+    const json: unknown = await res.json().catch(() => null);
+    const parsed = rankedQuotaResponseSchema.safeParse(json);
+    if (!parsed.success) {
+      log.debug('ranked quota parse failed');
+      return null;
+    }
+    return parsed.data.quota;
+  } catch (e) {
+    log.debug('ranked quota fetch failed', {
+      err: e instanceof Error ? e.message : String(e),
+    });
+    return null;
+  }
+}
+
+/** Relative reset copy for the Ranked quota pill (honest fixed-window). */
+export function formatRankedResetsIn(resetsInSec: number): string {
+  if (resetsInSec < 60) return `resets in ${resetsInSec}s`;
+  const minutes = Math.ceil(resetsInSec / 60);
+  if (minutes < 60) return `resets in ${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  const rem = minutes % 60;
+  return rem === 0 ? `resets in ${hours}h` : `resets in ${hours}h ${rem}m`;
 }
 
 export type AttestResponse =

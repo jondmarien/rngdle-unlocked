@@ -196,3 +196,18 @@ export const arcadeRollSchema = z.object({
   percentile: z.number(),
   rolledAt: isoDateSchema,
 });
+
+/** Ranked gameplay quota (GET /api/ranked-roll/quota + POST ranked-roll). */
+export const rankedQuotaSchema = z.object({
+  limit: z.number().int().nonnegative(),
+  remaining: z.number().int().nonnegative(),
+  used: z.number().int().nonnegative(),
+  resetsInSec: z.number().int().positive().nullable(),
+  resetAt: isoDateSchema.nullable(),
+});
+
+export const rankedQuotaResponseSchema = z.object({
+  quota: rankedQuotaSchema,
+});
+
+export type RankedQuota = z.infer<typeof rankedQuotaSchema>;

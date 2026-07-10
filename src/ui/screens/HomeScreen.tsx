@@ -22,6 +22,7 @@ import { LatestRunsPanel } from '../components/LatestRunsPanel';
 import { NumberDisplay } from '../components/NumberDisplay';
 import { OnboardingTip } from '../components/OnboardingTip';
 import { RarityBadge } from '../components/RarityBadge';
+import { RankedQuotaPill } from '../components/RankedQuotaPill';
 import { RollModePicker } from '../components/RollModePicker';
 import { RollReplayModal } from '../components/RollReplayModal';
 import { LazySharePanel } from '../components/LazySharePanel';
@@ -257,6 +258,12 @@ export function HomeScreen({
         <OnboardingTip onGoAccount={onGoAccount} />
 
         <RollModePicker value={rollMode} onChange={setRollMode} />
+
+        {rollMode === 'ranked' && (
+          <div className="flex flex-wrap justify-center gap-2 text-sm">
+            <RankedQuotaPill />
+          </div>
+        )}
 
         {!busy && !lastRoll && (
           <div className="flex w-full max-w-md flex-col items-center gap-3">

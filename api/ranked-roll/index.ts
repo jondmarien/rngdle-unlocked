@@ -1,9 +1,13 @@
-import { rateGuard, requireUser } from '../server/apiGuards.js';
-import { createDb } from '../server/db/index.js';
-import { createLogger } from '../server/logger.js';
-import { LIMITS } from '../server/rateLimit.js';
-import { getUsername, issueRankedRoll } from '../server/rankedRoll.js';
-import { defineHandler } from '../server/vercel-adapter.js';
+import { rateCheck, requireUser } from '../../server/apiGuards.js';
+import { createDb } from '../../server/db/index.js';
+import { createLogger } from '../../server/logger.js';
+import { LIMITS } from '../../server/rateLimit.js';
+import {
+  RANKED_ROLL_WINDOW_MS,
+  rankedRollRateKey,
+} from '../../server/rankedQuota.js';
+import { getUsername, issueRankedRoll } from '../../server/rankedRoll.js';
+import { defineHandler } from '../../server/vercel-adapter.js';
 
 const log = createLogger('api/ranked-roll');
 
@@ -31,16 +35,16 @@ export default defineHandler(async (request) => {
 
     const db = createDb();
 
-    const limited = await rateGuard(
+    const limited = await rateCheck(
       db,
-      `user:${userId}:ranked-roll`,
+      rankedRollRateKey(userId),
       LIMITS.rankedRollsPerHour,
-      3_600_000,
+      RANKED_ROLL_WINDOW_MS,
       { error: 'Ranked roll rate limit — try again later' },
     );
-    if (limited) {
+    if (!limited.ok) {
       log.warn('rate limited', { userId });
-      return limited;
+      return limited.response;
     }
 
     const username = await getUsername(db, userId);
@@ -56,7 +60,7 @@ export default defineHandler(async (request) => {
     }
 
     const roll = await issueRankedRoll(db, { userId });
-    return Response.json({ roll });
+    return Response.json({ roll, quota: limited.result.quota });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     const stack = err instanceof Error ? err.stack : undefined;

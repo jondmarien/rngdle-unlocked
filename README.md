@@ -209,7 +209,7 @@ Switch modes anytime (board fully resets). Badges, EP, history, and share work a
 ```
 rngdle-unlocked/
 ├── api/                 ⚡ Thin Vercel handlers (Node adapter → Web Request)
-│   ├── auth.ts · me.ts · sync.ts · health.ts · ranked-roll.ts
+│   ├── auth.ts · me.ts · sync.ts · health.ts · ranked-roll/ (index + quota)
 │   ├── leaderboard.ts · arcade/* · feed.ts · profile/[username].ts · og.ts · …
 │   └── admin/* · reports.ts · follow.ts · notifications.ts · …
 ├── server/              🧠 Shared API logic
@@ -256,7 +256,7 @@ rngdle-unlocked/
 | `/r/:id`         | Legacy public roll path                                               |
 
 **API (serverless):**  
-`/api/auth/*`, `/api/me`, `/api/sync`, `/api/ranked-roll`, `/api/leaderboard?view=total|best&scope=ranked|practice`, `/api/arcade` (+ `/start` `/roll` `/buy` `/arm` `/cash-out` `/abandon` `/leaderboard`), `/api/feature-requests`, `/api/feature-requests/:id/vote`, `/api/admin/feature-requests`, `/api/highlights`, `/api/follow`, `/api/feed`, `/api/users/search`, `/api/notifications`, `/api/system-messages`, `/api/admin/*`, `/api/reports`, `/api/challenge`, `/api/attest`, `/api/og`, `/api/profile/:user`, `/api/u/:user`, `/api/rolls/:id`, `/api/share/:id`, `/api/health`.
+`/api/auth/*`, `/api/me`, `/api/sync`, `/api/ranked-roll` (+ `/quota`), `/api/leaderboard?view=total|best&scope=ranked|practice`, `/api/arcade` (+ `/start` `/roll` `/buy` `/arm` `/cash-out` `/abandon` `/leaderboard`), `/api/feature-requests`, `/api/feature-requests/:id/vote`, `/api/admin/feature-requests`, `/api/highlights`, `/api/follow`, `/api/feed`, `/api/users/search`, `/api/notifications`, `/api/system-messages`, `/api/admin/*`, `/api/reports`, `/api/challenge`, `/api/attest`, `/api/og`, `/api/profile/:user`, `/api/u/:user`, `/api/rolls/:id`, `/api/share/:id`, `/api/health`.
 
 Bot user-agents: `/s/:user/:code` → `/api/share/:code`; `/u/:username` → `/api/u/:username`; `/arcade` → `/api/page/arcade` for OG HTML + image.
 
@@ -413,6 +413,7 @@ The Account screen times out after a few seconds and shows the sign-in form. Che
 | Best Roll board (EP / rarity) + Features tab                            | ✅ Shipped (`v0.6.0`)                                                             |
 | Arcade Mode (Digits runs) + mode-first Board tabs                       | ✅ Shipped (`v0.7.0`)                                                             |
 | Alerts hierarchy + crown grouping; Features status sections             | ✅ Shipped (`v0.7.1`)                                                             |
+| Ranked quota indicator (remaining + window reset)                       | ✅ Shipped (`v0.7.2`)                                                             |
 | Server Ranked free play (`/api/ranked-roll`)                            | ✅ Shipped                                                                        |
 | Profiles (vanity + avatars) + follows                                   | ✅ Shipped                                                                        |
 | Activity unlocks + Ranked crown msgs + overtake notifs                  | ✅ Shipped                                                                        |

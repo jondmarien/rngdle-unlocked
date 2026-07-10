@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query';
 import {
   createContext,
   useCallback,
@@ -31,7 +32,11 @@ import {
 import { applyStreaks, recomputeBestConsecutive } from '../game/stats';
 import { useSession } from '../lib/auth-client';
 import { createLogger } from '../lib/logger';
-import { requestAttestation, requestRankedRoll } from '../lib/roll-api';
+import {
+  RANKED_QUOTA_QUERY_KEY,
+  requestAttestation,
+  requestRankedRoll,
+} from '../lib/roll-api';
 import { STORAGE_KEYS } from '../lib/storage-keys';
 import { settingsReducer, type SettingsAction } from './settings';
 import {
@@ -121,6 +126,7 @@ function applyTheme(theme: ThemeMode): void {
 
 export function GameProvider({ children }: { children: ReactNode }) {
   const { data: session } = useSession();
+  const queryClient = useQueryClient();
   const loggedInRef = useRef(false);
   loggedInRef.current = Boolean(session?.user);
 
@@ -234,6 +240,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
           return null;
         }
         const ranked = await requestRankedRoll();
+        if (ranked.quota) {
+          queryClient.setQueryData(RANKED_QUOTA_QUERY_KEY, ranked.quota);
+        }
         if (!ranked.ok) {
           const msg =
             ranked.error ||
@@ -395,7 +404,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       rollInFlightRef.current = false;
       setRolling(false);
     }
-  }, [enqueueAutoSync, persist, rolling, rollMode, session?.user]);
+  }, [enqueueAutoSync, persist, queryClient, rolling, rollMode, session?.user]);
 
   const attestRoll = useCallback(
     async (rollResult: RollResult): Promise<{ seal: string } | null> => {

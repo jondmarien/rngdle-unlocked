@@ -12,10 +12,10 @@ if (!process.env.DATABASE_URL) {
 const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
-const title = 'New Update! v0.7.1 — Clearer Alerts & Features';
+const title = 'New Update! v0.7.2 — See your Ranked rolls left';
 const body = [
-  'Alerts now group same-roll crown notices into one card, with clearer unread treatment and relative times.',
-  'Features splits Active from Shipped / Declined, with dedicated status colors.',
+  'Ranked mode now shows how many server rolls you have left this hour, plus when the window refreshes.',
+  'The soft cap is unchanged — you just see it coming.',
   'Read the full player notes: https://rngdle-unlocked.chron0.tech/whats-new',
   'Open: /whats-new',
 ].join(' ');

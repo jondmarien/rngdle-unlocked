@@ -32,6 +32,26 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'See your Ranked rolls left',
+    date: '2026-07-09',
+    version: '0.7.2',
+    tags: ['UI', 'Ranked'],
+    content: [
+      {
+        body: 'Ranked mode now shows how many server rolls you have left in the current hour window — before you hit the soft cap.',
+      },
+      {
+        heading: 'On Home',
+        body: 'When Ranked is selected, a small pill tracks remaining rolls and when the window refreshes.',
+        bullets: [
+          '**Count**: `N/90 left` updates after each Ranked roll.',
+          '**Reset**: `resets in Xm` when a window is active — not a clock-hour reset.',
+          '**Low remaining**: subtle amber when you are down to 10 or fewer.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Clearer Alerts and Features',
     date: '2026-07-10',
     version: '0.7.1',

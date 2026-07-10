@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-07-09
+
+### Added
+
+- **Ranked quota indicator** — Home shows remaining Ranked rolls in the current hour window (`N/90 left`) plus honest `resets in Xm` for the request-anchored fixed window.
+- `GET /api/ranked-roll/quota` — read-only peek (`peekRateLimit`); soft burst `LIMITS.rankedQuotaPerMinute` (60). Does not consume Ranked rolls.
+- Additive `quota` metadata on `POST /api/ranked-roll` success and 429 bodies (`remaining`, `limit`, `used`, `resetsInSec`, `resetAt`).
+- `rateCheck` in `server/apiGuards.ts` so handlers can attach quota without discarding the check result; Ranked handler moved to `api/ranked-roll/index.ts` (+ `quota.ts`).
+
+### Notes
+
+- Ranked gameplay cap unchanged (`rankedRollsPerHour: 90`, 1h window). Visibility only; client soft-fails quota-GET errors without a second rate-limit message.
+
 ## [0.7.1] - 2026-07-10
 
 ### Changed
@@ -189,6 +202,7 @@ First **social multiplayer** release on top of the unlimited solo playground.
 - Public rolls + Discord OG via share APIs.
 - SPA path-based routes; Vercel Node adapter for serverless APIs.
 
+[0.7.2]: https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.7.2
 [0.7.1]: https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.7.1
 [0.7.0]: https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.7.0
 [0.6.0]: https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.6.0

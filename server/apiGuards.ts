@@ -9,6 +9,8 @@ import {
   isRateLimited,
   rateLimitedResponse,
   type RateLimitBlocked,
+  type RateLimitOk,
+  type RateLimitResult,
 } from './rateLimit.js';
 import { getSessionUser } from './session.js';
 
@@ -18,6 +20,10 @@ export type SessionUser = NonNullable<
 
 export type RequireUserOk = { ok: true; user: SessionUser };
 export type RequireUserFail = { ok: false; response: Response };
+
+export type RateCheckOk = { ok: true; result: RateLimitOk };
+export type RateCheckFail = { ok: false; response: Response };
+export type RateCheckResult = RateCheckOk | RateCheckFail;
 
 /** Session-or-401 preamble shared by authenticated handlers. */
 export async function requireUser(
@@ -67,9 +73,31 @@ export async function rateGuard(
   windowMs: number,
   options?: RateGuardOptions,
 ): Promise<Response | null> {
-  const rl = await checkRateLimit(db, key, limit, windowMs);
-  if (!isRateLimited(rl)) return null;
+  const checked = await rateCheck(db, key, limit, windowMs, options);
+  return checked.ok ? null : checked.response;
+}
+
+/**
+ * Like rateGuard, but returns the success RateLimitResult (incl. quota)
+ * so handlers can attach remaining/reset metadata without a second peek.
+ */
+export async function rateCheck(
+  db: Db,
+  key: string,
+  limit: number,
+  windowMs: number,
+  options?: RateGuardOptions,
+): Promise<RateCheckResult> {
+  const rl: RateLimitResult = await checkRateLimit(db, key, limit, windowMs);
+  if (!isRateLimited(rl)) return { ok: true, result: rl };
   const error =
     typeof options?.error === 'function' ? options.error(rl) : options?.error;
-  return rateLimitedResponse(rl, error, options?.withRetryAfterHeader ?? true);
+  return {
+    ok: false,
+    response: rateLimitedResponse(
+      rl,
+      error,
+      options?.withRetryAfterHeader ?? true,
+    ),
+  };
 }
