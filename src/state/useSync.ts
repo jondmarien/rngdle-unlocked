@@ -23,6 +23,7 @@ import {
 } from './storage';
 
 const log = createLogger('game');
+const AUTO_SYNC_DEBOUNCE_MS = 12_000;
 
 export function toCloudPayload(s: PersistedState): CloudSavePayload {
   return {
@@ -74,6 +75,7 @@ export function useSync(opts: {
   /** Coalesce rapid auto-syncs so spam-rolling doesn't race the server. */
   const autoSyncChain = useRef(Promise.resolve());
   const latestAutoPayload = useRef<CloudSavePayload | null>(null);
+  const autoSyncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const applyCloudPayload = useCallback(
     (cloud: CloudSavePayload) => {
@@ -120,35 +122,43 @@ export function useSync(opts: {
     (payload: CloudSavePayload) => {
       if (!loggedInRef.current) return;
       latestAutoPayload.current = payload;
-      autoSyncChain.current = autoSyncChain.current
-        .then(async () => {
-          if (!loggedInRef.current) return;
-          const p = latestAutoPayload.current;
-          if (!p) return;
-          log.info('autoSync:start', {
-            rolls: p.lifetimeRollCount,
-            ep: p.lifetimeEP,
-          });
-          setSyncing(true);
-          try {
-            const merged = await pushCloudSave(p);
-            // Only apply if this is still the latest enqueue (avoid clobbering newer local rolls)
-            if (latestAutoPayload.current === p) {
-              applyCloudPayload(merged);
-              setSyncError(null);
+
+      if (autoSyncTimer.current) {
+        clearTimeout(autoSyncTimer.current);
+      }
+
+      autoSyncTimer.current = setTimeout(() => {
+        autoSyncTimer.current = null;
+        autoSyncChain.current = autoSyncChain.current
+          .then(async () => {
+            if (!loggedInRef.current) return;
+            const p = latestAutoPayload.current;
+            if (!p) return;
+            log.info('autoSync:start', {
+              rolls: p.lifetimeRollCount,
+              ep: p.lifetimeEP,
+            });
+            setSyncing(true);
+            try {
+              const merged = await pushCloudSave(p);
+              // Only apply if this is still the latest enqueue (avoid clobbering newer local rolls)
+              if (latestAutoPayload.current === p) {
+                applyCloudPayload(merged);
+                setSyncError(null);
+              }
+              log.info('autoSync:ok', { rolls: merged.lifetimeRollCount });
+            } catch (e) {
+              const message = e instanceof Error ? e.message : 'Auto-sync failed';
+              log.error('autoSync:fail', { message });
+              setSyncError(message);
+            } finally {
+              setSyncing(false);
             }
-            log.info('autoSync:ok', { rolls: merged.lifetimeRollCount });
-          } catch (e) {
-            const message = e instanceof Error ? e.message : 'Auto-sync failed';
-            log.error('autoSync:fail', { message });
-            setSyncError(message);
-          } finally {
-            setSyncing(false);
-          }
-        })
-        .catch(() => {
-          /* chain must not break */
-        });
+          })
+          .catch(() => {
+            /* chain must not break */
+          });
+      }, AUTO_SYNC_DEBOUNCE_MS);
     },
     [applyCloudPayload, loggedInRef],
   );
@@ -201,7 +211,12 @@ export function useSync(opts: {
   const waitForCloudPublish = useCallback(
     async (roll: RollResult): Promise<'ok' | 'error' | 'logged-out'> => {
       if (!loggedInRef.current) return 'logged-out';
-      // Drain auto-sync queue first
+      // Drain auto-sync queue first. If a debounced full-state push is still
+      // pending, cancel it because the force-push below covers this publish path.
+      if (autoSyncTimer.current) {
+        clearTimeout(autoSyncTimer.current);
+        autoSyncTimer.current = null;
+      }
       await autoSyncChain.current.catch(() => {});
       const key = roll.shortCode || roll.id;
 
@@ -232,14 +247,8 @@ export function useSync(opts: {
           log.info('waitForCloudPublish:ok', { key, attempt });
           return 'ok';
         }
-        // Re-push mid-loop if still missing (handles transient 500s)
-        if (attempt === 2 || attempt === 5) {
-          try {
-            await pushCloudSave(ensurePayloadHasRoll());
-          } catch {
-            /* continue polling */
-          }
-        }
+        // Do not re-push the full payload during polling; repeated full-state
+        // uploads can exhaust database transfer quota.
         await new Promise((r) => setTimeout(r, 400 + attempt * 150));
       }
       log.error('waitForCloudPublish:exhausted', { key });

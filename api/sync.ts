@@ -3,9 +3,12 @@ import { createDb } from '../server/db/index.js';
 import { createLogger } from '../server/logger.js';
 import { LIMITS } from '../server/rateLimit.js';
 import {
+  MAX_SYNC_PAYLOAD_BYTES,
   cloudSavePayloadSchema,
+  jsonByteLength,
   loadCloudSave,
   saveCloudMerge,
+  syncPayloadTooLargeResponse,
   type CloudSavePayload,
 } from '../server/sync.js';
 import { SyncIntegrityError } from '../server/syncIntegrity.js';
@@ -40,6 +43,16 @@ export default defineHandler(async (request) => {
     }
 
     if (request.method === 'POST') {
+      const contentLength = Number(request.headers.get('content-length') ?? 0);
+      if (contentLength > MAX_SYNC_PAYLOAD_BYTES) {
+        log.warn('payload rejected: content-length too large', {
+          userId,
+          payloadBytes: contentLength,
+          maxPayloadBytes: MAX_SYNC_PAYLOAD_BYTES,
+        });
+        return syncPayloadTooLargeResponse(contentLength);
+      }
+
       // Soft burst guard only (per minute). No hourly roll-upload cap —
       // free play is unlimited and auto-sync should keep up.
       const limited = await rateGuard(
@@ -56,6 +69,21 @@ export default defineHandler(async (request) => {
 
       const parsed = await readJson<unknown>(request, 'Invalid JSON body');
       if (!parsed.ok) return parsed.response;
+
+      const payloadBytes = jsonByteLength(parsed.body);
+      log.info('payload size', {
+        userId,
+        payloadBytes,
+        maxPayloadBytes: MAX_SYNC_PAYLOAD_BYTES,
+      });
+      if (payloadBytes > MAX_SYNC_PAYLOAD_BYTES) {
+        log.warn('payload rejected: body too large', {
+          userId,
+          payloadBytes,
+          maxPayloadBytes: MAX_SYNC_PAYLOAD_BYTES,
+        });
+        return syncPayloadTooLargeResponse(payloadBytes);
+      }
 
       const validated = cloudSavePayloadSchema.safeParse(parsed.body);
       if (!validated.success) {
