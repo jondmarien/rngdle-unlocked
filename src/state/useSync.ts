@@ -13,14 +13,23 @@ import { createLogger } from '../lib/logger';
 import { isRollPublished } from '../lib/roll-api';
 import {
   fetchCloudSave,
-  pushCloudSave,
+  pushCloudDelta,
   type CloudSavePayload,
+  type SyncAck,
 } from '../lib/sync-api';
 import {
   backfillCollectionTimestamps,
   HISTORY_CAP,
   type PersistedState,
 } from './storage';
+import {
+  applyAckToMeta,
+  buildDeltaPayload,
+  loadSyncMeta,
+  saveSyncMeta,
+  type SyncDeltaPayload,
+} from './syncMeta';
+import { mergeCollection, mergeHistory, mergeStats } from '../lib/sync-merge';
 
 const log = createLogger('game');
 const AUTO_SYNC_DEBOUNCE_MS = 12_000;
@@ -33,6 +42,23 @@ export function toCloudPayload(s: PersistedState): CloudSavePayload {
     collection: s.collection,
     stats: s.stats,
     history: s.history,
+  };
+}
+
+function mergeLocalWithCloud(
+  local: PersistedState,
+  cloud: CloudSavePayload,
+): CloudSavePayload {
+  return {
+    lifetimeEP: Math.max(local.lifetimeEP, cloud.lifetimeEP),
+    lifetimeRollCount: Math.max(
+      local.lifetimeRollCount,
+      cloud.lifetimeRollCount,
+    ),
+    journeyEP: Math.max(local.journeyEP, cloud.journeyEP),
+    collection: mergeCollection(local.collection, cloud.collection),
+    stats: mergeStats(local.stats, cloud.stats),
+    history: mergeHistory(local.history, cloud.history),
   };
 }
 
@@ -118,6 +144,52 @@ export function useSync(opts: {
     [setState, persist, onSecretUnlocks],
   );
 
+  const applySyncAck = useCallback(
+    (ack: SyncAck, sent: SyncDeltaPayload) => {
+      const state = stateRef.current;
+      const meta = applyAckToMeta(
+        loadSyncMeta(),
+        ack.updatedAt,
+        sent,
+        new Set(state.history.map((r) => r.id)),
+      );
+      saveSyncMeta(meta);
+
+      setState((prev) => {
+        const next: PersistedState = {
+          ...prev,
+          lifetimeEP: Math.max(prev.lifetimeEP, ack.counts.lifetimeEP),
+          lifetimeRollCount: Math.max(
+            prev.lifetimeRollCount,
+            ack.counts.lifetimeRollCount,
+          ),
+          journeyEP: Math.max(prev.journeyEP, ack.counts.journeyEP),
+        };
+        persist(next);
+        return next;
+      });
+      setLastSyncAt(new Date().toISOString());
+    },
+    [persist, setState, stateRef],
+  );
+
+  const pushDeltaFrom = useCallback(
+    async (payload: CloudSavePayload, forceRoll?: RollResult) => {
+      const meta = loadSyncMeta();
+      let delta = buildDeltaPayload(payload, meta);
+      if (forceRoll && !delta.history.some((r) => r.id === forceRoll.id)) {
+        delta = {
+          ...delta,
+          history: [forceRoll, ...delta.history].slice(0, 60),
+        };
+      }
+      const ack = await pushCloudDelta(delta);
+      applySyncAck(ack, delta);
+      return ack;
+    },
+    [applySyncAck],
+  );
+
   const enqueueAutoSync = useCallback(
     (payload: CloudSavePayload) => {
       if (!loggedInRef.current) return;
@@ -140,15 +212,30 @@ export function useSync(opts: {
             });
             setSyncing(true);
             try {
-              const merged = await pushCloudSave(p);
-              // Only apply if this is still the latest enqueue (avoid clobbering newer local rolls)
+              let ack = await pushDeltaFrom(p);
               if (latestAutoPayload.current === p) {
-                applyCloudPayload(merged);
                 setSyncError(null);
               }
-              log.info('autoSync:ok', { rolls: merged.lifetimeRollCount });
+              // Drain remaining pending rolls (UPSERT_CAP batches) in this tick
+              let guard = 0;
+              while (guard < 10 && latestAutoPayload.current === p) {
+                guard += 1;
+                const still = buildDeltaPayload(
+                  latestAutoPayload.current,
+                  loadSyncMeta(),
+                );
+                if (
+                  still.history.length === 0 &&
+                  still.collection.length === 0
+                ) {
+                  break;
+                }
+                ack = await pushDeltaFrom(latestAutoPayload.current);
+              }
+              log.info('autoSync:ok', { rolls: ack.counts.lifetimeRollCount });
             } catch (e) {
-              const message = e instanceof Error ? e.message : 'Auto-sync failed';
+              const message =
+                e instanceof Error ? e.message : 'Auto-sync failed';
               log.error('autoSync:fail', { message });
               setSyncError(message);
             } finally {
@@ -160,7 +247,7 @@ export function useSync(opts: {
           });
       }, AUTO_SYNC_DEBOUNCE_MS);
     },
-    [applyCloudPayload, loggedInRef],
+    [loggedInRef, pushDeltaFrom],
   );
 
   const syncToCloud = useCallback(async () => {
@@ -172,9 +259,28 @@ export function useSync(opts: {
       ep: state.lifetimeEP,
     });
     try {
-      const merged = await pushCloudSave(toCloudPayload(state));
-      applyCloudPayload(merged);
-      log.info('syncToCloud:ok', { rolls: merged.lifetimeRollCount });
+      // Drain pending in batches of UPSERT_CAP
+      let guard = 0;
+      while (guard < 20) {
+        guard += 1;
+        const payload = toCloudPayload(stateRef.current);
+        const pending = buildDeltaPayload(payload, loadSyncMeta());
+        if (
+          pending.history.length === 0 &&
+          pending.collection.length === 0 &&
+          guard > 1
+        ) {
+          break;
+        }
+        const ack = await pushDeltaFrom(payload);
+        log.info('syncToCloud:batch', {
+          upserted: ack.counts.historyUpserted,
+          pending: pending.history.length,
+        });
+        if (pending.history.length < 60) break;
+      }
+      setSyncError(null);
+      log.info('syncToCloud:ok');
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Sync failed';
       log.error('syncToCloud:fail', { message });
@@ -182,23 +288,42 @@ export function useSync(opts: {
     } finally {
       setSyncing(false);
     }
-  }, [applyCloudPayload, stateRef]);
+  }, [pushDeltaFrom, stateRef]);
 
   const pullFromCloud = useCallback(async () => {
     setSyncing(true);
     setSyncError(null);
     log.info('pullFromCloud:start');
     try {
-      const cloud = await fetchCloudSave();
+      const { cloud, updatedAt } = await fetchCloudSave();
       if (!cloud) {
         log.warn('pullFromCloud:empty');
         setSyncError('Nothing in the cloud yet — push first.');
         return;
       }
-      // Merge pull with local then save
-      const merged = await pushCloudSave(toCloudPayload(stateRef.current));
+      const local = stateRef.current;
+      const merged = mergeLocalWithCloud(local, cloud);
       applyCloudPayload(merged);
-      log.info('pullFromCloud:ok', { rolls: merged.lifetimeRollCount });
+
+      // Seed cursor; mark cloud history as acked so we don't re-upload it.
+      // Local-only rolls stay unacked and drain via follow-up delta.
+      const cloudIds = new Set(cloud.history.map((r) => r.id));
+      const localOnly = local.history.filter((r) => !cloudIds.has(r.id));
+      saveSyncMeta({
+        cursorUpdatedAt: updatedAt,
+        ackedRollIds: cloud.history.map((r) => r.id),
+        ackedBadgeIds: cloud.collection.map((c) => c.badgeId).filter(Boolean),
+      });
+
+      if (localOnly.length > 0) {
+        // Upload device-local exclusives as delta — never full 500 POST.
+        enqueueAutoSync(merged);
+      }
+
+      log.info('pullFromCloud:ok', {
+        rolls: merged.lifetimeRollCount,
+        localOnly: localOnly.length,
+      });
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Pull failed';
       log.error('pullFromCloud:fail', { message });
@@ -206,13 +331,11 @@ export function useSync(opts: {
     } finally {
       setSyncing(false);
     }
-  }, [applyCloudPayload, stateRef]);
+  }, [applyCloudPayload, enqueueAutoSync, stateRef]);
 
   const waitForCloudPublish = useCallback(
     async (roll: RollResult): Promise<'ok' | 'error' | 'logged-out'> => {
       if (!loggedInRef.current) return 'logged-out';
-      // Drain auto-sync queue first. If a debounced full-state push is still
-      // pending, cancel it because the force-push below covers this publish path.
       if (autoSyncTimer.current) {
         clearTimeout(autoSyncTimer.current);
         autoSyncTimer.current = null;
@@ -220,20 +343,22 @@ export function useSync(opts: {
       await autoSyncChain.current.catch(() => {});
       const key = roll.shortCode || roll.id;
 
-      const ensurePayloadHasRoll = (): CloudSavePayload => {
-        const base = toCloudPayload(stateRef.current);
-        if (base.history.some((r) => r.id === roll.id)) return base;
-        return {
-          ...base,
-          history: [roll, ...base.history].slice(0, HISTORY_CAP),
-        };
-      };
-
-      // Immediate force-push so the roll is not waiting on a failed auto-sync
       try {
         setSyncing(true);
-        const merged = await pushCloudSave(ensurePayloadHasRoll());
-        applyCloudPayload(merged);
+        const base = toCloudPayload(stateRef.current);
+        const withRoll = base.history.some((r) => r.id === roll.id)
+          ? base
+          : {
+              ...base,
+              history: [roll, ...base.history].slice(0, HISTORY_CAP),
+            };
+        // Ensure this roll is treated as pending even if previously acked
+        const meta = loadSyncMeta();
+        saveSyncMeta({
+          ...meta,
+          ackedRollIds: meta.ackedRollIds.filter((id) => id !== roll.id),
+        });
+        await pushDeltaFrom(withRoll, roll);
       } catch (e) {
         log.error('waitForCloudPublish:push fail', {
           err: e instanceof Error ? e.message : String(e),
@@ -247,14 +372,12 @@ export function useSync(opts: {
           log.info('waitForCloudPublish:ok', { key, attempt });
           return 'ok';
         }
-        // Do not re-push the full payload during polling; repeated full-state
-        // uploads can exhaust database transfer quota.
         await new Promise((r) => setTimeout(r, 400 + attempt * 150));
       }
       log.error('waitForCloudPublish:exhausted', { key });
       return 'error';
     },
-    [applyCloudPayload, loggedInRef, stateRef],
+    [loggedInRef, pushDeltaFrom, stateRef],
   );
 
   return {

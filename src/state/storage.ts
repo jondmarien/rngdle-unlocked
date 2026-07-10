@@ -228,6 +228,7 @@ export function clearState(): void {
   for (const key of Object.values(KEYS)) {
     localStorage.removeItem(key);
   }
+  localStorage.removeItem(STORAGE_KEYS.syncMeta);
 }
 
 export function mergeCollection(

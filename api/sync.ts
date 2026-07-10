@@ -5,16 +5,30 @@ import { LIMITS } from '../server/rateLimit.js';
 import {
   MAX_SYNC_PAYLOAD_BYTES,
   cloudSavePayloadSchema,
+  isSyncDeltaPayload,
   jsonByteLength,
   loadCloudSave,
   saveCloudMerge,
+  syncDeltaPayloadSchema,
   syncPayloadTooLargeResponse,
+  toSyncAck,
   type CloudSavePayload,
 } from '../server/sync.js';
 import { SyncIntegrityError } from '../server/syncIntegrity.js';
 import { defineHandler } from '../server/vercel-adapter.js';
 
 const log = createLogger('api/sync');
+
+function normalizeLocalPayload(body: CloudSavePayload): CloudSavePayload {
+  return {
+    lifetimeEP: body.lifetimeEP,
+    lifetimeRollCount: body.lifetimeRollCount,
+    journeyEP: body.journeyEP ?? 0,
+    collection: Array.isArray(body.collection) ? body.collection : [],
+    stats: body.stats,
+    history: body.history ?? [],
+  };
+}
 
 export default defineHandler(async (request) => {
   log.info('request', { method: request.method });
@@ -38,8 +52,11 @@ export default defineHandler(async (request) => {
         { withRetryAfterHeader: false },
       );
       if (limited) return limited;
-      const cloud = await loadCloudSave(db, userId);
-      return Response.json({ cloud });
+      const loaded = await loadCloudSave(db, userId);
+      return Response.json({
+        cloud: loaded?.cloud ?? null,
+        updatedAt: loaded?.updatedAt ?? null,
+      });
     }
 
     if (request.method === 'POST') {
@@ -71,10 +88,12 @@ export default defineHandler(async (request) => {
       if (!parsed.ok) return parsed.response;
 
       const payloadBytes = jsonByteLength(parsed.body);
+      const isDelta = isSyncDeltaPayload(parsed.body);
       log.info('payload size', {
         userId,
         payloadBytes,
         maxPayloadBytes: MAX_SYNC_PAYLOAD_BYTES,
+        mode: isDelta ? 'delta' : 'full',
       });
       if (payloadBytes > MAX_SYNC_PAYLOAD_BYTES) {
         log.warn('payload rejected: body too large', {
@@ -85,33 +104,53 @@ export default defineHandler(async (request) => {
         return syncPayloadTooLargeResponse(payloadBytes);
       }
 
-      const validated = cloudSavePayloadSchema.safeParse(parsed.body);
-      if (!validated.success) {
-        log.warn('payload rejected', {
-          userId,
-          issues: validated.error.issues.slice(0, 3),
-        });
-        return Response.json({ error: 'Invalid payload' }, { status: 400 });
+      let local: CloudSavePayload;
+      if (isDelta) {
+        const validated = syncDeltaPayloadSchema.safeParse(parsed.body);
+        if (!validated.success) {
+          log.warn('delta payload rejected', {
+            userId,
+            issues: validated.error.issues.slice(0, 3),
+          });
+          return Response.json({ error: 'Invalid payload' }, { status: 400 });
+        }
+        const d = validated.data;
+        local = {
+          lifetimeEP: d.lifetimeEP,
+          lifetimeRollCount: d.lifetimeRollCount,
+          journeyEP: d.journeyEP ?? 0,
+          collection: d.collection as CloudSavePayload['collection'],
+          stats: d.stats as CloudSavePayload['stats'],
+          history: d.history as CloudSavePayload['history'],
+        };
+      } else {
+        const validated = cloudSavePayloadSchema.safeParse(parsed.body);
+        if (!validated.success) {
+          log.warn('payload rejected', {
+            userId,
+            issues: validated.error.issues.slice(0, 3),
+          });
+          return Response.json({ error: 'Invalid payload' }, { status: 400 });
+        }
+        local = normalizeLocalPayload(parsed.body as CloudSavePayload);
       }
-      // Zod gates the shape; merge keeps its existing normalization/clamps.
-      const body = parsed.body as CloudSavePayload;
 
       try {
-        const merged = await saveCloudMerge(db, userId, {
-          lifetimeEP: body.lifetimeEP,
-          lifetimeRollCount: body.lifetimeRollCount,
-          journeyEP: body.journeyEP ?? 0,
-          collection: Array.isArray(body.collection) ? body.collection : [],
-          stats: body.stats,
-          history: body.history ?? [],
-        });
+        const { merged, updatedAt, historyUpserted } = await saveCloudMerge(
+          db,
+          userId,
+          local,
+        );
         log.info('merged', {
           userId,
           rolls: merged.lifetimeRollCount,
           ep: merged.lifetimeEP,
           history: merged.history.length,
+          historyUpserted,
+          mode: isDelta ? 'delta' : 'full',
         });
-        return Response.json({ cloud: merged });
+        // Compact ack for both delta and legacy full — SPA is the only client.
+        return Response.json(toSyncAck(merged, updatedAt, historyUpserted));
       } catch (err) {
         if (err instanceof SyncIntegrityError) {
           log.warn('integrity reject', { userId, message: err.message });

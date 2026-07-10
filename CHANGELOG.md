@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Discord OG embeds** — ship `@resvg/resvg-wasm` `index_bg.wasm` under `server/assets/` during `bundle:api` and load it via the same multi-path resolver as Inter fonts. Without the binary, `/api/og` fell back to SVG (HTTP 200) which Discord ignores.
 - **Sync quota stopgap** (PR #4) — reject `/api/sync` bodies over 256KB (413), log payload sizes, debounce auto-sync by 12s, and stop re-POSTing full saves during share-publish polls.
+- **Sync Neon history load** — `loadCloudSave` now `ORDER BY rolled_at DESC LIMIT 500` instead of selecting every lifetime roll then slicing in memory. Adds `rolls_user_rolled_at_idx` (`scripts/add-rolls-user-rolled-at-idx.mjs`). Cuts Neon egress for power users with >500 rolls (e.g. 1600+ lifetime rows → 500).
+
+### Changed
+
+- **Delta `/api/sync`** — client POSTs `mode: 'delta'` with only pending rolls (≤60) + new collection rows + absolute counters; server returns compact `{ ok, updatedAt, counts }` ack instead of full `{ cloud }`. Legacy full payloads still accepted. `pullFromCloud` applies GET merge locally (no discard-then-full-POST). Shared merge helpers in `src/lib/sync-merge.ts`.
 
 ## [0.10.2] - 2026-07-10
 
