@@ -4,7 +4,7 @@ import { formatDateTime } from '../../lib/format';
 import { useGame, useGameSettings } from '../../state/GameProvider';
 import { BestRollCard } from '../components/BestRollCard';
 import { RollReplayModal } from '../components/RollReplayModal';
-import { SharePanel } from '../components/ShareCard';
+import { LazySharePanel } from '../components/LazySharePanel';
 import { StatTile } from '../components/StatTile';
 
 const SHOWCASE_LABEL = 'text-xs font-semibold text-[var(--prose-3)]';
@@ -128,7 +128,7 @@ export function ShowcaseScreen({
       </section>
 
       {shareRoll && (
-        <SharePanel
+        <LazySharePanel
           roll={shareRoll}
           rollCount={lifetimeRollCount}
           showRollCount={settings.shareShowRollCount}

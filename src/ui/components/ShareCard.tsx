@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { toPng } from 'html-to-image';
 import { ensureShortCode, topPercentFromEP, type RollResult } from '../../game';
 import { buildRollShareUrl, buildShareText } from '../../game/shareText';
 import { useSession } from '../../lib/auth-client';
@@ -89,6 +88,7 @@ export function SharePanel({
 
   const renderPngDataUrl = async (): Promise<string | null> => {
     if (!cardRef.current) return null;
+    const { toPng } = await import('html-to-image');
     return toPng(cardRef.current, {
       cacheBust: true,
       pixelRatio: 2,

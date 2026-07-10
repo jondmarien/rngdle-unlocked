@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Bundle size:** route-level lazy loading for secondary screens, deferred share/confetti/html-to-image chunks, and vendor manual chunks — main entry JS ~119 KB (was ~639 KB).
+
 ### Added
 
 - Feature request status **In progress** (`in_progress`) between Planned and Shipped.

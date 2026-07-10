@@ -19,7 +19,7 @@ import { OnboardingTip } from '../components/OnboardingTip';
 import { RarityBadge } from '../components/RarityBadge';
 import { RollModePicker } from '../components/RollModePicker';
 import { RollReplayModal } from '../components/RollReplayModal';
-import { SharePanel } from '../components/ShareCard';
+import { LazySharePanel } from '../components/LazySharePanel';
 
 const log = createLogger('home');
 
@@ -444,7 +444,7 @@ export function HomeScreen({
       )}
 
       {shareRoll && (
-        <SharePanel
+        <LazySharePanel
           roll={shareRoll}
           rollCount={lifetimeRollCount}
           showRollCount={settings.shareShowRollCount}

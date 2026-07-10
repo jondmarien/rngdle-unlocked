@@ -7,7 +7,7 @@ import { BestRollCard } from '../components/BestRollCard';
 import { RollReplayModal } from '../components/RollReplayModal';
 import { RarityBadge } from '../components/RarityBadge';
 import { SegmentedToggle } from '../components/SegmentedToggle';
-import { SharePanel } from '../components/ShareCard';
+import { LazySharePanel } from '../components/LazySharePanel';
 
 const CHIP_CLASS =
   'rounded-full border px-2.5 py-1 text-[11px] font-semibold sm:text-xs';
@@ -353,7 +353,7 @@ export function HistoryScreen({
       </div>
 
       {shareRoll && (
-        <SharePanel
+        <LazySharePanel
           roll={shareRoll}
           rollCount={lifetimeRollCount}
           showRollCount={settings.shareShowRollCount}

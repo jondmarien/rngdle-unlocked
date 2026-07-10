@@ -36,4 +36,25 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return;
+          if (
+            id.includes('/react-dom/') ||
+            id.includes('/react/') ||
+            id.includes('\\react-dom\\') ||
+            id.includes('\\react\\')
+          ) {
+            return 'vendor-react';
+          }
+          if (id.includes('@tanstack/react-query')) return 'vendor-query';
+          if (id.includes('better-auth')) return 'vendor-auth';
+          if (id.includes('/zod/') || id.includes('\\zod\\'))
+            return 'vendor-zod';
+        },
+      },
+    },
+  },
 });
