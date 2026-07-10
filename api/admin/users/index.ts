@@ -1,10 +1,16 @@
-import { eq, ilike, or } from 'drizzle-orm';
+import { count, desc, eq, ilike, or, sql } from 'drizzle-orm';
 import { requireAdmin } from '../../../server/admin.js';
+import { rateGuard } from '../../../server/apiGuards.js';
 import { user, userProgress } from '../../../server/db/schema.js';
+import { LIMITS } from '../../../server/rateLimit.js';
 import { defineHandler } from '../../../server/vercel-adapter.js';
 
+const DEFAULT_LIMIT = 25;
+const MAX_LIMIT = 100;
+
 /**
- * GET /api/admin/users?q= — search by username or email (admin session).
+ * GET /api/admin/users?q=&page=1&limit=25
+ * Lists users (newest first). Optional `q` filters email / username / name / id.
  */
 export default defineHandler(async (request) => {
   if (request.method !== 'GET') {
@@ -13,18 +19,51 @@ export default defineHandler(async (request) => {
 
   const gate = await requireAdmin(request);
   if (!gate.ok) return gate.response;
-  const { db } = gate;
+  const { db, user: adminUser } = gate;
+
+  const limited = await rateGuard(
+    db,
+    `user:${adminUser.id}:admin-users`,
+    LIMITS.usersSearchPerMinute,
+    60_000,
+  );
+  if (limited) return limited;
 
   const url = new URL(request.url);
   const q = (url.searchParams.get('q') ?? '').trim().toLowerCase();
-  if (q.length < 2) {
-    return Response.json(
-      { error: 'q must be at least 2 characters' },
-      { status: 400 },
-    );
-  }
+  const pageRaw = Number(url.searchParams.get('page') ?? '1');
+  const limitRaw = Number(
+    url.searchParams.get('limit') ?? String(DEFAULT_LIMIT),
+  );
+  const page =
+    Number.isFinite(pageRaw) && pageRaw > 0 ? Math.floor(pageRaw) : 1;
+  const limit = Math.min(
+    MAX_LIMIT,
+    Math.max(
+      1,
+      Number.isFinite(limitRaw) ? Math.floor(limitRaw) : DEFAULT_LIMIT,
+    ),
+  );
+  const offset = (page - 1) * limit;
 
-  const pattern = `%${q.replace(/[%_]/g, '')}%`;
+  const safeQ = q.replace(/[%_]/g, '');
+  const whereClause =
+    q.length >= 1
+      ? or(
+          ilike(user.email, `%${safeQ}%`),
+          ilike(user.username, `%${safeQ}%`),
+          ilike(user.name, `%${safeQ}%`),
+          eq(user.id, q),
+        )
+      : undefined;
+
+  const [totalRow] = await db
+    .select({ total: count() })
+    .from(user)
+    .where(whereClause);
+
+  const total = Number(totalRow?.total ?? 0);
+
   const rows = await db
     .select({
       id: user.id,
@@ -40,15 +79,10 @@ export default defineHandler(async (request) => {
     })
     .from(user)
     .leftJoin(userProgress, eq(userProgress.userId, user.id))
-    .where(
-      or(
-        ilike(user.email, pattern),
-        ilike(user.username, pattern),
-        ilike(user.name, pattern),
-        eq(user.id, q),
-      ),
-    )
-    .limit(40);
+    .where(whereClause)
+    .orderBy(desc(user.createdAt), sql`${user.id} desc`)
+    .limit(limit)
+    .offset(offset);
 
   return Response.json({
     users: rows.map((r) => ({
@@ -57,7 +91,7 @@ export default defineHandler(async (request) => {
       name: r.name,
       username: r.username,
       role: r.role,
-      banned: r.banned,
+      banned: Boolean(r.banned),
       banReason: r.banReason,
       createdAt:
         r.createdAt instanceof Date
@@ -66,5 +100,8 @@ export default defineHandler(async (request) => {
       lifetimeEp: r.lifetimeEp ?? 0,
       lifetimeRollCount: r.lifetimeRollCount ?? 0,
     })),
+    total,
+    page,
+    limit,
   });
 });

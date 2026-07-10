@@ -73,10 +73,20 @@ export async function checkIsAdmin(): Promise<boolean> {
   }
 }
 
-export function searchAdminUsers(q: string) {
-  return adminFetch<{ users: AdminUserRow[] }>(
-    `/api/admin/users?q=${encodeURIComponent(q)}`,
-  );
+export function searchAdminUsers(
+  q: string,
+  opts?: { page?: number; limit?: number },
+) {
+  const params = new URLSearchParams();
+  if (q.trim()) params.set('q', q.trim());
+  params.set('page', String(opts?.page ?? 1));
+  params.set('limit', String(opts?.limit ?? 25));
+  return adminFetch<{
+    users: AdminUserRow[];
+    total: number;
+    page: number;
+    limit: number;
+  }>(`/api/admin/users?${params}`);
 }
 
 export function postBroadcast(title: string, body: string) {

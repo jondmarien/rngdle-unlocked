@@ -1,17 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  banUser,
   listReports,
   patchReport,
   postBroadcast,
-  searchAdminUsers,
-  wipeUser,
   type AdminReportRow,
-  type AdminUserRow,
 } from '../../lib/admin-api';
 import { useSession } from '../../lib/auth-client';
 import { createLogger } from '../../lib/logger';
 import { useIsAdmin } from '../../lib/useIsAdmin';
+import { AdminUsersTable } from '../components/AdminUsersTable';
 import { SegmentedToggle } from '../components/SegmentedToggle';
 
 const log = createLogger('admin-ui');
@@ -28,9 +25,6 @@ export function AdminScreen({ onBack }: { onBack: () => void }) {
 
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
-
-  const [query, setQuery] = useState('');
-  const [users, setUsers] = useState<AdminUserRow[]>([]);
 
   const [reports, setReports] = useState<AdminReportRow[]>([]);
 
@@ -86,52 +80,6 @@ export function AdminScreen({ onBack }: { onBack: () => void }) {
     setBody('');
     setMsg(`Broadcast sent (${res.data.id.slice(0, 8)}…)`);
     log.info('broadcast ok');
-  };
-
-  const onSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setBusy(true);
-    setMsg(null);
-    const res = await searchAdminUsers(query);
-    setBusy(false);
-    if (!res.ok) {
-      setMsg(res.error);
-      setUsers([]);
-      return;
-    }
-    setUsers(res.data.users);
-  };
-
-  const onWipe = async (u: AdminUserRow) => {
-    const ok = window.confirm(
-      `Wipe cloud progress + rolls for @${u.username ?? u.email}? Auth account stays.`,
-    );
-    if (!ok) return;
-    setBusy(true);
-    const res = await wipeUser(u.id);
-    setBusy(false);
-    setMsg(res.ok ? `Wiped ${u.username ?? u.email}` : res.error);
-  };
-
-  const onBan = async (u: AdminUserRow, banned: boolean) => {
-    const reason = banned
-      ? (window.prompt('Ban reason (optional):') ?? undefined)
-      : undefined;
-    setBusy(true);
-    const res = await banUser(u.id, banned, reason);
-    setBusy(false);
-    setMsg(
-      res.ok
-        ? `${banned ? 'Banned' : 'Unbanned'} ${u.username ?? u.email}`
-        : res.error,
-    );
-    if (res.ok) {
-      setUsers((prev) =>
-        prev.map((row) =>
-          row.id === u.id ? { ...row, banned, banReason: reason ?? null } : row,
-        ),
-      );
-    }
   };
 
   return (
@@ -207,74 +155,7 @@ export function AdminScreen({ onBack }: { onBack: () => void }) {
       )}
 
       {tab === 'users' && (
-        <div className="space-y-4">
-          <form onSubmit={onSearch} className="flex flex-wrap gap-2">
-            <input
-              className="min-w-[12rem] flex-1 rounded-lg border border-[var(--outline)] bg-[var(--bg)] px-3 py-2 text-sm"
-              placeholder="Search email, @username, or id"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              minLength={2}
-              required
-            />
-            <button
-              type="submit"
-              disabled={busy}
-              className="rounded-lg bg-[var(--prose)] px-4 py-2 text-sm font-bold text-[var(--bg)] disabled:opacity-50"
-            >
-              Search
-            </button>
-          </form>
-          <ul className="space-y-3">
-            {users.map((u) => (
-              <li
-                key={u.id}
-                className="rounded-xl border border-[var(--outline)] bg-[var(--surface)] p-3"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div>
-                    <p className="font-semibold text-[var(--prose)]">
-                      {u.username ? `@${u.username}` : u.name}
-                      {u.banned && (
-                        <span className="ml-2 text-xs font-bold text-rose-600">
-                          BANNED
-                        </span>
-                      )}
-                      {u.role === 'admin' && (
-                        <span className="ml-2 text-xs font-bold text-amber-600">
-                          ADMIN
-                        </span>
-                      )}
-                    </p>
-                    <p className="text-xs text-[var(--prose-3)]">{u.email}</p>
-                    <p className="mt-1 text-xs text-[var(--prose-2)]">
-                      {u.lifetimeEp.toLocaleString()} EP ·{' '}
-                      {u.lifetimeRollCount.toLocaleString()} rolls
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      disabled={busy || u.role === 'admin'}
-                      className="rounded-md border border-[var(--outline)] px-2 py-1 text-xs font-semibold disabled:opacity-40"
-                      onClick={() => void onBan(u, !u.banned)}
-                    >
-                      {u.banned ? 'Unban' : 'Ban'}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={busy || u.role === 'admin'}
-                      className="rounded-md border border-rose-500/50 px-2 py-1 text-xs font-semibold text-rose-700 dark:text-rose-400 disabled:opacity-40"
-                      onClick={() => void onWipe(u)}
-                    >
-                      Wipe cloud
-                    </button>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <AdminUsersTable busy={busy} setBusy={setBusy} setMsg={setMsg} />
       )}
 
       {tab === 'reports' && (

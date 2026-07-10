@@ -24,6 +24,7 @@
     "@fontsource/jetbrains-mono": "^5.2.8",
     "@neondatabase/serverless": "^1.1.0",
     "@tanstack/react-query": "^5.101.2",
+    "@tanstack/react-table": "^8.21.3",
     "@types/node": "^24.13.2",
     "@vercel/analytics": "^2.0.1",
     "better-auth": "^1.6.23",
