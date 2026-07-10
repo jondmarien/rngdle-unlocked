@@ -75,7 +75,7 @@ pnpm dev              # SPA only (game works offline)
 pnpm test             # vite-plus / vitest
 pnpm typecheck        # app + node + tsconfig.server.json (NodeNext for api/server)
 pnpm build            # app + node typecheck, then Vite production build (server graph is typecheck’s job)
-pnpm build:vercel     # full typecheck + Vite + esbuild-bundle api/** → .js (Vercel buildCommand; thin .ts re-exports so Node builder skips per-function tsc)
+pnpm build:vercel     # full typecheck + Vite + esbuild-bundle api/** → api/_bundles/ (Vercel: thin @ts-nocheck stubs in api/**/*.ts)
 pnpm bundle:api       # esbuild each api entry (set BUNDLE_API_STRIP=1 to delete .ts after, as on Vercel)
 pnpm lint
 pnpm fmt              # Oxfmt write (single quotes — .oxfmtrc.json)
@@ -156,7 +156,7 @@ Vite resolves `.js` → `.ts` fine. Keep this pattern when adding game modules u
   - There is **no** hourly free-play roll-upload cap (removed).
   - Ranked still has `rankedRollsPerHour` (server cost).
 - Prefer keeping handler graphs esbuild-friendly (static imports) so `scripts/bundle-api.mjs` can emit one `.js` per entry. Dynamic `import()` of local modules is avoided for the Vercel prebundle path.
-- **Vercel deploy:** `buildCommand` is `pnpm build:vercel` — after the SPA build, `scripts/bundle-api.mjs` esbuild-bundles each `api/**/*.ts` into a colocated `.js` and, on `VERCEL=1`, replaces each `.ts` with a thin `export { default } from './name.js'` stub. Deleting `.ts` breaks deploy (“File not found: …/ban.ts”) because Vercel already registered those entry paths. Local `vercel dev` / `bundle:api` keep real TypeScript sources; do not commit generated `api/**/*.js`.
+- **Vercel deploy:** `buildCommand` is `pnpm build:vercel` — after the SPA build, `scripts/bundle-api.mjs` esbuild-bundles each `api/**/*.ts` into `api/_bundles/**` (underscore dir is ignored for function discovery). On `VERCEL=1`, each `api/**/*.ts` becomes a thin `@ts-nocheck` stub importing the matching bundle. Do not colocate `export { default } from './name.js'` next to `name.ts` (TS2303 circular alias under NodeNext). Do not delete `.ts` entry paths (Vercel already registered them). Local `vercel dev` / `bundle:api` keep real TypeScript sources; do not commit `api/_bundles/` or `api/**/*.js`.
 
 ### 5.4b Zod at trust boundaries
 
