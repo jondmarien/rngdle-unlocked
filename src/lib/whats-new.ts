@@ -38,14 +38,16 @@ export const WHATS_NEW: WhatsNewEntry[] = [
     tags: ['Profile', 'Secrets', 'UI'],
     content: [
       {
-        body: 'Profiles lead with your highest Journey badge (expand to see the rest), show streak secrets in their own section, and Home unlock toasts finally show the right streak seal art.',
+        body: 'Profiles lead with your highest Journey badge (expand to see the rest), put Best roll above secrets, keep Codex collapsed until you open it, show streak secrets in their own section, and Home unlock toasts finally show the right streak seal art.',
       },
       {
         heading: 'What you will notice',
         body: 'Small profile and celebration fixes on top of 0.10.0.',
         bullets: [
           '**Journey on profiles** — latest milestone by default; tap to show every earned journey badge.',
+          '**Best roll** — sits above Secret badges so the highlight is easy to find.',
           '**Secret badges** — Very Odd and friends appear on public profiles (separate from section masteries).',
+          '**Codex unlocks** — collapsed by default; expand when you want the full list.',
           '**Streak unlock toast** — Home celebration uses the real seal image again.',
         ],
       },

@@ -100,7 +100,7 @@ export function ProfileScreen({
   const [showAllJourney, setShowAllJourney] = useState(false);
   const [openSecrets, setOpenSecrets] = useState(true);
   const [openStreakSecrets, setOpenStreakSecrets] = useState(true);
-  const [openCodex, setOpenCodex] = useState(true);
+  const [openCodex, setOpenCodex] = useState(false);
   const [openBest, setOpenBest] = useState(true);
   const [openRecent, setOpenRecent] = useState(true);
   const [codexExpanded, setCodexExpanded] = useState(false);
@@ -593,6 +593,38 @@ export function ProfileScreen({
         </section>
       )}
 
+      {/* Best roll — showcase style (above secrets) */}
+      {best && (
+        <section className="space-y-2">
+          <SectionHeader
+            title="Best roll"
+            open={openBest}
+            onToggle={() => setOpenBest((v) => !v)}
+          />
+          {openBest && (
+            <div
+              className={`rounded-xl border bg-(--surface) p-4 ${theme.soft}`}
+            >
+              <div className="mono-number text-3xl font-bold sm:text-4xl">
+                {best.number.toLocaleString()}
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <RarityBadge rarity={coerceRarity(best.rarity)} />
+                <EPPill ep={best.totalEP} />
+                <span className="text-sm text-(--prose-2)">
+                  Top {topPercentFromEP(best.totalEP)}%
+                </span>
+              </div>
+              {best.topBadges && best.topBadges.length > 0 && (
+                <p className="mt-2 text-sm text-(--prose-2)">
+                  {best.topBadges.join(' · ')}
+                </p>
+              )}
+            </div>
+          )}
+        </section>
+      )}
+
       {/* Secret badges — streak / giant meta unlocks */}
       {unlockedStreakSecrets.length > 0 && (
         <section className="space-y-3">
@@ -706,7 +738,7 @@ export function ProfileScreen({
         </section>
       )}
 
-      {/* Codex unlocks — only if owner allows (default on) */}
+      {/* Codex unlocks — collapsed by default; owner can hide entirely */}
       {profile.profileShowCodex !== false && (
         <section className="space-y-3">
           <SectionHeader
@@ -844,38 +876,6 @@ export function ProfileScreen({
                 </>
               )}
             </>
-          )}
-        </section>
-      )}
-
-      {/* Best roll — showcase style */}
-      {best && (
-        <section className="space-y-2">
-          <SectionHeader
-            title="Best roll"
-            open={openBest}
-            onToggle={() => setOpenBest((v) => !v)}
-          />
-          {openBest && (
-            <div
-              className={`rounded-xl border bg-(--surface) p-4 ${theme.soft}`}
-            >
-              <div className="mono-number text-3xl font-bold sm:text-4xl">
-                {best.number.toLocaleString()}
-              </div>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <RarityBadge rarity={coerceRarity(best.rarity)} />
-                <EPPill ep={best.totalEP} />
-                <span className="text-sm text-(--prose-2)">
-                  Top {topPercentFromEP(best.totalEP)}%
-                </span>
-              </div>
-              {best.topBadges && best.topBadges.length > 0 && (
-                <p className="mt-2 text-sm text-(--prose-2)">
-                  {best.topBadges.join(' · ')}
-                </p>
-              )}
-            </div>
           )}
         </section>
       )}
