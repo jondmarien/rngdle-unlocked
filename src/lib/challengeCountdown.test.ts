@@ -30,6 +30,26 @@ describe('formatChallengeResetsIn', () => {
   it('formats whole days', () => {
     expect(formatChallengeResetsIn(2 * 86_400)).toBe('Resets in 2d');
   });
+
+  it('stays in minutes tier just under 1h (no premature 1h)', () => {
+    // ceil(3541/60)=60 — still minutes tier, never "1h"
+    expect(formatChallengeResetsIn(3541)).toBe('Resets in 60m');
+    expect(formatChallengeResetsIn(3599)).toBe('Resets in 60m');
+    expect(formatChallengeResetsIn(3540)).toBe('Resets in 59m');
+  });
+
+  it('enters hours tier only at a full hour', () => {
+    expect(formatChallengeResetsIn(3600)).toBe('Resets in 1h');
+  });
+
+  it('stays in hours tier just under 1d (no premature 1d)', () => {
+    expect(formatChallengeResetsIn(86_341)).toBe('Resets in 23h 59m');
+    expect(formatChallengeResetsIn(86_399)).toBe('Resets in 23h 59m');
+  });
+
+  it('enters days tier only at a full day', () => {
+    expect(formatChallengeResetsIn(86_400)).toBe('Resets in 1d');
+  });
 });
 
 describe('challengeResetsInSec', () => {
