@@ -236,14 +236,14 @@ flowchart TB
   API --> Vanity["/s/:user/:code"]
   Vanity -->|human| SPA[SPA PublicRoll]
   Vanity -->|bot UA| HTML["/api/share · OG HTML"]
-  HTML --> Img["/api/og SVG"]
+  HTML --> Img["/api/og PNG"]
   Profile["/u/:user"] -->|bot UA| UHTML["/api/u · profile OG"]
   UHTML --> Img
   Pages["/ · /leaderboard · /arcade · /features · /about · …"] -->|bot UA| PageHTML["/api/page/:slug"]
-  PageHTML --> PageImg["/api/og?type=page"]
+  PageHTML --> PageImg["/api/og?type=page PNG"]
 ```
 
-Static SPA routes use [`server/pageOg.ts`](../server/pageOg.ts) titles/descriptions plus a shared brand SVG (`type=page`). Humans still get the SPA; bots are rewritten in `vercel.json`. Baseline `og:*` / `twitter:*` tags also live in `index.html` for non-rewritten crawlers.
+Static SPA routes use [`server/pageOg.ts`](../server/pageOg.ts) titles/descriptions plus a shared brand card (`type=page`). **`/api/og` returns PNG** (Discord/Slack do not render SVG as `og:image`). Humans still get the SPA; bots are rewritten in `vercel.json`. Baseline `og:*` / `twitter:*` tags also live in `index.html` for non-rewritten crawlers.
 
 ## Key directories
 

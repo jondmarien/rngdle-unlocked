@@ -218,7 +218,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     rollInFlightRef.current = true;
     setRolling(true);
     log.debug('roll:start', {
-      lifetimeRollCount: state.lifetimeRollCount,
+      lifetimeRollCount: stateRef.current.lifetimeRollCount,
       rollMode: modeAtStart,
       epoch,
     });
@@ -307,7 +307,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
         return null;
       }
 
-      const prevCount = state.lifetimeRollCount;
+      // Always read latest persisted state after awaits (sync / prior rolls).
+      const base = stateRef.current;
+      const prevCount = base.lifetimeRollCount;
       const nextCount = prevCount + 1;
       const unlockedDefs = newlyUnlockedJourney(prevCount, nextCount);
       const journeyUnlocked = journeyHits(unlockedDefs);
@@ -320,8 +322,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       ];
 
       // Compute next state synchronously so auto-sync pushes this roll, not stale state
-      const history = prependHistory(state.history, result);
-      let stats = applyStreaks(state.stats, result);
+      const history = prependHistory(base.history, result);
+      let stats = applyStreaks(base.stats, result);
       stats = {
         ...stats,
         bestConsecutive: recomputeBestConsecutive(
@@ -329,8 +331,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
           stats.bestConsecutive,
         ),
       };
-      const ownedBefore = new Set(state.collection.map((c) => c.badgeId));
-      let collection = mergeCollection(state.collection, collectionAdds, at);
+      const ownedBefore = new Set(base.collection.map((c) => c.badgeId));
+      let collection = mergeCollection(base.collection, collectionAdds, at);
       const secretMerge = mergeSecretUnlocks(collection, at);
       collection = secretMerge.collection;
       const secretsUnlocked = secretHits(secretMerge.unlocked);
@@ -343,12 +345,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
       ].filter((id, i, arr) => arr.indexOf(id) === i && !ownedBefore.has(id));
 
       const next: PersistedState = {
-        ...state,
+        ...base,
         history,
         lifetimeRollCount: nextCount,
         lifetimeEP:
-          state.lifetimeEP + result.totalEP + journeyEPGained + secretsEPGained,
-        journeyEP: state.journeyEP + journeyEPGained + secretsEPGained,
+          base.lifetimeEP + result.totalEP + journeyEPGained + secretsEPGained,
+        journeyEP: base.journeyEP + journeyEPGained + secretsEPGained,
         collection,
         stats,
       };
@@ -393,7 +395,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       rollInFlightRef.current = false;
       setRolling(false);
     }
-  }, [enqueueAutoSync, persist, rolling, rollMode, session?.user, state]);
+  }, [enqueueAutoSync, persist, rolling, rollMode, session?.user]);
 
   const attestRoll = useCallback(
     async (rollResult: RollResult): Promise<{ seal: string } | null> => {

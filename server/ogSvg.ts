@@ -1,4 +1,9 @@
+import { readFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
+import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 import { eq } from 'drizzle-orm';
+import { initWasm, Resvg } from '@resvg/resvg-wasm';
 import type { Db } from './db/index.js';
 import { user, userProgress } from './db/schema.js';
 import { createLogger } from './logger.js';
@@ -6,6 +11,57 @@ import { findPublicRoll } from './rollLookup.js';
 import { parseCollectionIds } from './secretMasteries.js';
 
 const log = createLogger('ogSvg');
+const require = createRequire(import.meta.url);
+const here = dirname(fileURLToPath(import.meta.url));
+
+/** Discord / Slack / Twitter do not render SVG as og:image — serve PNG. */
+let wasmReady: Promise<void> | null = null;
+let fontBuffers: Uint8Array[] | null = null;
+
+async function loadOgFonts(): Promise<Uint8Array[]> {
+  if (fontBuffers) return fontBuffers;
+  const files = ['Inter-Regular.ttf', 'Inter-Bold.ttf'];
+  // Prefer cwd (Vercel /var/task includes server/) over import.meta dirname
+  // (esbuild places the handler under api/_bundles/).
+  const candidates = [
+    join(process.cwd(), 'server', 'assets'),
+    join(here, 'assets'),
+    join(here, '..', '..', 'server', 'assets'),
+  ];
+  let dir: string | null = null;
+  for (const c of candidates) {
+    try {
+      await readFile(join(c, files[0]!));
+      dir = c;
+      break;
+    } catch {
+      /* try next */
+    }
+  }
+  if (!dir) {
+    throw new Error('OG fonts not found under server/assets');
+  }
+  fontBuffers = await Promise.all(
+    files.map(async (name) => {
+      const buf = await readFile(join(dir!, name));
+      return new Uint8Array(buf);
+    }),
+  );
+  return fontBuffers;
+}
+
+function ensureResvgWasm(): Promise<void> {
+  if (!wasmReady) {
+    wasmReady = (async () => {
+      const wasmPath = require.resolve('@resvg/resvg-wasm/index_bg.wasm');
+      await initWasm(await readFile(wasmPath));
+    })().catch((err) => {
+      wasmReady = null;
+      throw err;
+    });
+  }
+  return wasmReady;
+}
 
 const ACCENT_STROKE: Record<string, string> = {
   teal: '#2dd4bf',
@@ -58,7 +114,7 @@ export async function rollOgResponse(url: URL, db: Db): Promise<Response> {
   });
 
   log.info('og roll', { key: key || 'params', number, rarity });
-  return svgResponse(svg, 120);
+  return pngResponse(svg, 120);
 }
 
 export async function profileOgResponse(url: URL, db: Db): Promise<Response> {
@@ -139,11 +195,11 @@ export async function profileOgResponse(url: URL, db: Db): Promise<Response> {
   });
 
   log.info('og profile', { handle: displayHandle, ep: epFmt });
-  return svgResponse(svg, 120);
+  return pngResponse(svg, 120);
 }
 
 /** Shared brand card for static SPA routes (home, leaderboard, about, …). */
-export function pageOgResponse(url: URL): Response {
+export async function pageOgResponse(url: URL): Promise<Response> {
   const page = (url.searchParams.get('page') || 'home').toLowerCase();
   const headline =
     url.searchParams.get('headline') ||
@@ -158,18 +214,18 @@ export function pageOgResponse(url: URL): Response {
     label: escapeXml(truncate(label, 56)),
   });
   log.info('og page', { page });
-  return svgResponse(svg, 300);
+  return pngResponse(svg, 300);
 }
 
 /** Branded fallback card when rendering fails. */
-export function fallbackOgResponse(): Response {
+export async function fallbackOgResponse(): Promise<Response> {
   const svg = buildRollOgSvg({
     number: 'RNGdle',
     rarity: 'UNLOCKED',
-    ep: '🎲',
+    ep: '—',
     handle: '',
   });
-  return svgResponse(svg, 60);
+  return pngResponse(svg, 60);
 }
 
 function formatInt(v: string): string {
@@ -185,14 +241,45 @@ function truncate(s: string, max: number): string {
   return `${t.slice(0, max - 1)}…`;
 }
 
-function svgResponse(svg: string, maxAge: number): Response {
-  return new Response(svg, {
-    status: 200,
-    headers: {
-      'Content-Type': 'image/svg+xml; charset=utf-8',
-      'Cache-Control': `public, max-age=${maxAge}, s-maxage=${maxAge * 2}`,
+async function svgToPng(svg: string): Promise<Uint8Array> {
+  await ensureResvgWasm();
+  const fonts = await loadOgFonts();
+  const resvg = new Resvg(svg, {
+    fitTo: { mode: 'width', value: 1200 },
+    font: {
+      fontBuffers: fonts,
+      loadSystemFonts: false,
+      defaultFontFamily: 'Inter',
+      sansSerifFamily: 'Inter',
+      monospaceFamily: 'Inter',
     },
   });
+  return resvg.render().asPng();
+}
+
+async function pngResponse(svg: string, maxAge: number): Promise<Response> {
+  try {
+    const png = await svgToPng(svg);
+    return new Response(Buffer.from(png), {
+      status: 200,
+      headers: {
+        'Content-Type': 'image/png',
+        'Cache-Control': `public, max-age=${maxAge}, s-maxage=${maxAge * 2}`,
+      },
+    });
+  } catch (err) {
+    // Last-resort SVG so the endpoint still returns *something* if WASM fails.
+    log.error('png render fail; falling back to svg', {
+      err: err instanceof Error ? err.message : String(err),
+    });
+    return new Response(svg, {
+      status: 200,
+      headers: {
+        'Content-Type': 'image/svg+xml; charset=utf-8',
+        'Cache-Control': `public, max-age=${maxAge}, s-maxage=${maxAge * 2}`,
+      },
+    });
+  }
 }
 
 function buildRollOgSvg(opts: {
@@ -212,12 +299,12 @@ function buildRollOgSvg(opts: {
   </defs>
   <rect width="1200" height="630" fill="url(#bg)"/>
   <rect x="40" y="40" width="1120" height="550" rx="24" fill="none" stroke="#5eead4" stroke-width="3" opacity="0.5"/>
-  <text x="80" y="120" fill="#5eead4" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="28" font-weight="700" letter-spacing="8">RNGDLE UNLOCKED</text>
-  <text x="80" y="280" fill="#ecfdf5" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="96" font-weight="700">${number}</text>
-  <text x="80" y="380" fill="#a7f3d0" font-family="system-ui, sans-serif" font-size="42" font-weight="700" letter-spacing="4">${rarity}</text>
-  <text x="80" y="460" fill="#fbbf24" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="36" font-weight="600">${ep} EP</text>
-  ${handle ? `<text x="80" y="540" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="28">${handle}</text>` : ''}
-  <text x="1120" y="540" fill="#334155" font-family="system-ui, sans-serif" font-size="22" text-anchor="end">unlimited CSPRNG · badges · cloud</text>
+  <text x="80" y="120" fill="#5eead4" font-family="Inter, ui-monospace, monospace" font-size="28" font-weight="700" letter-spacing="8">RNGDLE UNLOCKED</text>
+  <text x="80" y="280" fill="#ecfdf5" font-family="Inter, ui-monospace, monospace" font-size="96" font-weight="700">${number}</text>
+  <text x="80" y="380" fill="#a7f3d0" font-family="Inter, system-ui, sans-serif" font-size="42" font-weight="700" letter-spacing="4">${rarity}</text>
+  <text x="80" y="460" fill="#fbbf24" font-family="Inter, ui-monospace, monospace" font-size="36" font-weight="600">${ep} EP</text>
+  ${handle ? `<text x="80" y="540" fill="#94a3b8" font-family="Inter, system-ui, sans-serif" font-size="28">${handle}</text>` : ''}
+  <text x="1120" y="540" fill="#334155" font-family="Inter, system-ui, sans-serif" font-size="22" text-anchor="end">unlimited CSPRNG · badges · cloud</text>
 </svg>`;
 }
 
@@ -233,10 +320,10 @@ function buildPageOgSvg(opts: { headline: string; label: string }): string {
   </defs>
   <rect width="1200" height="630" fill="url(#bg)"/>
   <rect x="40" y="40" width="1120" height="550" rx="24" fill="none" stroke="#5eead4" stroke-width="3" opacity="0.5"/>
-  <text x="80" y="120" fill="#5eead4" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="28" font-weight="700" letter-spacing="8">RNGDLE UNLOCKED</text>
-  <text x="80" y="280" fill="#ecfdf5" font-family="system-ui, sans-serif" font-size="64" font-weight="800">${headline}</text>
-  <text x="80" y="380" fill="#a7f3d0" font-family="system-ui, sans-serif" font-size="36" font-weight="600">${label}</text>
-  <text x="1120" y="540" fill="#334155" font-family="system-ui, sans-serif" font-size="22" text-anchor="end">rngdle-unlocked.chron0.tech</text>
+  <text x="80" y="120" fill="#5eead4" font-family="Inter, ui-monospace, monospace" font-size="28" font-weight="700" letter-spacing="8">RNGDLE UNLOCKED</text>
+  <text x="80" y="280" fill="#ecfdf5" font-family="Inter, system-ui, sans-serif" font-size="64" font-weight="800">${headline}</text>
+  <text x="80" y="380" fill="#a7f3d0" font-family="Inter, system-ui, sans-serif" font-size="36" font-weight="600">${label}</text>
+  <text x="1120" y="540" fill="#334155" font-family="Inter, system-ui, sans-serif" font-size="22" text-anchor="end">rngdle-unlocked.chron0.tech</text>
 </svg>`;
 }
 
@@ -251,10 +338,10 @@ function buildProfileOgSvg(opts: {
 }): string {
   const { handle, name, flair, ep, badges, rolls, stroke } = opts;
   const flairLine = flair
-    ? `<text x="80" y="300" fill="${stroke}" font-family="system-ui, sans-serif" font-size="32" font-weight="600">${flair}</text>`
+    ? `<text x="80" y="300" fill="${stroke}" font-family="Inter, system-ui, sans-serif" font-size="32" font-weight="600">${flair}</text>`
     : '';
   const nameLine = name
-    ? `<text x="80" y="250" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="28">${name}</text>`
+    ? `<text x="80" y="250" fill="#cbd5e1" font-family="Inter, system-ui, sans-serif" font-size="28">${name}</text>`
     : '';
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
@@ -267,13 +354,13 @@ function buildProfileOgSvg(opts: {
   </defs>
   <rect width="1200" height="630" fill="url(#bg)"/>
   <rect x="40" y="40" width="1120" height="550" rx="24" fill="none" stroke="${stroke}" stroke-width="3" opacity="0.65"/>
-  <text x="80" y="110" fill="${stroke}" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="26" font-weight="700" letter-spacing="6">RNGDLE UNLOCKED · PROFILE</text>
-  <text x="80" y="200" fill="#f3efe6" font-family="system-ui, sans-serif" font-size="72" font-weight="800">${handle}</text>
+  <text x="80" y="110" fill="${stroke}" font-family="Inter, ui-monospace, monospace" font-size="26" font-weight="700" letter-spacing="6">RNGDLE UNLOCKED · PROFILE</text>
+  <text x="80" y="200" fill="#f3efe6" font-family="Inter, system-ui, sans-serif" font-size="72" font-weight="800">${handle}</text>
   ${nameLine}
   ${flairLine}
-  <text x="80" y="400" fill="#fbbf24" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="40" font-weight="700">${ep} EP</text>
-  <text x="80" y="470" fill="#a7f3d0" font-family="system-ui, sans-serif" font-size="32" font-weight="600">${badges} badges  ·  ${rolls} rolls</text>
-  <text x="1120" y="540" fill="#64748b" font-family="system-ui, sans-serif" font-size="22" text-anchor="end">public profile · roll · collect · climb</text>
+  <text x="80" y="400" fill="#fbbf24" font-family="Inter, ui-monospace, monospace" font-size="40" font-weight="700">${ep} EP</text>
+  <text x="80" y="470" fill="#a7f3d0" font-family="Inter, system-ui, sans-serif" font-size="32" font-weight="600">${badges} badges  ·  ${rolls} rolls</text>
+  <text x="1120" y="540" fill="#64748b" font-family="Inter, system-ui, sans-serif" font-size="22" text-anchor="end">public profile · roll · collect · climb</text>
 </svg>`;
 }
 

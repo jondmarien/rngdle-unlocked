@@ -14,10 +14,22 @@ import { defineHandler } from '../server/vercel-adapter.js';
 const log = createLogger('api/og');
 
 /**
- * Dynamic OG image — SVG card for Discord / social previews.
+ * Dynamic OG image — PNG card for Discord / social previews.
+ * (Discord does not render SVG as og:image.)
  * Rendering + DB lookups live in server/ogSvg.ts.
  */
 export default defineHandler(async (request) => {
+  if (request.method === 'HEAD') {
+    // Crawlers often probe with HEAD before fetching the image body.
+    return new Response(null, {
+      status: 200,
+      headers: {
+        'Content-Type': 'image/png',
+        'Cache-Control': 'public, max-age=120',
+      },
+    });
+  }
+
   if (request.method !== 'GET') {
     return new Response('Method not allowed', { status: 405 });
   }
@@ -41,7 +53,7 @@ export default defineHandler(async (request) => {
     }
 
     if (type === 'page') {
-      return pageOgResponse(url);
+      return await pageOgResponse(url);
     }
 
     return await rollOgResponse(url, db);
@@ -49,6 +61,6 @@ export default defineHandler(async (request) => {
     log.error('fail', {
       err: err instanceof Error ? err.message : String(err),
     });
-    return fallbackOgResponse();
+    return await fallbackOgResponse();
   }
 });

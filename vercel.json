@@ -3,6 +3,11 @@
   "buildCommand": "pnpm run build:vercel",
   "outputDirectory": "dist",
   "installCommand": "pnpm install --frozen-lockfile",
+  "functions": {
+    "api/og.ts": {
+      "includeFiles": "server/assets/**"
+    }
+  },
   "rewrites": [
     {
       "source": "/s/:user/:code",

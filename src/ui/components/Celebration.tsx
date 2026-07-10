@@ -149,7 +149,7 @@ export function CelebrationLayer() {
       return (
         <div
           key={burst.id}
-          className="pointer-events-none fixed inset-0 z-[100]"
+          className="pointer-events-none fixed inset-0 z-30"
           aria-hidden
         >
           <div className="celebrate-trash-desat celebrate-trash-desat-soft absolute inset-0" />
@@ -160,7 +160,7 @@ export function CelebrationLayer() {
     return (
       <div
         key={burst.id}
-        className="pointer-events-none fixed inset-0 z-[100]"
+        className="pointer-events-none fixed inset-0 z-30"
         aria-hidden
       >
         <div className="celebrate-trash-desat absolute inset-0" />
@@ -189,7 +189,7 @@ export function CelebrationLayer() {
     return (
       <div
         key={burst.id}
-        className={`pointer-events-none fixed inset-0 z-[100] celebrate-edge celebrate-edge-${burst.rarity} celebrate-edge-soft`}
+        className={`pointer-events-none fixed inset-0 z-30 celebrate-edge celebrate-edge-${burst.rarity} celebrate-edge-soft`}
         aria-hidden
       />
     );
@@ -198,7 +198,7 @@ export function CelebrationLayer() {
   return (
     <div
       key={burst.id}
-      className="pointer-events-none fixed inset-0 z-[100]"
+      className="pointer-events-none fixed inset-0 z-30"
       aria-hidden
     >
       {/* Edge blooms / vignette — escalate with tier; remount restarts CSS */}
