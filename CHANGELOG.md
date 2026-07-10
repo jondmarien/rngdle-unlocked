@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Feature request submit** — admins (`role=admin` or `ADMIN_USER_IDS`) are exempt from the hourly submit rate limit (server-side `isAdminRole` check).
+
 ## [0.11.0] - 2026-07-10
 
 ### Fixed

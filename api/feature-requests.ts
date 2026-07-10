@@ -1,3 +1,4 @@
+import { isAdminRole } from '../server/admin.js';
 import { rateGuard, readJson, requireUser } from '../server/apiGuards.js';
 import { createDb } from '../server/db/index.js';
 import {
@@ -49,13 +50,16 @@ export default defineHandler(async (request) => {
   }
 
   if (request.method === 'POST') {
-    const limited = await rateGuard(
-      db,
-      `user:${me.id}:feature-submit`,
-      LIMITS.featureRequestSubmitPerHour,
-      60 * 60 * 1000,
-    );
-    if (limited) return limited;
+    // Admins skip submit rate limit (role or ADMIN_USER_IDS) — server-side only.
+    if (!isAdminRole(me.role, me.id)) {
+      const limited = await rateGuard(
+        db,
+        `user:${me.id}:feature-submit`,
+        LIMITS.featureRequestSubmitPerHour,
+        60 * 60 * 1000,
+      );
+      if (limited) return limited;
+    }
 
     const parsed = await readJson<{ title?: string; description?: string }>(
       request,
