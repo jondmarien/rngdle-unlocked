@@ -77,6 +77,11 @@ export type AppSettings = {
   /** Optional confetti on rare+ settles. Default on. */
   confettiEnabled: boolean;
   /**
+   * Trash settle FX — cracked-screen overlay + heavy shake.
+   * Default on; independent of rare+ celebrate.
+   */
+  trashCrackEnabled: boolean;
+  /**
    * Follow cascading badge cards with auto-scroll after a roll.
    * Stored in localStorage with other settings (not Neon-only).
    */

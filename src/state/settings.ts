@@ -5,11 +5,12 @@ export type SettingsAction =
   | { type: 'setShareShowRollCount'; value: boolean }
   | { type: 'setSoundEnabled'; value: boolean }
   | { type: 'setConfettiEnabled'; value: boolean }
+  | { type: 'setTrashCrackEnabled'; value: boolean }
   | { type: 'setAutoScrollBadges'; value: boolean }
   | { type: 'setAutoShareHighRarity'; value: boolean }
   | { type: 'setShowLatestRuns'; value: boolean };
 
-/** Pure reducer behind the 7 near-identical settings setters. */
+/** Pure reducer behind the near-identical settings setters. */
 export function settingsReducer(
   settings: AppSettings,
   action: SettingsAction,
@@ -23,6 +24,8 @@ export function settingsReducer(
       return { ...settings, soundEnabled: action.value };
     case 'setConfettiEnabled':
       return { ...settings, confettiEnabled: action.value };
+    case 'setTrashCrackEnabled':
+      return { ...settings, trashCrackEnabled: action.value };
     case 'setAutoScrollBadges':
       return { ...settings, autoScrollBadges: action.value };
     case 'setAutoShareHighRarity':

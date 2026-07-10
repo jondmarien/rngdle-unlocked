@@ -7,7 +7,7 @@ import { useGame, useGameSettings } from '../../state/GameProvider';
 type Burst = {
   id: number;
   rarity: RarityTier;
-  intensity: 1 | 2 | 3 | 4;
+  intensity: 1 | 2 | 3 | 4 | 'trash';
 };
 
 const PALETTES: Record<'rare' | 'epic' | 'anomaly' | 'mythic', string[]> = {
@@ -25,10 +25,32 @@ const PALETTES: Record<'rare' | 'epic' | 'anomaly' | 'mythic', string[]> = {
   ],
 };
 
+const SHAKE_CLASSES = [
+  'celebrate-shake-epic',
+  'celebrate-shake-anomaly',
+  'celebrate-shake-mythic',
+  'celebrate-shake-trash',
+] as const;
+
+function clearShake(root: HTMLElement): void {
+  root.classList.remove(...SHAKE_CLASSES);
+}
+
+function fxAllowed(
+  rarity: RarityTier,
+  settings: { confettiEnabled: boolean; trashCrackEnabled?: boolean },
+): boolean {
+  if (rarity === 'trash') return settings.trashCrackEnabled !== false;
+  return settings.confettiEnabled;
+}
+
 /**
- * Tiered settle FX: confetti + edge blooms + optional screen shake.
- * Epic → Anomaly → Mythic escalate mass, color, and camera energy.
- * GPU-friendly (transform/opacity only). Respects reduced-motion + settings.
+ * Tiered settle FX: confetti + edge blooms + optional screen shake,
+ * plus trash cracked-screen + heavy shake (separate settings toggle).
+ *
+ * Each `confettiToken` remounts the burst (key={id}) so interrupting mid-FX
+ * (Roll again before settle) cannot leave CSS `forwards` / spent Confetti stuck
+ * on the previous rarity's animation.
  */
 export function CelebrationLayer() {
   const { confettiToken, celebrateRarity } = useGame();
@@ -54,59 +76,100 @@ export function CelebrationLayer() {
   }, []);
 
   useEffect(() => {
-    if (confettiToken === 0 || !settings.confettiEnabled) return;
-    if (!celebrateRarity) return;
-    const intensity = celebrateIntensity(celebrateRarity);
-    if (intensity < 1) return;
-
-    setBurst({
-      id: confettiToken,
-      rarity: celebrateRarity,
-      intensity: intensity as 1 | 2 | 3 | 4,
-    });
-
-    // Body shake class for epic+
     const root = document.documentElement;
-    if (!reduced && intensity >= 2) {
-      root.classList.remove(
-        'celebrate-shake-epic',
-        'celebrate-shake-anomaly',
-        'celebrate-shake-mythic',
-      );
-      // reflow to restart animation
+
+    // Cleared (new roll started) or disabled — tear down any in-flight burst.
+    if (
+      confettiToken === 0 ||
+      !celebrateRarity ||
+      !fxAllowed(celebrateRarity, settings)
+    ) {
+      setBurst(null);
+      clearShake(root);
+      return;
+    }
+
+    const intensity = celebrateIntensity(celebrateRarity);
+    if (intensity === 0) {
+      setBurst(null);
+      clearShake(root);
+      return;
+    }
+
+    const id = confettiToken;
+    const rarity = celebrateRarity;
+    setBurst({ id, rarity, intensity });
+
+    clearShake(root);
+    if (!reduced) {
       void root.offsetWidth;
-      if (intensity === 2) root.classList.add('celebrate-shake-epic');
+      if (intensity === 'trash') root.classList.add('celebrate-shake-trash');
+      else if (intensity === 2) root.classList.add('celebrate-shake-epic');
       else if (intensity === 3) root.classList.add('celebrate-shake-anomaly');
-      else root.classList.add('celebrate-shake-mythic');
+      else if (intensity === 4) root.classList.add('celebrate-shake-mythic');
     }
 
     const clearMs =
-      intensity >= 4
-        ? 5200
-        : intensity === 3
-          ? 4200
-          : intensity === 2
-            ? 3600
-            : 2800;
+      intensity === 'trash'
+        ? 2400
+        : intensity >= 4
+          ? 5200
+          : intensity === 3
+            ? 4200
+            : intensity === 2
+              ? 3600
+              : 2800;
     const t = window.setTimeout(() => {
-      setBurst(null);
-      root.classList.remove(
-        'celebrate-shake-epic',
-        'celebrate-shake-anomaly',
-        'celebrate-shake-mythic',
-      );
+      setBurst((b) => (b?.id === id ? null : b));
+      clearShake(root);
     }, clearMs);
+
     return () => {
       window.clearTimeout(t);
-      root.classList.remove(
-        'celebrate-shake-epic',
-        'celebrate-shake-anomaly',
-        'celebrate-shake-mythic',
-      );
     };
-  }, [confettiToken, celebrateRarity, settings.confettiEnabled, reduced]);
+  }, [
+    confettiToken,
+    celebrateRarity,
+    settings.confettiEnabled,
+    settings.trashCrackEnabled,
+    reduced,
+  ]);
 
-  if (!burst || !settings.confettiEnabled || size.w === 0) return null;
+  // Always strip shake classes on unmount (navigate away / HMR).
+  useEffect(() => {
+    return () => clearShake(document.documentElement);
+  }, []);
+
+  if (!burst || size.w === 0) return null;
+  if (!fxAllowed(burst.rarity, settings)) return null;
+
+  // Trash: cracked glass + vignette (no confetti)
+  if (burst.intensity === 'trash') {
+    if (reduced) {
+      return (
+        <div
+          key={burst.id}
+          className="pointer-events-none fixed inset-0 z-[100]"
+          aria-hidden
+        >
+          <div className="celebrate-trash-desat celebrate-trash-desat-soft absolute inset-0" />
+          <div className="celebrate-trash-crack celebrate-trash-crack-soft absolute inset-0" />
+        </div>
+      );
+    }
+    return (
+      <div
+        key={burst.id}
+        className="pointer-events-none fixed inset-0 z-[100]"
+        aria-hidden
+      >
+        <div className="celebrate-trash-desat absolute inset-0" />
+        <div className="celebrate-trash-vignette absolute inset-0" />
+        <div className="celebrate-trash-crack absolute inset-0" />
+        <div className="celebrate-trash-impact absolute inset-0" />
+      </div>
+    );
+  }
 
   const palette =
     PALETTES[burst.rarity as keyof typeof PALETTES] ?? PALETTES.rare;
@@ -125,6 +188,7 @@ export function CelebrationLayer() {
   if (reduced) {
     return (
       <div
+        key={burst.id}
         className={`pointer-events-none fixed inset-0 z-[100] celebrate-edge celebrate-edge-${burst.rarity} celebrate-edge-soft`}
         aria-hidden
       />
@@ -132,8 +196,12 @@ export function CelebrationLayer() {
   }
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-[100]" aria-hidden>
-      {/* Edge blooms / vignette — escalate with tier */}
+    <div
+      key={burst.id}
+      className="pointer-events-none fixed inset-0 z-[100]"
+      aria-hidden
+    >
+      {/* Edge blooms / vignette — escalate with tier; remount restarts CSS */}
       <div
         className={`celebrate-edge celebrate-edge-${burst.rarity} absolute inset-0`}
       />
@@ -149,6 +217,7 @@ export function CelebrationLayer() {
       )}
 
       <Confetti
+        key={`c1-${burst.id}`}
         width={size.w}
         height={size.h}
         numberOfPieces={pieces}
@@ -168,6 +237,7 @@ export function CelebrationLayer() {
       {/* Second burst from mid-lower center for mythic */}
       {burst.intensity >= 4 && (
         <Confetti
+          key={`c2-${burst.id}`}
           width={size.w}
           height={size.h}
           numberOfPieces={120}

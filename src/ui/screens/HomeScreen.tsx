@@ -6,7 +6,7 @@ import {
   topPercentFromEP,
   type RollResult,
 } from '../../game';
-import { playRollSound, shouldCelebrate } from '../../game/fx';
+import { playRollSound, shouldCelebrate, shouldTrashCrack } from '../../game/fx';
 import { createLogger } from '../../lib/logger';
 import { useGame, useGameSettings } from '../../state/GameProvider';
 import { BadgeBreakdown } from '../components/BadgeCard';
@@ -45,6 +45,7 @@ export function HomeScreen({
     stats,
     history,
     fireCelebration,
+    clearCelebration,
     rollMode,
     setRollMode,
     selectRoll,
@@ -117,6 +118,7 @@ export function HomeScreen({
     setAwaitingResult(false);
     pendingFx.current = false;
     revealRollRef.current = null;
+    clearCelebration();
     setReelMountKey((k) => k + 1);
 
     if (rollMode === 'daily' || rollMode === 'weekly') {
@@ -143,6 +145,9 @@ export function HomeScreen({
     // Cancel deferred anomaly/mythic share from a previous roll
     clearShareTimer();
     setShareRoll(null);
+    // Tear down in-flight celebrate FX so the next settle remounts cleanly
+    // (avoids rare-tier CSS/confetti "sticking" over a later anomaly/epic).
+    clearCelebration();
     setRevealDone(false);
     setAwaitingResult(true);
     pendingFx.current = true;
@@ -181,6 +186,11 @@ export function HomeScreen({
     if (pendingFx.current && settled) {
       playRollSound(settled.rarity, settings.soundEnabled);
       if (settings.confettiEnabled && shouldCelebrate(settled.rarity)) {
+        fireCelebration(settled.rarity);
+      } else if (
+        settings.trashCrackEnabled !== false &&
+        shouldTrashCrack(settled.rarity)
+      ) {
         fireCelebration(settled.rarity);
       }
       if (

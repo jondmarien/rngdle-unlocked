@@ -90,6 +90,8 @@ type GameContextValue = {
   exportSave: () => void;
   importSave: (file: File) => Promise<void>;
   fireCelebration: (rarity?: RarityTier) => void;
+  /** Cancel in-flight celebrate FX (e.g. Roll again before settle finishes). */
+  clearCelebration: () => void;
 };
 
 /** Settings + the 7 setters (reducer-backed). */
@@ -99,6 +101,7 @@ type GameSettingsValue = {
   setShareShowRollCount: (v: boolean) => void;
   setSoundEnabled: (v: boolean) => void;
   setConfettiEnabled: (v: boolean) => void;
+  setTrashCrackEnabled: (v: boolean) => void;
   setAutoScrollBadges: (v: boolean) => void;
   setAutoShareHighRarity: (v: boolean) => void;
   setShowLatestRuns: (v: boolean) => void;
@@ -518,6 +521,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setConfettiToken((t) => t + 1);
   }, []);
 
+  const clearCelebration = useCallback(() => {
+    setCelebrateRarity(null);
+  }, []);
+
   const gameValue = useMemo<GameContextValue>(
     () => ({
       lastRoll,
@@ -543,6 +550,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       exportSave,
       importSave,
       fireCelebration,
+      clearCelebration,
     }),
     [
       lastRoll,
@@ -563,6 +571,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       exportSave,
       importSave,
       fireCelebration,
+      clearCelebration,
     ],
   );
 
@@ -576,6 +585,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
         dispatchSettings({ type: 'setSoundEnabled', value }),
       setConfettiEnabled: (value) =>
         dispatchSettings({ type: 'setConfettiEnabled', value }),
+      setTrashCrackEnabled: (value) =>
+        dispatchSettings({ type: 'setTrashCrackEnabled', value }),
       setAutoScrollBadges: (value) =>
         dispatchSettings({ type: 'setAutoScrollBadges', value }),
       setAutoShareHighRarity: (value) =>

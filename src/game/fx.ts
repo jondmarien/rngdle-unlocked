@@ -80,9 +80,18 @@ export function shouldCelebrate(rarity: RarityTier): boolean {
   );
 }
 
-/** Intensity ladder for screen FX (0 = none). */
-export function celebrateIntensity(rarity: RarityTier): 0 | 1 | 2 | 3 | 4 {
+/** Trash settle gets its own cracked-screen FX (separate settings toggle). */
+export function shouldTrashCrack(rarity: RarityTier): boolean {
+  return rarity === 'trash';
+}
+
+/** Intensity ladder for screen FX (0 = none, 'trash' = crack + heavy shake). */
+export function celebrateIntensity(
+  rarity: RarityTier,
+): 0 | 1 | 2 | 3 | 4 | 'trash' {
   switch (rarity) {
+    case 'trash':
+      return 'trash';
     case 'rare':
       return 1;
     case 'epic':

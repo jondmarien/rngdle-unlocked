@@ -44,6 +44,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   shareShowRollCount: false,
   soundEnabled: false,
   confettiEnabled: true,
+  /** Default on; cracked-screen + heavy shake on trash settles. */
+  trashCrackEnabled: true,
   /** Default on; users can turn off under Settings (localStorage). */
   autoScrollBadges: true,
   /** Default off — anomaly/mythic share is manual unless enabled. */

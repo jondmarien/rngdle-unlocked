@@ -18,6 +18,7 @@ export function SettingsScreen() {
     setShareShowRollCount,
     setSoundEnabled,
     setConfettiEnabled,
+    setTrashCrackEnabled,
     setAutoScrollBadges,
     setAutoShareHighRarity,
     setShowLatestRuns,
@@ -58,6 +59,14 @@ export function SettingsScreen() {
             onChange={(e) => setConfettiEnabled(e.target.checked)}
           />
           Celebrate rare+ (confetti, edge glow, screen shake on epic+)
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={settings.trashCrackEnabled !== false}
+            onChange={(e) => setTrashCrackEnabled(e.target.checked)}
+          />
+          Trash crack (cracked screen + heavy shake)
         </label>
         <label className="flex items-center gap-2 text-sm">
           <input
