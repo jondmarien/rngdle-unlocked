@@ -17,4 +17,6 @@ export const STORAGE_KEYS = {
   guest: `${STORAGE_PREFIX}guest`,
   webNotifications: `${STORAGE_PREFIX}webNotifications`,
   onboarding: `${STORAGE_PREFIX}onboarding`,
+  /** Last sync ack cursor + acked roll/badge ids for delta pushes. */
+  syncMeta: `${STORAGE_PREFIX}syncMeta`,
 } as const;

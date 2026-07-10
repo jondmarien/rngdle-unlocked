@@ -7,6 +7,13 @@ import type {
 } from '../src/game/types.js';
 import { ROLL_MAX } from '../src/game/rng.js';
 import { defaultPlayStats } from '../src/game/stats.js';
+import {
+  maxNum,
+  mergeCollection,
+  mergeHistory,
+  mergeStats,
+  SYNC_HISTORY_CAP,
+} from '../src/lib/sync-merge.js';
 import type { Db } from './db/index.js';
 import { rolls, userProgress } from './db/schema.js';
 import { createLogger } from './logger.js';
@@ -14,6 +21,9 @@ import { processRollActivity } from './rollActivity.js';
 import { assertSyncIntegrity } from './syncIntegrity.js';
 
 const log = createLogger('sync');
+
+export { mergeCollection, mergeHistory, mergeStats };
+export const HISTORY_CAP = SYNC_HISTORY_CAP;
 
 export const MAX_SYNC_PAYLOAD_BYTES = 256 * 1024;
 
@@ -89,117 +99,84 @@ export const cloudSavePayloadSchema = z.looseObject({
   history: z.array(cloudRollSchema),
 });
 
-const HISTORY_CAP = 500;
 /** Cap how many roll rows we write per sync (keeps Vercel under timeout). */
-const UPSERT_CAP = 60;
+export const UPSERT_CAP = 60;
 
-function maxNum(a: number, b: number): number {
-  return Math.max(Number(a) || 0, Number(b) || 0);
+export type SyncAck = {
+  ok: true;
+  updatedAt: string;
+  counts: {
+    lifetimeEP: number;
+    lifetimeRollCount: number;
+    journeyEP: number;
+    collectionCount: number;
+    historyUpserted: number;
+  };
+};
+
+export type SyncMergeResult = {
+  merged: CloudSavePayload;
+  updatedAt: string;
+  historyUpserted: number;
+};
+
+const collectionEntrySchema = z.looseObject({
+  badgeId: z.string(),
+  family: z.string().nullish(),
+  firstEarnedAt: z.string().nullish(),
+});
+
+/** Incremental sync — only pending rolls/collection rows + absolute counters. */
+export const syncDeltaPayloadSchema = z.object({
+  mode: z.literal('delta'),
+  baseUpdatedAt: z.string().nullish(),
+  lifetimeEP: z.number(),
+  lifetimeRollCount: z.number(),
+  journeyEP: z.number().optional(),
+  collection: z.array(collectionEntrySchema).default([]),
+  stats: z.looseObject({}).optional(),
+  history: z.array(cloudRollSchema).max(UPSERT_CAP),
+});
+
+export type SyncDeltaPayload = z.infer<typeof syncDeltaPayloadSchema>;
+
+export function isSyncDeltaPayload(
+  body: unknown,
+): body is SyncDeltaPayload & { mode: 'delta' } {
+  return (
+    typeof body === 'object' &&
+    body !== null &&
+    (body as { mode?: unknown }).mode === 'delta'
+  );
 }
 
-export function mergeCollection(
-  a: CollectionEntry[] | null | undefined,
-  b: CollectionEntry[] | null | undefined,
-): CollectionEntry[] {
-  const map = new Map<string, CollectionEntry>();
-  for (const e of [...(a ?? []), ...(b ?? [])]) {
-    if (!e?.badgeId) continue;
-    const prev = map.get(e.badgeId);
-    if (!prev) {
-      map.set(e.badgeId, {
-        badgeId: e.badgeId,
-        family: e.family,
-        firstEarnedAt: e.firstEarnedAt || new Date(0).toISOString(),
-      });
-      continue;
-    }
-    const ea = e.firstEarnedAt || '';
-    const pa = prev.firstEarnedAt || '';
-    if (ea && (!pa || ea < pa)) {
-      map.set(e.badgeId, {
-        badgeId: e.badgeId,
-        family: e.family ?? prev.family,
-        firstEarnedAt: ea,
-      });
-    }
-  }
-  return [...map.values()];
-}
-
-export function mergeStats(
-  a: PlayStats | null | undefined,
-  b: PlayStats | null | undefined,
-): PlayStats {
-  const left = { ...defaultPlayStats(), ...a };
-  const right = { ...defaultPlayStats(), ...b };
-
-  const bestRoll = !left.bestRoll
-    ? right.bestRoll
-    : !right.bestRoll
-      ? left.bestRoll
-      : right.bestRoll.totalEP > left.bestRoll.totalEP
-        ? right.bestRoll
-        : left.bestRoll;
-
+export function toSyncAck(
+  merged: CloudSavePayload,
+  updatedAt: string,
+  historyUpserted: number,
+): SyncAck {
   return {
-    qualityStreak: Math.max(left.qualityStreak, right.qualityStreak),
-    bestQualityStreak: Math.max(
-      left.bestQualityStreak,
-      right.bestQualityStreak,
-    ),
-    dayStreak: Math.max(left.dayStreak, right.dayStreak),
-    bestDayStreak: Math.max(left.bestDayStreak, right.bestDayStreak),
-    lastPlayDate:
-      (left.lastPlayDate ?? '') > (right.lastPlayDate ?? '')
-        ? left.lastPlayDate
-        : right.lastPlayDate,
-    bestRoll,
-    bestConsecutive:
-      (left.bestConsecutive?.length ?? 0) >=
-      (right.bestConsecutive?.length ?? 0)
-        ? (left.bestConsecutive ?? [])
-        : (right.bestConsecutive ?? []),
-    // Current parity streaks are never Math.max'd — client recomputes from history.
-    oddStreak: 0,
-    evenStreak: 0,
-    bestOddStreak: Math.max(left.bestOddStreak ?? 0, right.bestOddStreak ?? 0),
-    bestEvenStreak: Math.max(
-      left.bestEvenStreak ?? 0,
-      right.bestEvenStreak ?? 0,
-    ),
+    ok: true,
+    updatedAt,
+    counts: {
+      lifetimeEP: merged.lifetimeEP,
+      lifetimeRollCount: merged.lifetimeRollCount,
+      journeyEP: merged.journeyEP,
+      collectionCount: merged.collection.length,
+      historyUpserted,
+    },
   };
 }
 
-export function mergeHistory(
-  a: RollResult[] | null | undefined,
-  b: RollResult[] | null | undefined,
-): RollResult[] {
-  const map = new Map<string, RollResult>();
-  for (const r of [...(a ?? []), ...(b ?? [])]) {
-    if (!r?.id) continue;
-    const prev = map.get(r.id);
-    if (!prev) {
-      map.set(r.id, r);
-      continue;
-    }
-    // Prefer row with shortCode / attestation if the other lacks it
-    map.set(r.id, {
-      ...prev,
-      ...r,
-      shortCode: r.shortCode || prev.shortCode,
-      attestationSeal: r.attestationSeal || prev.attestationSeal,
-      badges: r.badges?.length ? r.badges : prev.badges,
-    });
-  }
-  return [...map.values()]
-    .sort((x, y) => (x.rolledAt < y.rolledAt ? 1 : -1))
-    .slice(0, HISTORY_CAP);
-}
+export type CloudSaveLoad = {
+  cloud: CloudSavePayload;
+  updatedAt: string;
+};
 
 export async function loadCloudSave(
   db: Db,
   userId: string,
-): Promise<CloudSavePayload | null> {
+): Promise<CloudSaveLoad | null> {
   const [row] = await db
     .select()
     .from(userProgress)
@@ -253,13 +230,21 @@ export async function loadCloudSave(
     stats = defaultPlayStats();
   }
 
+  const updatedAt =
+    row.updatedAt instanceof Date
+      ? row.updatedAt.toISOString()
+      : String(row.updatedAt);
+
   return {
-    lifetimeEP: row.lifetimeEp,
-    lifetimeRollCount: row.lifetimeRollCount,
-    journeyEP: row.journeyEp,
-    collection: Array.isArray(collection) ? collection : [],
-    stats,
-    history,
+    updatedAt,
+    cloud: {
+      lifetimeEP: row.lifetimeEp,
+      lifetimeRollCount: row.lifetimeRollCount,
+      journeyEP: row.journeyEp,
+      collection: Array.isArray(collection) ? collection : [],
+      stats,
+      history,
+    },
   };
 }
 
@@ -334,8 +319,9 @@ export async function saveCloudMerge(
   db: Db,
   userId: string,
   local: CloudSavePayload,
-): Promise<CloudSavePayload> {
-  const cloud = await loadCloudSave(db, userId);
+): Promise<SyncMergeResult> {
+  const loaded = await loadCloudSave(db, userId);
+  const cloud = loaded?.cloud ?? null;
   await assertSyncIntegrity(db, userId, local, cloud);
 
   const prevCollection = cloud?.collection ?? [];
@@ -364,6 +350,7 @@ export async function saveCloudMerge(
       };
 
   const now = new Date();
+  const updatedAt = now.toISOString();
   await db
     .insert(userProgress)
     .values({
@@ -489,5 +476,5 @@ export async function saveCloudMerge(
     });
   }
 
-  return merged;
+  return { merged, updatedAt, historyUpserted: wrote };
 }
