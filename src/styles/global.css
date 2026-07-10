@@ -625,25 +625,25 @@ html.celebrate-shake-mythic {
 @keyframes celebrate-trash-crack-in {
   0% {
     opacity: 0;
-    transform: scale(0.92);
+    transform: scale(0.96);
   }
-  12% {
-    opacity: 1;
-    transform: scale(1.02);
+  14% {
+    opacity: 0.55;
+    transform: scale(1.01);
   }
-  28% {
-    opacity: 1;
+  32% {
+    opacity: 0.45;
     transform: scale(1);
   }
   100% {
     opacity: 0;
-    transform: scale(1.01);
+    transform: scale(1);
   }
 }
 
 @keyframes celebrate-trash-impact-in {
   0% {
-    opacity: 0.7;
+    opacity: 0.28;
   }
   100% {
     opacity: 0;
@@ -709,75 +709,75 @@ html.celebrate-shake-mythic {
 .celebrate-trash-impact {
   background: radial-gradient(
     circle at 48% 40%,
-    rgba(255, 255, 255, 0.35),
-    rgba(180, 60, 40, 0.2) 28%,
+    rgba(200, 180, 170, 0.18),
+    rgba(90, 40, 30, 0.12) 30%,
     transparent 55%
   );
-  animation: celebrate-trash-impact-in 0.45s cubic-bezier(0.22, 1, 0.36, 1)
+  animation: celebrate-trash-impact-in 0.4s cubic-bezier(0.22, 1, 0.36, 1)
     forwards;
 }
 
 .celebrate-trash-crack {
-  /* Fracture lines via layered linear-gradients (no images) */
+  /* Fracture lines — muted grey, not bright white */
   background:
     linear-gradient(
       118deg,
       transparent 48.5%,
-      rgba(255, 255, 255, 0.55) 49.2%,
-      rgba(255, 255, 255, 0.15) 50%,
+      rgba(160, 155, 150, 0.28) 49.2%,
+      rgba(90, 88, 85, 0.12) 50%,
       transparent 50.8%
     ),
     linear-gradient(
       62deg,
       transparent 46%,
-      rgba(255, 255, 255, 0.45) 48.5%,
-      rgba(200, 200, 210, 0.2) 49.5%,
+      rgba(150, 148, 145, 0.22) 48.5%,
+      rgba(80, 78, 75, 0.1) 49.5%,
       transparent 52%
     ),
     linear-gradient(
       12deg,
       transparent 42%,
-      rgba(255, 255, 255, 0.35) 48%,
+      rgba(140, 138, 135, 0.18) 48%,
       transparent 54%
     ),
     linear-gradient(
       155deg,
       transparent 55%,
-      rgba(255, 255, 255, 0.4) 57%,
+      rgba(145, 142, 138, 0.2) 57%,
       transparent 60%
     ),
     linear-gradient(
       95deg,
       transparent 30%,
-      rgba(255, 255, 255, 0.28) 38%,
+      rgba(130, 128, 125, 0.14) 38%,
       transparent 42%
     ),
     linear-gradient(
       200deg,
       transparent 58%,
-      rgba(255, 255, 255, 0.32) 64%,
+      rgba(135, 132, 128, 0.16) 64%,
       transparent 68%
     ),
     linear-gradient(
       35deg,
       transparent 65%,
-      rgba(255, 255, 255, 0.25) 72%,
+      rgba(125, 122, 118, 0.12) 72%,
       transparent 76%
     ),
     linear-gradient(
       175deg,
       transparent 22%,
-      rgba(255, 255, 255, 0.22) 28%,
+      rgba(120, 118, 115, 0.12) 28%,
       transparent 33%
     ),
     radial-gradient(
       circle at 48% 40%,
-      rgba(255, 255, 255, 0.2) 0 1.5px,
+      rgba(110, 105, 100, 0.18) 0 1.5px,
       transparent 2.5px
     );
   background-size: 100% 100%;
-  mix-blend-mode: soft-light;
-  filter: contrast(1.15);
+  mix-blend-mode: multiply;
+  opacity: 0.85;
   animation: celebrate-trash-crack-in 2.2s cubic-bezier(0.22, 1, 0.36, 1)
     forwards;
 }
@@ -792,12 +792,12 @@ html.celebrate-shake-mythic {
     linear-gradient(
       118deg,
       transparent 48%,
-      rgba(255, 255, 255, 0.2) 50%,
+      rgba(140, 138, 135, 0.12) 50%,
       transparent 52%
     );
   animation: celebrate-trash-vignette-in 1.4s cubic-bezier(0.22, 1, 0.36, 1)
     forwards;
-  mix-blend-mode: normal;
+  mix-blend-mode: multiply;
   filter: none;
 }
 
