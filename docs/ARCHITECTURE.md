@@ -13,11 +13,13 @@ flowchart TB
     LibApi[lib API wrappers]
     TQ[TanStack Query]
     Engine[game engine pure TS]
+    ArcadeRules[game/arcade Digits]
     LS[(localStorage)]
     UI --> LibApi
     UI --> TQ
     TQ --> LibApi
     UI --> Engine
+    UI --> ArcadeRules
     UI --> LS
   end
 
@@ -27,19 +29,24 @@ flowchart TB
     Guards[apiGuards]
     Server[server pipelines]
     Ranked[POST ranked-roll]
+    ArcadeAPI["/api/arcade run loop"]
   end
 
   subgraph Neon
     DB[(Postgres rolls source)]
+    ArcadeDB[(arcade_meta runs run_rolls)]
   end
 
   Static --> UI
   LibApi -->|auth sync Practice board| API
   LibApi -->|Ranked Generate| Ranked
+  LibApi -->|Arcade Digits| ArcadeAPI
   API --> Guards
   Guards --> Server
   Server --> DB
   Ranked --> DB
+  ArcadeAPI --> Guards
+  ArcadeAPI --> ArcadeDB
 ```
 
 ## Roll modes
@@ -52,6 +59,59 @@ flowchart TB
 | **Arcade**         | Server CSPRNG      | `arcade_*` tables only (Digits)                   | **Leaderboard → Arcade** (best Digits run); Digits ≠ EP |
 
 Mode switch fully resets the home reel / session roll (and abandons in-flight Generate). Arcade is a **separate `/arcade` screen**, not a Home `RollMode`.
+
+## Arcade Digits lifecycle
+
+Server is source of truth for Digits, shop, bust, and cash-out. Client UI (`ArcadeScreen` + `arcade-api.ts`) only displays and requests mutations — it cannot fabricate run scores.
+
+```mermaid
+sequenceDiagram
+  participant U as User
+  participant A as ArcadeScreen
+  participant Api as arcade-api
+  participant S as /api/arcade
+  participant Eng as game/arcade
+  participant DB as Neon arcade_*
+
+  U->>A: Start run
+  A->>Api: startArcadeRun
+  Api->>S: POST /start
+  S->>DB: insert arcade_runs active
+  S-->>A: run + meta
+
+  loop Digits run
+    U->>A: Roll / buy / arm
+    A->>Api: roll buy or arm
+    Api->>S: POST mutation
+    S->>Eng: awardDigits shop economy
+    S->>DB: update run + optional run_rolls
+    alt DoN loss
+      S->>DB: status busted score=peak
+      S-->>A: busted
+    else continue
+      S-->>A: updated Digits + shop
+    end
+  end
+
+  opt Cash out
+    U->>A: Cash out
+    A->>Api: cashOutArcadeRun
+    Api->>S: POST /cash-out
+    S->>DB: status cashed update arcade_meta
+    Note over DB: best_run_score feeds Arcade board
+  end
+
+  opt Abandon two-step
+    U->>A: Abandon confirm
+    A->>Api: abandonArcadeRun
+    Api->>S: POST /abandon
+    S->>DB: busted at peak Digits
+  end
+```
+
+**Isolation:** Arcade reuses `serverRollNumber` + `evaluateBadges` for flavor (EP shown on the roll card is Arcade-only display). It never inserts into `rolls`, never mutates `user_progress`, and never affects Ranked crowns or Practice EP boards.
+
+**Schema:** `arcade_meta` (unlocked upgrades, best Digits, lifetime cashed) · `arcade_runs` (one active run per user) · `arcade_run_rolls` (audit trail). Migration: `scripts/migrate-arcade.mjs`.
 
 ## Free play lifecycle
 
@@ -187,15 +247,16 @@ Static SPA routes use [`server/pageOg.ts`](../server/pageOg.ts) titles/descripti
 
 ## Key directories
 
-| Path         | Responsibility                                                              |
-| ------------ | --------------------------------------------------------------------------- |
-| `src/game/`  | Pure rules: RNG, badges, rarity, secrets, challenges, share text            |
-| `src/state/` | `GameProvider` contexts, `useSync`, settings reducer, localStorage          |
-| `src/lib/`   | `*-api.ts` wrappers, `schemas.ts`, auth client, routes, themes              |
-| `src/ui/`    | Screens & motion (reel, cascade, codex, dual boards)                        |
-| `api/`       | Thin Vercel route entrypoints                                               |
-| `server/`    | `apiGuards`, auth, DB, merge, ranked issue, read pipelines, rate limits, OG |
-| `public/`    | Icons, avatars, secret art, Absolute Ceiling badge, PWA                     |
+| Path               | Responsibility                                                              |
+| ------------------ | --------------------------------------------------------------------------- |
+| `src/game/`        | Pure rules: RNG, badges, rarity, secrets, challenges, share text            |
+| `src/game/arcade/` | Digits economy, upgrades, shop, meta unlocks (shared with server)           |
+| `src/state/`       | `GameProvider` contexts, `useSync`, settings reducer, localStorage          |
+| `src/lib/`         | `*-api.ts` wrappers (incl. `arcade-api`), `schemas.ts`, auth, routes        |
+| `src/ui/`          | Screens & motion (reel, cascade, codex, boards, `ArcadeScreen`)             |
+| `api/`             | Thin Vercel route entrypoints (incl. `api/arcade/*`)                        |
+| `server/`          | `apiGuards`, auth, DB, merge, ranked, **arcade**, boards, rate limits, OG   |
+| `public/`          | Icons, avatars, secret art, Absolute Ceiling badge, PWA                     |
 
 ## Trust model (honest)
 
@@ -203,16 +264,19 @@ Static SPA routes use [`server/pageOg.ts`](../server/pageOg.ts) titles/descripti
 | --------------------------- | ------------------------------------------------------------------------------------- |
 | Free-play randomness        | Browser CSPRNG + entropy pool — **client-authoritative**; Practice board honor system |
 | Ranked free-play randomness | **Server CSPRNG** via `/api/ranked-roll`; scores server-side; `source=ranked`         |
+| Arcade Digits / run score   | **Server-authoritative** via `/api/arcade/*`; client cannot forge Digits or best run  |
 | Challenge numbers           | Deterministic from period seed + subject id                                           |
 | Attestation seal            | Server HMAC on a **claim** — not proof of honest client RNG                           |
 | Leaderboard Ranked          | Fair competition baseline (server-issued only)                                        |
 | Leaderboard Practice        | Who **synced** free-play progress with a username                                     |
+| Leaderboard Arcade          | Best Digits run (`arcade_meta.best_run_score`); Digits ≠ EP; no crowns                |
 | Community crowns            | Ranked rolls only                                                                     |
 | Share links                 | Only after roll row exists in Neon                                                    |
-| Runtime schema validation   | Zod at **import / sync / profile** boundaries only — not blanket on every API         |
+| Runtime schema validation   | Zod at **import / sync / profile / arcade** boundaries — not blanket on every API     |
 
 ## Related docs
 
+- [Arcade Mode design](./superpowers/specs/2026-07-09-arcade-mode-design.md)
 - [Refactor notes (July 2026)](./refactor-notes-2026-07.md)
 - [Opus audit + §H implementation status](./opus-report.md)
 - [Solo design](./superpowers/specs/2026-07-08-rngdle-unlocked-design.md) _(historical)_

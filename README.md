@@ -59,9 +59,11 @@ flowchart LR
     UI[React UI]
     FREE[Free play CSPRNG]
     CHAL[Daily or Weekly seed]
+    ARCUI["/arcade Digits UI"]
     LS[(localStorage)]
     UI --> FREE
     UI --> CHAL
+    UI --> ARCUI
     UI --> LS
   end
 
@@ -69,28 +71,34 @@ flowchart LR
     STATIC[Static dist]
     API["Serverless API"]
     RANK["POST ranked-roll"]
+    ARCADE["/api/arcade run loop"]
   end
 
   subgraph Data["Neon Postgres"]
     NEON[(auth progress rolls follows)]
+    ARCTBL[(arcade_meta runs run_rolls)]
   end
 
   STATIC --> UI
   UI -->|Practice sync| API
   UI -->|Ranked| RANK
+  ARCUI -->|Digits run| ARCADE
   API --> NEON
   RANK --> NEON
+  ARCADE --> ARCTBL
 ```
 
-Deeper diagrams (roll lifecycle, Ranked vs Free, notifications, OG): **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)**.
+Deeper diagrams (roll lifecycle, Ranked vs Free, Arcade Digits, notifications, OG): **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)**.
 
 **Free play (practice):** fortified browser CSPRNG → badge evaluation → EP / rarity → history + collection → localStorage → auto-sync when signed in → places on **Leaderboard → Practice**. Does **not** claim community crowns.
 
 **Ranked free play (competitive):** sign-in + `@username` → `POST /api/ranked-roll` (server CSPRNG + server score) → `rolls.source = ranked` → places on **Leaderboard → Ranked**, community today/week/all-time crowns, overtake alerts. Client sync cannot forge ranked rows.
 
+**Arcade Mode (Digits runs):** separate tab `/arcade` (not a Home roll mode). Sign-in + `@username` → server-authoritative run loop (`/api/arcade/*`) → Digits, shop upgrades, cash out or bust → **Leaderboard → Arcade** (best Digits run). Digits never convert to EP; Arcade never writes `rolls` / `user_progress`.
+
 **Challenge path (optional):** Roll tab → **Daily** or **Weekly**. Shared UTC period seed + your account id → one personal deterministic number for that period.
 
-**Social path (optional):** Better Auth → merge-safe sync → dual boards → follows/feed → vanity share after cloud confirm → OG. Sync may enqueue Activity unlocks; Ranked rolls may enqueue System crown messages.
+**Social path (optional):** Better Auth → merge-safe sync → Ranked / Practice / Arcade boards → follows/feed → vanity share after cloud confirm → OG. Sync may enqueue Activity unlocks; Ranked rolls may enqueue System crown messages.
 
 ## 🚀 Quick start
 
@@ -113,12 +121,14 @@ Open the URL Vite prints (usually `http://localhost:5173`). Rolls and badges wor
 cp .env.example .env.local
 ```
 
-2. Apply schema to Neon (Drizzle **or** additive script):
+2. Apply schema to Neon (Drizzle **or** additive scripts):
 
 ```bash
 pnpm db:push
 # if drizzle-kit asks about truncating rolls, prefer:
 node scripts/migrate-feature-wave.mjs
+# Arcade Digits tables (additive; safe to re-run):
+node --env-file=.env.local scripts/migrate-arcade.mjs
 ```
 
 3. Run SPA + APIs together (recommended for local social):
@@ -309,6 +319,7 @@ Logged out: Discord-style text / PNG only — no public URL, with a create-accou
 | `pnpm db:push`                          | Push Drizzle schema to Neon                         |
 | `pnpm db:studio`                        | Drizzle Studio                                      |
 | `node scripts/migrate-feature-wave.mjs` | Additive SQL migration (follows, seals, short_code) |
+| `node scripts/migrate-arcade.mjs`       | Additive Arcade tables (`arcade_meta` / runs / rolls) |
 | `npx vercel dev`                        | Local SPA + serverless APIs                         |
 
 ### Debug logging (browser)
@@ -339,18 +350,18 @@ See [`.env.example`](./.env.example). Never commit `.env` / `.env.local`.
 
 Full diagrams: **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)**. Refactor summary: **[docs/refactor-notes-2026-07.md](./docs/refactor-notes-2026-07.md)**.
 
-- **Game engine is pure TS** under `src/game/` — no React imports; unit tests cover badges, secrets, challenges, rarity.
+- **Game engine is pure TS** under `src/game/` — no React imports; unit tests cover badges, secrets, challenges, rarity, **Arcade Digits**.
 - **SPA routing** uses the History API (`src/lib/routes.ts`); Vercel rewrites non-`/api` paths to `index.html`.
-- **Client API wrappers** — UI uses `src/lib/*-api.ts` only (no raw `fetch('/api/...')` in screens). **TanStack Query** caches leaderboard / feed / highlights / profile / admin-check reads.
-- **Zod at trust boundaries** — save import payload, cloud sync POST body, and public profile GET response. Not every endpoint is schema-validated.
-- **State** — `GameProvider` exposes `useGame` / `useGameSettings` / `useCloudSync`; sync orchestration in `src/state/useSync.ts`.
-- **Serverless handlers** — thin `api/*` → `server/*`; preamble via `server/apiGuards.ts` (`requireUser` / `readJson` / `rateGuard`). Read pipelines live in `server/{leaderboard,profile,feed,ogSvg}.ts`.
+- **Client API wrappers** — UI uses `src/lib/*-api.ts` only (no raw `fetch('/api/...')` in screens). **TanStack Query** caches leaderboard / arcade / feed / highlights / profile / admin-check reads.
+- **Zod at trust boundaries** — save import payload, cloud sync POST body, public profile GET response, and Arcade API payloads. Not every endpoint is schema-validated.
+- **State** — `GameProvider` exposes `useGame` / `useGameSettings` / `useCloudSync`; sync orchestration in `src/state/useSync.ts`. Arcade run state is server-owned (TanStack Query + `arcade-api`).
+- **Serverless handlers** — thin `api/*` → `server/*`; preamble via `server/apiGuards.ts` (`requireUser` / `readJson` / `rateGuard`). Read pipelines live in `server/{leaderboard,arcadeLeaderboard,profile,feed,ogSvg}.ts`.
 - **TypeScript** — `tsconfig.server.json` uses **NodeNext** so missing `.js` ESM extensions fail `pnpm typecheck` (prevents Ranked `/var/task` module misses).
 - **Auth multi-segment paths** rewritten to `/api/auth?__path=…` (no Next-style catch-all); Node `(req, res)` adapter in `server/vercel-adapter.ts`.
 - **Merge-safe sync** — max counters, union collections (earliest `firstEarnedAt`), merge histories by id; integrity gate rejects cloned progress dumps.
 - **Ranked rolls** (`POST /api/ranked-roll`, `server/rankedRoll.ts`) — server CSPRNG + score; `rolls.source = ranked`.
 - **Leaderboard scopes** — `?scope=ranked|practice` (default ranked); `?view=total|best` (default total); best view uses `?sortBy=ep|rarity`. Arcade Digits board is `GET /api/arcade/leaderboard` (separate from EP).
-- **Arcade** (`server/arcade.ts`, `src/game/arcade/`) — Digits economy; server is source of truth; never writes `rolls` / EP.
+- **Arcade** (`server/arcade.ts`, `src/game/arcade/`) — Digits economy; server is source of truth; never writes `rolls` / EP; one active run; cash out or bust (DoN loss / abandon).
 - **Roll activity** (`server/rollActivity.ts`) — unlock notifications; Ranked-only crowns + overtake alerts.
 - **Share publish** polls `/api/rolls/:key` (`waitForCloudPublish`) before enabling vanity links.
 - **Attestation** — optional HMAC on a claim (does not prove Free-play client RNG honesty).
@@ -378,6 +389,9 @@ One active run per user — Continue or Cash out (or two-step Abandon) from the 
 
 **Ranked roll 500 / “Ranked roll failed”**  
 Needs signed-in session + `@username`. Check Vercel function logs for `/api/ranked-roll`. Schema needs `rolls.source` (`node scripts/add-roll-source.mjs`). Extensionless `src/game` imports used to break production while typecheck stayed green — `tsconfig.server.json` **NodeNext** now fails `pnpm typecheck` on that class of bug.
+
+**Arcade 500 / missing tables**  
+Run `node --env-file=.env.local scripts/migrate-arcade.mjs` against the same Neon `DATABASE_URL` as production. Confirm `arcade_meta`, `arcade_runs`, `arcade_run_rolls` exist.
 
 **Wrong database**  
 Compare `DATABASE_URL` host in Vercel with `.env.local`. A Neon project in another region is a different database.
