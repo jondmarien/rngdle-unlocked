@@ -205,7 +205,7 @@ flowchart LR
 - **Ranked all-time / week (Total EP)** — sum of public `source=ranked` rolls only.
 - **Best Roll (`?view=best`)** — one personal best per player from public rolls matching scope/period; sort by EP or rarity (`RARITY_ORDER`); earliest `rolled_at` ties. Practice all-time Best Roll uses public practice rolls (not `user_progress`).
 - Client sync **cannot** set `source=ranked` (server preserves ranked on conflict).
-- Sync **rejects** payloads that claim another user’s roll ids or inflate EP/collection without matching rolls (`SyncIntegrityError` → 409).
+- Sync **rejects** payloads that claim another user’s roll ids or inflate EP/collection without matching rolls (`SyncIntegrityError` → 409). Lifetime roll-count vs new-history is only enforced when client history is below `HISTORY_CAP` (500) — the counter is unbounded while history is retention-capped.
 - Public profiles expose progress provenance pills (`cloud_sync` / `cloned_local` / `local_progress`) from best-roll ownership.
 
 ## Feature requests

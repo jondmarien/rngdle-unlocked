@@ -14,7 +14,13 @@ import type { CloudSavePayload } from './sync.js';
  */
 const JOURNEY_SECRET_EP_SLACK = 80_000;
 /**
- * Lifetime roll count may briefly outpace uploaded history (UPSERT_CAP lag).
+ * Must match `HISTORY_CAP` in `server/sync.ts` / `src/state/storage.ts`.
+ * Client history is retention-capped; `lifetimeRollCount` is not.
+ */
+const HISTORY_CAP = 500;
+/**
+ * Small slack when history is below the retention cap (clock skew / race).
+ * Not a substitute for the history window — see `assertLifetimeRollCountOk`.
  */
 const LIFETIME_ROLL_COUNT_SLACK = 5;
 /**
@@ -51,6 +57,33 @@ function isRollExplainableBadge(entry: CollectionEntry): boolean {
   const family = entry.family;
   if (family === 'journey' || family === 'secret') return false;
   return true;
+}
+
+/**
+ * `lifetimeRollCount` is unbounded; client history is capped at HISTORY_CAP.
+ * When the payload history window is full, newRolls.length cannot explain
+ * the true delta (first sync after 500+ local rolls, or 500+ between syncs).
+ * Only enforce count-vs-history when the window is still complete.
+ */
+export function assertLifetimeRollCountOk(opts: {
+  claimedRollCount: number;
+  cloudRollCount: number;
+  newRollCount: number;
+  historyLength: number;
+}): void {
+  const { claimedRollCount, cloudRollCount, newRollCount, historyLength } =
+    opts;
+
+  if (historyLength >= HISTORY_CAP) return;
+
+  if (
+    claimedRollCount >
+    cloudRollCount + newRollCount + LIFETIME_ROLL_COUNT_SLACK
+  ) {
+    throw new SyncIntegrityError(
+      'Sync rejected: claimed roll count increase is not explained by new rolls',
+    );
+  }
 }
 
 /**
@@ -124,14 +157,12 @@ export async function assertSyncIntegrity(
 
   const cloudRollCount = Number(cloud?.lifetimeRollCount) || 0;
   const claimedRollCount = Number(local.lifetimeRollCount) || 0;
-  if (
-    claimedRollCount >
-    cloudRollCount + newRolls.length + LIFETIME_ROLL_COUNT_SLACK
-  ) {
-    throw new SyncIntegrityError(
-      'Sync rejected: claimed roll count increase is not explained by new rolls',
-    );
-  }
+  assertLifetimeRollCountOk({
+    claimedRollCount,
+    cloudRollCount,
+    newRollCount: newRolls.length,
+    historyLength: history.length,
+  });
 
   const cloudCollection = new Set(
     (cloud?.collection ?? []).map((c) => c.badgeId).filter(Boolean),
