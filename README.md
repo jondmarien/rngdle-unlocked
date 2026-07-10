@@ -421,6 +421,7 @@ The Account screen times out after a few seconds and shows the sign-in form. Che
 | Divine rarity + poker hand fixes + badge equation proofs                  | ✅ Shipped (`v0.9.0`)                                                             |
 | Bases family, cat/Ultimeme, streak secrets, The Worst, equation proofs v3 | ✅ Shipped (`v0.10.0`)                                                            |
 | Profile journey collapse + Secret badges; streak unlock art fix           | ✅ Shipped (`v0.10.1`)                                                            |
+| Friends board filter + `/friends` tab                                     | ✅ Shipped (`v0.10.2`)                                                            |
 | Server Ranked free play (`/api/ranked-roll`)                              | ✅ Shipped                                                                        |
 | Profiles (vanity + avatars) + follows                                     | ✅ Shipped                                                                        |
 | Activity unlocks + Ranked crown msgs + overtake notifs                    | ✅ Shipped                                                                        |

@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 import { rateGuard, readJson, requireUser } from '../server/apiGuards.js';
 import { createDb } from '../server/db/index.js';
-import { follows, user } from '../server/db/schema.js';
+import { follows, user, userProgress } from '../server/db/schema.js';
 import { requestUrl } from '../server/http.js';
 import { createLogger } from '../server/logger.js';
 import { notifyFollow } from '../server/notifications.js';
@@ -14,7 +14,7 @@ const log = createLogger('api/follow');
  * Follow / unfollow / list (feature 2).
  * POST { username } — follow
  * DELETE ?username= — unfollow
- * GET — list who I follow
+ * GET — list who I follow (includes additive profile + lifetime EP fields)
  */
 export default defineHandler(async (request) => {
   const gate = await requireUser(request);
@@ -37,9 +37,15 @@ export default defineHandler(async (request) => {
         name: user.name,
         followingId: follows.followingId,
         createdAt: follows.createdAt,
+        profileAvatar: user.profileAvatar,
+        profileFlair: user.profileFlair,
+        profileAccent: user.profileAccent,
+        image: user.image,
+        lifetimeEp: userProgress.lifetimeEp,
       })
       .from(follows)
       .innerJoin(user, eq(user.id, follows.followingId))
+      .leftJoin(userProgress, eq(userProgress.userId, follows.followingId))
       .where(eq(follows.followerId, me.id));
 
     return Response.json({
@@ -48,6 +54,11 @@ export default defineHandler(async (request) => {
         name: r.name,
         userId: r.followingId,
         since: r.createdAt.toISOString(),
+        profileAvatar: r.profileAvatar || null,
+        profileFlair: r.profileFlair || null,
+        profileAccent: r.profileAccent || null,
+        image: r.image ?? null,
+        lifetimeEP: r.lifetimeEp ?? 0,
       })),
     });
   }

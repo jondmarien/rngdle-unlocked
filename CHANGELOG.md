@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.2] - 2026-07-10
+
+### Added
+
+- **Friends board filter** — Ranked / Practice (and Best Roll) support Circle → Friends (`?friendsOnly=1`), scoped to people you follow plus yourself. Sign-in required.
+- **`/friends` tab** — manage who you follow (avatar, flair, lifetime EP, unfollow). Reuses `GET` / `DELETE /api/follow`.
+
 ## [0.10.1] - 2026-07-10
 
 ### Fixed

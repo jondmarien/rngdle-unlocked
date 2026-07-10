@@ -12,6 +12,7 @@ import {
   type LeaderboardSort,
 } from '../../lib/leaderboard-api';
 import {
+  FOLLOWING_LIST_QUERY_KEY,
   FOLLOWING_USERNAMES_QUERY_KEY,
   fetchFollowingUsernames,
   followUser,
@@ -74,8 +75,10 @@ export function LeaderboardScreen({
   const [view, setView] = useState<BoardView>('ranked');
   const [metricKey, setMetricKey] = useState<BoardMetricKey>('total-ep');
   const [period, setPeriod] = useState<'all' | 'week'>('all');
+  const [circle, setCircle] = useState<'global' | 'friends'>('global');
   const [feedSource, setFeedSource] = useState<FeedSource>('all');
   const [followBusy, setFollowBusy] = useState<string | null>(null);
+  const friendsOnly = circle === 'friends';
   const followingQuery = useQuery({
     queryKey: FOLLOWING_USERNAMES_QUERY_KEY,
     queryFn: fetchFollowingUsernames,
@@ -104,28 +107,36 @@ export function LeaderboardScreen({
   }, [metricKey, scope, period]);
 
   const boardQuery = useQuery({
-    queryKey: ['leaderboard', scope, period, effectiveSort],
+    queryKey: ['leaderboard', scope, period, effectiveSort, friendsOnly],
     queryFn: ({ signal }) =>
       fetchLeaderboard({
         scope,
         period,
         sort: effectiveSort,
         limit: 50,
+        friendsOnly,
         signal,
       }),
-    enabled: onEpBoard && metric === 'total',
+    enabled:
+      onEpBoard &&
+      metric === 'total' &&
+      (!friendsOnly || Boolean(session?.user)),
   });
   const bestQuery = useQuery({
-    queryKey: ['leaderboard-best', scope, period, sortBy],
+    queryKey: ['leaderboard-best', scope, period, sortBy, friendsOnly],
     queryFn: ({ signal }) =>
       fetchBestRollLeaderboard({
         scope,
         period,
         sortBy,
         limit: 50,
+        friendsOnly,
         signal,
       }),
-    enabled: onEpBoard && metric === 'best',
+    enabled:
+      onEpBoard &&
+      metric === 'best' &&
+      (!friendsOnly || Boolean(session?.user)),
   });
 
   const arcadeQuery = useQuery({
@@ -140,12 +151,16 @@ export function LeaderboardScreen({
   const bestMe = bestQuery.data?.me ?? null;
   const arcadeEntries = arcadeQuery.data?.entries ?? [];
   const arcadeMe = arcadeQuery.data?.me ?? null;
+  const boardMessage =
+    metric === 'best' ? bestQuery.data?.message : boardQuery.data?.message;
 
   const activeQuery = metric === 'best' ? bestQuery : boardQuery;
+  const friendsSignInGate = onEpBoard && friendsOnly && !session?.user;
   const loading =
-    (onEpBoard && activeQuery.isPending) ||
+    (onEpBoard && !friendsSignInGate && activeQuery.isPending) ||
     (view === 'arcade' && arcadeQuery.isPending);
   const error = (() => {
+    if (friendsSignInGate) return null;
     if (view === 'arcade' && arcadeQuery.error) {
       return arcadeQuery.error instanceof Error
         ? arcadeQuery.error.message
@@ -192,6 +207,9 @@ export function LeaderboardScreen({
         next.add(key);
         queryClient.setQueryData(FOLLOWING_USERNAMES_QUERY_KEY, next);
       }
+      void queryClient.invalidateQueries({
+        queryKey: FOLLOWING_LIST_QUERY_KEY,
+      });
     } catch {
       /* keep previous following set */
     } finally {
@@ -520,19 +538,35 @@ export function LeaderboardScreen({
             </p>
           </div>
 
-          <div className="space-y-1">
-            <span className="text-xs font-semibold uppercase tracking-wide text-(--prose-3)">
-              Period
-            </span>
-            <SegmentedToggle
-              chipClassName="rounded-md border px-2 py-1 text-xs font-semibold"
-              options={[
-                { id: 'all', label: 'All-time' },
-                { id: 'week', label: 'This week' },
-              ]}
-              value={period}
-              onChange={setPeriod}
-            />
+          <div className="flex flex-wrap items-end gap-4">
+            <div className="space-y-1">
+              <span className="text-xs font-semibold uppercase tracking-wide text-(--prose-3)">
+                Period
+              </span>
+              <SegmentedToggle
+                chipClassName="rounded-md border px-2 py-1 text-xs font-semibold"
+                options={[
+                  { id: 'all', label: 'All-time' },
+                  { id: 'week', label: 'This week' },
+                ]}
+                value={period}
+                onChange={setPeriod}
+              />
+            </div>
+            <div className="space-y-1">
+              <span className="text-xs font-semibold uppercase tracking-wide text-(--prose-3)">
+                Circle
+              </span>
+              <SegmentedToggle
+                chipClassName="rounded-md border px-2 py-1 text-xs font-semibold"
+                options={[
+                  { id: 'global', label: 'Global' },
+                  { id: 'friends', label: 'Friends' },
+                ]}
+                value={circle}
+                onChange={setCircle}
+              />
+            </div>
           </div>
 
           {metric === 'total' && me && (
@@ -601,7 +635,12 @@ export function LeaderboardScreen({
             )}
 
           {loading && <p className="text-sm text-(--prose-2)">Loading…</p>}
-          {error && (
+          {friendsSignInGate && (
+            <p className="text-sm text-(--prose-2)">
+              Sign in to filter the board to people you follow.
+            </p>
+          )}
+          {error && !friendsSignInGate && (
             <QueryErrorBanner
               message={error}
               onRetry={() => void activeQuery.refetch()}
@@ -610,12 +649,24 @@ export function LeaderboardScreen({
 
           {!loading &&
             !error &&
+            !friendsSignInGate &&
+            boardMessage &&
+            ((metric === 'total' && entries.length <= 1) ||
+              (metric === 'best' && bestEntries.length <= 1)) && (
+              <p className="text-sm text-(--prose-2)">{boardMessage}</p>
+            )}
+
+          {!loading &&
+            !error &&
+            !friendsSignInGate &&
             ((metric === 'total' && entries.length === 0) ||
               (metric === 'best' && bestEntries.length === 0)) && (
               <div className="rounded-lg border border-dashed border-(--outline) px-4 py-6 text-center text-sm text-(--prose-2)">
-                {view === 'ranked'
-                  ? 'No Ranked rolls on the board yet. Sign in, claim @username, and Generate with Roll → Ranked.'
-                  : 'No Practice entries yet. Sync Free play progress or make a public Free play roll.'}
+                {friendsOnly
+                  ? 'No friends on this board yet. Follow players from Find or Friends, then check back.'
+                  : view === 'ranked'
+                    ? 'No Ranked rolls on the board yet. Sign in, claim @username, and Generate with Roll → Ranked.'
+                    : 'No Practice entries yet. Sync Free play progress or make a public Free play roll.'}
               </div>
             )}
 

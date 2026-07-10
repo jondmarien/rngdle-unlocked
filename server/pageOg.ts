@@ -6,6 +6,7 @@
 export type PageOgSlug =
   | 'home'
   | 'leaderboard'
+  | 'friends'
   | 'arcade'
   | 'features'
   | 'whats-new'
@@ -46,6 +47,15 @@ export const PAGE_OG: Record<PageOgSlug, PageOgMeta> = {
       'Ranked, Practice, and Arcade boards — EP Total / Best Roll, or best Digits run. Follow friends and browse the Feed.',
     cardHeadline: 'Leaderboard',
     cardLabel: 'Ranked · Practice · Arcade · Feed',
+  },
+  friends: {
+    slug: 'friends',
+    path: '/friends',
+    title: 'Friends · RNGdle Unlocked',
+    description:
+      'People you follow on RNGdle Unlocked — manage your list and filter the Board to your circle.',
+    cardHeadline: 'Friends',
+    cardLabel: 'Follow · Board filter · Feed',
   },
   arcade: {
     slug: 'arcade',
@@ -137,6 +147,7 @@ const PATH_TO_SLUG: Record<string, PageOgSlug> = {
   roll: 'home',
   leaderboard: 'leaderboard',
   board: 'leaderboard',
+  friends: 'friends',
   arcade: 'arcade',
   features: 'features',
   'whats-new': 'whats-new',

@@ -132,6 +132,26 @@ export const bestRollLeaderboardResponseSchema = z.object({
   scope: z.enum(['ranked', 'practice']),
   entries: z.array(bestRollLeaderboardEntrySchema),
   me: bestRollLeaderboardEntrySchema.nullable().optional(),
+  friendsOnly: z.literal(true).optional(),
+  followingCount: z.number().optional(),
+  message: z.string().optional(),
+});
+
+/** GET /api/follow — people you follow (additive profile + EP fields). */
+export const followingListEntrySchema = z.object({
+  username: z.string().nullable(),
+  name: z.string(),
+  userId: z.string(),
+  since: isoDateSchema,
+  profileAvatar: z.string().nullable().optional(),
+  profileFlair: z.string().nullable().optional(),
+  profileAccent: z.string().nullable().optional(),
+  image: z.string().nullable().optional(),
+  lifetimeEP: z.number().optional(),
+});
+
+export const followingListResponseSchema = z.object({
+  following: z.array(followingListEntrySchema),
 });
 
 export const featureRequestStatusSchema = z.enum([

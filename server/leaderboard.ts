@@ -1,9 +1,23 @@
-import { and, asc, desc, eq, gte, isNotNull, ne, sql } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gte,
+  inArray,
+  isNotNull,
+  ne,
+  sql,
+} from 'drizzle-orm';
 import { RARITY_ORDER } from '../src/game/rarity.js';
 import { createAuth } from './auth.js';
 import type { Db } from './db/index.js';
 import { rolls, user, userProgress } from './db/schema.js';
 import { requestUrl } from './http.js';
+import {
+  friendsBoardExtras,
+  loadFriendCircleIds,
+} from './leaderboardFriends.js';
 import { createLogger } from './logger.js';
 
 const log = createLogger('leaderboard');
@@ -58,6 +72,12 @@ function rarityRankSql() {
   return sql`(CASE ${rolls.rarity} ${sql.join(cases, sql.raw(' '))} ELSE 0 END)`;
 }
 
+function parseFriendsOnly(raw: string | null): boolean {
+  if (!raw) return false;
+  const v = raw.trim().toLowerCase();
+  return v === '1' || v === 'true' || v === 'yes';
+}
+
 /**
  * Board query pipeline (moved verbatim from api/leaderboard.ts).
  *
@@ -65,11 +85,14 @@ function rarityRankSql() {
  * Practice = synced progress / public free-play activity (social / honor-system)
  *
  * Optional `?view=best` switches to personal-best roll ranking (Total EP default).
+ * Optional `?friendsOnly=1` restricts to the signed-in user's follow circle + self
+ * (auth gated in api/leaderboard.ts via requireUser).
  */
 export async function leaderboardResponse(
   db: Db,
   request: Request,
   started: number,
+  opts?: { meId?: string },
 ): Promise<Response> {
   const url = requestUrl(request);
   const scopeParam = url.searchParams.get('scope');
@@ -80,33 +103,66 @@ export async function leaderboardResponse(
   const view = url.searchParams.get('view') === 'best' ? 'best' : 'total';
   const sortByParam = url.searchParams.get('sortBy');
   const sortBy: BestSortBy = sortByParam === 'rarity' ? 'rarity' : 'ep';
-  log.info('query', { view, scope, period, sort, sortBy });
+  const friendsOnly = parseFriendsOnly(url.searchParams.get('friendsOnly'));
+  log.info('query', { view, scope, period, sort, sortBy, friendsOnly });
   const limit = Math.min(
     100,
     Math.max(1, Number(url.searchParams.get('limit') ?? 50) || 50),
   );
 
-  let meUserId: string | null = null;
+  let meUserId: string | null = opts?.meId ?? null;
   let meUsername: string | null = null;
   try {
     const auth = createAuth();
     const session = await auth.api.getSession({ headers: request.headers });
     if (session?.user) {
       const uid = session.user.id;
-      meUserId = uid;
+      meUserId = opts?.meId ?? uid;
       meUsername = session.user.username ?? null;
       if (!meUsername) {
         const [u] = await db
           .select({ username: user.username })
           .from(user)
-          .where(eq(user.id, uid))
+          .where(eq(user.id, meUserId))
           .limit(1);
         meUsername = u?.username ?? null;
       }
+    } else if (opts?.meId) {
+      meUserId = opts.meId;
+      const [u] = await db
+        .select({ username: user.username })
+        .from(user)
+        .where(eq(user.id, opts.meId))
+        .limit(1);
+      meUsername = u?.username ?? null;
     }
   } catch {
     /* ignore session errors */
+    if (opts?.meId) {
+      meUserId = opts.meId;
+      try {
+        const [u] = await db
+          .select({ username: user.username })
+          .from(user)
+          .where(eq(user.id, opts.meId))
+          .limit(1);
+        meUsername = u?.username ?? null;
+      } catch {
+        /* ignore */
+      }
+    }
   }
+
+  let friendIds: string[] | null = null;
+  let followingCount = 0;
+  if (friendsOnly && meUserId) {
+    const circle = await loadFriendCircleIds(db, meUserId);
+    friendIds = circle.friendIds;
+    followingCount = circle.followingCount;
+  }
+
+  const friendsExtras =
+    friendIds != null ? friendsBoardExtras(followingCount) : null;
 
   if (view === 'best') {
     return bestRollBoard(db, {
@@ -117,6 +173,8 @@ export async function leaderboardResponse(
       meUserId,
       meUsername,
       started,
+      friendIds,
+      friendsExtras,
     });
   }
 
@@ -128,6 +186,8 @@ export async function leaderboardResponse(
       meUserId,
       meUsername,
       started,
+      friendIds,
+      friendsExtras,
     });
   }
 
@@ -138,8 +198,12 @@ export async function leaderboardResponse(
     meUserId,
     meUsername,
     started,
+    friendIds,
+    friendsExtras,
   });
 }
+
+type FriendsExtras = ReturnType<typeof friendsBoardExtras> | null;
 
 async function bestRollBoard(
   db: Db,
@@ -151,6 +215,8 @@ async function bestRollBoard(
     meUserId: string | null;
     meUsername: string | null;
     started: number;
+    friendIds: string[] | null;
+    friendsExtras: FriendsExtras;
   },
 ) {
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -158,6 +224,8 @@ async function bestRollBoard(
     opts.period === 'week' ? gte(rolls.rolledAt, weekAgo) : undefined;
   const scopeFilter =
     opts.scope === 'ranked' ? rankedRollFilters() : practiceRollFilters();
+  const friendsFilter =
+    opts.friendIds != null ? inArray(rolls.userId, opts.friendIds) : undefined;
 
   const rankExpr = rarityRankSql();
 
@@ -181,7 +249,13 @@ async function bestRollBoard(
     })
     .from(rolls)
     .innerJoin(user, eq(user.id, rolls.userId))
-    .where(and(scopeFilter, ...(periodFilter ? [periodFilter] : [])))
+    .where(
+      and(
+        scopeFilter,
+        ...(periodFilter ? [periodFilter] : []),
+        ...(friendsFilter ? [friendsFilter] : []),
+      ),
+    )
     .orderBy(...personalBestOrder)
     .limit(5000);
 
@@ -236,6 +310,7 @@ async function bestRollBoard(
     scope: opts.scope,
     entries,
     me,
+    ...opts.friendsExtras,
   });
 }
 
@@ -248,11 +323,15 @@ async function rankedBoard(
     meUserId: string | null;
     meUsername: string | null;
     started: number;
+    friendIds: string[] | null;
+    friendsExtras: FriendsExtras;
   },
 ) {
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const periodFilter =
     opts.period === 'week' ? gte(rolls.rolledAt, weekAgo) : undefined;
+  const friendsFilter =
+    opts.friendIds != null ? inArray(rolls.userId, opts.friendIds) : undefined;
 
   const rows = await db
     .select({
@@ -266,7 +345,13 @@ async function rankedBoard(
     })
     .from(rolls)
     .innerJoin(user, eq(user.id, rolls.userId))
-    .where(and(rankedRollFilters(), ...(periodFilter ? [periodFilter] : [])))
+    .where(
+      and(
+        rankedRollFilters(),
+        ...(periodFilter ? [periodFilter] : []),
+        ...(friendsFilter ? [friendsFilter] : []),
+      ),
+    )
     .groupBy(rolls.userId, user.username, user.name)
     .orderBy(
       opts.sort === 'rolls'
@@ -309,6 +394,7 @@ async function rankedBoard(
     scope: 'ranked',
     entries,
     me,
+    ...opts.friendsExtras,
   });
 }
 
@@ -321,11 +407,17 @@ async function practiceBoard(
     meUserId: string | null;
     meUsername: string | null;
     started: number;
+    friendIds: string[] | null;
+    friendsExtras: FriendsExtras;
   },
 ) {
   // Week: public free-play / challenge activity (not ranked competitive)
   if (opts.period === 'week') {
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const friendsFilter =
+      opts.friendIds != null
+        ? inArray(rolls.userId, opts.friendIds)
+        : undefined;
     const rows = await db
       .select({
         userId: rolls.userId,
@@ -336,7 +428,13 @@ async function practiceBoard(
       })
       .from(rolls)
       .innerJoin(user, eq(user.id, rolls.userId))
-      .where(and(gte(rolls.rolledAt, weekAgo), practiceRollFilters()))
+      .where(
+        and(
+          gte(rolls.rolledAt, weekAgo),
+          practiceRollFilters(),
+          ...(friendsFilter ? [friendsFilter] : []),
+        ),
+      )
       .groupBy(rolls.userId, user.username, user.name)
       .orderBy(desc(sql`sum(${rolls.totalEp})`))
       .limit(Math.max(opts.limit, 500));
@@ -368,10 +466,15 @@ async function practiceBoard(
       scope: 'practice',
       entries,
       me,
+      ...opts.friendsExtras,
     });
   }
 
   // All-time practice: synced lifetime progress (local free play + challenges + any cloud totals)
+  const friendsFilter =
+    opts.friendIds != null
+      ? inArray(userProgress.userId, opts.friendIds)
+      : undefined;
   const rows = await db
     .select({
       userId: userProgress.userId,
@@ -383,7 +486,9 @@ async function practiceBoard(
     })
     .from(userProgress)
     .innerJoin(user, eq(user.id, userProgress.userId))
-    .where(isNotNull(user.username))
+    .where(
+      and(isNotNull(user.username), ...(friendsFilter ? [friendsFilter] : [])),
+    )
     .orderBy(
       opts.sort === 'rolls'
         ? desc(userProgress.lifetimeRollCount)
@@ -435,6 +540,7 @@ async function practiceBoard(
     scope: 'practice',
     entries,
     me,
+    ...opts.friendsExtras,
   });
 }
 

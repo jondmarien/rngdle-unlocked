@@ -47,18 +47,26 @@ export async function fetchLeaderboard(opts: {
   period: LeaderboardPeriod;
   sort: LeaderboardSort;
   limit?: number;
+  friendsOnly?: boolean;
   signal?: AbortSignal;
-}): Promise<{ entries: LeaderboardEntry[]; me: LeaderboardEntry | null }> {
+}): Promise<{
+  entries: LeaderboardEntry[];
+  me: LeaderboardEntry | null;
+  message?: string;
+  followingCount?: number;
+}> {
   const q = new URLSearchParams({
     scope: opts.scope,
     period: opts.period,
     sort: opts.sort,
     limit: String(opts.limit ?? 50),
   });
+  if (opts.friendsOnly) q.set('friendsOnly', '1');
   log.info('fetch:start', {
     scope: opts.scope,
     period: opts.period,
     sort: opts.sort,
+    friendsOnly: Boolean(opts.friendsOnly),
   });
   const res = await withTimeout(
     fetch(`/api/leaderboard?${q}`, {
@@ -72,9 +80,16 @@ export async function fetchLeaderboard(opts: {
     error?: string;
     entries?: LeaderboardEntry[];
     me?: LeaderboardEntry | null;
+    message?: string;
+    followingCount?: number;
   };
   if (!res.ok) throw new Error(data.error ?? 'Failed to load');
-  return { entries: data.entries ?? [], me: data.me ?? null };
+  return {
+    entries: data.entries ?? [],
+    me: data.me ?? null,
+    message: data.message,
+    followingCount: data.followingCount,
+  };
 }
 
 export async function fetchBestRollLeaderboard(opts: {
@@ -82,10 +97,13 @@ export async function fetchBestRollLeaderboard(opts: {
   period: LeaderboardPeriod;
   sortBy: BestRollSortBy;
   limit?: number;
+  friendsOnly?: boolean;
   signal?: AbortSignal;
 }): Promise<{
   entries: BestRollLeaderboardEntry[];
   me: BestRollLeaderboardEntry | null;
+  message?: string;
+  followingCount?: number;
 }> {
   const q = new URLSearchParams({
     view: 'best',
@@ -94,10 +112,12 @@ export async function fetchBestRollLeaderboard(opts: {
     sortBy: opts.sortBy,
     limit: String(opts.limit ?? 50),
   });
+  if (opts.friendsOnly) q.set('friendsOnly', '1');
   log.info('fetch:best:start', {
     scope: opts.scope,
     period: opts.period,
     sortBy: opts.sortBy,
+    friendsOnly: Boolean(opts.friendsOnly),
   });
   const res = await withTimeout(
     fetch(`/api/leaderboard?${q}`, {
@@ -122,6 +142,8 @@ export async function fetchBestRollLeaderboard(opts: {
   return {
     entries: parsed.data.entries,
     me: parsed.data.me ?? null,
+    message: parsed.data.message,
+    followingCount: parsed.data.followingCount,
   };
 }
 

@@ -6,6 +6,21 @@ export const NOTIFICATIONS_QUERY_KEY = ['notifications'] as const;
 /** Shared key for following usernames (Leaderboard + Profile). */
 export const FOLLOWING_USERNAMES_QUERY_KEY = ['following-usernames'] as const;
 
+/** Full follow list for Friends screen (enriched GET /api/follow). */
+export const FOLLOWING_LIST_QUERY_KEY = ['following-list'] as const;
+
+export type FollowingListEntry = {
+  username: string | null;
+  name: string;
+  userId: string;
+  since: string;
+  profileAvatar?: string | null;
+  profileFlair?: string | null;
+  profileAccent?: string | null;
+  image?: string | null;
+  lifetimeEP?: number;
+};
+
 export type InboxItem = {
   id: string;
   tab: 'activity' | 'system';
@@ -101,6 +116,17 @@ export async function fetchFollowingUsernames(): Promise<Set<string>> {
       .map((f) => f.username?.toLowerCase())
       .filter((u): u is string => Boolean(u)),
   );
+}
+
+/** Full follow list with profile + lifetime EP (GET /api/follow). */
+export async function fetchFollowingList(): Promise<FollowingListEntry[]> {
+  const res = await fetch('/api/follow', { credentials: 'include' });
+  const data = (await res.json()) as {
+    error?: string;
+    following?: FollowingListEntry[];
+  };
+  if (!res.ok) throw new Error(data.error ?? 'Failed to load friends');
+  return data.following ?? [];
 }
 
 const WEB_NOTIFY_KEY = STORAGE_KEYS.webNotifications;

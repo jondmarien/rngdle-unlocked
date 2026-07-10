@@ -32,6 +32,26 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Friends on the Board',
+    date: '2026-07-10',
+    version: '0.10.2',
+    tags: ['Friends', 'Board', 'Social'],
+    content: [
+      {
+        body: 'Filter Ranked and Practice to people you follow, and manage that list on a dedicated Friends tab.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'Same follow graph as Feed — no new friend requests.',
+        bullets: [
+          '**Circle → Friends** — on Ranked / Practice, show only you and players you follow (sign-in required).',
+          '**Friends tab** — see avatars, flair, and lifetime EP; unfollow in one tap.',
+          '**Find still finds** — search @usernames from Board → Find, then watch them on Feed and Friends boards.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Profile polish + streak seal fix',
     date: '2026-07-10',
     version: '0.10.1',
