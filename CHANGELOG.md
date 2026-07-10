@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-07-10
+
 ### Fixed
 
 - **Discord OG embeds** — ship `@resvg/resvg-wasm` `index_bg.wasm` under `server/assets/` during `bundle:api` and load it via the same multi-path resolver as Inter fonts. Without the binary, `/api/og` fell back to SVG (HTTP 200) which Discord ignores.
@@ -16,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Delta `/api/sync`** — client POSTs `mode: 'delta'` with only pending rolls (≤60) + new collection rows + absolute counters; server returns compact `{ ok, updatedAt, counts }` ack instead of full `{ cloud }`. Legacy full payloads still accepted. `pullFromCloud` applies GET merge locally (no discard-then-full-POST). Shared merge helpers in `src/lib/sync-merge.ts`.
+
+### Notes
+
+- Ops: ensure `rolls_user_rolled_at_idx` exists in production (`node --env-file=.env.local scripts/add-rolls-user-rolled-at-idx.mjs` if needed).
+- Deferred transfer follow-ups (notifications peek, slim badges, etc.): [`docs/superpowers/plans/2026-07-10-transfer-second-pass-d-h.md`](docs/superpowers/plans/2026-07-10-transfer-second-pass-d-h.md).
 
 ## [0.10.2] - 2026-07-10
 

@@ -185,6 +185,7 @@ Do not claim blanket Zod on every POST/query — only these trust boundaries are
 - History: merge by roll id (cap writes per request — `UPSERT_CAP`).
 - Side effects (`processRollActivity`) must be **non-fatal** to sync success.
 - **Integrity gate** (`server/syncIntegrity.ts`): reject (HTTP 409) when history/best-roll ids belong to another user, or EP/collection growth cannot be explained by that user’s rolls (stops localStorage clone dumps).
+- **Delta POST (v0.11+):** client may send `mode: 'delta'` with pending rolls only; response is compact ack. Full `{ cloud }` is for GET pull. Payload size capped (`MAX_SYNC_PAYLOAD_BYTES`); auto-sync debounced.
 
 ### 5.5b Auth identity
 
@@ -241,7 +242,7 @@ Important tables: `user` (username, vanity profile fields), `user_progress`, `ro
 | Endpoint                                               | Notes                                                                                                                      |
 | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
 | `/api/auth/*`                                          | Better Auth (rewrites with `__path` for multi-segment)                                                                     |
-| `/api/sync`                                            | GET/POST cloud merge; soft per-minute burst only                                                                           |
+| `/api/sync`                                            | GET full cloud pull; POST delta (or legacy full) → compact ack; soft per-minute burst; 256KB body cap                      |
 | `/api/ranked-roll`                                     | POST Ranked free play (auth + username); response includes `quota` metadata                                                |
 | `/api/ranked-roll/quota`                               | GET read-only Ranked remaining / reset (auth; soft burst `rankedQuotaPerMinute`)                                           |
 | `/api/leaderboard`                                     | `?view=total\|best` (default total); `?scope=ranked\|practice&period=all\|week`; total: `sort=`; best: `sortBy=ep\|rarity` |
@@ -312,7 +313,7 @@ These four checks require a **manual browser smoke** — automated `pnpm test` /
 - Default branch: `main` (production via Vercel).
 - Prefer small, focused commits with complete sentences in messages.
 - Do not force-push `main` unless the user explicitly requests it.
-- Version in `package.json` (currently **0.10.2**); Settings footer reads `VITE_APP_VERSION` from the build.
+- Version in `package.json` (currently **0.11.0**); Settings footer reads `VITE_APP_VERSION` from the build.
 - Releases: annotated tags (`v0.x.y`) + `gh release create` when the user asks.
 
 ---

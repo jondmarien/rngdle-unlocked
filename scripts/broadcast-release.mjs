@@ -12,10 +12,10 @@ if (!process.env.DATABASE_URL) {
 const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
-const title = 'New Update! v0.10.2 — Friends on the Board';
+const title = 'New Update! v0.11.0 — Lighter cloud sync + Discord share cards';
 const body = [
-  'Filter Ranked and Practice to people you follow with Circle → Friends, and manage that list on the new Friends tab (avatar, flair, lifetime EP, unfollow).',
-  'Same follow graph as Feed — find players from Board → Find, then watch them on Friends boards.',
+  'Signed-in sync now sends only what changed instead of re-uploading your whole history on every roll — quieter, faster, and kinder to the database.',
+  'Discord share and profile previews should show the image card again.',
   'Read the full player notes: https://rngdle-unlocked.chron0.tech/whats-new',
   'Open: /whats-new',
 ].join(' ');

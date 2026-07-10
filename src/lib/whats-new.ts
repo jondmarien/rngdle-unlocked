@@ -32,6 +32,27 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Lighter cloud sync + Discord share cards',
+    date: '2026-07-10',
+    version: '0.11.0',
+    tags: ['Sync', 'Share', 'Reliability'],
+    content: [
+      {
+        body: 'Cloud sync no longer uploads your entire roll history on every Generate — only what changed — and Discord share previews show the PNG card again.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'Same game, quieter network.',
+        bullets: [
+          '**Smarter sync** — signed-in rolls push small updates instead of re-sending hundreds of past rolls each time.',
+          '**Pull from cloud** — Account pull merges your devices without a wasteful full re-upload.',
+          '**Discord embeds** — sharing a roll or profile should show the image card in Discord again (not a blank preview).',
+          '**Quota protection** — oversized sync payloads are rejected cleanly so one heavy session cannot melt the database transfer budget.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Friends on the Board',
     date: '2026-07-10',
     version: '0.10.2',

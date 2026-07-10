@@ -422,6 +422,7 @@ The Account screen times out after a few seconds and shows the sign-in form. Che
 | Bases family, cat/Ultimeme, streak secrets, The Worst, equation proofs v3 | ✅ Shipped (`v0.10.0`)                                                            |
 | Profile journey collapse + Secret badges; streak unlock art fix           | ✅ Shipped (`v0.10.1`)                                                            |
 | Friends board filter + `/friends` tab                                     | ✅ Shipped (`v0.10.2`)                                                            |
+| Delta cloud sync + OG PNG fix + sync quota stopgap                        | ✅ Shipped (`v0.11.0`)                                                            |
 | Server Ranked free play (`/api/ranked-roll`)                              | ✅ Shipped                                                                        |
 | Profiles (vanity + avatars) + follows                                     | ✅ Shipped                                                                        |
 | Activity unlocks + Ranked crown msgs + overtake notifs                    | ✅ Shipped                                                                        |

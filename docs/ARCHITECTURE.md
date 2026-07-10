@@ -135,11 +135,13 @@ sequenceDiagram
   H->>H: Lock · cascade · count EP
   opt signed in
     G->>Sync: enqueueAutoSync
-    Sync->>C: auto-sync merge source=client
-    C-->>Sync: merged cloud
+    Sync->>C: POST mode=delta pending rolls
+    C-->>Sync: compact ack ok + counts
     Note over C: unlock notifs only — no Ranked crowns
   end
 ```
+
+Auto-sync (v0.11+) sends a **delta** (`mode: 'delta'`, ≤60 pending rolls + new collection rows + absolute counters) and receives a compact `{ ok, updatedAt, counts }` ack — not a full `{ cloud }` round-trip. `GET /api/sync` remains the full-pull path; `pullFromCloud` merges that locally. Legacy full POST bodies are still accepted.
 
 ## Ranked free play lifecycle
 

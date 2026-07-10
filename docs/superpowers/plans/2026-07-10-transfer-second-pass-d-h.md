@@ -18,12 +18,12 @@
 
 Parent audit: payload transfer Phase 1 (Jul 2026). First pass status:
 
-| # | Workstream | Status |
-|---|------------|--------|
-| 0 | PR #4 sync stopgap | Merged |
-| 0b | OG wasm (PR #5) | Merged |
-| A | Neon `LIMIT 500` on `loadCloudSave` | Merged (via PR #7) |
-| B | Delta sync + compact ack + pull fix | **Merged** ([PR #7](https://github.com/jondmarien/rngdle-unlocked/pull/7)) |
+| #   | Workstream                          | Status                                                                     |
+| --- | ----------------------------------- | -------------------------------------------------------------------------- |
+| 0   | PR #4 sync stopgap                  | Merged                                                                     |
+| 0b  | OG wasm (PR #5)                     | Merged                                                                     |
+| A   | Neon `LIMIT 500` on `loadCloudSave` | Merged (via PR #7)                                                         |
+| B   | Delta sync + compact ack + pull fix | **Merged** ([PR #7](https://github.com/jondmarien/rngdle-unlocked/pull/7)) |
 
 **Open D–H only after:**
 
@@ -35,13 +35,13 @@ Parent audit: payload transfer Phase 1 (Jul 2026). First pass status:
 
 **Baseline (pre-B, for PR before/after tables):**
 
-| Signal | Value |
-|--------|-------|
-| Vercel 72h project in / out | ~5 GB / ~725 MB |
-| `/api/sync` | 4.2K req, **4.66 GB in**, 166 MB out |
-| `/api/notifications` | 5.7K req, **~17 MB** total (~3 KB/req) |
-| Neon prod rolls | 3930; avg `badges_json` ~**2684 B** |
-| Neon wrong twin | `bitter-grass-47308091` — ignore |
+| Signal                      | Value                                  |
+| --------------------------- | -------------------------------------- |
+| Vercel 72h project in / out | ~5 GB / ~725 MB                        |
+| `/api/sync`                 | 4.2K req, **4.66 GB in**, 166 MB out   |
+| `/api/notifications`        | 5.7K req, **~17 MB** total (~3 KB/req) |
+| Neon prod rolls             | 3930; avg `badges_json` ~**2684 B**    |
+| Neon wrong twin             | `bitter-grass-47308091` — ignore       |
 
 ---
 
@@ -49,13 +49,13 @@ Parent audit: payload transfer Phase 1 (Jul 2026). First pass status:
 
 Suggested priority by residual impact after B (re-rank with fresh metrics):
 
-| Order | ID | Workstream | Est. residual impact | Own PR? |
-|-------|-----|------------|----------------------|---------|
-| 1 | **E** (+ **C**) | Slim `BadgeHit` on roll APIs + lightweight publish probe | Highest remaining wire on ranked/arcade/rolls | Yes (C can fold into E) |
-| 2 | **F** | Leaderboard `view=best` SQL top-N | Neon egress on best-view | Yes |
-| 3 | **D** | Notifications poll / payload trim | ~17 MB/72h today; grows with users | Yes |
-| 4 | **G** | Follow list limit + slim fields | Tail risk; low volume today | Yes |
-| 5 | **H** | QueryClient default `staleTime` | Extra focus refetches | Yes (tiny) |
+| Order | ID              | Workstream                                               | Est. residual impact                          | Own PR?                 |
+| ----- | --------------- | -------------------------------------------------------- | --------------------------------------------- | ----------------------- |
+| 1     | **E** (+ **C**) | Slim `BadgeHit` on roll APIs + lightweight publish probe | Highest remaining wire on ranked/arcade/rolls | Yes (C can fold into E) |
+| 2     | **F**           | Leaderboard `view=best` SQL top-N                        | Neon egress on best-view                      | Yes                     |
+| 3     | **D**           | Notifications poll / payload trim                        | ~17 MB/72h today; grows with users            | Yes                     |
+| 4     | **G**           | Follow list limit + slim fields                          | Tail risk; low volume today                   | Yes                     |
+| 5     | **H**           | QueryClient default `staleTime`                          | Extra focus refetches                         | Yes (tiny)              |
 
 Each PR: `pnpm typecheck` + relevant tests, CHANGELOG, before/after estimate in PR body.
 
@@ -65,14 +65,14 @@ Each PR: `pnpm typecheck` + relevant tests, CHANGELOG, before/after estimate in 
 
 ## File map (second pass)
 
-| Workstream | Primary files |
-|------------|---------------|
-| D | `src/ui/layout/AppShell.tsx`, `src/ui/screens/NotificationsScreen.tsx`, `server/notifications.ts`, `api/notifications.ts`, `src/lib/notifications-api.ts` |
-| E | `server/rankedRoll.ts`, `server/arcade.ts`, `api/rolls/[id].ts`, `src/lib/roll-api.ts`, `src/lib/arcade-api.ts`, `src/game/types.ts` (slim DTO), hydrate helper near `BADGE_CATALOG` |
-| C | `api/rolls/[id].ts` or new HEAD handler, `src/lib/roll-api.ts` `isRollPublished`, `src/state/useSync.ts` `waitForCloudPublish` |
-| F | `server/leaderboard.ts` (~best-view path with `.limit(5000)`), optional index script under `scripts/` |
-| G | `api/follow.ts`, `src/lib/leaderboard-api.ts` (or follow-api), `LeaderboardScreen.tsx` / `FriendsScreen.tsx` / `ProfileScreen.tsx` |
-| H | `src/main.tsx` `QueryClient`, spot-check screens that already set `staleTime` |
+| Workstream | Primary files                                                                                                                                                                        |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| D          | `src/ui/layout/AppShell.tsx`, `src/ui/screens/NotificationsScreen.tsx`, `server/notifications.ts`, `api/notifications.ts`, `src/lib/notifications-api.ts`                            |
+| E          | `server/rankedRoll.ts`, `server/arcade.ts`, `api/rolls/[id].ts`, `src/lib/roll-api.ts`, `src/lib/arcade-api.ts`, `src/game/types.ts` (slim DTO), hydrate helper near `BADGE_CATALOG` |
+| C          | `api/rolls/[id].ts` or new HEAD handler, `src/lib/roll-api.ts` `isRollPublished`, `src/state/useSync.ts` `waitForCloudPublish`                                                       |
+| F          | `server/leaderboard.ts` (~best-view path with `.limit(5000)`), optional index script under `scripts/`                                                                                |
+| G          | `api/follow.ts`, `src/lib/leaderboard-api.ts` (or follow-api), `LeaderboardScreen.tsx` / `FriendsScreen.tsx` / `ProfileScreen.tsx`                                                   |
+| H          | `src/main.tsx` `QueryClient`, spot-check screens that already set `staleTime`                                                                                                        |
 
 ---
 
@@ -107,6 +107,7 @@ type BadgeHitWire = {
 ### Task E1: Define wire type + hydrate helper
 
 **Files:**
+
 - Create: `src/game/badgeHydrate.ts` (or `src/lib/badge-hydrate.ts`)
 - Modify: `src/game/types.ts` only if exporting a wire type
 - Test: `src/game/badgeHydrate.test.ts`
@@ -118,6 +119,7 @@ type BadgeHitWire = {
 ### Task E2: Server returns slim badges on ranked / arcade / public roll
 
 **Files:**
+
 - Modify: `server/rankedRoll.ts`, `server/arcade.ts`, `api/rolls/[id].ts` (and any shared serializer)
 - Modify: client consumers in `GameProvider` / arcade screen to hydrate before UI
 
@@ -130,6 +132,7 @@ type BadgeHitWire = {
 ### Task C: Lightweight publish probe (fold into E PR or tiny follow-up)
 
 **Files:**
+
 - Modify: `api/rolls/[id].ts`, `src/lib/roll-api.ts`
 
 - [ ] **Step 1:** Support `HEAD` or `?exists=1` without loading/parsing full `badges_json` if possible (`SELECT 1` / `id` only).
@@ -155,6 +158,7 @@ type BadgeHitWire = {
 ### Task F1: Replace 5000-row pool
 
 **Files:**
+
 - Modify: `server/leaderboard.ts` (best-view function ~`.limit(5000)`)
 - Optional: `scripts/add-rolls-best-leaderboard-idx.mjs`
 - Test: `server/leaderboardFriends.test.ts` or new best-view unit if extractable
@@ -186,6 +190,7 @@ type BadgeHitWire = {
 ### Task D1: Split peek vs full query
 
 **Files:**
+
 - Modify: `server/notifications.ts`, `api/notifications.ts`, `src/lib/notifications-api.ts`
 - Modify: `AppShell.tsx`, `NotificationsScreen.tsx`
 
@@ -214,6 +219,7 @@ type BadgeHitWire = {
 ### Task G1: Slim + limit
 
 **Files:**
+
 - Modify: `api/follow.ts`, follow/leaderboard API wrappers, `LeaderboardScreen.tsx`, `FriendsScreen.tsx`, `ProfileScreen.tsx`
 
 - [ ] **Step 1:** Add `fields` + `limit` query parsing; default limit for rich list (e.g. 200).
@@ -247,6 +253,7 @@ Do **not** raise staleTime for notifications peek if D expects fresher unread �
 ### Task H1: Defaults + audit overrides
 
 **Files:**
+
 - Modify: `src/main.tsx`
 - Audit: `LeaderboardScreen.tsx`, `CommunityHighlights.tsx`, `FeatureRequestsScreen.tsx`, notifications queries
 
@@ -259,11 +266,11 @@ Do **not** raise staleTime for notifications peek if D expects fresher unread �
 
 ## Verification matrix (after each PR)
 
-| Check | How |
-|-------|-----|
-| Typecheck | `pnpm typecheck` |
-| Unit tests | `pnpm test` (touched areas) |
-| Transfer | Vercel Routes table + Neon `data_transfer_bytes` 24h later |
+| Check         | How                                                                                            |
+| ------------- | ---------------------------------------------------------------------------------------------- |
+| Typecheck     | `pnpm typecheck`                                                                               |
+| Unit tests    | `pnpm test` (touched areas)                                                                    |
+| Transfer      | Vercel Routes table + Neon `data_transfer_bytes` 24h later                                     |
 | Product smoke | Free + Ranked roll settle; mode switch reel; share publish; Friends board; Notifications badge |
 
 Manual roll-mode checklist (if roll UI touched — mainly E): Free / Daily / Free-after-Daily / Ranked — see AGENTS.md §9.
