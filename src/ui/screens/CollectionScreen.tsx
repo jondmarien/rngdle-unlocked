@@ -44,12 +44,69 @@ const FAMILY_HINT: Record<Exclude<BadgeFamily, 'secret'>, string> = {
   journey: 'Lifetime milestone — keep rolling.',
 };
 
+const CEILING_LOCKED_TITLE = 'Ultra-rare seal';
+const CEILING_LOCKED_BODY = 'Hit exactly 1,000,000 to claim this seal.';
+const SECRET_LOCKED_TITLE = 'Hidden mastery';
+const SECRET_LOCKED_BODY =
+  'Collect every badge in this codex section to reveal the seal.';
+const OMEGA_LOCKED_TITLE = '???? · ????';
+const OMEGA_LOCKED_BODY =
+  'Unlock every number badge, every journey mark, and every section mastery. Then this appears.';
+
 function isRecentUnlock(iso: string | undefined, now: number): boolean {
   if (!iso) return false;
   const t = Date.parse(iso);
   if (!Number.isFinite(t)) return false;
   const age = now - t;
   return age >= 0 && age <= NEW_WINDOW_MS;
+}
+
+/** Case-insensitive substring match against one or more haystacks. */
+function textMatchesQuery(query: string, ...parts: string[]): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  return parts.some((p) => p.toLowerCase().includes(q));
+}
+
+/**
+ * Spoiler-safe codex search: unlocked badges match real name/description;
+ * locked badges match only the visible placeholder copy (never true name/desc).
+ */
+function badgeMatchesQuery(
+  isUnlocked: boolean,
+  query: string,
+  unlocked: { name: string; description: string },
+  lockedHaystack: string[],
+): boolean {
+  const q = query.trim();
+  if (!q) return true;
+  if (isUnlocked) {
+    return textMatchesQuery(q, unlocked.name, unlocked.description);
+  }
+  return textMatchesQuery(q, ...lockedHaystack);
+}
+
+function numberLockedHaystack(b: {
+  family: BadgeFamily;
+  image?: string;
+}): string[] {
+  if (b.image) {
+    return [CEILING_LOCKED_TITLE, CEILING_LOCKED_BODY, 'Locked'];
+  }
+  const hint =
+    FAMILY_HINT[b.family as Exclude<BadgeFamily, 'secret'>] ?? 'Locked';
+  return ['????', hint, 'Locked'];
+}
+
+function journeyLockedHaystack(): string[] {
+  return ['????', FAMILY_HINT.journey, 'Locked milestone'];
+}
+
+function secretLockedHaystack(secret: SecretBadgeDef): string[] {
+  if (secret.tier === 'omega') {
+    return [OMEGA_LOCKED_TITLE, OMEGA_LOCKED_BODY, 'Final seal'];
+  }
+  return [SECRET_LOCKED_TITLE, SECRET_LOCKED_BODY];
 }
 
 /** Badge encyclopedia — locked vs unlocked with spoiler-safe copy + secret tab. */
@@ -68,6 +125,7 @@ export function CollectionScreen() {
   }, [collection]);
   const [filter, setFilter] = useState<FilterId>('all');
   const [showLocked, setShowLocked] = useState(true);
+  const [query, setQuery] = useState('');
   /** Tick so the 5-minute NEW window expires without a remount. */
   const [now, setNow] = useState(() => Date.now());
 
@@ -107,8 +165,18 @@ export function CollectionScreen() {
     if (filter !== 'new' && !showLocked) {
       list = list.filter((b) => unlocked.has(b.id));
     }
+    if (query.trim()) {
+      list = list.filter((b) =>
+        badgeMatchesQuery(
+          unlocked.has(b.id),
+          query,
+          { name: b.name, description: b.description },
+          numberLockedHaystack(b),
+        ),
+      );
+    }
     return list;
-  }, [filter, showLocked, unlocked, recentIds, unlockedAt]);
+  }, [filter, showLocked, unlocked, recentIds, unlockedAt, query]);
 
   const journeyList = useMemo(() => {
     if (
@@ -129,8 +197,18 @@ export function CollectionScreen() {
     } else if (!showLocked) {
       list = list.filter((b) => unlocked.has(b.id));
     }
+    if (query.trim()) {
+      list = list.filter((b) =>
+        badgeMatchesQuery(
+          unlocked.has(b.id),
+          query,
+          { name: b.name, description: b.description },
+          journeyLockedHaystack(),
+        ),
+      );
+    }
     return list;
-  }, [filter, showLocked, unlocked, recentIds, unlockedAt]);
+  }, [filter, showLocked, unlocked, recentIds, unlockedAt, query]);
 
   const secretList = useMemo(() => {
     if (
@@ -151,8 +229,18 @@ export function CollectionScreen() {
     } else if (!showLocked) {
       list = list.filter((b) => unlocked.has(b.id));
     }
+    if (query.trim()) {
+      list = list.filter((s) =>
+        badgeMatchesQuery(
+          unlocked.has(s.id),
+          query,
+          { name: s.name, description: s.description },
+          secretLockedHaystack(s),
+        ),
+      );
+    }
     return list;
-  }, [filter, showLocked, unlocked, recentIds, unlockedAt]);
+  }, [filter, showLocked, unlocked, recentIds, unlockedAt, query]);
 
   return (
     <div className="space-y-6">
@@ -167,6 +255,30 @@ export function CollectionScreen() {
           Complete every badge in a section to unlock a Secret mastery. Finish
           all sections for the final Codex Absolute.
         </p>
+      </div>
+
+      <div className="relative">
+        <label className="block text-sm">
+          <span className="sr-only">Search badges</span>
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search badges…"
+            autoComplete="off"
+            className="w-full rounded-lg border border-[var(--outline)] bg-[var(--bg)] px-3 py-2 pr-10 text-sm"
+          />
+        </label>
+        {query.trim() !== '' && (
+          <button
+            type="button"
+            onClick={() => setQuery('')}
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded px-1.5 py-0.5 text-sm font-semibold text-[var(--prose-3)] hover:text-[var(--prose)]"
+            aria-label="Clear search"
+          >
+            ×
+          </button>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-1.5">
@@ -326,7 +438,7 @@ export function CollectionScreen() {
                               <span className="mr-1" aria-hidden>
                                 🔒
                               </span>
-                              {b.image ? 'Ultra-rare seal' : '????'}
+                              {b.image ? CEILING_LOCKED_TITLE : '????'}
                             </>
                           )}
                         </div>
@@ -338,7 +450,7 @@ export function CollectionScreen() {
                         {has
                           ? b.description
                           : b.image
-                            ? 'Hit exactly 1,000,000 to claim this seal.'
+                            ? CEILING_LOCKED_BODY
                             : FAMILY_HINT[
                                 b.family as Exclude<BadgeFamily, 'secret'>
                               ]}
@@ -493,9 +605,11 @@ export function CollectionScreen() {
         journeyList.length === 0 &&
         secretList.length === 0 && (
           <p className="text-sm text-[var(--prose-2)]">
-            {filter === 'new'
-              ? 'No first-time unlocks in the last 5 minutes. Roll something new!'
-              : 'Nothing in this filter — unlock badges or show locked entries.'}
+            {query.trim()
+              ? `No badges match “${query.trim()}”.`
+              : filter === 'new'
+                ? 'No first-time unlocks in the last 5 minutes. Roll something new!'
+                : 'Nothing in this filter — unlock badges or show locked entries.'}
           </p>
         )}
     </div>
@@ -559,7 +673,7 @@ function SecretCard({
               Final seal
             </p>
             <div className="mt-1 text-xl font-bold tracking-tight sm:text-2xl">
-              {has ? secret.name : '???? · ????'}
+              {has ? secret.name : OMEGA_LOCKED_TITLE}
               {isFresh && has && (
                 <span className="ml-2 inline-flex rounded bg-amber-400 px-1.5 py-0.5 align-middle text-[10px] font-black uppercase tracking-wider text-black">
                   New
@@ -567,9 +681,7 @@ function SecretCard({
               )}
             </div>
             <p className="mt-2 text-sm leading-relaxed text-[var(--prose-2)]">
-              {has
-                ? secret.description
-                : 'Unlock every number badge, every journey mark, and every section mastery. Then this appears.'}
+              {has ? secret.description : OMEGA_LOCKED_BODY}
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
               <span className="font-semibold text-amber-800 dark:text-amber-300">
@@ -624,7 +736,7 @@ function SecretCard({
           Section mastery · {secret.section}
         </p>
         <div className="mt-0.5 text-lg font-bold tracking-tight">
-          {has ? secret.name : 'Hidden mastery'}
+          {has ? secret.name : SECRET_LOCKED_TITLE}
           {isFresh && has && (
             <span className="ml-2 inline-flex rounded bg-amber-400 px-1.5 py-0.5 align-middle text-[10px] font-black uppercase tracking-wider text-black">
               New
@@ -632,9 +744,7 @@ function SecretCard({
           )}
         </div>
         <p className="mt-1 text-sm text-[var(--prose-2)]">
-          {has
-            ? secret.description
-            : 'Collect every badge in this codex section to reveal the seal.'}
+          {has ? secret.description : SECRET_LOCKED_BODY}
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
           <span className="font-semibold text-[var(--prose)]">

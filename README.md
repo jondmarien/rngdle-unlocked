@@ -415,6 +415,7 @@ The Account screen times out after a few seconds and shows the sign-in form. Che
 | Alerts hierarchy + crown grouping; Features status sections             | ✅ Shipped (`v0.7.1`)                                                             |
 | Ranked quota indicator (remaining + window reset)                       | ✅ Shipped (`v0.7.2`)                                                             |
 | Journey badge artwork (Collection + Profile section)                    | ✅ Shipped (`v0.7.3`)                                                             |
+| Codex search (spoiler-safe badge filter)                                | ✅ Shipped (`v0.7.4`)                                                             |
 | Server Ranked free play (`/api/ranked-roll`)                            | ✅ Shipped                                                                        |
 | Profiles (vanity + avatars) + follows                                   | ✅ Shipped                                                                        |
 | Activity unlocks + Ranked crown msgs + overtake notifs                  | ✅ Shipped                                                                        |

@@ -12,10 +12,10 @@ if (!process.env.DATABASE_URL) {
 const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
-const title = 'New Update! v0.7.3 — Journey milestones get custom seals';
+const title = 'New Update! v0.7.4 — Search the Badge Codex';
 const body = [
-  'Every lifetime Journey mark now has its own illustrated seal — from First Steps to Centurion.',
-  'See them in Collection and on profiles under Journey badges. Thresholds and EP are unchanged.',
+  'The Badge Codex now has a search box above the section tabs so you can find unlocked badges by name or description.',
+  'Locked names stay hidden — search will not spoil Journey or Secret seals you have not earned yet.',
   'Read the full player notes: https://rngdle-unlocked.chron0.tech/whats-new',
   'Open: /whats-new',
 ].join(' ');

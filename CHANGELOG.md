@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.4] - 2026-07-09
+
+### Added
+
+- **Codex search** — Badge Codex (`CollectionScreen`) text filter above section tabs; matches unlocked `name`/`description`, locked cards only via visible placeholder copy (spoiler-safe). Respects active tab + Show/Hide locked; clear control + empty-results message.
+
+### Notes
+
+- Presentation-only — no catalog, unlock, or EP changes.
+
 ## [0.7.3] - 2026-07-09
 
 ### Added
@@ -214,6 +224,7 @@ First **social multiplayer** release on top of the unlimited solo playground.
 - Public rolls + Discord OG via share APIs.
 - SPA path-based routes; Vercel Node adapter for serverless APIs.
 
+[0.7.4]: https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.7.4
 [0.7.3]: https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.7.3
 [0.7.2]: https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.7.2
 [0.7.1]: https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.7.1

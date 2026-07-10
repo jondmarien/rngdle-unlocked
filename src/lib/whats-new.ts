@@ -32,6 +32,26 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Search the Badge Codex',
+    date: '2026-07-09',
+    version: '0.7.4',
+    tags: ['UI', 'Collection'],
+    content: [
+      {
+        body: 'Find badges faster in the Codex with a search box above the section tabs — without spoiling locked names.',
+      },
+      {
+        heading: 'How it works',
+        body: 'Type to filter within the tab you already picked (All, Math, Journey, and so on).',
+        bullets: [
+          '**Unlocked**: matches badge name and description.',
+          '**Locked**: only matches the placeholder text you already see — true hidden names stay hidden.',
+          '**Clear**: tap × to reset; empty search shows the same list as before.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Journey milestones get custom seals',
     date: '2026-07-09',
     version: '0.7.3',
