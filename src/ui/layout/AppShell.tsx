@@ -24,6 +24,7 @@ const NAV_BASE: NavItem[] = [
   { kind: 'tab', id: 'showcase', label: 'Showcase' },
   { kind: 'tab', id: 'stats', label: 'Stats' },
   { kind: 'tab', id: 'leaderboard', label: 'Board' },
+  { kind: 'tab', id: 'arcade', label: 'Arcade' },
   { kind: 'tab', id: 'features', label: 'Features' },
   { kind: 'profile', label: 'Profile' },
   { kind: 'tab', id: 'account', label: 'Account' },

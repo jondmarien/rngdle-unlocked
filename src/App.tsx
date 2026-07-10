@@ -52,6 +52,10 @@ const FeatureRequestsScreen = lazyScreen<{ onGoAccount: () => void }>(
 const LeaderboardScreen = lazyScreen<{
   onOpenProfile: (username: string) => void;
 }>(() => import('./ui/screens/LeaderboardScreen'), 'LeaderboardScreen');
+const ArcadeScreen = lazyScreen<{
+  onGoAccount: () => void;
+  onGoLeaderboard: () => void;
+}>(() => import('./ui/screens/ArcadeScreen'), 'ArcadeScreen');
 const ProfileScreen = lazyScreen<{
   username: string;
   onOpenRoll: (rollId: string, username?: string | null) => void;
@@ -239,6 +243,12 @@ function AppRoutes() {
         {route.kind === 'tab' && tab === 'stats' && <StatsScreen />}
         {route.kind === 'tab' && tab === 'leaderboard' && (
           <LeaderboardScreen onOpenProfile={goProfile} />
+        )}
+        {route.kind === 'tab' && tab === 'arcade' && (
+          <ArcadeScreen
+            onGoAccount={() => goTab('account')}
+            onGoLeaderboard={() => goTab('leaderboard')}
+          />
         )}
         {route.kind === 'tab' && tab === 'features' && (
           <FeatureRequestsScreen onGoAccount={() => goTab('account')} />
