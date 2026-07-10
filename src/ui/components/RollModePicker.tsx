@@ -23,16 +23,16 @@ const MODES: {
   {
     id: 'daily',
     label: 'Daily',
-    short: 'One personal number / UTC day',
+    short: 'One spin / UTC day',
     detail:
-      'Shared UTC day seed + your account id → one deterministic personal number for today (same inputs always match). Shows under History → Challenge and Latest runs → Challenge. Optional — Free (Practice) and Ranked stay available anytime. Not Ranked crowns.',
+      'Shared UTC day seed + your account id → one personal number for today. Generate locks after your first spin this UTC day (re-spinning would only repeat the same number). Shows under History → Challenge. Free and Ranked stay available anytime. Not Ranked crowns.',
   },
   {
     id: 'weekly',
     label: 'Weekly',
-    short: 'One personal number / UTC week',
+    short: 'One spin / UTC week',
     detail:
-      'Same deterministic idea as Daily for the whole ISO week. History → Challenge / Latest runs → Challenge. Free and Ranked stay unlimited. Not Ranked crowns.',
+      'Same as Daily for the whole ISO week — one spin, then locked until the next UTC week. History → Challenge. Free and Ranked stay unlimited. Not Ranked crowns.',
   },
 ];
 

@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
   buildPeriodSeed,
+  challengeKeyForPeriod,
   challengeNumber,
+  findChallengeRollForPeriod,
   utcDateKey,
   utcWeekKey,
 } from './challenge';
 import { ROLL_MAX } from './rng';
+import type { RollResult } from './types';
 
 describe('challenge seeds', () => {
   it('builds stable daily/weekly keys', () => {
@@ -15,6 +18,7 @@ describe('challenge seeds', () => {
     const daily = buildPeriodSeed('daily', d);
     expect(daily.seed).toBe('rngdle:daily:2026-07-08');
     expect(daily.periodKey).toBe('2026-07-08');
+    expect(challengeKeyForPeriod('daily', d)).toBe('daily:2026-07-08');
   });
 
   it('challengeNumber is deterministic and in range', async () => {
@@ -25,5 +29,29 @@ describe('challenge seeds', () => {
     expect(a).not.toBe(c);
     expect(a).toBeGreaterThanOrEqual(0);
     expect(a).toBeLessThanOrEqual(ROLL_MAX);
+  });
+
+  it('findChallengeRollForPeriod returns newest matching key', () => {
+    const d = new Date('2026-07-08T15:00:00.000Z');
+    const key = challengeKeyForPeriod('daily', d);
+    const older = {
+      id: 'a',
+      challengeKey: key,
+      number: 1,
+    } as RollResult;
+    const newer = {
+      id: 'b',
+      challengeKey: key,
+      number: 2,
+    } as RollResult;
+    const other = {
+      id: 'c',
+      challengeKey: 'weekly:2026-W28',
+      number: 3,
+    } as RollResult;
+    expect(
+      findChallengeRollForPeriod([newer, older, other], 'daily', d)?.id,
+    ).toBe('b');
+    expect(findChallengeRollForPeriod([other], 'daily', d)).toBeUndefined();
   });
 });

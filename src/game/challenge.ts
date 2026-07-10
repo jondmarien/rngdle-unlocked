@@ -1,3 +1,4 @@
+import type { RollResult } from './types.js';
 import {
   mapBytesToInclusiveRange,
   REJECT_THRESHOLD,
@@ -81,6 +82,28 @@ export function buildPeriodSeed(
     label: `Weekly · ${periodKey} UTC`,
     endsAt: endOfUtcIsoWeek(at).toISOString(),
   };
+}
+
+/** Stored on RollResult — e.g. `daily:2026-07-08` / `weekly:2026-W28`. */
+export function challengeKeyForPeriod(
+  kind: ChallengeKind,
+  at = new Date(),
+): string {
+  const info = buildPeriodSeed(kind, at);
+  return `${kind}:${info.periodKey}`;
+}
+
+/**
+ * Newest history row for this UTC daily/weekly period, if any.
+ * History is newest-first; duplicates from older clients may exist — take the first match.
+ */
+export function findChallengeRollForPeriod(
+  history: readonly RollResult[],
+  kind: ChallengeKind,
+  at = new Date(),
+): RollResult | undefined {
+  const key = challengeKeyForPeriod(kind, at);
+  return history.find((r) => r.challengeKey === key);
 }
 
 async function sha256Text(text: string): Promise<Uint8Array> {

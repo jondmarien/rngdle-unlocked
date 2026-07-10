@@ -65,7 +65,9 @@ export { playRollSound, shouldCelebrate, celebrateIntensity } from './fx.js';
 export { buildShareText, buildFlavorQuote } from './shareText.js';
 export {
   buildPeriodSeed,
+  challengeKeyForPeriod,
   challengeNumber,
+  findChallengeRollForPeriod,
   utcDateKey,
   utcWeekKey,
   type ChallengeInfo,

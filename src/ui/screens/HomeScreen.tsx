@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   contributeKeyEntropy,
   contributePointerEntropy,
+  findChallengeRollForPeriod,
   topPercentFromEP,
   type RollResult,
 } from '../../game';
@@ -46,6 +47,7 @@ export function HomeScreen({
     fireCelebration,
     rollMode,
     setRollMode,
+    selectRoll,
     attestRoll,
   } = useGame();
   const { settings } = useGameSettings();
@@ -98,6 +100,9 @@ export function HomeScreen({
    * Mode switch must wipe the whole roll board (reel, meta, share, cascade).
    * Use a remount key so NumberDisplay internal lastRevealKey cannot collide
    * with a reused revealKey after reset (that stuck the reel on ?????).
+   * Daily/Weekly: if this UTC period is already claimed, settle that roll
+   * (do not depend on `history` here — a post-roll history update must not
+   * wipe mid-reveal).
    */
   const [reelMountKey, setReelMountKey] = useState(0);
   useEffect(() => {
@@ -113,9 +118,28 @@ export function HomeScreen({
     pendingFx.current = false;
     revealRollRef.current = null;
     setReelMountKey((k) => k + 1);
-  }, [rollMode]);
+
+    if (rollMode === 'daily' || rollMode === 'weekly') {
+      const existing = findChallengeRollForPeriod(history, rollMode);
+      if (existing) {
+        selectRoll(existing);
+        setSlotValue(existing.number);
+        setRevealDone(true);
+        revealRollRef.current = existing;
+      }
+    }
+    // history intentionally omitted — only re-hydrate on mode change
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- see above
+  }, [rollMode, selectRoll]);
+
+  /** Daily/Weekly: already claimed this UTC period (history is source of truth). */
+  const periodLocked = useMemo(() => {
+    if (rollMode !== 'daily' && rollMode !== 'weekly') return null;
+    return findChallengeRollForPeriod(history, rollMode) ?? null;
+  }, [history, rollMode]);
 
   const handleRoll = async () => {
+    if (periodLocked) return;
     // Cancel deferred anomaly/mythic share from a previous roll
     clearShareTimer();
     setShareRoll(null);
@@ -195,6 +219,9 @@ export function HomeScreen({
       : rollMode === 'daily' || rollMode === 'weekly'
         ? 'challenge'
         : 'free';
+
+  const challengeLockedLabel =
+    rollMode === 'weekly' ? 'Done for this week' : 'Done for today';
 
   return (
     <div className="relative flex min-h-0 w-full flex-1 flex-col">
@@ -332,8 +359,19 @@ export function HomeScreen({
         <GenerateButton
           hasRolled={!!lastRoll}
           busy={busy}
+          locked={!!periodLocked}
+          lockedLabel={challengeLockedLabel}
           onClick={handleRoll}
         />
+
+        {periodLocked && revealDone && (
+          <p className="max-w-md text-sm text-[var(--prose-2)]">
+            {rollMode === 'weekly'
+              ? 'Weekly challenge is locked until the next UTC week — same seed would only repeat this number.'
+              : 'Daily challenge is locked until the next UTC day — same seed would only repeat this number.'}{' '}
+            Free play and Ranked stay available.
+          </p>
+        )}
 
         {lastRoll && revealDone && (
           <div className="flex w-full max-w-md flex-col items-center gap-2">

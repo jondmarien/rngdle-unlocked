@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Daily / Weekly challenges lock after one Generate per UTC period (same seed would only repeat the number). Button shows “Done for today/week”; engine skips duplicate history/EP.
 - Root `tsconfig.json` is the api/server NodeNext config (not an empty project-references solution). Vercel ignores references when typechecking `/api`, which previously flooded builds with `process` / `Buffer` / discriminant-narrowing errors while still deploying.
 
 ## [0.6.0] - 2026-07-09

@@ -12,6 +12,7 @@ import {
   buildPeriodSeed,
   challengeNumber,
   evaluateNumber,
+  findChallengeRollForPeriod,
   performRoll,
   journeyHits,
   mergeSecretUnlocks,
@@ -251,7 +252,29 @@ export function GameProvider({ children }: { children: ReactNode }) {
         result = { ...ranked.roll, source: 'ranked' };
         setSaveError(null);
       } else {
-        // Optional challenge: personal number from shared period seed + subject
+        // Optional challenge: personal number from shared period seed + subject.
+        // One spin per UTC period — re-spins would only duplicate the same number.
+        const existing = findChallengeRollForPeriod(
+          stateRef.current.history,
+          modeAtStart,
+        );
+        if (existing) {
+          setLastRoll(existing);
+          setLastJourneyUnlocks([]);
+          setLastSecretUnlocks([]);
+          setLastNewBadgeIds([]);
+          log.debug('roll:challenge-locked', {
+            challengeKey: existing.challengeKey,
+            id: existing.id,
+          });
+          return {
+            roll: existing,
+            journeyUnlocked: [],
+            journeyEPGained: 0,
+            secretsUnlocked: [],
+            secretsEPGained: 0,
+          };
+        }
         const info = buildPeriodSeed(modeAtStart);
         const userId = session?.user?.id;
         let subject = userId ?? 'guest:anon';
