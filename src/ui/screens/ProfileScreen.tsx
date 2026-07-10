@@ -36,6 +36,7 @@ const BADGE_CATALOG = (() => {
       family: BadgeFamily;
       ep: number;
       description: string;
+      image?: string;
     }
   >();
   for (const b of NUMBER_BADGES) {
@@ -46,6 +47,7 @@ const BADGE_CATALOG = (() => {
       family: b.family,
       ep: b.ep,
       description: b.description,
+      ...(b.image ? { image: b.image } : {}),
     });
   }
   for (const b of JOURNEY_BADGES) {
@@ -56,6 +58,7 @@ const BADGE_CATALOG = (() => {
       family: b.family,
       ep: b.ep,
       description: b.description,
+      ...(b.image ? { image: b.image } : {}),
     });
   }
   return m;
@@ -71,7 +74,6 @@ const CODEX_FAMILY_FILTERS: { id: BadgeFamily | 'all'; label: string }[] = [
   { id: 'sequence', label: 'Seq' },
   { id: 'poker', label: 'Poker' },
   { id: 'element', label: 'Element' },
-  { id: 'journey', label: 'Journey' },
 ];
 
 const PREVIEW_LIMIT = 10;
@@ -88,6 +90,7 @@ export function ProfileScreen({
   const { data: session } = useSession();
   const myUsername = session?.user.username ?? null;
   const [codexFilter, setCodexFilter] = useState<BadgeFamily | 'all'>('all');
+  const [openJourney, setOpenJourney] = useState(true);
   const [openSecrets, setOpenSecrets] = useState(true);
   const [openCodex, setOpenCodex] = useState(true);
   const [openBest, setOpenBest] = useState(true);
@@ -131,14 +134,16 @@ export function ProfileScreen({
   const isSelf =
     myUsername && myUsername.toLowerCase() === username.toLowerCase();
 
-  /** Public codex: number + journey unlocks (secrets have their own section). */
+  /** Public codex: number unlocks (journey + secrets have their own sections). */
   const codexUnlocks = useMemo(() => {
     const rows = profile?.collection ?? [];
     return rows
       .filter(
         (e) =>
           e.family !== 'secret' &&
+          e.family !== 'journey' &&
           !e.badgeId.startsWith('secret-') &&
+          !e.badgeId.startsWith('rolls-') &&
           BADGE_CATALOG.has(e.badgeId),
       )
       .map((e) => {
@@ -155,6 +160,17 @@ export function ProfileScreen({
         if (ta !== tb) return tb.localeCompare(ta);
         return a.name.localeCompare(b.name);
       });
+  }, [profile?.collection]);
+
+  /** Unlocked journey milestones only (dedicated art section). */
+  const unlockedJourney = useMemo(() => {
+    const rows = profile?.collection ?? [];
+    const ids = new Set(
+      rows
+        .filter((e) => e.family === 'journey' || e.badgeId.startsWith('rolls-'))
+        .map((e) => e.badgeId),
+    );
+    return JOURNEY_BADGES.filter((b) => ids.has(b.id));
   }, [profile?.collection]);
 
   const codexFiltered = useMemo(() => {
@@ -396,6 +412,57 @@ export function ProfileScreen({
         </div>
       )}
 
+      {/* Journey badges — unlocked lifetime milestones with custom art */}
+      {unlockedJourney.length > 0 && (
+        <section className="space-y-3">
+          <SectionHeader
+            title="Journey badges"
+            meta={`${unlockedJourney.length} earned`}
+            open={openJourney}
+            onToggle={() => setOpenJourney((v) => !v)}
+          />
+          {openJourney && (
+            <>
+              <p className="text-sm text-[var(--prose-2)]">
+                Lifetime roll milestones @{profile.username} has reached.
+              </p>
+              <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {unlockedJourney.map((b) => (
+                  <li
+                    key={b.id}
+                    className="flex gap-3 rounded-xl border border-amber-400/45 bg-gradient-to-br from-amber-500/15 via-teal-500/10 to-transparent p-3"
+                  >
+                    {b.image ? (
+                      <img
+                        src={b.image}
+                        alt={b.name}
+                        className="h-20 w-20 shrink-0 rounded-lg border border-amber-400/50 object-cover"
+                      />
+                    ) : (
+                      <span
+                        className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg border border-[var(--outline)] bg-[var(--surface)] text-3xl"
+                        aria-hidden
+                      >
+                        {b.emoji}
+                      </span>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
+                        Journey
+                      </p>
+                      <p className="font-bold tracking-tight">{b.name}</p>
+                      <p className="text-sm text-amber-800 dark:text-amber-300">
+                        +{b.ep.toLocaleString()} life EP
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </section>
+      )}
+
       {/* Secret masteries — only completed section seals (+ omega if earned) */}
       {unlockedCount > 0 && (
         <section className="space-y-3">
@@ -472,7 +539,7 @@ export function ProfileScreen({
         <section className="space-y-3">
           <SectionHeader
             title="Codex unlocks"
-            meta={`${codexUnlocks.length} badge${codexUnlocks.length === 1 ? '' : 's'} · ${codexUnlocks.length}/${NUMBER_BADGES.length + JOURNEY_BADGES.length}`}
+            meta={`${codexUnlocks.length} badge${codexUnlocks.length === 1 ? '' : 's'} · ${codexUnlocks.length}/${NUMBER_BADGES.length}`}
             open={openCodex}
             onToggle={() => setOpenCodex((v) => !v)}
           />

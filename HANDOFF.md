@@ -7,8 +7,8 @@
 | **Repo**                   | `jondmarien/rngdle-unlocked`                                                                  |
 | **Live**                   | https://rngdle-unlocked.chron0.tech                                                           |
 | **Branch**                 | `main` (auto-deploys Vercel)                                                                  |
-| **Version**                | `0.7.2` (`package.json`; Settings uses `VITE_APP_VERSION`)                                    |
-| **Latest release**         | [v0.7.2](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.7.2) (cut when tagged) |
+| **Version**                | `0.7.3` (`package.json`; Settings uses `VITE_APP_VERSION`)                                    |
+| **Latest release**         | [v0.7.3](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.7.3) (cut when tagged) |
 | **Handoff commit context** | Opus audit refactor (`aa8e91e`…`fc4fa65` on `main`) + prior P0/P1 wave                        |
 
 ---
@@ -233,6 +233,7 @@ node scripts/add-roll-source.mjs   # if source column missing
 - [x] **v0.7.0** — Arcade Mode (Digits runs) + mode-first Leaderboard (Ranked | Practice | Arcade | Feed | Find)
 - [x] **v0.7.1** — Notifications hierarchy + crown grouping; Features status sections (`--feature-*` tokens)
 - [x] **v0.7.2** — Ranked quota indicator (`N/90 left` + honest window reset)
+- [x] **v0.7.3** — Journey badge artwork (Collection + Profile Journey section)
 
 ### Still open for you / ops
 

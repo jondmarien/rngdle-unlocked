@@ -30,4 +30,12 @@ describe('journey milestones', () => {
       'rolls-100000',
     ]);
   });
+
+  it('attaches custom art paths for every milestone', () => {
+    const all = journeyBadgesForCount(100_000);
+    expect(all).toHaveLength(22);
+    for (const b of all) {
+      expect(b.image).toBe(`/journey/${b.id.replace('rolls-', '')}.jpg`);
+    }
+  });
 });

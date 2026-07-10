@@ -91,6 +91,8 @@ function journeyBadge(threshold: JourneyThreshold): BadgeDef {
     ep: EP_BY_THRESHOLD[threshold],
     family: 'journey',
     emoji: EMOJI[threshold],
+    /** Custom Grok art under /public/journey */
+    image: `/journey/${threshold}.jpg`,
     matches: () => false,
   };
 }
@@ -117,6 +119,7 @@ export function journeyHits(defs: BadgeDef[]): BadgeHit[] {
     emoji: b.emoji,
     highlights: [],
     rarity: badgeRarityFromEP(b.ep),
+    ...(b.image ? { image: b.image } : {}),
   }));
 }
 

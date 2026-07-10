@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.3] - 2026-07-09
+
+### Added
+
+- **Journey badge artwork** — custom 1024×1024 seals for all 22 lifetime milestones under `public/journey/{threshold}.jpg`; catalog `image` on `JOURNEY_BADGES` (same optional-art pattern as Absolute Ceiling).
+- Collection Journey cards render art thumbs (locked: blurred + 🔒, name still `????`).
+- Profile **Journey badges** collapsible section (unlocked only), placed before Secret masteries; Journey removed from Codex unlocks filter.
+
+### Notes
+
+- Visual-only — no changes to Journey unlock thresholds, EP, or unlock logic.
+
 ## [0.7.2] - 2026-07-09
 
 ### Added
@@ -202,6 +214,7 @@ First **social multiplayer** release on top of the unlimited solo playground.
 - Public rolls + Discord OG via share APIs.
 - SPA path-based routes; Vercel Node adapter for serverless APIs.
 
+[0.7.3]: https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.7.3
 [0.7.2]: https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.7.2
 [0.7.1]: https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.7.1
 [0.7.0]: https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.7.0

@@ -387,48 +387,76 @@ export function CollectionScreen() {
                 <article
                   key={b.id}
                   className={`rounded-lg border p-3 text-left text-sm ${
-                    fresh
-                      ? 'border-amber-400/45 bg-[var(--surface)]'
-                      : has
-                        ? 'border-[var(--outline)] bg-[var(--surface)]'
-                        : 'border-[var(--outline)] opacity-70'
+                    b.image && has
+                      ? 'border-amber-400/55 bg-gradient-to-br from-amber-500/15 via-teal-500/10 to-[var(--surface)] shadow-[0_0_20px_rgba(251,191,36,0.12)]'
+                      : fresh
+                        ? 'border-amber-400/45 bg-[var(--surface)]'
+                        : has
+                          ? 'border-[var(--outline)] bg-[var(--surface)]'
+                          : 'border-[var(--outline)] opacity-70'
                   }`}
                 >
-                  <div className="font-bold tracking-tight">
-                    {has ? (
-                      <>
-                        <span className="mr-1" aria-hidden>
-                          {b.emoji}
-                        </span>
-                        {b.name}
-                        {fresh && (
-                          <span className="ml-1.5 inline-flex rounded bg-amber-400 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-black">
-                            New
-                          </span>
-                        )}
-                      </>
-                    ) : (
-                      '????'
-                    )}
-                  </div>
-                  <p className="mt-1 text-[var(--prose-2)]">
-                    {has ? b.description : FAMILY_HINT.journey}
-                  </p>
-                  <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 text-sm text-[var(--prose-2)]">
-                    <span>
-                      {has
-                        ? `+${b.ep.toLocaleString()} life EP`
-                        : 'Locked milestone'}
-                    </span>
-                    {(age || when) && (
-                      <time
-                        dateTime={at}
-                        className="text-xs text-[var(--prose-3)]"
-                        title="First unlocked"
+                  <div className="flex gap-3">
+                    {b.image && (
+                      <div
+                        className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border sm:h-20 sm:w-20 ${
+                          has
+                            ? 'border-amber-400/70 shadow-[0_0_12px_rgba(251,191,36,0.25)]'
+                            : 'border-[var(--outline)] grayscale'
+                        }`}
                       >
-                        {age ? `Unlocked ${age}` : `Unlocked ${when}`}
-                      </time>
+                        <img
+                          src={b.image}
+                          alt={has ? b.name : 'Locked journey milestone'}
+                          className={`h-full w-full object-cover ${has ? '' : 'opacity-40 blur-[1px]'}`}
+                        />
+                        {!has && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-base">
+                            🔒
+                          </div>
+                        )}
+                      </div>
                     )}
+                    <div className="min-w-0 flex-1">
+                      <div className="font-bold tracking-tight">
+                        {has ? (
+                          <>
+                            {!b.image && (
+                              <span className="mr-1" aria-hidden>
+                                {b.emoji}
+                              </span>
+                            )}
+                            {b.name}
+                            {fresh && (
+                              <span className="ml-1.5 inline-flex rounded bg-amber-400 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-black">
+                                New
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          '????'
+                        )}
+                      </div>
+                      <p className="mt-1 text-[var(--prose-2)]">
+                        {has ? b.description : FAMILY_HINT.journey}
+                      </p>
+                      <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 text-sm text-[var(--prose-2)]">
+                        <span>
+                          {has
+                            ? `+${b.ep.toLocaleString()} life EP`
+                            : 'Locked milestone'}
+                        </span>
+                        {(age || when) && (
+                          <time
+                            dateTime={at}
+                            className="text-xs text-[var(--prose-3)]"
+                            title="First unlocked"
+                          >
+                            {age ? `Unlocked ${age}` : `Unlocked ${when}`}
+                          </time>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </article>
               );

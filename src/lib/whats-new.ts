@@ -32,6 +32,26 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Journey milestones get custom seals',
+    date: '2026-07-09',
+    version: '0.7.3',
+    tags: ['UI', 'Collection', 'Profile'],
+    content: [
+      {
+        body: 'Every lifetime Journey mark — from First Steps to Centurion — now has its own illustrated seal, matching the look of Secret masteries.',
+      },
+      {
+        heading: 'Where to see them',
+        body: 'Collection and public profiles show the new art for milestones you have earned.',
+        bullets: [
+          '**Collection**: Journey cards use the seal art; locked marks still hide the name as `????`.',
+          '**Profile**: a dedicated Journey badges section lists unlocked seals (before Secret masteries).',
+          '**Unchanged**: roll thresholds and life EP rewards stay the same — this is art only.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'See your Ranked rolls left',
     date: '2026-07-09',
     version: '0.7.2',

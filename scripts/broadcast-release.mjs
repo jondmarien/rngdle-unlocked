@@ -12,10 +12,10 @@ if (!process.env.DATABASE_URL) {
 const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
-const title = 'New Update! v0.7.2 — See your Ranked rolls left';
+const title = 'New Update! v0.7.3 — Journey milestones get custom seals';
 const body = [
-  'Ranked mode now shows how many server rolls you have left this hour, plus when the window refreshes.',
-  'The soft cap is unchanged — you just see it coming.',
+  'Every lifetime Journey mark now has its own illustrated seal — from First Steps to Centurion.',
+  'See them in Collection and on profiles under Journey badges. Thresholds and EP are unchanged.',
   'Read the full player notes: https://rngdle-unlocked.chron0.tech/whats-new',
   'Open: /whats-new',
 ].join(' ');
