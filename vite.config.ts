@@ -37,22 +37,33 @@ export default defineConfig({
     },
   },
   build: {
-    rollupOptions: {
+    // Vite 8 / Rolldown: codeSplitting replaces manualChunks / advancedChunks.
+    // https://vite.dev/guide/migration · https://rolldown.rs/in-depth/manual-code-splitting
+    rolldownOptions: {
       output: {
-        manualChunks(id) {
-          if (!id.includes('node_modules')) return;
-          if (
-            id.includes('/react-dom/') ||
-            id.includes('/react/') ||
-            id.includes('\\react-dom\\') ||
-            id.includes('\\react\\')
-          ) {
-            return 'vendor-react';
-          }
-          if (id.includes('@tanstack/react-query')) return 'vendor-query';
-          if (id.includes('better-auth')) return 'vendor-auth';
-          if (id.includes('/zod/') || id.includes('\\zod\\'))
-            return 'vendor-zod';
+        codeSplitting: {
+          groups: [
+            {
+              name: 'vendor-react',
+              test: /[\\/]node_modules[\\/](react|react-dom|scheduler)([\\/]|$)/,
+              priority: 40,
+            },
+            {
+              name: 'vendor-query',
+              test: /[\\/]node_modules[\\/]@tanstack[\\/]react-query([\\/]|$)/,
+              priority: 30,
+            },
+            {
+              name: 'vendor-auth',
+              test: /[\\/]node_modules[\\/]better-auth([\\/]|$)/,
+              priority: 20,
+            },
+            {
+              name: 'vendor-zod',
+              test: /[\\/]node_modules[\\/]zod([\\/]|$)/,
+              priority: 10,
+            },
+          ],
         },
       },
     },
