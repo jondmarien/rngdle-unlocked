@@ -11,6 +11,10 @@ import {
 import { formatDateTimeMedium, formatRelative } from '../../lib/format';
 import { FAMILY_ICON } from '../../lib/icons';
 import { useGame } from '../../state/GameProvider';
+import {
+  BadgeArtLightbox,
+  type BadgeArtLightboxItem,
+} from '../components/BadgeArtLightbox';
 
 type FilterId = BadgeFamily | 'all' | 'secret' | 'new';
 
@@ -131,6 +135,7 @@ export function CollectionScreen() {
   const [filter, setFilter] = useState<FilterId>('all');
   const [showLocked, setShowLocked] = useState(true);
   const [query, setQuery] = useState('');
+  const [lightbox, setLightbox] = useState<BadgeArtLightboxItem | null>(null);
   /** Tick so the 5-minute NEW window expires without a remount. */
   const [now, setNow] = useState(() => Date.now());
 
@@ -515,16 +520,31 @@ export function CollectionScreen() {
                 >
                   <div className="flex gap-3">
                     {b.image && (
-                      <div
+                      <button
+                        type="button"
+                        disabled={!has}
                         className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border sm:h-20 sm:w-20 ${
                           has
-                            ? 'border-amber-400/70 shadow-[0_0_12px_rgba(251,191,36,0.25)]'
-                            : 'border-(--outline) grayscale'
+                            ? 'cursor-pointer border-amber-400/70 shadow-[0_0_12px_rgba(251,191,36,0.25)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400'
+                            : 'cursor-default border-(--outline) grayscale'
                         }`}
+                        onClick={() => {
+                          if (!has || !b.image) return;
+                          setLightbox({
+                            image: b.image,
+                            name: b.name,
+                            description: b.description,
+                            ep: b.ep,
+                            kind: 'Journey',
+                          });
+                        }}
+                        aria-label={
+                          has ? `View ${b.name} full size` : undefined
+                        }
                       >
                         <img
                           src={b.image}
-                          alt={has ? b.name : 'Locked journey milestone'}
+                          alt={has ? '' : 'Locked journey milestone'}
                           className={`h-full w-full object-cover ${has ? '' : 'opacity-40 blur-[1px]'}`}
                         />
                         {!has && (
@@ -532,7 +552,7 @@ export function CollectionScreen() {
                             🔒
                           </div>
                         )}
-                      </div>
+                      </button>
                     )}
                     <div className="min-w-0 flex-1">
                       <div className="font-bold tracking-tight">
@@ -600,6 +620,23 @@ export function CollectionScreen() {
                     ? formatRelative(unlockedAt.get(s.id), now)
                     : null
                 }
+                onOpenArt={
+                  unlocked.has(s.id) && s.image
+                    ? () =>
+                        setLightbox({
+                          image: s.image,
+                          name: s.name,
+                          description: s.description,
+                          ep: s.ep,
+                          kind:
+                            s.tier === 'omega'
+                              ? 'Final seal'
+                              : s.tier === 'streak'
+                                ? 'Streak secret'
+                                : 'Secret mastery',
+                        })
+                    : undefined
+                }
               />
             ))}
           </div>
@@ -617,6 +654,10 @@ export function CollectionScreen() {
                 : 'Nothing in this filter — unlock badges or show locked entries.'}
           </p>
         )}
+
+      {lightbox && (
+        <BadgeArtLightbox item={lightbox} onClose={() => setLightbox(null)} />
+      )}
     </div>
   );
 }
@@ -627,12 +668,14 @@ function SecretCard({
   unlockedAt,
   isFresh = false,
   ageLabel = null,
+  onOpenArt,
 }: {
   secret: SecretBadgeDef;
   unlocked: Set<string>;
   unlockedAt?: string;
   isFresh?: boolean;
   ageLabel?: string | null;
+  onOpenArt?: () => void;
 }) {
   const has = unlocked.has(secret.id);
   const isOmega = secret.tier === 'omega';
@@ -658,16 +701,20 @@ function SecretCard({
         }`}
       >
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-          <div
+          <button
+            type="button"
+            disabled={!onOpenArt}
+            onClick={onOpenArt}
+            aria-label={has ? `View ${secret.name} full size` : undefined}
             className={`relative mx-auto h-28 w-28 shrink-0 overflow-hidden rounded-xl border-2 sm:mx-0 sm:h-32 sm:w-32 ${
               has
-                ? 'border-amber-400/80 shadow-[0_0_24px_rgba(251,191,36,0.35)]'
-                : 'border-(--outline) grayscale'
+                ? 'cursor-pointer border-amber-400/80 shadow-[0_0_24px_rgba(251,191,36,0.35)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400'
+                : 'cursor-default border-(--outline) grayscale'
             }`}
           >
             <img
               src={secret.image}
-              alt={has ? secret.name : 'Locked final seal'}
+              alt={has ? '' : 'Locked final seal'}
               className={`h-full w-full object-cover ${has ? '' : 'opacity-40 blur-[1px]'}`}
             />
             {!has && (
@@ -675,7 +722,7 @@ function SecretCard({
                 🔒
               </div>
             )}
-          </div>
+          </button>
           <div className="min-w-0 flex-1">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">
               Final seal
@@ -723,14 +770,20 @@ function SecretCard({
             : 'border-(--outline) bg-(--surface) opacity-75'
       }`}
     >
-      <div
+      <button
+        type="button"
+        disabled={!onOpenArt}
+        onClick={onOpenArt}
+        aria-label={has ? `View ${secret.name} full size` : undefined}
         className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border sm:h-24 sm:w-24 ${
-          has ? 'border-violet-400/60' : 'border-(--outline) grayscale'
+          has
+            ? 'cursor-pointer border-violet-400/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-400'
+            : 'cursor-default border-(--outline) grayscale'
         }`}
       >
         <img
           src={secret.image}
-          alt={has ? secret.name : 'Locked section mastery'}
+          alt={has ? '' : 'Locked section mastery'}
           className={`h-full w-full object-cover ${has ? '' : 'opacity-35 blur-[1px]'}`}
         />
         {!has && (
@@ -738,7 +791,7 @@ function SecretCard({
             🔒
           </div>
         )}
-      </div>
+      </button>
       <div className="min-w-0 flex-1">
         <p className="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
           {isStreak ? 'Streak secret' : `Section mastery · ${secret.section}`}
