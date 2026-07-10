@@ -25,7 +25,7 @@ export function FindPlayers({
 
   if (!session?.user) {
     return (
-      <p className="text-sm text-[var(--prose-2)]">
+      <p className="text-sm text-(--prose-2)">
         Sign in to search usernames and follow players.
       </p>
     );
@@ -71,14 +71,12 @@ export function FindPlayers({
   };
 
   return (
-    <div className="space-y-3 rounded-lg border border-[var(--outline)] bg-[var(--surface)] p-3">
+    <div className="space-y-3 rounded-lg border border-(--outline) bg-(--surface) p-3">
       <div>
-        <h2 className="text-base font-bold text-[var(--prose)]">
-          Find players
-        </h2>
-        <p className="text-sm text-[var(--prose-2)]">
-          Search public @usernames (min 2 characters). Follow to see their rare
-          rolls on the Feed.
+        <h2 className="text-base font-bold text-(--prose)">Find players</h2>
+        <p className="text-sm text-(--prose-2)">
+          Search public @usernames (min 2 characters). Follow to see their
+          public rolls on the Feed.
         </p>
       </div>
       <form
@@ -92,19 +90,19 @@ export function FindPlayers({
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="@username"
-          className="min-w-[10rem] flex-1 border border-[var(--outline)] bg-[var(--bg)] px-3 py-2 text-sm"
+          className="min-w-[10rem] flex-1 border border-(--outline) bg-(--bg) px-3 py-2 text-sm"
           autoComplete="off"
         />
         <button
           type="submit"
           disabled={busy || q.trim().length < 2}
-          className="rounded-md border-2 border-[var(--prose)] bg-[var(--prose)] px-3 py-2 text-sm font-semibold text-[var(--bg)] disabled:opacity-40"
+          className="rounded-md border-2 border-(--prose) bg-(--prose) px-3 py-2 text-sm font-semibold text-(--bg) disabled:opacity-40"
         >
           Search
         </button>
       </form>
-      {msg && <p className="text-sm text-[var(--prose-2)]">{msg}</p>}
-      <ul className="divide-y divide-[var(--outline)]">
+      {msg && <p className="text-sm text-(--prose-2)">{msg}</p>}
+      <ul className="divide-y divide-(--outline)">
         {results.map((u) => {
           const isFollowing = following.has(u.username.toLowerCase());
           return (
@@ -118,7 +116,7 @@ export function FindPlayers({
                 onClick={() => onOpenProfile(u.username)}
               >
                 @{u.username}
-                <span className="ml-2 text-sm font-normal text-[var(--prose-2)]">
+                <span className="ml-2 text-sm font-normal text-(--prose-2)">
                   {u.name}
                 </span>
               </button>
@@ -128,8 +126,8 @@ export function FindPlayers({
                 onClick={() => void toggle(u.username)}
                 className={`rounded-md border px-2.5 py-1.5 text-sm font-semibold ${
                   isFollowing
-                    ? 'border-[var(--outline)] text-[var(--prose-2)]'
-                    : 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
+                    ? 'border-(--outline) text-(--prose-2)'
+                    : 'border-(--prose) bg-(--prose) text-(--bg)'
                 }`}
               >
                 {isFollowing ? 'Following' : '+ Follow'}

@@ -1,6 +1,5 @@
 import { evaluateNumber } from '../src/game/evaluate.ts';
 import { rollNumber } from '../src/game/rng.ts';
-import { rarityFromEP } from '../src/game/rarity.ts';
 
 const eps = [];
 const N = 8000;

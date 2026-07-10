@@ -37,7 +37,7 @@ export function GenerateButton({
       type="button"
       disabled={busy || !!locked}
       onClick={handle}
-      className="min-w-[13rem] border-2 border-[var(--prose)] bg-[var(--prose)] px-8 py-3.5 text-base font-bold tracking-wide text-[var(--bg)] transition hover:bg-transparent hover:text-[var(--prose)] disabled:cursor-not-allowed disabled:opacity-60"
+      className="min-w-52 border-2 border-(--prose) bg-(--prose) px-8 py-3.5 text-base font-bold tracking-wide text-(--bg) transition hover:bg-transparent hover:text-(--prose) disabled:cursor-not-allowed disabled:opacity-60"
     >
       {label}
     </button>

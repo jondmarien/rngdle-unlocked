@@ -46,8 +46,7 @@ export const FAMILY_PILL: Record<BadgeFamily, { chip: string; label: string }> =
   };
 
 export const RARITY_PILL: Record<RarityTier, string> = {
-  trash:
-    'border-[var(--outline)] bg-[var(--surface-raised)] text-[var(--prose-3)]',
+  trash: 'border-(--outline) bg-(--surface-raised) text-(--prose-3)',
   common:
     'border-emerald-500/30 bg-emerald-500/12 text-emerald-800 dark:text-emerald-300',
   uncommon:
@@ -79,7 +78,7 @@ export const RARITY_DIGIT_ON: Record<RarityTier, string> = {
 };
 
 export const RARITY_DIGIT_OFF =
-  'border-[var(--outline)] bg-[var(--bg)] text-[var(--prose-3)] ring-1 ring-[var(--outline)]';
+  'border-(--outline) bg-(--bg) text-(--prose-3) ring-1 ring-(--outline)';
 
 /** Reel glow ring + shadow per settled rarity (NumberDisplay). */
 export const RARITY_GLOW: Record<RarityTier, string> = {
@@ -117,7 +116,7 @@ export function rarityRing(r: RarityTier): string {
     case 'uncommon':
       return 'border-teal-400/50';
     default:
-      return 'border-[var(--outline)]';
+      return 'border-(--outline)';
   }
 }
 
@@ -125,5 +124,5 @@ export function familyPillClass(family: string | null | undefined): string {
   if (family && family in FAMILY_PILL) {
     return FAMILY_PILL[family as BadgeFamily].chip;
   }
-  return 'border-[var(--outline)] bg-[var(--surface-raised)] text-[var(--prose)]';
+  return 'border-(--outline) bg-(--surface-raised) text-(--prose)';
 }

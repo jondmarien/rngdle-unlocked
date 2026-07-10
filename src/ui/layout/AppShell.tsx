@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { useSession } from '../../lib/auth-client';
 import { countGroupedUnread } from '../../lib/inboxPresentation';
 import {
   fetchNotifications,
   loadWebNotifyPref,
+  NOTIFICATIONS_QUERY_KEY,
   showBrowserNotification,
 } from '../../lib/notifications-api';
 import { tabPath, type TabId } from '../../lib/routes';
@@ -51,52 +53,51 @@ export function AppShell({
   const { lifetimeEP, lifetimeRollCount, stats } = useGame();
   const { settings, setTheme } = useGameSettings();
   const { data: session } = useSession();
-  const [unread, setUnread] = useState(0);
   const { isAdmin } = useIsAdmin(session?.user?.id);
   const lastUnread = useRef(0);
 
+  const inboxQuery = useQuery({
+    queryKey: NOTIFICATIONS_QUERY_KEY,
+    queryFn: fetchNotifications,
+    enabled: Boolean(session?.user),
+    refetchInterval: 45_000,
+  });
+
+  const unread = session?.user
+    ? countGroupedUnread({
+        activity: inboxQuery.data?.activity ?? [],
+        system: inboxQuery.data?.system ?? [],
+      }).total
+    : 0;
+
+  useEffect(() => {
+    if (!session?.user || !inboxQuery.data) return;
+    const data = inboxQuery.data;
+    const total = countGroupedUnread({
+      activity: data.activity,
+      system: data.system,
+    }).total;
+    if (
+      total > lastUnread.current &&
+      lastUnread.current >= 0 &&
+      loadWebNotifyPref()
+    ) {
+      const newest =
+        [...data.activity, ...data.system]
+          .filter((i) => !i.read)
+          .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))[0] ?? null;
+      if (newest) {
+        showBrowserNotification(newest.title, newest.body);
+      }
+    }
+    lastUnread.current = total;
+  }, [session?.user, inboxQuery.data]);
+
   useEffect(() => {
     if (!session?.user) {
-      setUnread(0);
       lastUnread.current = 0;
-      return;
     }
-    let cancelled = false;
-    const poll = async () => {
-      try {
-        const data = await fetchNotifications();
-        if (cancelled) return;
-        const grouped = countGroupedUnread({
-          activity: data.activity,
-          system: data.system,
-        });
-        const total = grouped.total;
-        if (
-          total > lastUnread.current &&
-          lastUnread.current >= 0 &&
-          loadWebNotifyPref()
-        ) {
-          const newest =
-            [...data.activity, ...data.system]
-              .filter((i) => !i.read)
-              .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))[0] ?? null;
-          if (newest) {
-            showBrowserNotification(newest.title, newest.body);
-          }
-        }
-        lastUnread.current = total;
-        setUnread(total);
-      } catch {
-        /* ignore */
-      }
-    };
-    void poll();
-    const id = window.setInterval(() => void poll(), 45_000);
-    return () => {
-      cancelled = true;
-      window.clearInterval(id);
-    };
-  }, [session?.user, tab, profileActive]);
+  }, [session?.user]);
 
   const myUsername = session?.user.username ?? null;
 
@@ -116,9 +117,9 @@ export function AppShell({
   })();
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-[var(--bg)] text-[var(--prose)]">
+    <div className="flex min-h-dvh flex-col bg-(--bg) text-(--prose)">
       {/* Sticky chrome: brand bar + nav stay visible while content scrolls */}
-      <div className="sticky top-0 z-40 border-b border-[var(--outline)] bg-[var(--bg)]/95 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-[var(--bg)]/85">
+      <div className="sticky top-0 z-40 border-b border-(--outline) bg-(--bg)/95 shadow-sm backdrop-blur-md supports-backdrop-filter:bg-(--bg)/85">
         <header className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
           <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
             <a
@@ -131,7 +132,7 @@ export function AppShell({
             >
               RNGdle Unlocked
             </a>
-            <span className="text-sm text-[var(--prose-2)]">
+            <span className="text-sm text-(--prose-2)">
               {lifetimeRollCount.toLocaleString()} rolls ·{' '}
               {lifetimeEP.toLocaleString()} EP
               {stats.dayStreak > 0 ? ` · ${stats.dayStreak}d streak` : ''}
@@ -145,16 +146,21 @@ export function AppShell({
               <button
                 type="button"
                 title="Notifications"
+                aria-label={
+                  unread > 0
+                    ? `Notifications, ${unread} unread`
+                    : 'Notifications'
+                }
                 onClick={() => onTab('notifications')}
                 className={`relative rounded-md border px-2.5 py-1.5 text-sm font-semibold ${
                   tab === 'notifications'
-                    ? 'border-[var(--prose)] bg-[var(--surface-raised)]'
-                    : 'border-[var(--outline)]'
+                    ? 'border-(--prose) bg-(--surface-raised)'
+                    : 'border-(--outline)'
                 }`}
               >
                 Alerts
                 {unread > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--accent)] px-1 text-[11px] font-bold text-white">
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-(--accent) px-1 text-[11px] font-bold text-white">
                     {unread > 99 ? '99+' : unread}
                   </span>
                 )}
@@ -183,8 +189,8 @@ export function AppShell({
                   }}
                   className={`whitespace-nowrap rounded-md px-3 py-2 text-sm font-semibold tracking-wide ${
                     profileActive
-                      ? 'bg-[var(--surface-raised)] text-[var(--prose)]'
-                      : 'text-[var(--prose-2)] hover:bg-[var(--surface)] hover:text-[var(--prose)]'
+                      ? 'bg-(--surface-raised) text-(--prose)'
+                      : 'text-(--prose-2) hover:bg-(--surface) hover:text-(--prose)'
                   }`}
                 >
                   {item.label}
@@ -203,8 +209,8 @@ export function AppShell({
                 }}
                 className={`whitespace-nowrap rounded-md px-3 py-2 text-sm font-semibold tracking-wide ${
                   active
-                    ? 'bg-[var(--surface-raised)] text-[var(--prose)]'
-                    : 'text-[var(--prose-2)] hover:bg-[var(--surface)] hover:text-[var(--prose)]'
+                    ? 'bg-(--surface-raised) text-(--prose)'
+                    : 'text-(--prose-2) hover:bg-(--surface) hover:text-(--prose)'
                 }`}
               >
                 {item.label}

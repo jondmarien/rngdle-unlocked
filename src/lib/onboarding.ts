@@ -7,11 +7,14 @@ export type OnboardingState = {
   dismissedAccountTip: boolean;
   /** First roll ever completed on this device. */
   hasRolledOnce: boolean;
+  /** Signed-in checklist (username / Ranked / Journey / Features). */
+  dismissedSignedInChecklist: boolean;
 };
 
 const DEFAULT: OnboardingState = {
   dismissedAccountTip: false,
   hasRolledOnce: false,
+  dismissedSignedInChecklist: false,
 };
 
 export function loadOnboarding(): OnboardingState {

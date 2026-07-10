@@ -1,18 +1,22 @@
 import { useMemo, useState } from 'react';
 import { rarityRank, topPercentFromEP, type RollResult } from '../../game';
-import { formatDateTime } from '../../lib/format';
 import { useGame, useGameSettings } from '../../state/GameProvider';
 import { BadgePill } from '../components/BadgePill';
 import { BestRollCard } from '../components/BestRollCard';
 import { RollReplayModal } from '../components/RollReplayModal';
 import { RarityBadge } from '../components/RarityBadge';
+import {
+  RelativeTime,
+  RollLaneChip,
+  laneFromSource,
+} from '../components/RollRow';
 import { SegmentedToggle } from '../components/SegmentedToggle';
 import { LazySharePanel } from '../components/LazySharePanel';
 
 const CHIP_CLASS =
   'rounded-full border px-2.5 py-1 text-[11px] font-semibold sm:text-xs';
 const CHIP_INACTIVE =
-  'border-[var(--outline)] text-[var(--prose-2)] hover:bg-[var(--surface-raised)]';
+  'border-(--outline) text-(--prose-2) hover:bg-(--surface-raised)';
 
 type HistorySort =
   | 'newest'
@@ -50,14 +54,29 @@ const LANE_OPTIONS: { id: HistoryLane; label: string }[] = [
 
 /** Normalize older history rows that predate `source`. */
 function rollLane(r: RollResult): 'free' | 'ranked' | 'challenge' {
-  if (r.source === 'ranked') return 'ranked';
   if (r.source === 'challenge' || r.challengeKey) return 'challenge';
-  return 'free';
+  return laneFromSource(r.source);
 }
 
 function filterByLane(list: RollResult[], lane: HistoryLane): RollResult[] {
   if (lane === 'all') return list;
   return list.filter((r) => rollLane(r) === lane);
+}
+
+function matchesHistorySearch(r: RollResult, raw: string): boolean {
+  const q = raw.trim().toLowerCase();
+  if (!q) return true;
+  if (String(r.number).includes(q)) return true;
+  if (r.number.toLocaleString().toLowerCase().includes(q)) return true;
+  if (String(r.totalEP).includes(q)) return true;
+  if (r.totalEP.toLocaleString().toLowerCase().includes(q)) return true;
+  if (`${r.totalEP} ep`.toLowerCase().includes(q)) return true;
+  for (const b of r.badges) {
+    if (b.name.toLowerCase().includes(q) || b.id.toLowerCase().includes(q)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function sortHistory(list: RollResult[], sort: HistorySort): RollResult[] {
@@ -112,6 +131,7 @@ export function HistoryScreen({
   const [replayRoll, setReplayRoll] = useState<RollResult | null>(null);
   const [sort, setSort] = useState<HistorySort>('newest');
   const [lane, setLane] = useState<HistoryLane>('all');
+  const [search, setSearch] = useState('');
 
   const best = stats.bestRoll;
   const bestFull = useMemo(() => {
@@ -119,7 +139,15 @@ export function HistoryScreen({
     return history.find((r) => r.id === best.id) ?? null;
   }, [history, best]);
 
-  const filtered = useMemo(() => filterByLane(history, lane), [history, lane]);
+  const filtered = useMemo(() => {
+    const byLane = filterByLane(history, lane);
+    return byLane.filter((r) => matchesHistorySearch(r, search));
+  }, [history, lane, search]);
+
+  const laneFilteredCount = useMemo(
+    () => filterByLane(history, lane).length,
+    [history, lane],
+  );
 
   const sorted = useMemo(() => sortHistory(filtered, sort), [filtered, sort]);
 
@@ -138,7 +166,7 @@ export function HistoryScreen({
 
   if (history.length === 0) {
     return (
-      <p className="text-center text-[var(--prose-3)]">
+      <p className="text-center text-(--prose-3)">
         No rolls yet. Hit Generate on the Roll tab.
       </p>
     );
@@ -148,7 +176,7 @@ export function HistoryScreen({
     <div className="space-y-4">
       <div>
         <h1 className="text-xl font-bold uppercase tracking-wider">History</h1>
-        <p className="text-xs text-[var(--prose-3)]">
+        <p className="text-xs text-(--prose-3)">
           Last {history.length} rolls (cap 500). Lifetime count never shrinks.
           Filter by Free play (client) or Ranked (server).
         </p>
@@ -164,38 +192,31 @@ export function HistoryScreen({
       )}
 
       <div>
-        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--prose-3)]">
-            {lane === 'all'
-              ? 'All rolls'
-              : lane === 'free'
-                ? 'Free play'
-                : lane === 'ranked'
-                  ? 'Ranked'
-                  : 'Challenge'}
-            <span className="ml-1.5 font-normal normal-case tracking-normal text-[var(--prose-3)]">
-              ({sorted.length}
-              {lane !== 'all' ? ` of ${history.length}` : ''})
-            </span>
-          </h2>
-          <label className="flex items-center gap-2 text-xs text-[var(--prose-2)]">
-            <span className="font-semibold uppercase tracking-wide">
-              Sort by
-            </span>
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value as HistorySort)}
-              className="rounded-md border border-[var(--outline)] bg-[var(--surface)] px-2 py-1.5 text-sm font-semibold text-[var(--prose)]"
-              aria-label="Sort history"
-            >
-              {SORT_OPTIONS.map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
+        <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-(--prose-3)">
+          {lane === 'all'
+            ? 'All rolls'
+            : lane === 'free'
+              ? 'Free play'
+              : lane === 'ranked'
+                ? 'Ranked'
+                : 'Challenge'}
+          <span className="ml-1.5 font-normal normal-case tracking-normal text-(--prose-3)">
+            ({sorted.length}
+            {lane !== 'all' || search.trim() ? ` of ${laneFilteredCount}` : ''})
+          </span>
+        </h2>
+
+        <label className="mb-2 block">
+          <span className="sr-only">Search history</span>
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search number, badge, or EP…"
+            autoComplete="off"
+            className="w-full rounded-lg border border-(--outline) bg-(--bg) px-3 py-2 text-sm text-(--prose)"
+          />
+        </label>
 
         <SegmentedToggle
           className="mb-2 flex flex-wrap gap-1.5"
@@ -235,17 +256,20 @@ export function HistoryScreen({
         />
 
         {sorted.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-[var(--outline)] px-3 py-6 text-center text-sm text-[var(--prose-2)]">
-            No rolls in this lane yet.
-            {lane === 'ranked'
-              ? ' Generate with Roll → Ranked to fill this list.'
-              : lane === 'free'
-                ? ' Generate with Roll → Free play.'
-                : ' Try Daily / Weekly challenges.'}
+          <p className="rounded-lg border border-dashed border-(--outline) px-3 py-6 text-center text-sm text-(--prose-2)">
+            {search.trim()
+              ? 'No rolls match this search.'
+              : `No rolls in this lane yet.${
+                  lane === 'ranked'
+                    ? ' Generate with Roll → Ranked to fill this list.'
+                    : lane === 'free'
+                      ? ' Generate with Roll → Free play.'
+                      : ' Try Daily / Weekly challenges.'
+                }`}
           </p>
         ) : null}
 
-        <ul className="divide-y divide-[var(--outline)] border border-[var(--outline)]">
+        <ul className="divide-y divide-(--outline) border border-(--outline)">
           {sorted.map((r, idx) => {
             const top = [...r.badges].sort((a, b) => b.ep - a.ep).slice(0, 4);
             const extra = Math.max(0, r.badges.length - top.length);
@@ -258,14 +282,14 @@ export function HistoryScreen({
             return (
               <li
                 key={r.id}
-                className={`flex flex-col gap-2 px-3 py-3 hover:bg-[var(--surface-raised)] sm:flex-row sm:items-center sm:justify-between ${
+                className={`flex flex-col gap-2 px-3 py-3 hover:bg-(--surface-raised) sm:flex-row sm:items-center sm:justify-between ${
                   isBest ? 'bg-amber-500/5' : ''
                 }`}
               >
                 <div className="min-w-0 flex-1 text-left">
                   <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                     {showRank && (
-                      <span className="mono-number w-6 text-xs font-bold text-[var(--prose-3)]">
+                      <span className="mono-number w-6 text-xs font-bold text-(--prose-3)">
                         #{idx + 1}
                       </span>
                     )}
@@ -277,33 +301,10 @@ export function HistoryScreen({
                         Best
                       </span>
                     )}
-                    {(() => {
-                      const l = rollLane(r);
-                      if (l === 'ranked') {
-                        return (
-                          <span className="rounded bg-amber-500/90 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-black">
-                            Ranked
-                          </span>
-                        );
-                      }
-                      if (l === 'challenge') {
-                        return (
-                          <span className="rounded border border-[var(--outline)] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--prose-2)]">
-                            Challenge
-                          </span>
-                        );
-                      }
-                      return (
-                        <span className="rounded border border-[var(--outline)] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--prose-3)]">
-                          Free
-                        </span>
-                      );
-                    })()}
-                    <time className="text-xs text-[var(--prose-3)]">
-                      {formatDateTime(r.rolledAt)}
-                    </time>
+                    <RollLaneChip lane={rollLane(r)} />
+                    <RelativeTime iso={r.rolledAt} />
                   </div>
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-[var(--prose-3)]">
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-(--prose-3)">
                     <RarityBadge rarity={r.rarity} />
                     <span className="font-semibold text-amber-700 dark:text-amber-400">
                       {r.totalEP.toLocaleString()} EP
@@ -323,7 +324,7 @@ export function HistoryScreen({
                         <BadgePill key={b.id} badge={b} compact />
                       ))}
                       {extra > 0 && (
-                        <span className="rounded-full border border-[var(--outline)] bg-[var(--bg)] px-2 py-0.5 text-[11px] font-semibold text-[var(--prose-2)]">
+                        <span className="rounded-full border border-(--outline) bg-(--bg) px-2 py-0.5 text-[11px] font-semibold text-(--prose-2)">
                           +{extra} more
                         </span>
                       )}
@@ -333,14 +334,14 @@ export function HistoryScreen({
                 <div className="flex shrink-0 flex-wrap gap-2">
                   <button
                     type="button"
-                    className="border border-[var(--outline)] px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-[var(--prose-2)] hover:border-[var(--prose-2)] hover:text-[var(--prose)]"
+                    className="border border-(--outline) px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-(--prose-2) hover:border-(--prose-2) hover:text-(--prose)"
                     onClick={() => setReplayRoll(r)}
                   >
                     Replay
                   </button>
                   <button
                     type="button"
-                    className="border border-[var(--prose)] px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide"
+                    className="border border-(--prose) px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide"
                     onClick={() => setShareRoll(r)}
                   >
                     Share

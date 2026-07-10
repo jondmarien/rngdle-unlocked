@@ -15,7 +15,12 @@ export function RankedQuotaPill() {
   const { data: session } = useSession();
   const signedIn = Boolean(session?.user);
 
-  const { data: quota } = useQuery({
+  const {
+    data: quota,
+    isError,
+    refetch,
+    isFetching,
+  } = useQuery({
     queryKey: RANKED_QUOTA_QUERY_KEY,
     queryFn: async ({ client }) => {
       const next = await fetchRankedQuota();
@@ -31,8 +36,25 @@ export function RankedQuotaPill() {
     retry: false,
   });
 
-  // No data yet / first peek soft-failed — hide rather than invent an error.
-  if (!signedIn || quota == null) return null;
+  if (!signedIn) return null;
+
+  if (quota == null && isError) {
+    return (
+      <span className="inline-flex max-w-full flex-wrap items-center gap-1.5 rounded-md border border-amber-500/50 px-2.5 py-1 text-amber-700 dark:text-amber-400">
+        <span className="truncate">Quota unavailable</span>
+        <button
+          type="button"
+          className="shrink-0 underline"
+          disabled={isFetching}
+          onClick={() => void refetch()}
+        >
+          Retry
+        </button>
+      </span>
+    );
+  }
+
+  if (quota == null) return null;
 
   const low = quota.remaining <= 10;
   const resetLabel =
@@ -40,10 +62,10 @@ export function RankedQuotaPill() {
 
   return (
     <span
-      className={`rounded-md border px-2.5 py-1 ${
+      className={`max-w-full truncate rounded-md border px-2.5 py-1 ${
         low
           ? 'border-amber-500/70 text-amber-600'
-          : 'border-[var(--outline)] text-[var(--prose-2)]'
+          : 'border-(--outline) text-(--prose-2)'
       }`}
       title={
         resetLabel

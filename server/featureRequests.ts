@@ -252,3 +252,21 @@ export async function setFeatureRequestStatus(
   log.info('status', { requestId: opts.requestId, status: opts.status });
   return { ok: true, status: opts.status };
 }
+
+/** Hard-delete a feature request (votes cascade). Prefer declined → delete for spam. */
+export async function deleteFeatureRequest(
+  db: Db,
+  requestId: string,
+): Promise<{ ok: true } | { ok: false; status: 404; error: string }> {
+  const [exists] = await db
+    .select({ id: featureRequests.id })
+    .from(featureRequests)
+    .where(eq(featureRequests.id, requestId))
+    .limit(1);
+  if (!exists) {
+    return { ok: false, status: 404, error: 'Feature request not found' };
+  }
+  await db.delete(featureRequests).where(eq(featureRequests.id, requestId));
+  log.info('deleted', { requestId });
+  return { ok: true };
+}

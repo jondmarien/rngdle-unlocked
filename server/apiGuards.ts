@@ -3,7 +3,10 @@
  * Mirrors the `requireAdmin` gate shape from `server/admin.ts`.
  */
 
+import { eq } from 'drizzle-orm';
 import type { Db } from './db/index.js';
+import { createDb } from './db/index.js';
+import { user as userTable } from './db/schema.js';
 import {
   checkRateLimit,
   isRateLimited,
@@ -25,19 +28,45 @@ export type RateCheckOk = { ok: true; result: RateLimitOk };
 export type RateCheckFail = { ok: false; response: Response };
 export type RateCheckResult = RateCheckOk | RateCheckFail;
 
-/** Session-or-401 preamble shared by authenticated handlers. */
+/**
+ * Session-or-401 preamble shared by authenticated handlers.
+ * Also rejects banned accounts (403) — defense in depth when ban fallback
+ * updates columns without revoking cookies, or a session outlives a ban.
+ */
 export async function requireUser(
   request: Request,
   error = 'Unauthorized',
 ): Promise<RequireUserOk | RequireUserFail> {
-  const user = await getSessionUser(request);
-  if (!user) {
+  const sessionUser = await getSessionUser(request);
+  if (!sessionUser) {
     return {
       ok: false,
       response: Response.json({ error }, { status: 401 }),
     };
   }
-  return { ok: true, user };
+
+  const db = createDb();
+  const [row] = await db
+    .select({
+      banned: userTable.banned,
+      banExpires: userTable.banExpires,
+    })
+    .from(userTable)
+    .where(eq(userTable.id, sessionUser.id))
+    .limit(1);
+
+  if (row?.banned) {
+    const expires = row.banExpires;
+    const expired = expires != null && new Date(expires).getTime() < Date.now();
+    if (!expired) {
+      return {
+        ok: false,
+        response: Response.json({ error: 'Account banned' }, { status: 403 }),
+      };
+    }
+  }
+
+  return { ok: true, user: sessionUser };
 }
 
 export type ReadJsonOk<T> = { ok: true; body: T };

@@ -49,13 +49,6 @@ export default defineHandler(async (request) => {
       { status: 400 },
     );
   }
-  if (!isValidUsername(username)) {
-    return Response.json(
-      { error: 'Username must be 3–24 chars: a-z, 0-9, _' },
-      { status: 400 },
-    );
-  }
-
   const [target] = await db
     .select({
       id: user.id,
@@ -73,6 +66,16 @@ export default defineHandler(async (request) => {
 
   if (target.username === username) {
     return Response.json({ ok: true, username, unchanged: true });
+  }
+
+  if (!isValidUsername(username, { currentUsername: target.username })) {
+    return Response.json(
+      {
+        error:
+          'Username must be 3–24 chars: a-z, 0-9, _ (reserved names blocked)',
+      },
+      { status: 400 },
+    );
   }
 
   const [taken] = await db

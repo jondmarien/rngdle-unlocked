@@ -48,8 +48,8 @@ export function RollModePicker({
   return (
     <div className="w-full max-w-lg space-y-3 text-left">
       <div>
-        <p className="text-sm font-semibold text-[var(--prose)]">How to roll</p>
-        <p className="mt-0.5 text-sm leading-snug text-[var(--prose-2)]">
+        <p className="text-sm font-semibold text-(--prose)">How to roll</p>
+        <p className="mt-0.5 text-sm leading-snug text-(--prose-2)">
           Free play for practice, Ranked for the competitive board, or optional
           Daily / Weekly challenges.
         </p>
@@ -73,8 +73,8 @@ export function RollModePicker({
                 selected
                   ? m.id === 'ranked'
                     ? 'border-amber-500 bg-amber-500 text-black'
-                    : 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
-                  : 'border-[var(--outline)] bg-[var(--surface)] text-[var(--prose)] hover:border-[var(--prose-2)]'
+                    : 'border-(--prose) bg-(--prose) text-(--bg)'
+                  : 'border-(--outline) bg-(--surface) text-(--prose) hover:border-(--prose-2)'
               }`}
             >
               <span className="block text-sm font-bold leading-tight">
@@ -82,7 +82,7 @@ export function RollModePicker({
               </span>
               <span
                 className={`mt-1 block text-[11px] leading-snug sm:text-xs ${
-                  selected ? 'opacity-90' : 'text-[var(--prose-2)]'
+                  selected ? 'opacity-90' : 'text-(--prose-2)'
                 }`}
               >
                 {m.short}
@@ -92,10 +92,8 @@ export function RollModePicker({
         })}
       </div>
 
-      <p className="rounded-lg border border-[var(--outline)] bg-[var(--surface-raised)] px-3 py-2.5 text-sm leading-relaxed text-[var(--prose-2)]">
-        <span className="font-semibold text-[var(--prose)]">
-          {active.label}:{' '}
-        </span>
+      <p className="rounded-lg border border-(--outline) bg-(--surface-raised) px-3 py-2.5 text-sm leading-relaxed text-(--prose-2)">
+        <span className="font-semibold text-(--prose)">{active.label}: </span>
         {active.detail}
       </p>
     </div>

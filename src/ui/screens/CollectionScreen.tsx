@@ -246,12 +246,12 @@ export function CollectionScreen() {
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold tracking-tight">Badge codex</h1>
-        <p className="text-sm text-[var(--prose-2)]">
+        <p className="text-sm text-(--prose-2)">
           Number: {numberUnlocked}/{NUMBER_BADGES.length} · Journey:{' '}
           {journeyUnlocked}/{JOURNEY_BADGES.length} · Secrets: {secretUnlocked}/
           {SECRET_BADGES.length}
         </p>
-        <p className="mt-1 text-sm text-[var(--prose-2)]">
+        <p className="mt-1 text-sm text-(--prose-2)">
           Complete every badge in a section to unlock a Secret mastery. Finish
           all sections for the final Codex Absolute.
         </p>
@@ -266,14 +266,14 @@ export function CollectionScreen() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search badges…"
             autoComplete="off"
-            className="w-full rounded-lg border border-[var(--outline)] bg-[var(--bg)] px-3 py-2 pr-10 text-sm"
+            className="w-full rounded-lg border border-(--outline) bg-(--bg) px-3 py-2 pr-10 text-sm"
           />
         </label>
         {query.trim() !== '' && (
           <button
             type="button"
             onClick={() => setQuery('')}
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded px-1.5 py-0.5 text-sm font-semibold text-[var(--prose-3)] hover:text-[var(--prose)]"
+            className="absolute right-1 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded text-sm font-semibold text-(--prose-3) hover:text-(--prose)"
             aria-label="Clear search"
           >
             ×
@@ -297,12 +297,12 @@ export function CollectionScreen() {
                     ? 'border-amber-400 bg-amber-400 text-black'
                     : f.id === 'secret'
                       ? 'border-amber-400 bg-amber-400 text-black'
-                      : 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
+                      : 'border-(--prose) bg-(--prose) text-(--bg)'
                   : isNewTab
                     ? 'border-amber-500/50 text-amber-700 dark:text-amber-300'
                     : f.id === 'secret'
                       ? 'border-amber-500/40 text-amber-700 dark:text-amber-300'
-                      : 'border-[var(--outline)] text-[var(--prose-2)]'
+                      : 'border-(--outline) text-(--prose-2)'
               }`}
             >
               {isNewTab ? (
@@ -343,7 +343,7 @@ export function CollectionScreen() {
           <button
             type="button"
             onClick={() => setShowLocked((v) => !v)}
-            className="rounded-md border border-[var(--outline)] px-2.5 py-1.5 text-sm font-semibold text-[var(--prose-2)]"
+            className="rounded-md border border-(--outline) px-2.5 py-1.5 text-sm font-semibold text-(--prose-2)"
           >
             {showLocked ? 'Hide locked' : 'Show locked'}
           </button>
@@ -351,7 +351,7 @@ export function CollectionScreen() {
       </div>
 
       {filter === 'new' && (
-        <p className="rounded-lg border border-amber-500/35 bg-amber-500/10 px-3 py-2 text-sm text-[var(--prose-2)]">
+        <p className="rounded-lg border border-amber-500/35 bg-amber-500/10 px-3 py-2 text-sm text-(--prose-2)">
           First-time unlocks from the last{' '}
           <span className="font-semibold text-amber-800 dark:text-amber-300">
             5 minutes
@@ -364,7 +364,7 @@ export function CollectionScreen() {
       )}
 
       {filter === 'secret' && (
-        <p className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-sm text-[var(--prose-2)]">
+        <p className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-sm text-(--prose-2)">
           Secrets never appear on a single roll. They unlock only when a whole
           codex section is complete (or everything, for Codex Absolute).
         </p>
@@ -372,7 +372,7 @@ export function CollectionScreen() {
 
       {numberList.length > 0 && (
         <section>
-          <h2 className="mb-2 text-base font-bold text-[var(--prose)]">
+          <h2 className="mb-2 text-base font-bold text-(--prose)">
             {filter === 'new' ? 'New number badges' : 'Number badges'}
           </h2>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -387,12 +387,12 @@ export function CollectionScreen() {
                   key={b.id}
                   className={`rounded-lg border p-3 text-left text-sm ${
                     b.image && has
-                      ? 'border-amber-400/55 bg-gradient-to-br from-amber-500/15 via-violet-500/10 to-[var(--surface)] shadow-[0_0_20px_rgba(251,191,36,0.15)]'
+                      ? 'border-amber-400/55 bg-linear-to-br from-amber-500/15 via-violet-500/10 to-(--surface) shadow-[0_0_20px_rgba(251,191,36,0.15)]'
                       : fresh
-                        ? 'border-amber-400/45 bg-[var(--surface)] shadow-[0_0_0_1px_rgba(251,191,36,0.08)]'
+                        ? 'border-amber-400/45 bg-(--surface) shadow-[0_0_0_1px_rgba(251,191,36,0.08)]'
                         : has
-                          ? 'border-[var(--outline)] bg-[var(--surface)]'
-                          : 'border-[var(--outline)] bg-[var(--bg)] opacity-70'
+                          ? 'border-(--outline) bg-(--surface)'
+                          : 'border-(--outline) bg-(--bg) opacity-70'
                   }`}
                 >
                   <div className="flex gap-3">
@@ -401,7 +401,7 @@ export function CollectionScreen() {
                         className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border sm:h-20 sm:w-20 ${
                           has
                             ? 'border-amber-400/70 shadow-[0_0_12px_rgba(251,191,36,0.3)]'
-                            : 'border-[var(--outline)] grayscale'
+                            : 'border-(--outline) grayscale'
                         }`}
                       >
                         <img
@@ -442,11 +442,11 @@ export function CollectionScreen() {
                             </>
                           )}
                         </div>
-                        <span className="shrink-0 text-xs font-medium capitalize text-[var(--prose-2)]">
+                        <span className="shrink-0 text-xs font-medium capitalize text-(--prose-2)">
                           {b.family}
                         </span>
                       </div>
-                      <p className="mt-1 text-[var(--prose-2)]">
+                      <p className="mt-1 text-(--prose-2)">
                         {has
                           ? b.description
                           : b.image
@@ -455,14 +455,14 @@ export function CollectionScreen() {
                                 b.family as Exclude<BadgeFamily, 'secret'>
                               ]}
                       </p>
-                      <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 text-sm text-[var(--prose-2)]">
+                      <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 text-sm text-(--prose-2)">
                         <span>
                           {has ? `+${b.ep.toLocaleString()} EP` : 'Locked'}
                         </span>
                         {(age || when) && (
                           <time
                             dateTime={at}
-                            className="text-xs text-[var(--prose-3)]"
+                            className="text-xs text-(--prose-3)"
                             title="First unlocked"
                           >
                             {age ? `Unlocked ${age}` : `Unlocked ${when}`}
@@ -480,11 +480,11 @@ export function CollectionScreen() {
 
       {journeyList.length > 0 && (
         <section>
-          <h2 className="mb-2 text-base font-bold text-[var(--prose)]">
+          <h2 className="mb-2 text-base font-bold text-(--prose)">
             {filter === 'new' ? 'New journey marks' : 'Journey'}
           </h2>
           {filter !== 'new' && (
-            <p className="mb-2 text-sm text-[var(--prose-2)]">
+            <p className="mb-2 text-sm text-(--prose-2)">
               Lifetime-only EP — does not change a single roll&apos;s rarity.
             </p>
           )}
@@ -500,12 +500,12 @@ export function CollectionScreen() {
                   key={b.id}
                   className={`rounded-lg border p-3 text-left text-sm ${
                     b.image && has
-                      ? 'border-amber-400/55 bg-gradient-to-br from-amber-500/15 via-teal-500/10 to-[var(--surface)] shadow-[0_0_20px_rgba(251,191,36,0.12)]'
+                      ? 'border-amber-400/55 bg-linear-to-br from-amber-500/15 via-teal-500/10 to-(--surface) shadow-[0_0_20px_rgba(251,191,36,0.12)]'
                       : fresh
-                        ? 'border-amber-400/45 bg-[var(--surface)]'
+                        ? 'border-amber-400/45 bg-(--surface)'
                         : has
-                          ? 'border-[var(--outline)] bg-[var(--surface)]'
-                          : 'border-[var(--outline)] opacity-70'
+                          ? 'border-(--outline) bg-(--surface)'
+                          : 'border-(--outline) opacity-70'
                   }`}
                 >
                   <div className="flex gap-3">
@@ -514,7 +514,7 @@ export function CollectionScreen() {
                         className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border sm:h-20 sm:w-20 ${
                           has
                             ? 'border-amber-400/70 shadow-[0_0_12px_rgba(251,191,36,0.25)]'
-                            : 'border-[var(--outline)] grayscale'
+                            : 'border-(--outline) grayscale'
                         }`}
                       >
                         <img
@@ -549,10 +549,10 @@ export function CollectionScreen() {
                           '????'
                         )}
                       </div>
-                      <p className="mt-1 text-[var(--prose-2)]">
+                      <p className="mt-1 text-(--prose-2)">
                         {has ? b.description : FAMILY_HINT.journey}
                       </p>
-                      <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 text-sm text-[var(--prose-2)]">
+                      <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 text-sm text-(--prose-2)">
                         <span>
                           {has
                             ? `+${b.ep.toLocaleString()} life EP`
@@ -561,7 +561,7 @@ export function CollectionScreen() {
                         {(age || when) && (
                           <time
                             dateTime={at}
-                            className="text-xs text-[var(--prose-3)]"
+                            className="text-xs text-(--prose-3)"
                             title="First unlocked"
                           >
                             {age ? `Unlocked ${age}` : `Unlocked ${when}`}
@@ -579,7 +579,7 @@ export function CollectionScreen() {
 
       {secretList.length > 0 && (
         <section>
-          <h2 className="mb-2 text-base font-bold text-[var(--prose)]">
+          <h2 className="mb-2 text-base font-bold text-(--prose)">
             {filter === 'new' ? 'New secret masteries' : 'Secret masteries'}
           </h2>
           <div className="grid grid-cols-1 gap-3">
@@ -604,7 +604,7 @@ export function CollectionScreen() {
       {numberList.length === 0 &&
         journeyList.length === 0 &&
         secretList.length === 0 && (
-          <p className="text-sm text-[var(--prose-2)]">
+          <p className="text-sm text-(--prose-2)">
             {query.trim()
               ? `No badges match “${query.trim()}”.`
               : filter === 'new'
@@ -645,8 +645,8 @@ function SecretCard({
       <article
         className={`relative overflow-hidden rounded-xl border-2 p-4 text-left sm:p-5 ${
           has
-            ? 'border-amber-400 bg-gradient-to-br from-amber-500/20 via-violet-500/15 to-teal-500/20 shadow-[0_0_40px_rgba(251,191,36,0.25)]'
-            : 'border-amber-500/20 bg-[var(--bg)] opacity-80'
+            ? 'border-amber-400 bg-linear-to-br from-amber-500/20 via-violet-500/15 to-teal-500/20 shadow-[0_0_40px_rgba(251,191,36,0.25)]'
+            : 'border-amber-500/20 bg-(--bg) opacity-80'
         }`}
       >
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -654,7 +654,7 @@ function SecretCard({
             className={`relative mx-auto h-28 w-28 shrink-0 overflow-hidden rounded-xl border-2 sm:mx-0 sm:h-32 sm:w-32 ${
               has
                 ? 'border-amber-400/80 shadow-[0_0_24px_rgba(251,191,36,0.35)]'
-                : 'border-[var(--outline)] grayscale'
+                : 'border-(--outline) grayscale'
             }`}
           >
             <img
@@ -680,7 +680,7 @@ function SecretCard({
                 </span>
               )}
             </div>
-            <p className="mt-2 text-sm leading-relaxed text-[var(--prose-2)]">
+            <p className="mt-2 text-sm leading-relaxed text-(--prose-2)">
               {has ? secret.description : OMEGA_LOCKED_BODY}
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
@@ -692,7 +692,7 @@ function SecretCard({
               {(ageLabel || when) && (
                 <time
                   dateTime={unlockedAt}
-                  className="text-xs text-[var(--prose-3)]"
+                  className="text-xs text-(--prose-3)"
                   title="First unlocked"
                 >
                   {ageLabel ? `Unlocked ${ageLabel}` : `Unlocked ${when}`}
@@ -709,15 +709,15 @@ function SecretCard({
     <article
       className={`flex gap-3 rounded-xl border p-3 text-left sm:p-4 ${
         isFresh && has
-          ? 'border-amber-400/50 bg-gradient-to-br from-amber-500/10 via-violet-500/10 to-transparent shadow-sm'
+          ? 'border-amber-400/50 bg-linear-to-br from-amber-500/10 via-violet-500/10 to-transparent shadow-sm'
           : has
-            ? 'border-violet-400/50 bg-gradient-to-br from-violet-500/10 to-transparent shadow-sm'
-            : 'border-[var(--outline)] bg-[var(--surface)] opacity-75'
+            ? 'border-violet-400/50 bg-linear-to-br from-violet-500/10 to-transparent shadow-sm'
+            : 'border-(--outline) bg-(--surface) opacity-75'
       }`}
     >
       <div
         className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border sm:h-24 sm:w-24 ${
-          has ? 'border-violet-400/60' : 'border-[var(--outline)] grayscale'
+          has ? 'border-violet-400/60' : 'border-(--outline) grayscale'
         }`}
       >
         <img
@@ -743,11 +743,11 @@ function SecretCard({
             </span>
           )}
         </div>
-        <p className="mt-1 text-sm text-[var(--prose-2)]">
+        <p className="mt-1 text-sm text-(--prose-2)">
           {has ? secret.description : SECRET_LOCKED_BODY}
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
-          <span className="font-semibold text-[var(--prose)]">
+          <span className="font-semibold text-(--prose)">
             {has
               ? `+${secret.ep.toLocaleString()} life EP`
               : `${progress.have} / ${progress.total} badges`}
@@ -755,14 +755,14 @@ function SecretCard({
           {(ageLabel || when) && (
             <time
               dateTime={unlockedAt}
-              className="text-xs text-[var(--prose-3)]"
+              className="text-xs text-(--prose-3)"
               title="First unlocked"
             >
               {ageLabel ? `Unlocked ${ageLabel}` : `Unlocked ${when}`}
             </time>
           )}
           {!has && progress.total > 0 && (
-            <div className="h-2 min-w-[5rem] flex-1 overflow-hidden rounded-full bg-[var(--surface-raised)]">
+            <div className="h-2 min-w-20 flex-1 overflow-hidden rounded-full bg-(--surface-raised)">
               <div
                 className="h-full rounded-full bg-violet-500/70"
                 style={{

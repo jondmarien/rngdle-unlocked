@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-07-10
+
+### Added
+
+- **Signed-in onboarding checklist** — dismissible Home checklist for username, first sync, and Ranked (`SignedInOnboardingChecklist`).
+- **Shared roll row** — Feed / History / Profile / Latest Runs use `RollRow` + relative timestamps + lane chips.
+- **Query error Retry** — `QueryErrorBanner` on Board, Feed, Features, Arcade, Profile, Highlights; Ranked quota pill Retry on failure.
+- **Admin stats** — `GET /api/admin/stats` + Admin screen summary cards.
+- **Username blocklist** — reserved handles (e.g. `admin`) blocked for new claims; grandfathered holders keep their name via `isValidUsername(..., { currentUsername })`.
+- **oxlint-tailwindcss** — `enforce-consistent-variable-syntax` (Tailwind v4 `bg-(--token)` shorthand) via Vite+ `lint` + `.oxlintrc.json`; `pnpm lint` / `pnpm lint:fix`.
+- Focus-visible styles; `SegmentedToggle` keyboard / `aria-pressed`; icon-button `aria-label`s.
+- History text search; Features search; empty leaderboard CTAs; Profile “Compare with me”.
+
+### Changed
+
+- Ban enforcement: `requireUser` returns **403 Account banned** (checks `banned` / `banExpires`); admin ban fallback also deletes sessions.
+- Attest no longer inserts client-scored rolls; sync integrity checks `lifetimeRollCount`.
+- Admin: FR delete; reports filters + Ban+resolve; wipe clears Arcade tables; `PATCH /api/me` rate-limited.
+- Shared query keys for notifications / following usernames; touch-target polish on primary controls.
+- About / Settings version footer via `APP_VERSION` helper (`src/lib/app-version.ts`).
+
+### Fixed
+
+- `scripts/migrate-arcade.mjs` present for Arcade schema ops (tables + one-active-run partial unique).
+- Grandfathered `@admin` (and other blocklisted holders) can keep / re-save their existing username.
+
+### Notes
+
+- After deploy, ensure Arcade tables exist: `node --env-file=.env.local scripts/migrate-arcade.mjs` if not already run.
+- Tailwind class rewrite is presentation-only (canonical CSS variable syntax).
+
 ## [0.7.4] - 2026-07-09
 
 ### Added

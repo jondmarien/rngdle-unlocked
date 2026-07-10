@@ -28,9 +28,9 @@ export function OnboardingTip({ onGoAccount }: { onGoAccount?: () => void }) {
   if (!show) return null;
 
   return (
-    <div className="w-full max-w-lg rounded-lg border border-[var(--outline)] bg-[var(--surface-raised)] p-4 text-left">
-      <p className="text-base font-bold text-[var(--prose)]">Nice roll</p>
-      <p className="mt-1 text-sm leading-relaxed text-[var(--prose-2)]">
+    <div className="w-full max-w-lg rounded-lg border border-(--outline) bg-(--surface-raised) p-4 text-left">
+      <p className="text-base font-bold text-(--prose)">Nice roll</p>
+      <p className="mt-1 text-sm leading-relaxed text-(--prose-2)">
         Create an account to keep progress forever, climb the board, claim
         today&apos;s best with a public handle, and get vanity share links for
         rare hits. Badge unlocks also show up under Alerts.
@@ -39,7 +39,7 @@ export function OnboardingTip({ onGoAccount }: { onGoAccount?: () => void }) {
         {onGoAccount && (
           <button
             type="button"
-            className="border-2 border-[var(--prose)] bg-[var(--prose)] px-3 py-2 text-sm font-semibold text-[var(--bg)]"
+            className="border-2 border-(--prose) bg-(--prose) px-3 py-2 text-sm font-semibold text-(--bg)"
             onClick={onGoAccount}
           >
             Create account
@@ -47,7 +47,7 @@ export function OnboardingTip({ onGoAccount }: { onGoAccount?: () => void }) {
         )}
         <button
           type="button"
-          className="border border-[var(--outline)] px-3 py-2 text-sm font-semibold text-[var(--prose-2)]"
+          className="border border-(--outline) px-3 py-2 text-sm font-semibold text-(--prose-2)"
           onClick={() => {
             saveOnboarding({ dismissedAccountTip: true });
             setShow(false);

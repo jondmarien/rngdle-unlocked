@@ -12,10 +12,11 @@ if (!process.env.DATABASE_URL) {
 const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
-const title = 'New Update! v0.7.4 — Search the Badge Codex';
+const title = 'New Update! v0.8.0 — Smoother boards, clearer onboarding';
 const body = [
-  'The Badge Codex now has a search box above the section tabs so you can find unlocked badges by name or description.',
-  'Locked names stay hidden — search will not spoil Journey or Secret seals you have not earned yet.',
+  'Signed-in players get a short Home checklist (username, sync, Ranked) you can dismiss anytime.',
+  'Board, Feed, Features, and Arcade show a Retry when a load fails; History and Features gained search; roll lists share clearer Free / Ranked / Challenge chips.',
+  'Keyboard focus and segmented toggles are easier to use — scoring and Ranked rules are unchanged.',
   'Read the full player notes: https://rngdle-unlocked.chron0.tech/whats-new',
   'Open: /whats-new',
 ].join(' ');

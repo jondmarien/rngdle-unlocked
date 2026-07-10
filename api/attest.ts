@@ -12,6 +12,7 @@ const log = createLogger('api/attest');
 /**
  * Optional competitive seal (feature 4).
  * Body: { id, number, totalEP, rolledAt, shortCode? }
+ * Does not insert rolls — sync first; only seals an existing owned row.
  */
 export default defineHandler(async (request) => {
   if (request.method !== 'POST') {
@@ -58,49 +59,49 @@ export default defineHandler(async (request) => {
     );
   }
 
-  const seal = await createAttestationSeal({
-    userId: me.id,
-    rollId: id,
-    number,
-    totalEp: totalEP,
-    rolledAt,
-  });
-  const attestedAt = new Date();
-
   const [existing] = await db
     .select()
     .from(rolls)
     .where(eq(rolls.id, id))
     .limit(1);
 
-  if (existing) {
-    if (existing.userId !== me.id) {
-      return Response.json({ error: 'Not your roll' }, { status: 403 });
-    }
-    await db
-      .update(rolls)
-      .set({
-        attestationSeal: seal,
-        attestedAt,
-      })
-      .where(eq(rolls.id, id));
-  } else {
-    // Seal can be requested before full sync — create a minimal public row
-    await db.insert(rolls).values({
-      id,
-      userId: me.id,
-      number,
-      totalEp: totalEP,
-      rarity: 'common',
-      percentile: 50,
-      badgesJson: '[]',
-      rolledAt: new Date(rolledAt),
-      isPublic: true,
-      shortCode: body.shortCode ?? null,
+  if (!existing) {
+    return Response.json(
+      { error: 'Roll not found — sync first' },
+      { status: 404 },
+    );
+  }
+
+  if (existing.userId !== me.id) {
+    return Response.json({ error: 'Not your roll' }, { status: 403 });
+  }
+
+  if (existing.number !== number) {
+    return Response.json(
+      { error: 'Number does not match existing roll' },
+      { status: 400 },
+    );
+  }
+
+  const seal = await createAttestationSeal({
+    userId: me.id,
+    rollId: id,
+    number: existing.number,
+    totalEp: existing.totalEp,
+    rolledAt:
+      existing.rolledAt instanceof Date
+        ? existing.rolledAt.toISOString()
+        : String(existing.rolledAt),
+  });
+  const attestedAt = new Date();
+
+  await db
+    .update(rolls)
+    .set({
       attestationSeal: seal,
       attestedAt,
-    });
-  }
+    })
+    .where(eq(rolls.id, id));
 
   log.info('sealed', { userId: me.id, rollId: id });
   return Response.json({

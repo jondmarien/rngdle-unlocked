@@ -142,12 +142,12 @@ export function AdminUsersTable({
           const u = info.row.original;
           return (
             <div>
-              <p className="font-semibold text-[var(--prose)]">
+              <p className="font-semibold text-(--prose)">
                 {u.username ? (
                   `@${u.username}`
                 ) : (
                   <>
-                    <span className="text-[var(--prose-2)]">{u.name}</span>
+                    <span className="text-(--prose-2)">{u.name}</span>
                     <span className="ml-2 text-[10px] font-bold uppercase tracking-wide text-amber-600">
                       No @username
                     </span>
@@ -164,7 +164,7 @@ export function AdminUsersTable({
                   </span>
                 )}
               </p>
-              <p className="text-xs text-[var(--prose-3)]">{u.email}</p>
+              <p className="text-xs text-(--prose-3)">{u.email}</p>
             </div>
           );
         },
@@ -174,7 +174,7 @@ export function AdminUsersTable({
         cell: (info) => {
           const u = info.row.original;
           return (
-            <span className="text-xs text-[var(--prose-2)]">
+            <span className="text-xs text-(--prose-2)">
               {u.lifetimeEp.toLocaleString()} EP ·{' '}
               {u.lifetimeRollCount.toLocaleString()} rolls
             </span>
@@ -191,7 +191,7 @@ export function AdminUsersTable({
               <button
                 type="button"
                 disabled={busy}
-                className="rounded-md border border-[var(--outline)] px-2 py-1 text-xs font-semibold disabled:opacity-40"
+                className="rounded-md border border-(--outline) px-2 py-1 text-xs font-semibold disabled:opacity-40"
                 onClick={() => void onEditUsername(u)}
               >
                 Edit
@@ -199,7 +199,7 @@ export function AdminUsersTable({
               <button
                 type="button"
                 disabled={busy || u.role === 'admin'}
-                className="rounded-md border border-[var(--outline)] px-2 py-1 text-xs font-semibold disabled:opacity-40"
+                className="rounded-md border border-(--outline) px-2 py-1 text-xs font-semibold disabled:opacity-40"
                 onClick={() => void onBan(u, !u.banned)}
               >
                 {u.banned ? 'Unban' : 'Ban'}
@@ -236,7 +236,7 @@ export function AdminUsersTable({
       <label className="block text-sm">
         <span className="sr-only">Filter users</span>
         <input
-          className="w-full rounded-lg border border-[var(--outline)] bg-[var(--bg)] px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-(--outline) bg-(--bg) px-3 py-2 text-sm"
           placeholder="Filter email, @username, name, or id"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -244,7 +244,7 @@ export function AdminUsersTable({
       </label>
 
       {listQuery.isPending && !listQuery.data && (
-        <p className="text-sm text-[var(--prose-2)]">Loading users…</p>
+        <p className="text-sm text-(--prose-2)">Loading users…</p>
       )}
       {listQuery.error && (
         <p className="text-sm text-rose-600 dark:text-rose-400">
@@ -254,9 +254,9 @@ export function AdminUsersTable({
         </p>
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-[var(--outline)]">
-        <table className="w-full min-w-[36rem] border-collapse text-left text-sm">
-          <thead className="border-b border-[var(--outline)] bg-[var(--surface-raised)] text-xs uppercase tracking-wide text-[var(--prose-3)]">
+      <div className="overflow-x-auto rounded-xl border border-(--outline)">
+        <table className="w-full min-w-xl border-collapse text-left text-sm">
+          <thead className="border-b border-(--outline) bg-(--surface-raised) text-xs uppercase tracking-wide text-(--prose-3)">
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id}>
                 {hg.headers.map((header) => (
@@ -277,7 +277,7 @@ export function AdminUsersTable({
               <tr>
                 <td
                   colSpan={columns.length}
-                  className="px-3 py-8 text-center text-[var(--prose-3)]"
+                  className="px-3 py-8 text-center text-(--prose-3)"
                 >
                   {listQuery.isFetching ? 'Loading…' : 'No users found.'}
                 </td>
@@ -286,7 +286,7 @@ export function AdminUsersTable({
               table.getRowModel().rows.map((row) => (
                 <tr
                   key={row.id}
-                  className="border-b border-[var(--outline)] last:border-0"
+                  className="border-b border-(--outline) last:border-0"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id} className="px-3 py-3 align-top">
@@ -303,7 +303,7 @@ export function AdminUsersTable({
         </table>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--prose-2)]">
+      <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-(--prose-2)">
         <p>
           {total.toLocaleString()} user{total === 1 ? '' : 's'}
           {listQuery.isFetching ? ' · updating…' : ''}
@@ -312,7 +312,7 @@ export function AdminUsersTable({
           <label className="flex items-center gap-1">
             Rows
             <select
-              className="rounded-md border border-[var(--outline)] bg-[var(--bg)] px-2 py-1"
+              className="rounded-md border border-(--outline) bg-(--bg) px-2 py-1"
               value={pagination.pageSize}
               onChange={(e) => {
                 table.setPageSize(Number(e.target.value));
@@ -327,7 +327,7 @@ export function AdminUsersTable({
           </label>
           <button
             type="button"
-            className="rounded-md border border-[var(--outline)] px-2 py-1 font-semibold disabled:opacity-40"
+            className="rounded-md border border-(--outline) px-2 py-1 font-semibold disabled:opacity-40"
             onClick={() => table.firstPage()}
             disabled={!table.getCanPreviousPage()}
           >
@@ -335,18 +335,18 @@ export function AdminUsersTable({
           </button>
           <button
             type="button"
-            className="rounded-md border border-[var(--outline)] px-2 py-1 font-semibold disabled:opacity-40"
+            className="rounded-md border border-(--outline) px-2 py-1 font-semibold disabled:opacity-40"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
             Prev
           </button>
-          <span className="font-semibold text-[var(--prose)]">
+          <span className="font-semibold text-(--prose)">
             Page {pagination.pageIndex + 1} / {pageCount}
           </span>
           <button
             type="button"
-            className="rounded-md border border-[var(--outline)] px-2 py-1 font-semibold disabled:opacity-40"
+            className="rounded-md border border-(--outline) px-2 py-1 font-semibold disabled:opacity-40"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
@@ -354,7 +354,7 @@ export function AdminUsersTable({
           </button>
           <button
             type="button"
-            className="rounded-md border border-[var(--outline)] px-2 py-1 font-semibold disabled:opacity-40"
+            className="rounded-md border border-(--outline) px-2 py-1 font-semibold disabled:opacity-40"
             onClick={() => table.lastPage()}
             disabled={!table.getCanNextPage()}
           >

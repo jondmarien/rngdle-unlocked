@@ -14,6 +14,10 @@ import type { CloudSavePayload } from './sync.js';
  */
 const JOURNEY_SECRET_EP_SLACK = 80_000;
 /**
+ * Lifetime roll count may briefly outpace uploaded history (UPSERT_CAP lag).
+ */
+const LIFETIME_ROLL_COUNT_SLACK = 5;
+/**
  * Number-family badges not yet present on uploaded history (UPSERT_CAP lag).
  * Journey / secret seals are excluded from this check.
  */
@@ -115,6 +119,17 @@ export async function assertSyncIntegrity(
   if (deltaEp > newRollEp + JOURNEY_SECRET_EP_SLACK) {
     throw new SyncIntegrityError(
       'Sync rejected: claimed EP increase is not explained by new rolls',
+    );
+  }
+
+  const cloudRollCount = Number(cloud?.lifetimeRollCount) || 0;
+  const claimedRollCount = Number(local.lifetimeRollCount) || 0;
+  if (
+    claimedRollCount >
+    cloudRollCount + newRolls.length + LIFETIME_ROLL_COUNT_SLACK
+  ) {
+    throw new SyncIntegrityError(
+      'Sync rejected: claimed roll count increase is not explained by new rolls',
     );
   }
 

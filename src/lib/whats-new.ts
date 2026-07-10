@@ -32,6 +32,28 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Smoother boards, clearer onboarding',
+    date: '2026-07-10',
+    version: '0.8.0',
+    tags: ['UI', 'Board', 'Account', 'A11y'],
+    content: [
+      {
+        body: 'A polish pass across Home, Board, Feed, History, and Account — easier to get started when signed in, and easier to recover when a load fails.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'Small quality-of-life upgrades without changing how Free play, Ranked, or Arcade score.',
+        bullets: [
+          '**Signed-in checklist** on Home: set a username, sync, try Ranked — dismiss anytime.',
+          '**Retry** when Board, Feed, Features, or Arcade fail to load.',
+          '**Shared roll rows** with relative times and Free / Ranked / Challenge lane chips.',
+          '**Search** in History and Features; clearer empty Board states.',
+          '**Keyboard & focus** polish on segmented toggles and icon buttons.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Search the Badge Codex',
     date: '2026-07-09',
     version: '0.7.4',

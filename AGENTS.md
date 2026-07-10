@@ -166,11 +166,13 @@ Vite resolves `.js` → `.ts` fine. Keep this pattern when adding game modules u
 
 Runtime schemas live primarily in [`src/lib/schemas.ts`](./src/lib/schemas.ts) (shared shapes) plus server sync validation:
 
-| Boundary                        | Where                                          |
-| ------------------------------- | ---------------------------------------------- |
-| Save **import** payload         | `parseImportPayload` in `src/state/storage.ts` |
-| Cloud **sync** POST body        | `api/sync.ts` + schema in `server/sync.ts`     |
-| Public **profile** GET response | `src/lib/profile-api.ts`                       |
+| Boundary                        | Where                                                                                            |
+| ------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Save **import** payload         | `parseImportPayload` in `src/state/storage.ts`                                                   |
+| Cloud **sync** POST body        | `api/sync.ts` + schema in `server/sync.ts`                                                       |
+| Public **profile** GET response | `src/lib/profile-api.ts`                                                                         |
+| Feature request submit / list   | `featureRequestSubmitSchema`, list item schemas in `src/lib/schemas.ts`                          |
+| Arcade run / meta / leaderboard | `arcadeRunSchema`, `arcadeMetaSchema`, `arcadeLeaderboardResponseSchema` in `src/lib/schemas.ts` |
 
 Do not claim blanket Zod on every POST/query — only these trust boundaries are validated today.
 
@@ -253,7 +255,7 @@ Important tables: `user` (username, vanity profile fields), `user_progress`, `ro
 | `/api/follow`                                          | Follow graph                                                                                                               |
 | `/api/notifications`                                   | Activity + system inbox                                                                                                    |
 | `/api/system-messages`                                 | GET list; POST **admin session** (role=admin). Still live alongside `api/admin/broadcast.ts` — redundant POST not removed. |
-| `/api/admin/*`                                         | Admin: broadcast, users search/wipe/ban, reports                                                                           |
+| `/api/admin/*`                                         | Admin: broadcast, stats, users search/wipe/ban, reports                                                                    |
 | `/api/reports`                                         | Signed-in users file abuse / username reports                                                                              |
 | `/api/challenge`                                       | Period seeds metadata                                                                                                      |
 | `/api/attest`                                          | Optional HMAC seal on claim                                                                                                |
@@ -310,7 +312,7 @@ These four checks require a **manual browser smoke** — automated `pnpm test` /
 - Default branch: `main` (production via Vercel).
 - Prefer small, focused commits with complete sentences in messages.
 - Do not force-push `main` unless the user explicitly requests it.
-- Version in `package.json` (currently **0.7.4**); Settings footer reads `VITE_APP_VERSION` from the build.
+- Version in `package.json` (currently **0.8.0**); Settings footer reads `VITE_APP_VERSION` from the build.
 - Releases: annotated tags (`v0.x.y`) + `gh release create` when the user asks.
 
 ---

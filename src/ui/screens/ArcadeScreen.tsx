@@ -14,6 +14,7 @@ import {
   type ArcadeRoll,
   type ArcadeRun,
 } from '../../lib/arcade-api';
+import { QueryErrorBanner } from '../components/QueryErrorBanner';
 import { RarityBadge } from '../components/RarityBadge';
 import { SegmentedToggle } from '../components/SegmentedToggle';
 
@@ -188,14 +189,16 @@ export function ArcadeScreen({
     cashMut.isPending ||
     abandonMut.isPending;
 
-  const errMsg =
+  const mutErr =
     startMut.error?.message ||
     rollMut.error?.message ||
     buyMut.error?.message ||
     armMut.error?.message ||
     cashMut.error?.message ||
     abandonMut.error?.message ||
-    (stateQuery.error instanceof Error ? stateQuery.error.message : null);
+    null;
+  const stateErr =
+    stateQuery.error instanceof Error ? stateQuery.error.message : null;
 
   if (!session?.user) {
     return (
@@ -203,13 +206,13 @@ export function ArcadeScreen({
         <h1 className="font-display text-2xl font-bold tracking-tight">
           Arcade Mode
         </h1>
-        <p className="text-sm text-[var(--prose-2)]">
+        <p className="text-sm text-(--prose-2)">
           Sign in and claim a public @username to start a Digits run. Arcade is
           separate from EP — Free, Daily, and Ranked are unchanged.
         </p>
         <button
           type="button"
-          className="rounded-md border border-[var(--prose)] bg-[var(--prose)] px-3 py-2 text-sm font-semibold text-[var(--bg)]"
+          className="rounded-md border border-(--prose) bg-(--prose) px-3 py-2 text-sm font-semibold text-(--bg)"
           onClick={onGoAccount}
         >
           Go to Account
@@ -224,11 +227,10 @@ export function ArcadeScreen({
         <h1 className="font-display text-2xl font-bold tracking-tight">
           Arcade Mode
         </h1>
-        <p className="text-sm text-[var(--prose-2)]">
-          Roguelite runs with{' '}
-          <strong className="text-[var(--prose)]">Digits</strong> — buy upgrades
-          between rolls, cash out or bust on Double or Nothing. Digits never
-          convert to EP.{' '}
+        <p className="text-sm text-(--prose-2)">
+          Roguelite runs with <strong className="text-(--prose)">Digits</strong>{' '}
+          — buy upgrades between rolls, cash out or bust on Double or Nothing.
+          Digits never convert to EP.{' '}
           <button type="button" className="underline" onClick={onGoLeaderboard}>
             Arcade board
           </button>
@@ -254,17 +256,23 @@ export function ArcadeScreen({
         </p>
       )}
 
-      {errMsg && (
+      {stateErr && (
+        <QueryErrorBanner
+          message={stateErr}
+          onRetry={() => void stateQuery.refetch()}
+        />
+      )}
+      {mutErr && (
         <p className="text-sm text-red-400" role="alert">
-          {errMsg}
+          {mutErr}
         </p>
       )}
 
       {endBanner && (
-        <div className="rounded-lg border-2 border-[var(--accent)] bg-[var(--surface-raised)] px-3 py-3 text-sm">
+        <div className="rounded-lg border-2 border-(--accent) bg-(--surface-raised) px-3 py-3 text-sm">
           <p className="font-semibold">{endBanner}</p>
           {meta?.newlyUnlocked && meta.newlyUnlocked.length > 0 && (
-            <p className="mt-1 text-[var(--prose-2)]">
+            <p className="mt-1 text-(--prose-2)">
               Unlocked:{' '}
               {meta.newlyUnlocked.map((id) => upgradeLabel(id)).join(', ')}
             </p>
@@ -273,7 +281,7 @@ export function ArcadeScreen({
       )}
 
       {panel === 'meta' && meta && (
-        <div className="space-y-3 rounded-lg border border-[var(--outline)] bg-[var(--surface)] px-3 py-3 text-sm">
+        <div className="space-y-3 rounded-lg border border-(--outline) bg-(--surface) px-3 py-3 text-sm">
           <p>
             Best run:{' '}
             <strong className="text-amber-500">
@@ -286,19 +294,17 @@ export function ArcadeScreen({
           </p>
           <div>
             <p className="mb-1 font-semibold">Unlocked shop pool</p>
-            <ul className="space-y-1 text-[var(--prose-2)]">
+            <ul className="space-y-1 text-(--prose-2)">
               {meta.unlockedUpgrades.map((id) => (
                 <li key={id}>
-                  <span className="text-[var(--prose)]">
-                    {upgradeLabel(id)}
-                  </span>
+                  <span className="text-(--prose)">{upgradeLabel(id)}</span>
                   {' — '}
                   {ARCADE_UPGRADES[id].description}
                 </li>
               ))}
             </ul>
           </div>
-          <p className="text-xs text-[var(--prose-3)]">
+          <p className="text-xs text-(--prose-3)">
             Coming later (not in v1): debt/deadline pressure, idle Digits, trash
             streak soft-fail.
           </p>
@@ -308,19 +314,19 @@ export function ArcadeScreen({
       {panel === 'run' && (
         <>
           {stateQuery.isPending && (
-            <p className="text-sm text-[var(--prose-2)]">Loading…</p>
+            <p className="text-sm text-(--prose-2)">Loading…</p>
           )}
 
           {!run && !stateQuery.isPending && (
-            <div className="space-y-3 rounded-lg border border-[var(--outline)] px-3 py-4">
-              <p className="text-sm text-[var(--prose-2)]">
+            <div className="space-y-3 rounded-lg border border-(--outline) px-3 py-4">
+              <p className="text-sm text-(--prose-2)">
                 No active run. Start one to earn Digits, buy upgrades, and chase
                 a high score.
               </p>
               <button
                 type="button"
                 disabled={busy || usernameRequired}
-                className="rounded-md border border-[var(--prose)] bg-[var(--prose)] px-4 py-2 text-sm font-bold text-[var(--bg)] disabled:opacity-40"
+                className="rounded-md border border-(--prose) bg-(--prose) px-4 py-2 text-sm font-bold text-(--bg) disabled:opacity-40"
                 onClick={() => startMut.mutate()}
               >
                 Start run
@@ -330,16 +336,16 @@ export function ArcadeScreen({
 
           {run && run.status === 'active' && (
             <div className="space-y-4">
-              <div className="rounded-lg border-2 border-[var(--accent)] bg-[var(--surface-raised)] px-3 py-3">
+              <div className="rounded-lg border-2 border-(--accent) bg-(--surface-raised) px-3 py-3">
                 <div className="flex flex-wrap items-end justify-between gap-2">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-[var(--prose-3)]">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-(--prose-3)">
                       Digits
                     </p>
                     <p className="mono-number text-3xl font-bold text-amber-500">
                       {run.digits.toLocaleString()}
                     </p>
-                    <p className="text-xs text-[var(--prose-3)]">
+                    <p className="text-xs text-(--prose-3)">
                       Peak {run.peakDigits.toLocaleString()} · Roll #
                       {run.rollCount}
                       {run.comboStreak > 0 ? ` · Combo ${run.comboStreak}` : ''}
@@ -352,7 +358,7 @@ export function ArcadeScreen({
                     <button
                       type="button"
                       disabled={busy}
-                      className="rounded-md border border-[var(--prose)] bg-[var(--prose)] px-3 py-2 text-sm font-bold text-[var(--bg)] disabled:opacity-40"
+                      className="rounded-md border border-(--prose) bg-(--prose) px-3 py-2 text-sm font-bold text-(--bg) disabled:opacity-40"
                       onClick={() => rollMut.mutate({})}
                     >
                       Roll
@@ -360,7 +366,7 @@ export function ArcadeScreen({
                     <button
                       type="button"
                       disabled={busy || run.digits <= 0}
-                      className="rounded-md border border-[var(--outline)] px-3 py-2 text-sm font-semibold disabled:opacity-40"
+                      className="rounded-md border border-(--outline) px-3 py-2 text-sm font-semibold disabled:opacity-40"
                       onClick={() => cashMut.mutate()}
                     >
                       Cash out
@@ -395,13 +401,13 @@ export function ArcadeScreen({
               </div>
 
               {lastRoll && (
-                <div className="rounded-lg border border-[var(--outline)] px-3 py-3">
+                <div className="rounded-lg border border-(--outline) px-3 py-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
                       <p className="mono-number text-2xl font-bold">
                         {lastRoll.number.toLocaleString()}
                       </p>
-                      <p className="text-sm text-[var(--prose-2)]">
+                      <p className="text-sm text-(--prose-2)">
                         +{lastRoll.digitsAwarded.toLocaleString()} Digits ·{' '}
                         {lastRoll.totalEP.toLocaleString()} EP (Arcade only)
                       </p>
@@ -414,7 +420,7 @@ export function ArcadeScreen({
               <div className="space-y-2">
                 <h2 className="text-sm font-bold">Owned upgrades</h2>
                 {run.ownedUpgrades.length === 0 ? (
-                  <p className="text-sm text-[var(--prose-3)]">
+                  <p className="text-sm text-(--prose-3)">
                     None yet — buy from the shop below.
                   </p>
                 ) : (
@@ -426,14 +432,14 @@ export function ArcadeScreen({
                       return (
                         <li
                           key={id}
-                          className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-[var(--outline)] px-3 py-2 text-sm"
+                          className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-(--outline) px-3 py-2 text-sm"
                         >
                           <div>
                             <span className="font-semibold">{def.name}</span>
-                            <span className="ml-2 text-xs uppercase text-[var(--prose-3)]">
+                            <span className="ml-2 text-xs uppercase text-(--prose-3)">
                               {def.type}
                             </span>
-                            <p className="text-xs text-[var(--prose-2)]">
+                            <p className="text-xs text-(--prose-2)">
                               {def.description}
                             </p>
                           </div>
@@ -443,7 +449,7 @@ export function ArcadeScreen({
                                 className={`text-xs font-semibold ${
                                   ready
                                     ? 'text-emerald-400'
-                                    : 'text-[var(--prose-3)]'
+                                    : 'text-(--prose-3)'
                                 }`}
                               >
                                 {cooldownLabel(run, id)}
@@ -452,7 +458,7 @@ export function ArcadeScreen({
                                 <button
                                   type="button"
                                   disabled={busy || !ready}
-                                  className="rounded border border-[var(--outline)] px-2 py-1 text-xs font-semibold disabled:opacity-40"
+                                  className="rounded border border-(--outline) px-2 py-1 text-xs font-semibold disabled:opacity-40"
                                   onClick={() =>
                                     rollMut.mutate({ useReroll: true })
                                   }
@@ -463,7 +469,7 @@ export function ArcadeScreen({
                                 <button
                                   type="button"
                                   disabled={busy || !ready}
-                                  className="rounded border border-[var(--outline)] px-2 py-1 text-xs font-semibold disabled:opacity-40"
+                                  className="rounded border border-(--outline) px-2 py-1 text-xs font-semibold disabled:opacity-40"
                                   onClick={() => {
                                     if (id === 'bonus_spin') {
                                       void (async () => {
@@ -490,7 +496,7 @@ export function ArcadeScreen({
               <div className="space-y-2">
                 <h2 className="text-sm font-bold">Shop</h2>
                 {run.shopOffers.length === 0 ? (
-                  <p className="text-sm text-[var(--prose-3)]">
+                  <p className="text-sm text-(--prose-3)">
                     No offers (pool exhausted or sold out). Keep rolling.
                   </p>
                 ) : (
@@ -501,19 +507,19 @@ export function ArcadeScreen({
                       return (
                         <li
                           key={offer.upgradeId}
-                          className="flex flex-col rounded-md border border-[var(--outline)] px-3 py-2 text-sm"
+                          className="flex flex-col rounded-md border border-(--outline) px-3 py-2 text-sm"
                         >
                           <span className="font-semibold">{def.name}</span>
-                          <span className="text-xs text-[var(--prose-3)]">
+                          <span className="text-xs text-(--prose-3)">
                             {def.type}
                           </span>
-                          <p className="mt-1 flex-1 text-xs text-[var(--prose-2)]">
+                          <p className="mt-1 flex-1 text-xs text-(--prose-2)">
                             {def.description}
                           </p>
                           <button
                             type="button"
                             disabled={busy || !canBuy}
-                            className="mt-2 rounded-md border border-[var(--prose)] px-2 py-1.5 text-xs font-bold disabled:opacity-40"
+                            className="mt-2 rounded-md border border-(--prose) px-2 py-1.5 text-xs font-bold disabled:opacity-40"
                             onClick={() => buyMut.mutate(offer.upgradeId)}
                           >
                             Buy · {offer.price} Digits

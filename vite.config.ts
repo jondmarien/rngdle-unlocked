@@ -23,6 +23,29 @@ export default defineConfig({
     sortPackageJson: false,
     ignorePatterns: ['dist/**', 'node_modules/**', '.vercel/**', 'coverage/**'],
   },
+  // Oxlint via Vite+ — prefer this over relying on .oxlintrc alone (`vp lint`
+  // does not always auto-load sibling .oxlintrc.json). Keep .oxlintrc.json in
+  // sync for IDE / `vp lint -c` / CI that passes -c explicitly.
+  lint: {
+    ignorePatterns: [
+      'dist/**',
+      'node_modules/**',
+      '.vercel/**',
+      'coverage/**',
+      'api/_bundles/**',
+    ],
+    jsPlugins: ['oxlint-tailwindcss'],
+    settings: {
+      tailwindcss: {
+        // Explicit even though global.css is conventional — deterministic CI.
+        entryPoint: 'src/styles/global.css',
+      },
+    },
+    rules: {
+      // Tailwind v4: bg-[var(--x)] → bg-(--x) (IntelliSense suggestCanonicalClasses).
+      'tailwindcss/enforce-consistent-variable-syntax': 'warn',
+    },
+  },
   plugins: [react(), tailwindcss()],
   define: {
     'import.meta.env.VITE_APP_VERSION': JSON.stringify(pkg.version),

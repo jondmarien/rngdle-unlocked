@@ -22,7 +22,7 @@ export function LazySharePanel({
     <Suspense
       fallback={
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <p className="rounded-md border border-[var(--outline)] bg-[var(--surface)] px-4 py-3 text-sm text-[var(--prose-2)]">
+          <p className="rounded-md border border-(--outline) bg-(--surface) px-4 py-3 text-sm text-(--prose-2)">
             Loading share…
           </p>
         </div>

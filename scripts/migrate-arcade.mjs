@@ -1,11 +1,14 @@
 /**
  * Additive Arcade Mode tables (Digits economy — isolated from rolls / EP).
+ * Safe to re-run: CREATE TABLE / INDEX IF NOT EXISTS.
+ *
  * Usage: node --env-file=.env.local scripts/migrate-arcade.mjs
  */
 import { config } from 'dotenv';
 import { neon } from '@neondatabase/serverless';
 
 config({ path: '.env.local' });
+config({ path: '.env' });
 
 const url = process.env.DATABASE_URL;
 if (!url) {
@@ -41,10 +44,14 @@ const stmts = [
     started_at timestamp NOT NULL DEFAULT now(),
     ended_at timestamp
   )`,
+  `CREATE INDEX IF NOT EXISTS arcade_runs_user_started_idx
+    ON arcade_runs (user_id, started_at DESC)`,
   `CREATE INDEX IF NOT EXISTS arcade_runs_user_status_idx
     ON arcade_runs (user_id, status)`,
-  `CREATE INDEX IF NOT EXISTS arcade_meta_best_score_idx
-    ON arcade_meta (best_run_score DESC)`,
+  /** One active run per user (app also enforces; DB is the hard gate). */
+  `CREATE UNIQUE INDEX IF NOT EXISTS arcade_runs_one_active_per_user
+    ON arcade_runs (user_id)
+    WHERE status = 'active'`,
   `CREATE TABLE IF NOT EXISTS arcade_run_rolls (
     id text PRIMARY KEY,
     run_id text NOT NULL REFERENCES arcade_runs(id) ON DELETE CASCADE,
@@ -57,7 +64,7 @@ const stmts = [
     rolled_at timestamp NOT NULL DEFAULT now()
   )`,
   `CREATE INDEX IF NOT EXISTS arcade_run_rolls_run_idx
-    ON arcade_run_rolls (run_id, rolled_at DESC)`,
+    ON arcade_run_rolls (run_id, rolled_at)`,
 ];
 
 for (const s of stmts) {
@@ -67,18 +74,25 @@ for (const s of stmts) {
   } catch (e) {
     console.error('fail:', e instanceof Error ? e.message : e);
     console.error(s.slice(0, 100));
-    process.exit(1);
   }
 }
 
 const tables = await sql`
-  SELECT table_name
-  FROM information_schema.tables
-  WHERE table_schema = 'public'
-    AND table_name LIKE 'arcade%'
-  ORDER BY table_name
+  SELECT to_regclass('public.arcade_meta') AS meta,
+         to_regclass('public.arcade_runs') AS runs,
+         to_regclass('public.arcade_run_rolls') AS rolls
+`;
+console.log('arcade_meta:', tables[0]?.meta);
+console.log('arcade_runs:', tables[0]?.runs);
+console.log('arcade_run_rolls:', tables[0]?.rolls);
+
+const idx = await sql`
+  SELECT indexname
+  FROM pg_indexes
+  WHERE tablename = 'arcade_runs'
+    AND indexname = 'arcade_runs_one_active_per_user'
 `;
 console.log(
-  'arcade tables:',
-  tables.map((t) => t.table_name).join(', ') || '(none)',
+  'one-active unique index:',
+  idx[0]?.indexname ?? '(missing — check prior duplicate active runs)',
 );

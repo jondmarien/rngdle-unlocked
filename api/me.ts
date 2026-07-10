@@ -1,10 +1,11 @@
 import { eq } from 'drizzle-orm';
-import { readJson, requireUser } from '../server/apiGuards.js';
+import { rateGuard, readJson, requireUser } from '../server/apiGuards.js';
 import { createAuth } from '../server/auth.js';
 import { createDb } from '../server/db/index.js';
 import { user } from '../server/db/schema.js';
 import { getLinkedSocialAccounts } from '../server/linkedAccounts.js';
 import { createLogger } from '../server/logger.js';
+import { LIMITS } from '../server/rateLimit.js';
 import { isValidUsername, normalizeUsername } from '../server/username.js';
 import { defineHandler } from '../server/vercel-adapter.js';
 
@@ -93,6 +94,15 @@ export default defineHandler(async (request) => {
     const gate = await requireUser(request);
     if (!gate.ok) return gate.response;
     const me = gate.user;
+    const db = createDb();
+    const limited = await rateGuard(
+      db,
+      `user:${me.id}:me-patch`,
+      LIMITS.mePatchPerMinute,
+      60_000,
+    );
+    if (limited) return limited;
+
     const parsed = await readJson<{
       username?: string;
       profileAccent?: string;
@@ -104,7 +114,6 @@ export default defineHandler(async (request) => {
     if (!parsed.ok) return parsed.response;
     const body = parsed.body;
 
-    const db = createDb();
     const patch: {
       username?: string;
       profileAccent?: string;
@@ -118,9 +127,20 @@ export default defineHandler(async (request) => {
     if (body.username !== undefined) {
       const username = normalizeUsername(body.username ?? '');
       log.info('username patch', { userId: me.id, username });
-      if (!username || !isValidUsername(username)) {
+      const [current] = await db
+        .select({ username: user.username })
+        .from(user)
+        .where(eq(user.id, me.id))
+        .limit(1);
+      if (
+        !username ||
+        !isValidUsername(username, { currentUsername: current?.username })
+      ) {
         return Response.json(
-          { error: 'Username must be 3–24 chars: a-z, 0-9, _' },
+          {
+            error:
+              'Username must be 3–24 chars: a-z, 0-9, _ (reserved names blocked)',
+          },
           { status: 400 },
         );
       }

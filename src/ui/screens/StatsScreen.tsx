@@ -64,7 +64,7 @@ export function StatsScreen() {
     <div className="space-y-8">
       <div>
         <h1 className="text-xl font-bold uppercase tracking-wider">Stats</h1>
-        <p className="text-xs text-[var(--prose-3)]">
+        <p className="text-xs text-(--prose-3)">
           From local history (last {history.length} rolls) · lifetime counters
           never shrink.
         </p>
@@ -96,21 +96,21 @@ export function StatsScreen() {
         <div className="flex flex-wrap gap-3 text-sm">
           <span>
             🔥 Day streak <strong>{stats.dayStreak}</strong>
-            <span className="text-[var(--prose-3)]">
+            <span className="text-(--prose-3)">
               {' '}
               (best {stats.bestDayStreak})
             </span>
           </span>
           <span>
             ⚡ Quality <strong>{stats.qualityStreak}</strong>
-            <span className="text-[var(--prose-3)]">
+            <span className="text-(--prose-3)">
               {' '}
               (best {stats.bestQualityStreak})
             </span>
           </span>
         </div>
         {stats.bestRoll && (
-          <p className="mt-2 text-xs text-[var(--prose-3)]">
+          <p className="mt-2 text-xs text-(--prose-3)">
             Best roll: {stats.bestRoll.number.toLocaleString()} ·{' '}
             {stats.bestRoll.totalEP.toLocaleString()} EP ·{' '}
             {stats.bestRoll.rarity}
@@ -122,7 +122,7 @@ export function StatsScreen() {
         <h2 className="mb-2 text-sm font-bold uppercase tracking-wider">
           Rarity histogram
         </h2>
-        <p className="mb-3 text-xs text-[var(--prose-3)]">
+        <p className="mb-3 text-xs text-(--prose-3)">
           Counts in current history window (not lifetime if history rotated).
         </p>
         <ul className="space-y-2">
@@ -131,10 +131,10 @@ export function StatsScreen() {
             const pct = (n / hist.max) * 100;
             return (
               <li key={tier} className="flex items-center gap-2 text-sm">
-                <span className="w-24 shrink-0 font-semibold text-[var(--prose-2)]">
+                <span className="w-24 shrink-0 font-semibold text-(--prose-2)">
                   {RARITY_LABELS[tier] ?? tier}
                 </span>
-                <div className="h-3 flex-1 overflow-hidden rounded bg-[var(--surface-raised)]">
+                <div className="h-3 flex-1 overflow-hidden rounded bg-(--surface-raised)">
                   <div
                     className={`h-full ${RARITY_BAR[tier]} transition-all`}
                     style={{ width: `${pct}%` }}
@@ -151,7 +151,7 @@ export function StatsScreen() {
         <h2 className="mb-2 text-sm font-bold uppercase tracking-wider">
           Streak calendar
         </h2>
-        <p className="mb-3 text-xs text-[var(--prose-3)]">
+        <p className="mb-3 text-xs text-(--prose-3)">
           Last 28 local days — intensity by roll count in history.
         </p>
         <div className="grid grid-cols-7 gap-1">
@@ -162,7 +162,7 @@ export function StatsScreen() {
               <div
                 key={d.key}
                 title={`${d.key}: ${d.rolls} rolls · ${d.ep.toLocaleString()} EP`}
-                className="aspect-square rounded border border-[var(--outline)]"
+                className="aspect-square rounded border border-(--outline)"
                 style={{
                   backgroundColor:
                     d.rolls === 0
@@ -173,7 +173,7 @@ export function StatsScreen() {
             );
           })}
         </div>
-        <div className="mt-1 flex justify-between text-sm text-[var(--prose-2)]">
+        <div className="mt-1 flex justify-between text-sm text-(--prose-2)">
           <span>{calendar.days[0]?.key}</span>
           <span>{calendar.days[calendar.days.length - 1]?.key}</span>
         </div>

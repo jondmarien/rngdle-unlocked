@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { RollResult } from '../../game';
-import { formatDateTimeCompact } from '../../lib/format';
 import { RarityBadge } from './RarityBadge';
+import { laneFromSource, RelativeTime, type RollLaneKind } from './RollRow';
 
-type Lane = 'free' | 'ranked' | 'challenge';
+type Lane = RollLaneKind;
 
 const TABS: { id: Lane; label: string }[] = [
   { id: 'free', label: 'Free play' },
@@ -14,9 +14,8 @@ const TABS: { id: Lane; label: string }[] = [
 const EXIT_MS = 380;
 
 function rollLane(r: RollResult): Lane {
-  if (r.source === 'ranked') return 'ranked';
   if (r.source === 'challenge' || r.challengeKey) return 'challenge';
-  return 'free';
+  return laneFromSource(r.source);
 }
 
 /**
@@ -116,12 +115,12 @@ export function LatestRunsPanel({
   }, [latest, lane]);
 
   return (
-    <aside className="flex h-full max-h-full w-full flex-col overflow-hidden rounded-xl border border-[var(--outline)] bg-[var(--bg)]/95 text-left shadow-lg backdrop-blur-md supports-[backdrop-filter]:bg-[var(--surface)]/90">
-      <div className="shrink-0 border-b border-[var(--outline)] px-3 py-2.5">
-        <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--prose-3)]">
+    <aside className="flex h-full max-h-full w-full flex-col overflow-hidden rounded-xl border border-(--outline) bg-(--bg)/95 text-left shadow-lg backdrop-blur-md supports-backdrop-filter:bg-(--surface)/90">
+      <div className="shrink-0 border-b border-(--outline) px-3 py-2.5">
+        <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-(--prose-3)">
           Latest runs
         </h2>
-        <p className="mt-0.5 text-[11px] leading-snug text-[var(--prose-3)]">
+        <p className="mt-0.5 text-[11px] leading-snug text-(--prose-3)">
           Top 10 · Free / Ranked / Challenge
         </p>
       </div>
@@ -129,7 +128,7 @@ export function LatestRunsPanel({
       <div
         role="tablist"
         aria-label="Latest runs mode"
-        className="flex shrink-0 flex-wrap gap-1 border-b border-[var(--outline)] p-2"
+        className="flex shrink-0 flex-wrap gap-1 border-b border-(--outline) p-2"
       >
         {TABS.map((t) => {
           const selected = lane === t.id;
@@ -144,8 +143,8 @@ export function LatestRunsPanel({
                 selected
                   ? t.id === 'ranked'
                     ? 'bg-amber-500 text-black'
-                    : 'bg-[var(--prose)] text-[var(--bg)]'
-                  : 'text-[var(--prose-2)] hover:bg-[var(--surface-raised)]'
+                    : 'bg-(--prose) text-(--bg)'
+                  : 'text-(--prose-2) hover:bg-(--surface-raised)'
               }`}
             >
               {t.label}
@@ -157,7 +156,7 @@ export function LatestRunsPanel({
 
       <ol className="latest-runs-list min-h-0 flex-1 space-y-0 overflow-y-auto overscroll-contain p-1">
         {latest.length === 0 && exiting.length === 0 ? (
-          <li className="px-3 py-8 text-center text-xs text-[var(--prose-3)]">
+          <li className="px-3 py-8 text-center text-xs text-(--prose-3)">
             No {TABS.find((t) => t.id === lane)?.label ?? ''} runs yet.
           </li>
         ) : (
@@ -177,17 +176,17 @@ export function LatestRunsPanel({
                     onClick={() => onSelect?.(r)}
                     className={`flex w-full items-start gap-2 rounded-lg px-2.5 py-2 text-left transition ${
                       active
-                        ? 'bg-[color-mix(in_srgb,var(--accent)_16%,transparent)] ring-1 ring-inset ring-[var(--accent)]'
+                        ? 'bg-[color-mix(in_srgb,var(--accent)_16%,transparent)] ring-1 ring-inset ring-(--accent)'
                         : clickable
-                          ? 'hover:bg-[var(--surface-raised)]'
+                          ? 'hover:bg-(--surface-raised)'
                           : ''
                     }`}
                   >
-                    <span className="mono-number mt-0.5 w-4 shrink-0 text-[10px] font-bold text-[var(--prose-3)]">
+                    <span className="mono-number mt-0.5 w-4 shrink-0 text-[10px] font-bold text-(--prose-3)">
                       {i + 1}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <div className="mono-number text-base font-bold tracking-tight text-[var(--prose)]">
+                      <div className="mono-number text-base font-bold tracking-tight text-(--prose)">
                         {r.number.toLocaleString()}
                       </div>
                       <div className="mt-1 flex flex-wrap items-center gap-1.5">
@@ -196,11 +195,15 @@ export function LatestRunsPanel({
                           {r.totalEP.toLocaleString()} EP
                         </span>
                       </div>
-                      <p className="mt-0.5 text-[10px] text-[var(--prose-3)]">
-                        {formatDateTimeCompact(r.rolledAt)}
-                        {' · '}
-                        {r.badges.length} badge
-                        {r.badges.length === 1 ? '' : 's'}
+                      <p className="mt-0.5 flex flex-wrap items-center gap-1 text-[10px] text-(--prose-3)">
+                        <RelativeTime
+                          iso={r.rolledAt}
+                          className="text-[10px] text-(--prose-3)"
+                        />
+                        <span>
+                          · {r.badges.length} badge
+                          {r.badges.length === 1 ? '' : 's'}
+                        </span>
                       </p>
                     </div>
                   </button>
@@ -214,11 +217,11 @@ export function LatestRunsPanel({
                 aria-hidden
               >
                 <div className="flex w-full items-start gap-2 rounded-lg px-2.5 py-2 text-left opacity-70">
-                  <span className="mono-number mt-0.5 w-4 shrink-0 text-[10px] font-bold text-[var(--prose-3)]">
+                  <span className="mono-number mt-0.5 w-4 shrink-0 text-[10px] font-bold text-(--prose-3)">
                     —
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="mono-number text-base font-bold tracking-tight text-[var(--prose)]">
+                    <div className="mono-number text-base font-bold tracking-tight text-(--prose)">
                       {r.number.toLocaleString()}
                     </div>
                     <div className="mt-1 flex flex-wrap items-center gap-1.5">

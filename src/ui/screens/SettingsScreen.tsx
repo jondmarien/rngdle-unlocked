@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { APP_VERSION } from '../../lib/app-version';
 import { useGame, useGameSettings } from '../../state/GameProvider';
 import { ThemeToggle } from '../layout/ThemeToggle';
 
@@ -42,14 +43,14 @@ export function SettingsScreen() {
       <h1 className="text-xl font-bold uppercase tracking-wider">Settings</h1>
 
       <section className="space-y-2">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--prose-3)]">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-(--prose-3)">
           Theme
         </h2>
         <ThemeToggle value={settings.theme} onChange={setTheme} />
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--prose-3)]">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-(--prose-3)">
           Effects (optional)
         </h2>
         <label className="flex items-center gap-2 text-sm">
@@ -100,7 +101,7 @@ export function SettingsScreen() {
           />
           Show Latest runs on the Roll tab
         </label>
-        <p className="text-xs text-[var(--prose-3)]">
+        <p className="text-xs text-(--prose-3)">
           Scroll, share, and Latest runs prefs save on this device
           (localStorage). Auto-share is off by default so a quick re-roll never
           steals a popup.
@@ -108,7 +109,7 @@ export function SettingsScreen() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--prose-3)]">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-(--prose-3)">
           Share
         </h2>
         <label className="flex items-center gap-2 text-sm">
@@ -119,15 +120,15 @@ export function SettingsScreen() {
           />
           Include lifetime roll count on share cards
         </label>
-        <p className="text-xs text-[var(--prose-3)]">
+        <p className="text-xs text-(--prose-3)">
           Public vanity links require an account and a confirmed cloud sync.
           Logged-out share is Discord text / PNG only. Discord embeds use
           dynamic OG art for rolls and public profiles.
         </p>
       </section>
 
-      <section className="space-y-2 text-sm text-[var(--prose-2)]">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--prose-3)]">
+      <section className="space-y-2 text-sm text-(--prose-2)">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-(--prose-3)">
           Roll &amp; codex tips
         </h2>
         <ul className="list-disc space-y-1 pl-5 text-xs sm:text-sm">
@@ -136,7 +137,7 @@ export function SettingsScreen() {
             History and the Codex still keep everything you earned.
           </li>
           <li>
-            Codex → <strong className="text-[var(--prose)]">New</strong> lists
+            Codex → <strong className="text-(--prose)">New</strong> lists
             first-time unlocks from the last 5 minutes (with unlock times on
             every badge).
           </li>
@@ -151,8 +152,8 @@ export function SettingsScreen() {
         </ul>
       </section>
 
-      <section className="space-y-1 text-sm text-[var(--prose-2)]">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--prose-3)]">
+      <section className="space-y-1 text-sm text-(--prose-2)">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-(--prose-3)">
           Stats
         </h2>
         <p>Lifetime rolls: {lifetimeRollCount.toLocaleString()}</p>
@@ -167,24 +168,24 @@ export function SettingsScreen() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--prose-3)]">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-(--prose-3)">
           Export / import
         </h2>
-        <p className="text-xs text-[var(--prose-3)]">
+        <p className="text-xs text-(--prose-3)">
           Download a JSON save of history, collection, stats, and settings — or
           restore from a previous export.
         </p>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            className="border border-[var(--prose)] px-3 py-2 text-xs font-bold uppercase"
+            className="border border-(--prose) px-3 py-2 text-xs font-bold uppercase"
             onClick={exportSave}
           >
             Export JSON
           </button>
           <button
             type="button"
-            className="border border-[var(--prose)] px-3 py-2 text-xs font-bold uppercase"
+            className="border border-(--prose) px-3 py-2 text-xs font-bold uppercase"
             onClick={() => fileRef.current?.click()}
           >
             Import JSON
@@ -197,13 +198,11 @@ export function SettingsScreen() {
             onChange={(e) => void onImport(e.target.files?.[0])}
           />
         </div>
-        {importMsg && (
-          <p className="text-xs text-[var(--prose-2)]">{importMsg}</p>
-        )}
+        {importMsg && <p className="text-xs text-(--prose-2)">{importMsg}</p>}
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--prose-3)]">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-(--prose-3)">
           Data
         </h2>
         {!confirm ? (
@@ -228,7 +227,7 @@ export function SettingsScreen() {
             </button>
             <button
               type="button"
-              className="border border-[var(--outline)] px-3 py-2 text-xs font-bold uppercase"
+              className="border border-(--outline) px-3 py-2 text-xs font-bold uppercase"
               onClick={() => setConfirm(false)}
             >
               Cancel
@@ -237,9 +236,7 @@ export function SettingsScreen() {
         )}
       </section>
 
-      <p className="text-xs text-[var(--prose-3)]">
-        RNGdle Unlocked v{import.meta.env.VITE_APP_VERSION ?? '0.0.0'}
-      </p>
+      <p className="text-xs text-(--prose-3)">RNGdle Unlocked v{APP_VERSION}</p>
     </div>
   );
 }

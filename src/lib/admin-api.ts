@@ -143,3 +143,15 @@ export function fileReport(input: {
     body: JSON.stringify(input),
   });
 }
+
+export type AdminStats = {
+  users: number;
+  rolls: number;
+  rankedRolls: number;
+  arcadeRunsCompleted: number;
+  openReports: number;
+};
+
+export function fetchAdminStats() {
+  return adminFetch<AdminStats>('/api/admin/stats');
+}

@@ -85,7 +85,7 @@ export function PublicRollScreen({
     return (
       <div className="space-y-3">
         <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-        <p className="text-xs text-[var(--prose-3)]">
+        <p className="text-xs text-(--prose-3)">
           Tip: sign in → Account → Push / merge to cloud, then re-share. Public
           links use the cloud copy of the roll.
         </p>
@@ -98,7 +98,7 @@ export function PublicRollScreen({
     );
   }
   if (!roll) {
-    return <p className="text-sm text-[var(--prose-3)]">Loading roll…</p>;
+    return <p className="text-sm text-(--prose-3)">Loading roll…</p>;
   }
 
   const asResult: RollResult = {
@@ -138,7 +138,7 @@ export function PublicRollScreen({
       )}
 
       <div className="text-center">
-        <p className="text-xs uppercase tracking-wider text-[var(--prose-3)]">
+        <p className="text-xs uppercase tracking-wider text-(--prose-3)">
           Shared roll
           {roll.player.username && (
             <>
@@ -172,7 +172,7 @@ export function PublicRollScreen({
 
       <button
         type="button"
-        className="w-full border border-[var(--outline)] px-3 py-2 text-xs font-bold uppercase"
+        className="w-full border border-(--outline) px-3 py-2 text-xs font-bold uppercase"
         onClick={async () => {
           await navigator.clipboard.writeText(share);
           setCopied(true);

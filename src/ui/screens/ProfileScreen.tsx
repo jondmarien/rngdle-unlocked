@@ -1,5 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
-import { useEffect, useMemo, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo, useState } from 'react';
 import {
   badgeRarityFromEP,
   coerceRarity,
@@ -13,7 +13,10 @@ import { fileReport } from '../../lib/admin-api';
 import { useSession } from '../../lib/auth-client';
 import { FAMILY_PILL } from '../../lib/badge-theme';
 import { formatDateTime } from '../../lib/format';
+import { QueryErrorBanner } from '../components/QueryErrorBanner';
+import { RelativeTime } from '../components/RollRow';
 import {
+  FOLLOWING_USERNAMES_QUERY_KEY,
   fetchFollowingUsernames,
   followUser,
   unfollowUser,
@@ -88,6 +91,7 @@ export function ProfileScreen({
   onBack?: () => void;
 }) {
   const { data: session } = useSession();
+  const queryClient = useQueryClient();
   const myUsername = session?.user.username ?? null;
   const [codexFilter, setCodexFilter] = useState<BadgeFamily | 'all'>('all');
   const [openJourney, setOpenJourney] = useState(true);
@@ -97,7 +101,6 @@ export function ProfileScreen({
   const [openRecent, setOpenRecent] = useState(true);
   const [codexExpanded, setCodexExpanded] = useState(false);
   const [recentExpanded, setRecentExpanded] = useState(false);
-  const [following, setFollowing] = useState(false);
   const [followBusy, setFollowBusy] = useState(false);
   const [followMsg, setFollowMsg] = useState<string | null>(null);
 
@@ -113,26 +116,24 @@ export function ProfileScreen({
       : 'Failed'
     : null;
 
-  useEffect(() => {
-    if (!session?.user) {
-      setFollowing(false);
-      return;
-    }
-    let cancelled = false;
-    fetchFollowingUsernames()
-      .then((set) => {
-        if (!cancelled) setFollowing(set.has(username.toLowerCase()));
-      })
-      .catch(() => {
-        /* ignore */
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [session?.user, username]);
+  const isSelf = Boolean(
+    myUsername && myUsername.toLowerCase() === username.toLowerCase(),
+  );
 
-  const isSelf =
-    myUsername && myUsername.toLowerCase() === username.toLowerCase();
+  const myProfileQuery = useQuery({
+    queryKey: ['profile', myUsername?.toLowerCase() ?? ''],
+    queryFn: () => fetchProfile(myUsername!),
+    enabled: Boolean(myUsername) && !isSelf,
+  });
+  const myProfile = myProfileQuery.data ?? null;
+
+  const followingQuery = useQuery({
+    queryKey: FOLLOWING_USERNAMES_QUERY_KEY,
+    queryFn: fetchFollowingUsernames,
+    enabled: Boolean(session?.user),
+    staleTime: 60_000,
+  });
+  const following = Boolean(followingQuery.data?.has(username.toLowerCase()));
 
   /** Public codex: number unlocks (journey + secrets have their own sections). */
   const codexUnlocks = useMemo(() => {
@@ -193,13 +194,21 @@ export function ProfileScreen({
     }
     setFollowBusy(true);
     setFollowMsg(null);
+    const key = username.toLowerCase();
+    const prev =
+      queryClient.getQueryData<Set<string>>(FOLLOWING_USERNAMES_QUERY_KEY) ??
+      new Set<string>();
     try {
       if (following) {
         await unfollowUser(username);
-        setFollowing(false);
+        const next = new Set(prev);
+        next.delete(key);
+        queryClient.setQueryData(FOLLOWING_USERNAMES_QUERY_KEY, next);
       } else {
         await followUser(username);
-        setFollowing(true);
+        const next = new Set(prev);
+        next.add(key);
+        queryClient.setQueryData(FOLLOWING_USERNAMES_QUERY_KEY, next);
       }
     } catch (e) {
       setFollowMsg(e instanceof Error ? e.message : 'Failed');
@@ -209,14 +218,15 @@ export function ProfileScreen({
   };
 
   if (loading) {
-    return <p className="text-sm text-[var(--prose-2)]">Loading profile…</p>;
+    return <p className="text-sm text-(--prose-2)">Loading profile…</p>;
   }
   if (error || !profile) {
     return (
       <div className="space-y-2">
-        <p className="text-sm text-red-700 dark:text-red-400">
-          {error ?? 'Not found'}
-        </p>
+        <QueryErrorBanner
+          message={error ?? 'Not found'}
+          onRetry={() => void profileQuery.refetch()}
+        />
         {onBack && (
           <button type="button" className="text-sm underline" onClick={onBack}>
             Back
@@ -245,7 +255,7 @@ export function ProfileScreen({
       {onBack && (
         <button
           type="button"
-          className="text-sm font-semibold text-[var(--prose-2)] underline-offset-2 hover:underline"
+          className="text-sm font-semibold text-(--prose-2) underline-offset-2 hover:underline"
           onClick={onBack}
         >
           ← Back
@@ -254,12 +264,12 @@ export function ProfileScreen({
 
       {/* Hero banner */}
       <section
-        className={`relative overflow-hidden rounded-xl border border-[var(--outline)] bg-gradient-to-br ${theme.banner} p-5 sm:p-6`}
+        className={`relative overflow-hidden rounded-xl border border-(--outline) bg-linear-to-br ${theme.banner} p-5 sm:p-6`}
       >
         <div className="relative flex flex-wrap items-start justify-between gap-4">
           <div className="flex min-w-0 items-start gap-4">
             <div
-              className={`flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[var(--outline)] bg-[var(--surface)] text-2xl font-bold ring-2 ${theme.ring}`}
+              className={`flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-(--outline) bg-(--surface) text-2xl font-bold ring-2 ${theme.ring}`}
               aria-hidden
             >
               {avatarSrc ? (
@@ -273,7 +283,7 @@ export function ProfileScreen({
               )}
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-[var(--prose-2)]">
+              <p className="text-sm font-semibold text-(--prose-2)">
                 @{profile.username}
               </p>
               <h1 className="truncate text-2xl font-bold tracking-tight sm:text-3xl">
@@ -296,7 +306,7 @@ export function ProfileScreen({
                         ? 'border-amber-500/50 bg-amber-500/15 text-amber-800 dark:text-amber-200'
                         : profile.progressProvenance === 'cloud_sync'
                           ? 'border-teal-500/40 bg-teal-500/10 text-teal-800 dark:text-teal-200'
-                          : 'border-[var(--outline)] bg-[var(--surface)] text-[var(--prose-2)]'
+                          : 'border-(--outline) bg-(--surface) text-(--prose-2)'
                     }`}
                     title={
                       profile.progressProvenance === 'cloned_local'
@@ -316,11 +326,11 @@ export function ProfileScreen({
                 </p>
               )}
               {profile.profileBio && (
-                <p className="mt-2 max-w-md text-sm leading-relaxed text-[var(--prose)]">
+                <p className="mt-2 max-w-md text-sm leading-relaxed text-(--prose)">
                   {profile.profileBio}
                 </p>
               )}
-              <p className="mt-2 text-sm text-[var(--prose-2)]">
+              <p className="mt-2 text-sm text-(--prose-2)">
                 Member since {formatDateTime(String(profile.memberSince))}
               </p>
             </div>
@@ -333,8 +343,8 @@ export function ProfileScreen({
                 onClick={() => void toggleFollow()}
                 className={`border-2 px-4 py-2 text-sm font-semibold ${
                   following
-                    ? 'border-[var(--outline)] bg-[var(--surface)] text-[var(--prose-2)]'
-                    : 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
+                    ? 'border-(--outline) bg-(--surface) text-(--prose-2)'
+                    : 'border-(--prose) bg-(--prose) text-(--bg)'
                 }`}
               >
                 {following ? 'Following' : 'Follow'}
@@ -342,7 +352,7 @@ export function ProfileScreen({
               {session?.user && (
                 <button
                   type="button"
-                  className="text-xs font-semibold text-[var(--prose-3)] underline"
+                  className="text-xs font-semibold text-(--prose-3) underline"
                   onClick={() => {
                     const reason = window.prompt(
                       'Why are you reporting this username / profile? (min 8 chars)',
@@ -367,7 +377,7 @@ export function ProfileScreen({
           )}
         </div>
         {followMsg && (
-          <p className="mt-3 text-sm text-[var(--prose-2)]">{followMsg}</p>
+          <p className="mt-3 text-sm text-(--prose-2)">{followMsg}</p>
         )}
       </section>
 
@@ -395,8 +405,77 @@ export function ProfileScreen({
         />
       </div>
 
+      {!isSelf && myUsername && myProfile && (
+        <section className="rounded-lg border border-(--outline) bg-(--surface) p-3">
+          <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-(--prose-3)">
+            Compare with me
+          </h2>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[16rem] text-left text-sm">
+              <thead>
+                <tr className="text-[11px] uppercase tracking-wide text-(--prose-3)">
+                  <th className="pb-1.5 pr-2 font-semibold" />
+                  <th className="pb-1.5 pr-2 font-semibold">
+                    @{profile.username}
+                  </th>
+                  <th className="pb-1.5 font-semibold">@{myUsername}</th>
+                </tr>
+              </thead>
+              <tbody className="text-(--prose)">
+                <tr className="border-t border-(--outline)">
+                  <td className="py-1.5 pr-2 text-(--prose-2)">Lifetime EP</td>
+                  <td className="mono-number py-1.5 pr-2 font-semibold">
+                    {profile.lifetimeEP.toLocaleString()}
+                  </td>
+                  <td className="mono-number py-1.5 font-semibold">
+                    {myProfile.lifetimeEP.toLocaleString()}
+                  </td>
+                </tr>
+                <tr className="border-t border-(--outline)">
+                  <td className="py-1.5 pr-2 text-(--prose-2)">Rolls</td>
+                  <td className="mono-number py-1.5 pr-2 font-semibold">
+                    {profile.lifetimeRollCount.toLocaleString()}
+                  </td>
+                  <td className="mono-number py-1.5 font-semibold">
+                    {myProfile.lifetimeRollCount.toLocaleString()}
+                  </td>
+                </tr>
+                <tr className="border-t border-(--outline)">
+                  <td className="py-1.5 pr-2 text-(--prose-2)">Best roll</td>
+                  <td className="py-1.5 pr-2">
+                    {best ? (
+                      <span className="mono-number font-semibold">
+                        {best.number.toLocaleString()}
+                        <span className="ml-1 text-[11px] font-normal text-(--prose-3)">
+                          ({best.totalEP.toLocaleString()} EP)
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="text-(--prose-3)">—</span>
+                    )}
+                  </td>
+                  <td className="py-1.5">
+                    {myProfile.stats?.bestRoll ? (
+                      <span className="mono-number font-semibold">
+                        {myProfile.stats.bestRoll.number.toLocaleString()}
+                        <span className="ml-1 text-[11px] font-normal text-(--prose-3)">
+                          ({myProfile.stats.bestRoll.totalEP.toLocaleString()}{' '}
+                          EP)
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="text-(--prose-3)">—</span>
+                    )}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
       {(profile.stats?.bestDayStreak || profile.stats?.bestQualityStreak) && (
-        <div className="flex flex-wrap gap-2 text-sm text-[var(--prose-2)]">
+        <div className="flex flex-wrap gap-2 text-sm text-(--prose-2)">
           {profile.stats.bestDayStreak != null &&
             profile.stats.bestDayStreak > 0 && (
               <span className={`rounded-md border px-2.5 py-1 ${theme.soft}`}>
@@ -423,14 +502,14 @@ export function ProfileScreen({
           />
           {openJourney && (
             <>
-              <p className="text-sm text-[var(--prose-2)]">
+              <p className="text-sm text-(--prose-2)">
                 Lifetime roll milestones @{profile.username} has reached.
               </p>
               <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {unlockedJourney.map((b) => (
                   <li
                     key={b.id}
-                    className="flex gap-3 rounded-xl border border-amber-400/45 bg-gradient-to-br from-amber-500/15 via-teal-500/10 to-transparent p-3"
+                    className="flex gap-3 rounded-xl border border-amber-400/45 bg-linear-to-br from-amber-500/15 via-teal-500/10 to-transparent p-3"
                   >
                     {b.image ? (
                       <img
@@ -440,7 +519,7 @@ export function ProfileScreen({
                       />
                     ) : (
                       <span
-                        className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg border border-[var(--outline)] bg-[var(--surface)] text-3xl"
+                        className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg border border-(--outline) bg-(--surface) text-3xl"
                         aria-hidden
                       >
                         {b.emoji}
@@ -474,12 +553,12 @@ export function ProfileScreen({
           />
           {openSecrets && (
             <>
-              <p className="text-sm text-[var(--prose-2)]">
+              <p className="text-sm text-(--prose-2)">
                 Seals for completing whole codex sections.
               </p>
 
               {hasOmega && (
-                <div className="flex flex-col gap-3 rounded-xl border-2 border-amber-400/70 bg-gradient-to-br from-amber-500/20 via-violet-500/15 to-teal-500/20 p-4 shadow-[0_0_32px_rgba(251,191,36,0.2)] sm:flex-row sm:items-center">
+                <div className="flex flex-col gap-3 rounded-xl border-2 border-amber-400/70 bg-linear-to-br from-amber-500/20 via-violet-500/15 to-teal-500/20 p-4 shadow-[0_0_32px_rgba(251,191,36,0.2)] sm:flex-row sm:items-center">
                   <img
                     src={OMEGA_SECRET.image}
                     alt={OMEGA_SECRET.name}
@@ -492,7 +571,7 @@ export function ProfileScreen({
                     <p className="mt-1 text-xl font-bold tracking-tight">
                       {OMEGA_SECRET.name}
                     </p>
-                    <p className="mt-1 text-sm text-[var(--prose-2)]">
+                    <p className="mt-1 text-sm text-(--prose-2)">
                       {OMEGA_SECRET.description}
                     </p>
                     <p className="mt-2 text-sm font-semibold text-amber-800 dark:text-amber-300">
@@ -507,7 +586,7 @@ export function ProfileScreen({
                   {sectionSecrets.map((s) => (
                     <li
                       key={s.id}
-                      className="flex gap-3 rounded-xl border border-violet-400/50 bg-gradient-to-br from-violet-500/15 to-transparent p-3"
+                      className="flex gap-3 rounded-xl border border-violet-400/50 bg-linear-to-br from-violet-500/15 to-transparent p-3"
                     >
                       {s.image && (
                         <img
@@ -545,13 +624,13 @@ export function ProfileScreen({
           />
           {openCodex && (
             <>
-              <p className="text-sm text-[var(--prose-2)]">
+              <p className="text-sm text-(--prose-2)">
                 Badges @{profile.username} has unlocked. Locked codex entries
                 stay private.
               </p>
 
               {codexUnlocks.length === 0 ? (
-                <p className="rounded-lg border border-dashed border-[var(--outline)] px-3 py-4 text-sm text-[var(--prose-3)]">
+                <p className="rounded-lg border border-dashed border-(--outline) px-3 py-4 text-sm text-(--prose-3)">
                   No codex badges synced yet.
                 </p>
               ) : (
@@ -577,8 +656,8 @@ export function ProfileScreen({
                           }}
                           className={`rounded-md border px-2.5 py-1 text-xs font-semibold sm:text-sm ${
                             selected
-                              ? 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
-                              : 'border-[var(--outline)] text-[var(--prose-2)] hover:bg-[var(--surface-raised)]'
+                              ? 'border-(--prose) bg-(--prose) text-(--bg)'
+                              : 'border-(--outline) text-(--prose-2) hover:bg-(--surface-raised)'
                           }`}
                         >
                           {f.label}
@@ -614,7 +693,7 @@ export function ProfileScreen({
                       return (
                         <li
                           key={b.id}
-                          className="rounded-lg border border-[var(--outline)] bg-[var(--surface)] p-3 text-left text-sm"
+                          className="rounded-lg border border-(--outline) bg-(--surface) p-3 text-left text-sm"
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0 font-bold tracking-tight">
@@ -627,7 +706,7 @@ export function ProfileScreen({
                               +{b.ep.toLocaleString()}
                             </span>
                           </div>
-                          <p className="mt-1 line-clamp-2 text-xs text-[var(--prose-2)]">
+                          <p className="mt-1 line-clamp-2 text-xs text-(--prose-2)">
                             {b.description}
                           </p>
                           <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -642,7 +721,7 @@ export function ProfileScreen({
                             {when && (
                               <time
                                 dateTime={b.firstEarnedAt}
-                                className="text-[10px] text-[var(--prose-3)]"
+                                className="text-[10px] text-(--prose-3)"
                                 title="First unlocked"
                               >
                                 {when}
@@ -654,7 +733,7 @@ export function ProfileScreen({
                     })}
                   </ul>
                   {codexFiltered.length === 0 && (
-                    <p className="text-sm text-[var(--prose-3)]">
+                    <p className="text-sm text-(--prose-3)">
                       Nothing in this family yet.
                     </p>
                   )}
@@ -662,7 +741,7 @@ export function ProfileScreen({
                     <button
                       type="button"
                       onClick={() => setCodexExpanded((v) => !v)}
-                      className="w-full rounded-lg border border-[var(--outline)] bg-[var(--surface-raised)] px-3 py-2 text-sm font-semibold text-[var(--prose-2)] hover:border-[var(--prose-2)] hover:text-[var(--prose)]"
+                      className="w-full rounded-lg border border-(--outline) bg-(--surface-raised) px-3 py-2 text-sm font-semibold text-(--prose-2) hover:border-(--prose-2) hover:text-(--prose)"
                     >
                       {codexExpanded
                         ? 'Show fewer'
@@ -686,7 +765,7 @@ export function ProfileScreen({
           />
           {openBest && (
             <div
-              className={`rounded-xl border bg-[var(--surface)] p-4 ${theme.soft}`}
+              className={`rounded-xl border bg-(--surface) p-4 ${theme.soft}`}
             >
               <div className="mono-number text-3xl font-bold sm:text-4xl">
                 {best.number.toLocaleString()}
@@ -694,12 +773,12 @@ export function ProfileScreen({
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <RarityBadge rarity={coerceRarity(best.rarity)} />
                 <EPPill ep={best.totalEP} />
-                <span className="text-sm text-[var(--prose-2)]">
+                <span className="text-sm text-(--prose-2)">
                   Top {topPercentFromEP(best.totalEP)}%
                 </span>
               </div>
               {best.topBadges && best.topBadges.length > 0 && (
-                <p className="mt-2 text-sm text-[var(--prose-2)]">
+                <p className="mt-2 text-sm text-(--prose-2)">
                   {best.topBadges.join(' · ')}
                 </p>
               )}
@@ -719,9 +798,7 @@ export function ProfileScreen({
         {openRecent && (
           <>
             {profile.recentRolls.length === 0 ? (
-              <p className="text-sm text-[var(--prose-2)]">
-                No public rolls yet.
-              </p>
+              <p className="text-sm text-(--prose-2)">No public rolls yet.</p>
             ) : (
               <>
                 <ul className="space-y-2.5">
@@ -732,7 +809,7 @@ export function ProfileScreen({
                     <li key={r.id}>
                       <button
                         type="button"
-                        className="w-full rounded-xl border border-[var(--outline)] bg-[var(--surface)] p-4 text-left transition hover:border-[var(--prose-2)] hover:bg-[var(--surface-raised)]"
+                        className="w-full rounded-xl border border-(--outline) bg-(--surface) p-4 text-left transition hover:border-(--prose-2) hover:bg-(--surface-raised)"
                         onClick={() =>
                           onOpenRoll(r.shortCode || r.id, profile.username)
                         }
@@ -747,7 +824,7 @@ export function ProfileScreen({
                               <span className="text-sm font-semibold text-amber-700 dark:text-amber-400">
                                 {r.totalEP.toLocaleString()} EP
                               </span>
-                              <span className="text-sm text-[var(--prose-2)]">
+                              <span className="text-sm text-(--prose-2)">
                                 Top {topPercentFromEP(r.totalEP)}%
                               </span>
                               {r.attested && (
@@ -758,13 +835,13 @@ export function ProfileScreen({
                                 </span>
                               )}
                               {r.challengeKey && (
-                                <span className="text-xs font-mono text-[var(--prose-2)]">
+                                <span className="text-xs font-mono text-(--prose-2)">
                                   {r.challengeKey}
                                 </span>
                               )}
                             </div>
                             {r.topBadges && r.topBadges.length > 0 && (
-                              <p className="mt-2 text-sm leading-snug text-[var(--prose-2)]">
+                              <p className="mt-2 text-sm leading-snug text-(--prose-2)">
                                 {r.topBadges.join(' · ')}
                                 {r.badgeCount > (r.topBadges?.length ?? 0)
                                   ? ` · +${r.badgeCount - r.topBadges.length} more`
@@ -772,9 +849,10 @@ export function ProfileScreen({
                               </p>
                             )}
                           </div>
-                          <time className="shrink-0 text-sm text-[var(--prose-2)]">
-                            {formatDateTime(r.rolledAt)}
-                          </time>
+                          <RelativeTime
+                            iso={r.rolledAt}
+                            className="shrink-0 text-sm text-(--prose-2)"
+                          />
                         </div>
                       </button>
                     </li>
@@ -784,7 +862,7 @@ export function ProfileScreen({
                   <button
                     type="button"
                     onClick={() => setRecentExpanded((v) => !v)}
-                    className="w-full rounded-lg border border-[var(--outline)] bg-[var(--surface-raised)] px-3 py-2 text-sm font-semibold text-[var(--prose-2)] hover:border-[var(--prose-2)] hover:text-[var(--prose)]"
+                    className="w-full rounded-lg border border-(--outline) bg-(--surface-raised) px-3 py-2 text-sm font-semibold text-(--prose-2) hover:border-(--prose-2) hover:text-(--prose)"
                   >
                     {recentExpanded
                       ? 'Show fewer'

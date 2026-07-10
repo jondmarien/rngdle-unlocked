@@ -120,6 +120,22 @@ export async function patchFeatureRequestStatus(
   if (!res.ok) throw new Error(data.error ?? 'Status update failed');
 }
 
+export async function deleteFeatureRequestAdmin(id: string): Promise<void> {
+  log.info('admin:delete', { id });
+  const res = await withTimeout(
+    fetch('/api/admin/feature-requests', {
+      method: 'DELETE',
+      credentials: 'include',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ id }),
+    }),
+    FETCH_MS,
+    'feature request delete',
+  );
+  const data = (await res.json()) as { error?: string };
+  if (!res.ok) throw new Error(data.error ?? 'Delete failed');
+}
+
 export const FEATURE_STATUS_LABELS: Record<FeatureRequestStatus, string> = {
   submitted: 'Submitted',
   under_review: 'Under review',

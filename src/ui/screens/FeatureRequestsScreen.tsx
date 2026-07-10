@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { useSession } from '../../lib/auth-client';
 import {
+  deleteFeatureRequestAdmin,
   FEATURE_STATUS_LABELS,
   fetchFeatureRequests,
   patchFeatureRequestStatus,
@@ -13,6 +14,7 @@ import {
 } from '../../lib/feature-requests-api';
 import { formatDateTime, formatRelative } from '../../lib/format';
 import { useIsAdmin } from '../../lib/useIsAdmin';
+import { QueryErrorBanner } from '../components/QueryErrorBanner';
 import { SectionHeader } from '../components/SectionHeader';
 import { SegmentedToggle } from '../components/SegmentedToggle';
 
@@ -70,15 +72,19 @@ function FeatureRequestCard({
   isAdmin,
   votePending,
   statusPending,
+  deletePending,
   onVote,
   onStatus,
+  onDelete,
 }: {
   item: FeatureRequestItem;
   isAdmin: boolean;
   votePending: boolean;
   statusPending: boolean;
+  deletePending: boolean;
   onVote: (id: string) => void;
   onStatus: (id: string, status: FeatureRequestStatus) => void;
+  onDelete: (id: string) => void;
 }) {
   const status = asStatus(item.status);
   const accent = `var(${statusAccentVar(status)})`;
@@ -101,7 +107,7 @@ function FeatureRequestCard({
       <div className="flex flex-wrap items-start justify-between gap-2 pl-1">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-bold text-[var(--prose)]">{item.title}</h3>
+            <h3 className="font-bold text-(--prose)">{item.title}</h3>
             <span
               className="rounded border px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide"
               style={{
@@ -114,10 +120,10 @@ function FeatureRequestCard({
               {FEATURE_STATUS_LABELS[status]}
             </span>
           </div>
-          <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-sm text-[var(--prose-2)]">
+          <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-sm text-(--prose-2)">
             {item.description}
           </p>
-          <p className="mt-1 text-[11px] text-[var(--prose-3)]">
+          <p className="mt-1 text-[11px] text-(--prose-3)">
             <span>{submitter}</span>
             {' · '}
             <time
@@ -128,28 +134,46 @@ function FeatureRequestCard({
             </time>
           </p>
           {isAdmin && (
-            <label className="mt-2 block text-xs font-semibold text-[var(--prose-3)]">
-              Status
-              <select
-                className="ml-2 rounded-md border border-[var(--outline)] bg-[var(--surface)] px-2 py-1 text-sm text-[var(--prose)]"
-                value={status}
-                disabled={statusPending}
-                onChange={(e) =>
-                  onStatus(item.id, e.target.value as FeatureRequestStatus)
-                }
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <label className="text-xs font-semibold text-(--prose-3)">
+                Status
+                <select
+                  className="ml-2 rounded-md border border-(--outline) bg-(--surface) px-2 py-1 text-sm text-(--prose)"
+                  value={status}
+                  disabled={statusPending}
+                  onChange={(e) =>
+                    onStatus(item.id, e.target.value as FeatureRequestStatus)
+                  }
+                >
+                  {STATUS_OPTIONS.map((s) => (
+                    <option key={s} value={s}>
+                      {FEATURE_STATUS_LABELS[s]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                type="button"
+                disabled={deletePending}
+                className="rounded-md border border-red-600/40 px-2 py-1 text-xs font-semibold text-red-700 dark:text-red-400"
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      `Permanently delete “${item.title.slice(0, 60)}”?`,
+                    )
+                  ) {
+                    onDelete(item.id);
+                  }
+                }}
               >
-                {STATUS_OPTIONS.map((s) => (
-                  <option key={s} value={s}>
-                    {FEATURE_STATUS_LABELS[s]}
-                  </option>
-                ))}
-              </select>
-            </label>
+                Delete
+              </button>
+            </div>
           )}
         </div>
         {closed ? (
           <div
-            className="flex min-w-14 flex-col items-center rounded-md border border-[var(--outline)] px-2 py-1.5 text-sm font-bold text-[var(--prose-3)]"
+            className="flex min-w-14 flex-col items-center rounded-md border border-(--outline) px-2 py-1.5 text-sm font-bold text-(--prose-3)"
             title="Final upvote count"
           >
             <span aria-hidden>▲</span>
@@ -160,12 +184,17 @@ function FeatureRequestCard({
             type="button"
             disabled={item.votedByMe || votePending}
             onClick={() => onVote(item.id)}
-            className={`flex min-w-14 flex-col items-center rounded-md border px-2 py-1.5 text-sm font-bold ${
+            className={`flex min-h-11 min-w-14 flex-col items-center justify-center rounded-md border px-2 py-1.5 text-sm font-bold ${
               item.votedByMe
                 ? 'border-amber-500 bg-amber-500/15 text-amber-700 dark:text-amber-300'
-                : 'border-[var(--outline)] text-[var(--prose)] hover:border-[var(--prose)]'
+                : 'border-(--outline) text-(--prose) hover:border-(--prose)'
             }`}
             title={item.votedByMe ? 'Already voted' : 'Upvote'}
+            aria-label={
+              item.votedByMe
+                ? `Already voted, ${item.voteCount} votes`
+                : `Upvote, ${item.voteCount} votes`
+            }
           >
             <span aria-hidden>▲</span>
             <span>{item.voteCount}</span>
@@ -182,24 +211,26 @@ function RequestList({
   isAdmin,
   votePending,
   statusPending,
+  deletePending,
   onVote,
   onStatus,
+  onDelete,
 }: {
   items: FeatureRequestItem[];
   emptyCopy: string;
   isAdmin: boolean;
   votePending: boolean;
   statusPending: boolean;
+  deletePending: boolean;
   onVote: (id: string) => void;
   onStatus: (id: string, status: FeatureRequestStatus) => void;
+  onDelete: (id: string) => void;
 }) {
   if (items.length === 0) {
-    return (
-      <p className="px-1 py-3 text-sm text-[var(--prose-3)]">{emptyCopy}</p>
-    );
+    return <p className="px-1 py-3 text-sm text-(--prose-3)">{emptyCopy}</p>;
   }
   return (
-    <ul className="divide-y divide-[var(--outline)] overflow-hidden rounded-lg border border-[var(--outline)]">
+    <ul className="divide-y divide-(--outline) overflow-hidden rounded-lg border border-(--outline)">
       {items.map((item) => (
         <FeatureRequestCard
           key={item.id}
@@ -207,8 +238,10 @@ function RequestList({
           isAdmin={isAdmin}
           votePending={votePending}
           statusPending={statusPending}
+          deletePending={deletePending}
           onVote={onVote}
           onStatus={onStatus}
+          onDelete={onDelete}
         />
       ))}
     </ul>
@@ -224,6 +257,7 @@ export function FeatureRequestsScreen({
   const { isAdmin } = useIsAdmin(session?.user?.id);
   const queryClient = useQueryClient();
   const [sort, setSort] = useState<FeatureRequestSort>('top');
+  const [search, setSearch] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
@@ -296,12 +330,28 @@ export function FeatureRequestsScreen({
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteFeatureRequestAdmin(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['feature-requests'] });
+    },
+  });
+
   const items = listQuery.data?.items ?? [];
+  const filteredItems = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return items;
+    return items.filter(
+      (item) =>
+        item.title.toLowerCase().includes(q) ||
+        item.description.toLowerCase().includes(q),
+    );
+  }, [items, search]);
   const buckets = useMemo(() => {
     const active: FeatureRequestItem[] = [];
     const shipped: FeatureRequestItem[] = [];
     const declined: FeatureRequestItem[] = [];
-    for (const item of items) {
+    for (const item of filteredItems) {
       const s = asStatus(item.status);
       if (s === 'shipped') shipped.push(item);
       else if (s === 'declined') declined.push(item);
@@ -309,14 +359,14 @@ export function FeatureRequestsScreen({
       else active.push(item);
     }
     return { active, shipped, declined };
-  }, [items]);
+  }, [filteredItems]);
 
   if (!session?.user) {
     return (
       <div className="space-y-4">
         <div>
           <h1 className="text-xl font-bold tracking-tight">Features</h1>
-          <p className="text-sm text-[var(--prose-2)]">
+          <p className="text-sm text-(--prose-2)">
             Sign in to browse feature requests, upvote ideas, and submit your
             own.
           </p>
@@ -324,7 +374,7 @@ export function FeatureRequestsScreen({
         <button
           type="button"
           onClick={onGoAccount}
-          className="rounded-md border border-[var(--prose)] bg-[var(--prose)] px-3 py-2 text-sm font-semibold text-[var(--bg)]"
+          className="rounded-md border border-(--prose) bg-(--prose) px-3 py-2 text-sm font-semibold text-(--bg)"
         >
           Sign in
         </button>
@@ -336,23 +386,25 @@ export function FeatureRequestsScreen({
     isAdmin: Boolean(isAdmin),
     votePending: voteMutation.isPending,
     statusPending: statusMutation.isPending,
+    deletePending: deleteMutation.isPending,
     onVote: (id: string) => voteMutation.mutate(id),
     onStatus: (id: string, status: FeatureRequestStatus) =>
       statusMutation.mutate({ id, status }),
+    onDelete: (id: string) => deleteMutation.mutate(id),
   };
 
   return (
     <div className="space-y-4">
       <div>
         <h1 className="text-xl font-bold tracking-tight">Features</h1>
-        <p className="text-sm text-[var(--prose-2)]">
+        <p className="text-sm text-(--prose-2)">
           Suggest improvements and upvote what you want next. Admins update
           status as ideas move through review.
         </p>
       </div>
 
       <form
-        className="space-y-2 rounded-lg border border-[var(--outline)] p-3"
+        className="space-y-2 rounded-lg border border-(--outline) p-3"
         onSubmit={(e) => {
           e.preventDefault();
           setFormError(null);
@@ -360,26 +412,26 @@ export function FeatureRequestsScreen({
         }}
       >
         <h2 className="text-sm font-bold">Submit a request</h2>
-        <label className="block text-xs font-semibold text-[var(--prose-2)]">
+        <label className="block text-xs font-semibold text-(--prose-2)">
           Title
           <input
             type="text"
             value={title}
             maxLength={200}
             onChange={(e) => setTitle(e.target.value)}
-            className="mt-1 w-full rounded-md border border-[var(--outline)] bg-[var(--surface)] px-2.5 py-2 text-sm text-[var(--prose)]"
+            className="mt-1 w-full rounded-md border border-(--outline) bg-(--surface) px-2.5 py-2 text-sm text-(--prose)"
             placeholder="Short summary"
             required
           />
         </label>
-        <label className="block text-xs font-semibold text-[var(--prose-2)]">
+        <label className="block text-xs font-semibold text-(--prose-2)">
           Description
           <textarea
             value={description}
             maxLength={2000}
             rows={3}
             onChange={(e) => setDescription(e.target.value)}
-            className="mt-1 w-full rounded-md border border-[var(--outline)] bg-[var(--surface)] px-2.5 py-2 text-sm text-[var(--prose)]"
+            className="mt-1 w-full rounded-md border border-(--outline) bg-(--surface) px-2.5 py-2 text-sm text-(--prose)"
             placeholder="What should we add or change?"
             required
           />
@@ -390,11 +442,23 @@ export function FeatureRequestsScreen({
         <button
           type="submit"
           disabled={submitMutation.isPending}
-          className="rounded-md border border-[var(--prose)] bg-[var(--prose)] px-3 py-1.5 text-sm font-semibold text-[var(--bg)] disabled:opacity-60"
+          className="rounded-md border border-(--prose) bg-(--prose) px-3 py-1.5 text-sm font-semibold text-(--bg) disabled:opacity-60"
         >
           {submitMutation.isPending ? 'Submitting…' : 'Submit'}
         </button>
       </form>
+
+      <label className="block">
+        <span className="sr-only">Search feature requests</span>
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search title or description…"
+          autoComplete="off"
+          className="w-full rounded-lg border border-(--outline) bg-(--bg) px-3 py-2 text-sm text-(--prose)"
+        />
+      </label>
 
       <SegmentedToggle
         options={[
@@ -406,28 +470,36 @@ export function FeatureRequestsScreen({
       />
 
       {listQuery.isPending && (
-        <p className="text-sm text-[var(--prose-2)]">Loading…</p>
+        <p className="text-sm text-(--prose-2)">Loading…</p>
       )}
       {listQuery.error && (
-        <p className="text-sm text-red-700 dark:text-red-400">
-          {listQuery.error instanceof Error
-            ? listQuery.error.message
-            : 'Failed'}
-        </p>
+        <QueryErrorBanner
+          message={
+            listQuery.error instanceof Error
+              ? listQuery.error.message
+              : 'Failed'
+          }
+          onRetry={() => void listQuery.refetch()}
+        />
       )}
 
       {!listQuery.isPending && !listQuery.error && (
         <div className="space-y-5">
           <section className="space-y-2">
-            <h2 className="text-base font-bold text-[var(--prose)]">
-              Active requests
-              <span className="ml-2 text-sm font-normal text-[var(--prose-2)]">
-                ({buckets.active.length})
-              </span>
-            </h2>
+            <SectionHeader
+              title="Active requests"
+              meta={`(${buckets.active.length})`}
+              open
+              onToggle={() => {}}
+              collapsible={false}
+            />
             <RequestList
               items={buckets.active}
-              emptyCopy="No active requests — submit one above."
+              emptyCopy={
+                search.trim()
+                  ? 'No active requests match this search.'
+                  : 'No active requests — submit one above.'
+              }
               {...listProps}
             />
           </section>

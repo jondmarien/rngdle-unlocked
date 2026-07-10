@@ -114,12 +114,12 @@ export function BadgeCard({
   return (
     <article
       className={[
-        'relative rounded-xl border bg-[var(--surface)] p-3.5 text-left transition-all duration-300 sm:p-4',
+        'relative rounded-xl border bg-(--surface) p-3.5 text-left transition-all duration-300 sm:p-4',
         hasArt
           ? 'border-amber-400/50 bg-gradient-to-br from-amber-500/15 via-violet-500/10 to-transparent shadow-[0_0_28px_rgba(251,191,36,0.18)]'
           : isNew
             ? 'border-amber-400/35 shadow-[0_0_0_1px_rgba(251,191,36,0.08)]'
-            : 'border-[var(--outline)]',
+            : 'border-(--outline)',
         visible
           ? 'translate-y-0 opacity-100'
           : 'pointer-events-none translate-y-3 opacity-0',
@@ -186,7 +186,7 @@ export function BadgeCard({
         </span>
       </div>
 
-      <p className="mt-1.5 text-xs leading-relaxed text-[var(--prose-2)] sm:text-sm">
+      <p className="mt-1.5 text-xs leading-relaxed text-(--prose-2) sm:text-sm">
         {badge.description}
       </p>
 
@@ -292,7 +292,7 @@ export function BadgeBreakdown({
 
   if (badges.length === 0) {
     return (
-      <p className="py-6 text-center text-base text-[var(--prose-2)]">
+      <p className="py-6 text-center text-base text-(--prose-2)">
         No number badges this roll. Still a valid spin.
       </p>
     );
@@ -303,10 +303,10 @@ export function BadgeBreakdown({
   return (
     <div ref={rootRef} className="space-y-3">
       <div className="flex items-baseline justify-between gap-2 px-0.5">
-        <h2 className="text-base font-bold uppercase tracking-wider text-[var(--prose)]">
+        <h2 className="text-base font-bold uppercase tracking-wider text-(--prose)">
           Badge breakdown
         </h2>
-        <span className="text-sm text-[var(--prose-2)]">
+        <span className="text-sm text-(--prose-2)">
           {animateCascade && visibleCount < sorted.length
             ? `${visibleCount}/${sorted.length}`
             : `${sorted.length} badge${sorted.length === 1 ? '' : 's'} earned`}

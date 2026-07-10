@@ -177,6 +177,8 @@ export const LIMITS = {
   leaderboardPerMinute: 60,
   profilePerMinute: 60,
   followPerMinute: 30,
+  /** Profile vanity PATCH (/api/me). */
+  mePatchPerMinute: 30,
   feedPerMinute: 60,
   attestPerMinute: 20,
   challengePerMinute: 60,

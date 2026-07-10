@@ -82,7 +82,7 @@ export function CountUpEP({
   if (pending) {
     return (
       <span
-        className={`mono-number inline-flex rounded-full border border-[var(--outline)] bg-[var(--surface-raised)] px-3 py-1 text-sm font-semibold text-[var(--prose-3)] ${className}`}
+        className={`mono-number inline-flex rounded-full border border-(--outline) bg-(--surface-raised) px-3 py-1 text-sm font-semibold text-(--prose-3) ${className}`}
       >
         ??? EP
       </span>
@@ -91,7 +91,7 @@ export function CountUpEP({
 
   return (
     <span
-      className={`mono-number inline-flex rounded-full border border-[var(--outline)] bg-[var(--surface)] px-3 py-1 text-base font-bold text-amber-700 dark:text-amber-300 ${className}`}
+      className={`mono-number inline-flex rounded-full border border-(--outline) bg-(--surface) px-3 py-1 text-base font-bold text-amber-700 dark:text-amber-300 ${className}`}
     >
       {shown.toLocaleString()} EP
     </span>

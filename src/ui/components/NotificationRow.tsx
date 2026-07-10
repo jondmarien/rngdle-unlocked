@@ -21,7 +21,7 @@ function PeriodTags({ periods }: { periods: CrownPeriod[] }) {
       {periods.map((p) => (
         <span
           key={p}
-          className="rounded border border-[var(--outline)] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--prose-3)]"
+          className="rounded border border-(--outline) px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-(--prose-3)"
         >
           {periodLabel(p)}
         </span>
@@ -60,7 +60,8 @@ function RowBody({
     <button
       type="button"
       onClick={onActivate}
-      className={`group relative w-full overflow-hidden px-3 py-3 text-left transition-[background-color,opacity] duration-150 hover:bg-[var(--surface-raised)] active:scale-[0.995] ${
+      aria-label={`${read ? '' : 'Unread. '}${title}${body ? `. ${body.slice(0, 120)}` : ''}`}
+      className={`group relative w-full overflow-hidden px-3 py-3 text-left transition-[background-color,opacity] duration-150 hover:bg-(--surface-raised) active:scale-[0.995] ${
         read ? 'opacity-70' : ''
       }`}
       style={
@@ -92,8 +93,8 @@ function RowBody({
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <p
-              className={`text-sm leading-snug text-[var(--prose)] ${
-                read ? 'font-medium text-[var(--prose-2)]' : 'font-semibold'
+              className={`text-sm leading-snug text-(--prose) ${
+                read ? 'font-medium text-(--prose-2)' : 'font-semibold'
               }`}
             >
               {!read && (
@@ -106,7 +107,7 @@ function RowBody({
               {title}
             </p>
             <time
-              className="shrink-0 text-xs text-[var(--prose-3)]"
+              className="shrink-0 text-xs text-(--prose-3)"
               dateTime={createdAt}
               title={formatDateTime(createdAt)}
             >
@@ -117,25 +118,25 @@ function RowBody({
           {parsed ? (
             <>
               {parsed.lead && (
-                <p className="mt-1 text-sm leading-snug text-[var(--prose-2)]">
+                <p className="mt-1 text-sm leading-snug text-(--prose-2)">
                   {parsed.lead}
                 </p>
               )}
               {parsed.detail && (
-                <p className="mt-0.5 text-xs leading-snug text-[var(--prose-3)] line-clamp-3">
+                <p className="mt-0.5 text-xs leading-snug text-(--prose-3) line-clamp-3">
                   {parsed.detail}
                 </p>
               )}
             </>
           ) : (
             activityBody && (
-              <p className="mt-1 text-sm leading-snug text-[var(--prose-2)] line-clamp-2">
+              <p className="mt-1 text-sm leading-snug text-(--prose-2) line-clamp-2">
                 {activityBody}
               </p>
             )
           )}
           {href && (
-            <p className="mt-1 text-xs font-medium text-[var(--prose-3)] underline-offset-2 group-hover:underline">
+            <p className="mt-1 text-xs font-medium text-(--prose-3) underline-offset-2 group-hover:underline">
               Open roll
             </p>
           )}
@@ -198,16 +199,16 @@ export function NotificationRow({
 export function NotificationSkeleton() {
   return (
     <ul
-      className="divide-y divide-[var(--outline)] overflow-hidden rounded-lg border border-[var(--outline)]"
+      className="divide-y divide-(--outline) overflow-hidden rounded-lg border border-(--outline)"
       aria-hidden
     >
       {[0, 1, 2].map((i) => (
         <li key={i} className="flex items-start gap-2.5 px-3 py-3">
-          <div className="h-9 w-9 shrink-0 animate-pulse rounded-md bg-[var(--surface-raised)]" />
+          <div className="h-9 w-9 shrink-0 animate-pulse rounded-md bg-(--surface-raised)" />
           <div className="min-w-0 flex-1 space-y-2">
-            <div className="h-3.5 w-[60%] animate-pulse rounded bg-[var(--surface-raised)]" />
-            <div className="h-3 w-full animate-pulse rounded bg-[var(--surface-raised)]" />
-            <div className="h-3 w-[40%] animate-pulse rounded bg-[var(--surface-raised)]" />
+            <div className="h-3.5 w-[60%] animate-pulse rounded bg-(--surface-raised)" />
+            <div className="h-3 w-full animate-pulse rounded bg-(--surface-raised)" />
+            <div className="h-3 w-[40%] animate-pulse rounded bg-(--surface-raised)" />
           </div>
         </li>
       ))}

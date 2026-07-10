@@ -27,7 +27,7 @@ export function BestRollCard({
 }) {
   return (
     <div
-      className={`rounded-xl border border-amber-500/35 bg-gradient-to-br from-amber-500/10 via-[var(--surface)] to-[var(--surface)] ${
+      className={`rounded-xl border border-amber-500/35 bg-linear-to-br from-amber-500/10 via-(--surface) to-(--surface) ${
         compact ? 'p-3' : 'p-4'
       }`}
     >
@@ -50,7 +50,7 @@ export function BestRollCard({
               <button
                 type="button"
                 onClick={onReplay}
-                className="border border-[var(--outline)] px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-[var(--prose-2)] hover:border-[var(--prose-2)] hover:text-[var(--prose)]"
+                className="border border-(--outline) px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-(--prose-2) hover:border-(--prose-2) hover:text-(--prose)"
               >
                 Replay
               </button>
@@ -59,7 +59,7 @@ export function BestRollCard({
               <button
                 type="button"
                 onClick={onShare}
-                className="border border-[var(--prose)] px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide"
+                className="border border-(--prose) px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide"
               >
                 Share
               </button>
@@ -70,16 +70,16 @@ export function BestRollCard({
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <RarityBadge rarity={best.rarity} />
         <EPPill ep={best.totalEP} />
-        <span className="text-sm text-[var(--prose-2)]">
+        <span className="text-sm text-(--prose-2)">
           Top {topPercentFromEP(best.totalEP)}%
         </span>
       </div>
-      <p className="mt-1.5 text-xs text-[var(--prose-3)]">
+      <p className="mt-1.5 text-xs text-(--prose-3)">
         {best.badgeCount} badge{best.badgeCount === 1 ? '' : 's'} ·{' '}
         {formatDateTime(best.rolledAt)}
       </p>
       {best.topBadges.length > 0 && (
-        <p className="mt-2 text-sm leading-snug text-[var(--prose-2)]">
+        <p className="mt-2 text-sm leading-snug text-(--prose-2)">
           {best.topBadges.join(' · ')}
           {best.badgeCount > best.topBadges.length
             ? ` · +${best.badgeCount - best.topBadges.length} more`
@@ -87,7 +87,7 @@ export function BestRollCard({
         </p>
       )}
       {!fullRoll && onReplay && (
-        <p className="mt-2 text-[11px] text-[var(--prose-3)]">
+        <p className="mt-2 text-[11px] text-(--prose-3)">
           Full badge replay unavailable — roll aged out of the 500-history cap.
         </p>
       )}

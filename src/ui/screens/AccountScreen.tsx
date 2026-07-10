@@ -427,21 +427,21 @@ export function AccountScreen({
   };
 
   if (sessionLoading) {
-    return <p className="text-sm text-[var(--prose-3)]">Loading session…</p>;
+    return <p className="text-sm text-(--prose-3)">Loading session…</p>;
   }
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold uppercase tracking-wider">Account</h1>
-        <p className="text-xs text-[var(--prose-3)]">
+        <p className="text-xs text-(--prose-3)">
           Sign in to keep progress forever, auto-sync rolls, climb the board,
           follow friends, unlock public share links, and customize your public
           profile (username, accent, flair, bio, emblem avatar). First-time
           badge unlocks and secret masteries land in Alerts while signed in.
         </p>
         {(error || waitTimedOut) && !session?.user && (
-          <p className="mt-1 text-xs text-[var(--prose-3)]">
+          <p className="mt-1 text-xs text-(--prose-3)">
             Not signed in
             {error ? ` (session check failed: ${error.message})` : ''}.
           </p>
@@ -455,7 +455,7 @@ export function AccountScreen({
               type="button"
               disabled={busy}
               onClick={() => void onSocial('discord')}
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#5865F2]/40 bg-[#5865F2]/15 px-4 py-2.5 text-sm font-bold text-[var(--prose)] disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#5865F2]/40 bg-[#5865F2]/15 px-4 py-2.5 text-sm font-bold text-(--prose) disabled:opacity-50"
             >
               Continue with Discord
             </button>
@@ -463,17 +463,17 @@ export function AccountScreen({
               type="button"
               disabled={busy}
               onClick={() => void onSocial('github')}
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--outline)] bg-[var(--surface)] px-4 py-2.5 text-sm font-bold text-[var(--prose)] disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-(--outline) bg-(--surface) px-4 py-2.5 text-sm font-bold text-(--prose) disabled:opacity-50"
             >
               Continue with GitHub
             </button>
-            <p className="text-[11px] text-[var(--prose-3)]">
+            <p className="text-[11px] text-(--prose-3)">
               Recommended. Email below requires a real inbox (magic link or
               verification).
             </p>
           </div>
-          <details className="rounded-lg border border-[var(--outline)] bg-[var(--surface)] p-3">
-            <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-[var(--prose-3)]">
+          <details className="rounded-lg border border-(--outline) bg-(--surface) p-3">
+            <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-(--prose-3)">
               Or use email
             </summary>
             <div className="mt-3 space-y-3">
@@ -481,7 +481,7 @@ export function AccountScreen({
                 <button
                   type="button"
                   className={
-                    mode === 'signin' ? 'underline' : 'text-[var(--prose-3)]'
+                    mode === 'signin' ? 'underline' : 'text-(--prose-3)'
                   }
                   onClick={() => {
                     setMode('signin');
@@ -493,7 +493,7 @@ export function AccountScreen({
                 <button
                   type="button"
                   className={
-                    mode === 'signup' ? 'underline' : 'text-[var(--prose-3)]'
+                    mode === 'signup' ? 'underline' : 'text-(--prose-3)'
                   }
                   onClick={() => setMode('signup')}
                 >
@@ -508,7 +508,7 @@ export function AccountScreen({
                     className={
                       emailAuthTab === 'magic'
                         ? 'underline'
-                        : 'text-[var(--prose-3)]'
+                        : 'text-(--prose-3)'
                     }
                     onClick={() => setEmailAuthTab('magic')}
                   >
@@ -519,7 +519,7 @@ export function AccountScreen({
                     className={
                       emailAuthTab === 'password'
                         ? 'underline'
-                        : 'text-[var(--prose-3)]'
+                        : 'text-(--prose-3)'
                     }
                     onClick={() => setEmailAuthTab('password')}
                   >
@@ -539,7 +539,7 @@ export function AccountScreen({
                     name="email"
                     required
                     autoComplete="email"
-                    className="w-full border border-[var(--outline)] bg-[var(--bg)] px-3 py-2 text-sm"
+                    className="w-full border border-(--outline) bg-(--bg) px-3 py-2 text-sm"
                     placeholder="Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -547,11 +547,11 @@ export function AccountScreen({
                   <button
                     type="submit"
                     disabled={busy}
-                    className="border-2 border-[var(--prose)] bg-[var(--prose)] px-4 py-2 text-xs font-bold uppercase text-[var(--bg)] disabled:opacity-50"
+                    className="border-2 border-(--prose) bg-(--prose) px-4 py-2 text-xs font-bold uppercase text-(--bg) disabled:opacity-50"
                   >
                     {busy ? (status ?? 'Working…') : 'Email me a sign-in link'}
                   </button>
-                  <p className="text-[11px] text-[var(--prose-3)]">
+                  <p className="text-[11px] text-(--prose-3)">
                     Works for new and existing accounts. You must be able to
                     open the inbox.
                   </p>
@@ -560,7 +560,7 @@ export function AccountScreen({
                 <form onSubmit={onAuth} className="space-y-3" autoComplete="on">
                   {mode === 'signup' && (
                     <input
-                      className="w-full border border-[var(--outline)] bg-[var(--bg)] px-3 py-2 text-sm"
+                      className="w-full border border-(--outline) bg-(--bg) px-3 py-2 text-sm"
                       placeholder="Display name"
                       name="name"
                       autoComplete="name"
@@ -573,7 +573,7 @@ export function AccountScreen({
                     name="email"
                     required
                     autoComplete="email"
-                    className="w-full border border-[var(--outline)] bg-[var(--bg)] px-3 py-2 text-sm"
+                    className="w-full border border-(--outline) bg-(--bg) px-3 py-2 text-sm"
                     placeholder="Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -586,7 +586,7 @@ export function AccountScreen({
                     autoComplete={
                       mode === 'signup' ? 'new-password' : 'current-password'
                     }
-                    className="w-full border border-[var(--outline)] bg-[var(--bg)] px-3 py-2 text-sm"
+                    className="w-full border border-(--outline) bg-(--bg) px-3 py-2 text-sm"
                     placeholder="Password (8+)"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -594,7 +594,7 @@ export function AccountScreen({
                   <button
                     type="submit"
                     disabled={busy}
-                    className="border-2 border-[var(--prose)] bg-[var(--prose)] px-4 py-2 text-xs font-bold uppercase text-[var(--bg)] disabled:opacity-50"
+                    className="border-2 border-(--prose) bg-(--prose) px-4 py-2 text-xs font-bold uppercase text-(--bg) disabled:opacity-50"
                   >
                     {busy
                       ? (status ?? 'Working…')
@@ -603,7 +603,7 @@ export function AccountScreen({
                         : 'Sign in with password'}
                   </button>
                   {mode === 'signup' && (
-                    <p className="text-[11px] text-[var(--prose-3)]">
+                    <p className="text-[11px] text-(--prose-3)">
                       New email accounts must verify via the link we send.
                       Spoofed domains (e.g. fake @chron0.tech) will not work.
                     </p>
@@ -611,18 +611,18 @@ export function AccountScreen({
                 </form>
               )}
               {status && busy && (
-                <p className="text-xs text-[var(--prose-3)]">{status}</p>
+                <p className="text-xs text-(--prose-3)">{status}</p>
               )}
             </div>
           </details>
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="rounded-xl border border-[var(--outline)] bg-[var(--surface)] p-4 text-sm">
+          <div className="rounded-xl border border-(--outline) bg-(--surface) p-4 text-sm">
             <p>
               Signed in as <strong>{session.user.email}</strong>
             </p>
-            <p className="text-[var(--prose-3)]">
+            <p className="text-(--prose-3)">
               {session.user.username
                 ? `@${session.user.username}`
                 : 'No username yet'}
@@ -647,11 +647,11 @@ export function AccountScreen({
             </div>
           </div>
 
-          <div className="space-y-2 rounded-xl border border-[var(--outline)] bg-[var(--surface)] p-4">
-            <p className="text-sm font-semibold text-[var(--prose)]">
+          <div className="space-y-2 rounded-xl border border-(--outline) bg-(--surface) p-4">
+            <p className="text-sm font-semibold text-(--prose)">
               Linked sign-in
             </p>
-            <p className="text-xs text-[var(--prose-3)]">
+            <p className="text-xs text-(--prose-3)">
               Connect Discord and/or GitHub to this account. Linked providers
               show the connected handle; unlink anytime.
             </p>
@@ -663,13 +663,13 @@ export function AccountScreen({
               return (
                 <div
                   key={provider}
-                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--outline)] bg-[var(--bg)] px-3 py-2"
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-(--outline) bg-(--bg) px-3 py-2"
                 >
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-[var(--prose)]">
+                    <p className="text-sm font-semibold text-(--prose)">
                       {label}
                     </p>
-                    <p className="truncate text-xs text-[var(--prose-3)]">
+                    <p className="truncate text-xs text-(--prose-3)">
                       {linked ? `Linked as ${linked.label}` : 'Not linked'}
                     </p>
                   </div>
@@ -681,7 +681,7 @@ export function AccountScreen({
                       className={`shrink-0 rounded-lg border px-3 py-1.5 text-xs font-bold disabled:opacity-50 ${
                         provider === 'discord'
                           ? 'border-[#5865F2]/40'
-                          : 'border-[var(--outline)]'
+                          : 'border-(--outline)'
                       }`}
                     >
                       Unlink {label}
@@ -694,7 +694,7 @@ export function AccountScreen({
                       className={`shrink-0 rounded-lg border px-3 py-1.5 text-xs font-bold disabled:opacity-50 ${
                         provider === 'discord'
                           ? 'border-[#5865F2]/40'
-                          : 'border-[var(--outline)]'
+                          : 'border-(--outline)'
                       }`}
                     >
                       Link {label}
@@ -707,7 +707,7 @@ export function AccountScreen({
 
           <div className="flex flex-wrap gap-2">
             <input
-              className="border border-[var(--outline)] bg-[var(--surface)] px-3 py-2 text-sm"
+              className="border border-(--outline) bg-(--surface) px-3 py-2 text-sm"
               placeholder="username"
               name="username"
               autoComplete="username"
@@ -717,29 +717,29 @@ export function AccountScreen({
             <button
               type="button"
               disabled={busy}
-              className="border border-[var(--prose)] px-3 py-2 text-sm font-semibold"
+              className="border border-(--prose) px-3 py-2 text-sm font-semibold"
               onClick={() => void saveUsername()}
             >
               Save username
             </button>
           </div>
 
-          <div className="space-y-3 rounded-lg border border-[var(--outline)] bg-[var(--surface)] p-4">
+          <div className="space-y-3 rounded-lg border border-(--outline) bg-(--surface) p-4">
             <div>
-              <h2 className="text-base font-bold text-[var(--prose)]">
+              <h2 className="text-base font-bold text-(--prose)">
                 Public profile look
               </h2>
-              <p className="text-sm text-[var(--prose-2)]">
+              <p className="text-sm text-(--prose-2)">
                 Picture, accent, flair, and bio on{' '}
                 <code className="text-xs">/u/yourname</code>. Requires a
                 username.
               </p>
             </div>
             <div>
-              <p className="mb-1.5 text-sm font-semibold text-[var(--prose-2)]">
+              <p className="mb-1.5 text-sm font-semibold text-(--prose-2)">
                 Profile picture
               </p>
-              <p className="mb-2 text-xs text-[var(--prose-3)]">
+              <p className="mb-2 text-xs text-(--prose-3)">
                 Pick a custom emblem, or None for initial / linked account
                 photo.
               </p>
@@ -750,8 +750,8 @@ export function AccountScreen({
                   title="None"
                   className={`flex aspect-square flex-col items-center justify-center rounded-xl border-2 text-xs font-semibold ${
                     profileAvatar === ''
-                      ? 'border-[var(--prose)] bg-[var(--surface-raised)] ring-2 ring-[var(--accent)]/40'
-                      : 'border-[var(--outline)] bg-[var(--bg)] text-[var(--prose-2)]'
+                      ? 'border-(--prose) bg-(--surface-raised) ring-2 ring-(--accent)/40'
+                      : 'border-(--outline) bg-(--bg) text-(--prose-2)'
                   }`}
                 >
                   <span className="text-lg font-bold" aria-hidden>
@@ -769,8 +769,8 @@ export function AccountScreen({
                       title={av.label}
                       className={`aspect-square overflow-hidden rounded-xl border-2 p-0.5 ${
                         selected
-                          ? 'border-[var(--prose)] ring-2 ring-[var(--accent)]/50'
-                          : 'border-[var(--outline)] opacity-90 hover:opacity-100'
+                          ? 'border-(--prose) ring-2 ring-(--accent)/50'
+                          : 'border-(--outline) opacity-90 hover:opacity-100'
                       }`}
                     >
                       <img
@@ -783,7 +783,7 @@ export function AccountScreen({
                 })}
               </div>
               {profileAvatar !== '' && (
-                <p className="mt-1.5 text-xs text-[var(--prose-2)]">
+                <p className="mt-1.5 text-xs text-(--prose-2)">
                   Selected:{' '}
                   <span className="font-semibold">
                     {PROFILE_AVATARS.find((a) => a.id === profileAvatar)
@@ -793,7 +793,7 @@ export function AccountScreen({
               )}
             </div>
             <div>
-              <p className="mb-1.5 text-sm font-semibold text-[var(--prose-2)]">
+              <p className="mb-1.5 text-sm font-semibold text-(--prose-2)">
                 Accent
               </p>
               <div className="flex flex-wrap gap-2">
@@ -808,7 +808,7 @@ export function AccountScreen({
                       className={`rounded-full border px-3 py-1.5 text-sm font-semibold ${
                         selected
                           ? `${t.chip} ring-2 ${t.ring}`
-                          : 'border-[var(--outline)] text-[var(--prose-2)]'
+                          : 'border-(--outline) text-(--prose-2)'
                       }`}
                     >
                       {t.label}
@@ -818,7 +818,7 @@ export function AccountScreen({
               </div>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-semibold text-[var(--prose-2)]">
+              <label className="mb-1 block text-sm font-semibold text-(--prose-2)">
                 Flair (optional)
               </label>
               <input
@@ -826,11 +826,11 @@ export function AccountScreen({
                 onChange={(e) => setProfileFlair(e.target.value.slice(0, 48))}
                 maxLength={48}
                 placeholder="e.g. Anomaly hunter"
-                className="w-full border border-[var(--outline)] bg-[var(--bg)] px-3 py-2 text-sm"
+                className="w-full border border-(--outline) bg-(--bg) px-3 py-2 text-sm"
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-semibold text-[var(--prose-2)]">
+              <label className="mb-1 block text-sm font-semibold text-(--prose-2)">
                 Bio (optional, 160 chars)
               </label>
               <textarea
@@ -839,14 +839,14 @@ export function AccountScreen({
                 maxLength={160}
                 rows={3}
                 placeholder="A short line for your public profile."
-                className="w-full resize-y border border-[var(--outline)] bg-[var(--bg)] px-3 py-2 text-sm"
+                className="w-full resize-y border border-(--outline) bg-(--bg) px-3 py-2 text-sm"
               />
-              <p className="mt-1 text-xs text-[var(--prose-2)]">
+              <p className="mt-1 text-xs text-(--prose-2)">
                 {profileBio.length}/160
               </p>
             </div>
             <div className="space-y-1.5">
-              <label className="flex items-start gap-2.5 text-sm text-[var(--prose)]">
+              <label className="flex items-start gap-2.5 text-sm text-(--prose)">
                 <input
                   type="checkbox"
                   className="mt-0.5"
@@ -857,7 +857,7 @@ export function AccountScreen({
                   <span className="font-semibold">
                     Show codex on public profile
                   </span>
-                  <span className="mt-0.5 block text-xs text-[var(--prose-3)]">
+                  <span className="mt-0.5 block text-xs text-(--prose-3)">
                     When on, visitors to{' '}
                     <code className="text-[11px]">/u/yourname</code> see your
                     unlocked badges (not locked spoilers). Default on.
@@ -869,17 +869,15 @@ export function AccountScreen({
               type="button"
               disabled={busy}
               onClick={() => void saveProfileVanity()}
-              className="border-2 border-[var(--prose)] bg-[var(--prose)] px-3 py-2 text-sm font-semibold text-[var(--bg)] disabled:opacity-50"
+              className="border-2 border-(--prose) bg-(--prose) px-3 py-2 text-sm font-semibold text-(--bg) disabled:opacity-50"
             >
               Save profile look
             </button>
           </div>
 
           <div className="space-y-2">
-            <h2 className="text-sm font-bold text-[var(--prose)]">
-              Cloud sync
-            </h2>
-            <p className="text-xs text-[var(--prose-3)]">
+            <h2 className="text-sm font-bold text-(--prose)">Cloud sync</h2>
+            <p className="text-xs text-(--prose-3)">
               While signed in, every new roll is auto-pushed to the cloud
               (merge-safe). Manual pull/push still available for catch-up.
             </p>
@@ -887,7 +885,7 @@ export function AccountScreen({
               <button
                 type="button"
                 disabled={syncing}
-                className="border border-[var(--prose)] px-3 py-2 text-xs font-bold uppercase"
+                className="border border-(--prose) px-3 py-2 text-xs font-bold uppercase"
                 onClick={() => {
                   log.info('pull clicked');
                   void pullFromCloud();
@@ -898,7 +896,7 @@ export function AccountScreen({
               <button
                 type="button"
                 disabled={syncing}
-                className="border-2 border-[var(--prose)] bg-[var(--prose)] px-3 py-2 text-xs font-bold uppercase text-[var(--bg)]"
+                className="border-2 border-(--prose) bg-(--prose) px-3 py-2 text-xs font-bold uppercase text-(--bg)"
                 onClick={() => {
                   log.info('push clicked');
                   void syncToCloud();
@@ -908,7 +906,7 @@ export function AccountScreen({
               </button>
             </div>
             {lastSyncAt && (
-              <p className="text-xs text-[var(--prose-3)]">
+              <p className="text-xs text-(--prose-3)">
                 Last sync: {new Date(lastSyncAt).toLocaleString()}
               </p>
             )}
@@ -919,18 +917,16 @@ export function AccountScreen({
             )}
           </div>
 
-          <div className="space-y-3 rounded-xl border border-red-500/40 bg-[var(--surface)] p-4">
-            <h2 className="text-sm font-bold text-[var(--prose)]">
-              Delete account
-            </h2>
-            <p className="text-xs text-[var(--prose-3)]">
+          <div className="space-y-3 rounded-xl border border-red-500/40 bg-(--surface) p-4">
+            <h2 className="text-sm font-bold text-(--prose)">Delete account</h2>
+            <p className="text-xs text-(--prose-3)">
               Permanently removes your cloud account, synced rolls, and related
               social data. Local browser saves are separate: clear site data if
               you want those gone too. We send a confirmation link to{' '}
               <span className="font-mono">{session.user.email}</span>.
             </p>
             <div className="space-y-2">
-              <label className="block text-xs font-semibold text-[var(--prose-2)]">
+              <label className="block text-xs font-semibold text-(--prose-2)">
                 Type DELETE to confirm
               </label>
               <input
@@ -938,11 +934,11 @@ export function AccountScreen({
                 onChange={(e) => setDeleteConfirm(e.target.value)}
                 autoComplete="off"
                 placeholder="DELETE"
-                className="w-full border border-[var(--outline)] bg-[var(--bg)] px-3 py-2 text-sm"
+                className="w-full border border-(--outline) bg-(--bg) px-3 py-2 text-sm"
               />
             </div>
             <div className="space-y-2">
-              <label className="block text-xs font-semibold text-[var(--prose-2)]">
+              <label className="block text-xs font-semibold text-(--prose-2)">
                 Password (only if this account uses email + password)
               </label>
               <input
@@ -951,7 +947,7 @@ export function AccountScreen({
                 onChange={(e) => setDeletePassword(e.target.value)}
                 autoComplete="current-password"
                 placeholder="Optional"
-                className="w-full border border-[var(--outline)] bg-[var(--bg)] px-3 py-2 text-sm"
+                className="w-full border border-(--outline) bg-(--bg) px-3 py-2 text-sm"
               />
             </div>
             <button
@@ -973,14 +969,14 @@ export function AccountScreen({
             msg.toLowerCase().includes('error') ||
             msg.toLowerCase().includes('timeout')
               ? 'text-red-600 dark:text-red-400'
-              : 'text-[var(--prose-2)]'
+              : 'text-(--prose-2)'
           }`}
         >
           {msg}
         </p>
       )}
 
-      <p className="text-[10px] text-[var(--prose-3)]">
+      <p className="text-[10px] text-(--prose-3)">
         Debug: open console for <code>[rngdle:*]</code> logs ·{' '}
         <code>__rngdleLog.dump()</code> ·{' '}
         <code>__rngdleLog.setLevel(&apos;debug&apos;)</code>

@@ -7,8 +7,8 @@
 | **Repo**                   | `jondmarien/rngdle-unlocked`                                                                  |
 | **Live**                   | https://rngdle-unlocked.chron0.tech                                                           |
 | **Branch**                 | `main` (auto-deploys Vercel)                                                                  |
-| **Version**                | `0.7.4` (`package.json`; Settings uses `VITE_APP_VERSION`)                                    |
-| **Latest release**         | [v0.7.4](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.7.4) (cut when tagged) |
+| **Version**                | `0.8.0` (`package.json`; Settings uses `VITE_APP_VERSION`)                                    |
+| **Latest release**         | [v0.8.0](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.8.0) (cut when tagged) |
 | **Handoff commit context** | Opus audit refactor (`aa8e91e`…`fc4fa65` on `main`) + prior P0/P1 wave                        |
 
 ---
@@ -132,7 +132,6 @@ Rough chronological product work across this multi-turn session (and immediate p
 
 - `AGENTS.md` — standing rules for agents (comprehensive)
 - `README.md` + `docs/ARCHITECTURE.md` updated for dual boards / Ranked
-- Release **v0.4.0** published
 
 ---
 
@@ -142,12 +141,14 @@ Rough chronological product work across this multi-turn session (and immediate p
 Free play (client RNG)  →  local history  →  sync as source=client  →  Practice board
 Ranked (server RNG)     →  Neon source=ranked  →  Ranked board + crowns + overtake
 Daily/Weekly            →  seed challenge    →  source=challenge
+Arcade (server RNG)     →  Digits runs (/arcade)  →  Arcade board (Digits ≠ EP)
 ```
 
 | Surface                                  | Ranked only?                         |
 | ---------------------------------------- | ------------------------------------ |
 | Leaderboard → Ranked                     | Yes                                  |
 | Leaderboard → Practice                   | No (progress / non-ranked week)      |
+| Leaderboard → Arcade                     | No (best Digits run; not EP)         |
 | Home community bests (`/api/highlights`) | Yes Ranked                           |
 | System crown messages + overtake         | Yes Ranked                           |
 | Feed                                     | Filterable all / ranked / practice   |
@@ -171,7 +172,7 @@ Daily/Weekly            →  seed challenge    →  source=challenge
 | Latest runs            | `src/ui/components/LatestRunsPanel.tsx`                                                                                                       |
 | Mode copy              | `src/ui/components/RollModePicker.tsx`                                                                                                        |
 | Celebrate FX           | `src/ui/components/Celebration.tsx`, `src/styles/global.css`, `src/game/fx.ts`                                                                |
-| Ranked issue           | `server/rankedRoll.ts`, `api/ranked-roll.ts`                                                                                                  |
+| Ranked issue           | `server/rankedRoll.ts`, `api/ranked-roll/index.ts`, quota: `api/ranked-roll/quota.ts` + `server/rankedQuota.ts`                               |
 | Crowns / overtake      | `server/rollActivity.ts`                                                                                                                      |
 | Sync                   | `server/sync.ts`, `api/sync.ts`                                                                                                               |
 | Leaderboard            | `server/leaderboard.ts`, `api/leaderboard.ts`, `LeaderboardScreen.tsx` (Ranked/Practice/Arcade)                                               |
@@ -235,6 +236,7 @@ node scripts/add-roll-source.mjs   # if source column missing
 - [x] **v0.7.2** — Ranked quota indicator (`N/90 left` + honest window reset)
 - [x] **v0.7.3** — Journey badge artwork (Collection + Profile Journey section)
 - [x] **v0.7.4** — Codex search (spoiler-safe name/description filter)
+- [x] **v0.8.0** — Gap remediation: onboarding checklist, shared roll rows, Retry banners, a11y, admin/trust polish, Tailwind v4 canonical classes
 
 ### Still open for you / ops
 

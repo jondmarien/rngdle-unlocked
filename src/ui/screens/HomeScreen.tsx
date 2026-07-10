@@ -20,7 +20,9 @@ import { CountUpEP } from '../components/CountUpEP';
 import { GenerateButton } from '../components/GenerateButton';
 import { LatestRunsPanel } from '../components/LatestRunsPanel';
 import { NumberDisplay } from '../components/NumberDisplay';
+import type { TabId } from '../../lib/routes';
 import { OnboardingTip } from '../components/OnboardingTip';
+import { SignedInOnboardingChecklist } from '../components/SignedInOnboardingChecklist';
 import { RarityBadge } from '../components/RarityBadge';
 import { RankedQuotaPill } from '../components/RankedQuotaPill';
 import { RollModePicker } from '../components/RollModePicker';
@@ -31,10 +33,12 @@ const log = createLogger('home');
 
 export function HomeScreen({
   onGoAccount,
+  onGoTab,
   onOpenProfile,
   onOpenRoll,
 }: {
   onGoAccount?: () => void;
+  onGoTab?: (tab: TabId) => void;
   onOpenProfile?: (username: string) => void;
   onOpenRoll?: (id: string, username?: string | null) => void;
 } = {}) {
@@ -43,6 +47,7 @@ export function HomeScreen({
     rolling,
     roll,
     saveError,
+    reportSaveError,
     lastJourneyUnlocks,
     lastSecretUnlocks,
     lastNewBadgeIds,
@@ -176,9 +181,9 @@ export function HomeScreen({
     } catch (e) {
       pendingFx.current = false;
       setRevealDone(false);
-      log.error('handleRoll failed', {
-        err: e instanceof Error ? e.message : String(e),
-      });
+      const msg = e instanceof Error ? e.message : String(e);
+      log.error('handleRoll failed', { err: msg });
+      reportSaveError(msg || 'Roll failed — try again.');
     } finally {
       setAwaitingResult(false);
     }
@@ -242,7 +247,7 @@ export function HomeScreen({
     <div className="relative flex min-h-0 w-full flex-1 flex-col">
       {/* Fixed right rail under sticky header — does not squeeze the roll column */}
       {settings.showLatestRuns !== false && (
-        <div className="pointer-events-none fixed bottom-3 right-3 top-[8rem] z-30 hidden w-[min(18.5rem,calc(100vw-2rem))] xl:block">
+        <div className="pointer-events-none fixed bottom-3 right-3 top-32 z-30 hidden w-[min(18.5rem,calc(100vw-2rem))] xl:block">
           <div className="pointer-events-auto h-full max-h-[calc(100dvh-9rem)]">
             <LatestRunsPanel
               history={history}
@@ -256,11 +261,16 @@ export function HomeScreen({
 
       <div className="flex shrink-0 flex-col items-center gap-5 text-center">
         <OnboardingTip onGoAccount={onGoAccount} />
+        <SignedInOnboardingChecklist
+          onGoAccount={onGoAccount}
+          onGoTab={onGoTab}
+          onSelectRanked={() => setRollMode('ranked')}
+        />
 
         <RollModePicker value={rollMode} onChange={setRollMode} />
 
         {rollMode === 'ranked' && (
-          <div className="flex flex-wrap justify-center gap-2 text-sm">
+          <div className="flex max-w-full flex-wrap justify-center gap-2 text-sm">
             <RankedQuotaPill />
           </div>
         )}
@@ -268,14 +278,14 @@ export function HomeScreen({
         {!busy && !lastRoll && (
           <div className="flex w-full max-w-md flex-col items-center gap-3">
             {(stats.dayStreak > 0 || stats.qualityStreak > 0) && (
-              <div className="flex flex-wrap justify-center gap-2 text-sm text-[var(--prose-2)]">
+              <div className="flex flex-wrap justify-center gap-2 text-sm text-(--prose-2)">
                 {stats.dayStreak > 0 && (
-                  <span className="rounded-md border border-[var(--outline)] px-2.5 py-1">
+                  <span className="rounded-md border border-(--outline) px-2.5 py-1">
                     {stats.dayStreak}d streak
                   </span>
                 )}
                 {stats.qualityStreak > 0 && (
-                  <span className="rounded-md border border-[var(--outline)] px-2.5 py-1">
+                  <span className="rounded-md border border-(--outline) px-2.5 py-1">
                     {stats.qualityStreak} quality
                   </span>
                 )}
@@ -306,13 +316,13 @@ export function HomeScreen({
           spinning={awaitingResult}
         />
 
-        <div className="flex min-h-[4.5rem] flex-col items-center justify-center gap-2">
+        <div className="flex min-h-18 flex-col items-center justify-center gap-2">
           {showPendingEp && <CountUpEP value={0} pending />}
           {showMeta && (
             <div className="number-fade-in flex flex-col items-center gap-2">
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <RarityBadge rarity={lastRoll.rarity} />
-                <span className="text-sm text-[var(--prose-2)]">
+                <span className="text-sm text-(--prose-2)">
                   Top {topPercentFromEP(lastRoll.totalEP)}%
                 </span>
               </div>
@@ -324,14 +334,12 @@ export function HomeScreen({
             </div>
           )}
           {!lastRoll && !busy && (
-            <p className="text-sm text-[var(--prose-2)]">
-              Press Generate to roll
-            </p>
+            <p className="text-sm text-(--prose-2)">Press Generate to roll</p>
           )}
         </div>
 
         {revealDone && lastJourneyUnlocks.length > 0 && (
-          <div className="number-fade-in w-full max-w-md rounded-lg border border-[var(--accent)] bg-[var(--surface-raised)] px-3 py-2.5 text-sm leading-snug">
+          <div className="number-fade-in w-full max-w-md rounded-lg border border-(--accent) bg-(--surface-raised) px-3 py-2.5 text-sm leading-snug">
             Journey unlocked: {lastJourneyUnlocks.map((j) => j.name).join(', ')}{' '}
             (+
             {lastJourneyUnlocks
@@ -342,7 +350,7 @@ export function HomeScreen({
         )}
 
         {revealDone && lastSecretUnlocks.length > 0 && (
-          <div className="number-fade-in w-full max-w-md rounded-xl border-2 border-amber-400/60 bg-gradient-to-br from-violet-500/15 via-amber-500/10 to-teal-500/15 px-4 py-3 text-left text-sm leading-snug shadow-[0_0_24px_rgba(251,191,36,0.15)]">
+          <div className="number-fade-in w-full max-w-md rounded-xl border-2 border-amber-400/60 bg-linear-to-br from-violet-500/15 via-amber-500/10 to-teal-500/15 px-4 py-3 text-left text-sm leading-snug shadow-[0_0_24px_rgba(251,191,36,0.15)]">
             <p className="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300">
               Secret mastery
             </p>
@@ -362,14 +370,14 @@ export function HomeScreen({
                       alt=""
                       className="h-10 w-10 rounded-md object-cover"
                     />
-                    <span className="font-semibold text-[var(--prose)]">
+                    <span className="font-semibold text-(--prose)">
                       {s.name}
                     </span>
                   </div>
                 );
               })}
             </div>
-            <p className="mt-2 text-[var(--prose-2)]">
+            <p className="mt-2 text-(--prose-2)">
               +
               {lastSecretUnlocks.reduce((a, b) => a + b.ep, 0).toLocaleString()}{' '}
               lifetime EP · open Codex → Secret
@@ -386,7 +394,7 @@ export function HomeScreen({
         />
 
         {periodLocked && revealDone && (
-          <p className="max-w-md text-sm text-[var(--prose-2)]">
+          <p className="max-w-md text-sm text-(--prose-2)">
             {rollMode === 'weekly'
               ? 'Weekly challenge is locked until the next UTC week — same seed would only repeat this number.'
               : 'Daily challenge is locked until the next UTC day — same seed would only repeat this number.'}{' '}
@@ -399,7 +407,7 @@ export function HomeScreen({
             <div className="flex flex-wrap items-center justify-center gap-2">
               <button
                 type="button"
-                className="rounded-md border border-[var(--outline)] bg-[var(--surface)] px-3 py-2 text-sm font-semibold text-[var(--prose)] hover:border-[var(--prose-2)]"
+                className="rounded-md border border-(--outline) bg-(--surface) px-3 py-2 text-sm font-semibold text-(--prose) hover:border-(--prose-2)"
                 onClick={() => setShareRoll(lastRoll)}
               >
                 Share
@@ -407,7 +415,7 @@ export function HomeScreen({
               {!lastRoll.attestationSeal ? (
                 <button
                   type="button"
-                  className="rounded-md border border-[var(--outline)] bg-[var(--surface)] px-3 py-2 text-sm font-semibold text-[var(--prose)] hover:border-[var(--prose-2)]"
+                  className="rounded-md border border-(--outline) bg-(--surface) px-3 py-2 text-sm font-semibold text-(--prose) hover:border-(--prose-2)"
                   title="Ask the server to HMAC-seal this roll claim. Not proof of honest RNG."
                   onClick={() => {
                     setAttestMsg(null);
@@ -434,26 +442,26 @@ export function HomeScreen({
               </p>
             )}
             {lastRoll.source === 'client' && rollMode === 'free' && (
-              <p className="text-sm text-[var(--prose-2)]">
+              <p className="text-sm text-(--prose-2)">
                 Free play · places on Leaderboard → Practice (not Ranked)
               </p>
             )}
             {lastRoll.challengeKey && (
-              <p className="text-sm text-[var(--prose-2)]">
+              <p className="text-sm text-(--prose-2)">
                 Challenge:{' '}
-                <span className="font-mono font-medium text-[var(--prose)]">
+                <span className="font-mono font-medium text-(--prose)">
                   {lastRoll.challengeKey}
                 </span>
               </p>
             )}
             {lastRoll.attestationSeal && !attestMsg && (
-              <p className="max-w-sm text-sm leading-snug text-[var(--prose-2)]">
+              <p className="max-w-sm text-sm leading-snug text-(--prose-2)">
                 Server stamped this roll. That records the claim; it does not
                 mean the number came from server RNG.
               </p>
             )}
             {attestMsg && (
-              <p className="max-w-sm text-sm leading-snug text-[var(--prose-2)]">
+              <p className="max-w-sm text-sm leading-snug text-(--prose-2)">
                 {attestMsg}
               </p>
             )}

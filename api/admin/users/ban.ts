@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import { createAuth } from '../../../server/auth.js';
 import { requireAdmin, writeAdminAudit } from '../../../server/admin.js';
 import { rateGuard, readJson } from '../../../server/apiGuards.js';
-import { user } from '../../../server/db/schema.js';
+import { session, user } from '../../../server/db/schema.js';
 import { createLogger } from '../../../server/logger.js';
 import { LIMITS } from '../../../server/rateLimit.js';
 import { defineHandler } from '../../../server/vercel-adapter.js';
@@ -92,6 +92,8 @@ export default defineHandler(async (request) => {
           updatedAt: new Date(),
         })
         .where(eq(user.id, targetId));
+      // Match Better Auth banUser: drop live sessions when plugin API failed.
+      await db.delete(session).where(eq(session.userId, targetId));
     }
   } else {
     const auth = createAuth();

@@ -151,12 +151,12 @@ export function SharePanel({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center">
-      <div className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-lg border-2 border-[var(--outline)] bg-[var(--surface)] p-4 shadow-xl">
+      <div className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-lg border-2 border-(--outline) bg-(--surface) p-4 shadow-xl">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-lg font-bold uppercase tracking-wider">Share</h2>
           <button
             type="button"
-            className="text-[var(--prose-3)] hover:text-[var(--prose)]"
+            className="text-(--prose-3) hover:text-(--prose)"
             onClick={onClose}
           >
             Close
@@ -164,18 +164,18 @@ export function SharePanel({
         </div>
 
         {publish === 'logged-out' && (
-          <div className="mb-4 space-y-2 rounded-lg border border-[var(--outline)] bg-[var(--bg)] p-3 text-sm">
-            <p className="text-[var(--prose)]">
+          <div className="mb-4 space-y-2 rounded-lg border border-(--outline) bg-(--bg) p-3 text-sm">
+            <p className="text-(--prose)">
               If you would like a <strong>public share link</strong>, please
               create an account so rolls sync to the cloud.
             </p>
-            <p className="text-xs text-[var(--prose-3)]">
+            <p className="text-xs text-(--prose-3)">
               You can still copy Discord-style roll text below (without a URL).
             </p>
             {onGoAccount && (
               <button
                 type="button"
-                className="border-2 border-[var(--prose)] bg-[var(--prose)] px-3 py-1.5 text-xs font-bold uppercase text-[var(--bg)]"
+                className="border-2 border-(--prose) bg-(--prose) px-3 py-1.5 text-xs font-bold uppercase text-(--bg)"
                 onClick={() => {
                   onClose();
                   onGoAccount();
@@ -188,7 +188,7 @@ export function SharePanel({
         )}
 
         {publish === 'checking' && (
-          <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[var(--prose-3)]">
+          <p className="mb-3 text-xs font-bold uppercase tracking-wider text-(--prose-3)">
             {syncing ? 'Publishing to cloud…' : 'Waiting for cloud…'}
           </p>
         )}
@@ -202,13 +202,11 @@ export function SharePanel({
 
         {includePublicLink && (
           <>
-            <p className="mb-2 text-xs text-[var(--prose-3)]">
-              Public vanity link:
-            </p>
-            <p className="mb-3 break-all font-mono text-[11px] text-[var(--prose)]">
+            <p className="mb-2 text-xs text-(--prose-3)">Public vanity link:</p>
+            <p className="mb-3 break-all font-mono text-[11px] text-(--prose)">
               {fullUrl}
             </p>
-            <p className="mb-2 text-[10px] text-[var(--prose-3)]">
+            <p className="mb-2 text-[10px] text-(--prose-3)">
               Path: <code>{publicPath}</code>
               {!username && ' · set @username for your handle in the URL'}
             </p>
@@ -216,40 +214,40 @@ export function SharePanel({
         )}
 
         {publish === 'checking' && loggedIn && (
-          <p className="mb-3 break-all font-mono text-[11px] text-[var(--prose-3)] opacity-50">
+          <p className="mb-3 break-all font-mono text-[11px] text-(--prose-3) opacity-50">
             {fullUrl}
           </p>
         )}
 
-        <pre className="mb-3 overflow-x-auto whitespace-pre-wrap rounded-lg border border-[var(--outline)] bg-[#1e1f22] p-4 text-left font-mono text-[13px] leading-relaxed text-[#dbdee1]">
+        <pre className="mb-3 overflow-x-auto whitespace-pre-wrap rounded-lg border border-(--outline) bg-[#1e1f22] p-4 text-left font-mono text-[13px] leading-relaxed text-[#dbdee1]">
           {text}
         </pre>
 
-        <div className="mb-4 grid grid-cols-4 gap-1.5">
+        <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <button
             type="button"
-            className="border-2 border-[var(--prose)] bg-[var(--prose)] px-1.5 py-2 text-[10px] font-bold uppercase leading-tight text-[var(--bg)] sm:text-xs"
+            className="min-h-11 border-2 border-(--prose) bg-(--prose) px-2 py-2 text-xs font-bold uppercase leading-tight text-(--bg) sm:text-sm"
             onClick={() => void copyText()}
           >
             Copy for Discord
           </button>
           <button
             type="button"
-            className="border border-[var(--prose)] px-1.5 py-2 text-[10px] font-bold uppercase leading-tight sm:text-xs"
+            className="min-h-11 border border-(--prose) px-2 py-2 text-xs font-bold uppercase leading-tight sm:text-sm"
             onClick={() => void nativeShare()}
           >
             Share…
           </button>
           <button
             type="button"
-            className="border border-[var(--prose)] px-1.5 py-2 text-[10px] font-bold uppercase leading-tight sm:text-xs"
+            className="min-h-11 border border-(--prose) px-2 py-2 text-xs font-bold uppercase leading-tight sm:text-sm"
             onClick={() => void copyPng()}
           >
             Copy PNG
           </button>
           <button
             type="button"
-            className="border border-[var(--prose)] px-1.5 py-2 text-[10px] font-bold uppercase leading-tight sm:text-xs"
+            className="min-h-11 border border-(--prose) px-2 py-2 text-xs font-bold uppercase leading-tight sm:text-sm"
             onClick={() => void downloadPng()}
           >
             Download PNG
@@ -258,9 +256,9 @@ export function SharePanel({
 
         <div
           ref={cardRef}
-          className="space-y-2 rounded-lg border border-[var(--outline)] bg-[var(--bg)] p-6 text-center"
+          className="space-y-2 rounded-lg border border-(--outline) bg-(--bg) p-6 text-center"
         >
-          <div className="text-xs font-bold uppercase tracking-[0.25em] text-[var(--prose-3)]">
+          <div className="text-xs font-bold uppercase tracking-[0.25em] text-(--prose-3)">
             RNGdle Unlocked 🎲
           </div>
           <div className="mono-number text-4xl font-bold">
@@ -270,7 +268,7 @@ export function SharePanel({
           <div className="flex justify-center gap-2">
             <EPPill ep={roll.totalEP} />
           </div>
-          <p className="text-xs text-[var(--prose-3)]">
+          <p className="text-xs text-(--prose-3)">
             Top {topPercentFromEP(roll.totalEP)}% of roll scores
           </p>
           <div className="flex flex-wrap justify-center gap-1 pt-2">
@@ -280,14 +278,14 @@ export function SharePanel({
               .map((b) => (
                 <span
                   key={b.id}
-                  className="rounded bg-[var(--surface-raised)] px-2 py-0.5 text-[10px] uppercase"
+                  className="rounded bg-(--surface-raised) px-2 py-0.5 text-[10px] uppercase"
                 >
                   {b.emoji} {b.name}
                 </span>
               ))}
           </div>
           {roll.badges.length > 0 && (
-            <p className="pt-1 text-[10px] text-[var(--prose-3)]">
+            <p className="pt-1 text-[10px] text-(--prose-3)">
               {roll.badges.length} badge
               {roll.badges.length === 1 ? '' : 's'} · full list above in share
               text
@@ -295,9 +293,7 @@ export function SharePanel({
           )}
         </div>
 
-        {status && (
-          <p className="mt-2 text-xs text-[var(--prose-3)]">{status}</p>
-        )}
+        {status && <p className="mt-2 text-xs text-(--prose-3)">{status}</p>}
       </div>
     </div>
   );

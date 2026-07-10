@@ -14,18 +14,18 @@ function LegalShell({
   children: ReactNode;
 }) {
   return (
-    <article className="mx-auto max-w-2xl space-y-6 text-sm leading-relaxed text-[var(--prose-2)]">
-      <header className="space-y-2 border-b border-[var(--outline)] pb-4">
-        <p className="text-xs font-semibold uppercase tracking-wider text-[var(--prose-3)]">
+    <article className="mx-auto max-w-2xl space-y-6 text-sm leading-relaxed text-(--prose-2)">
+      <header className="space-y-2 border-b border-(--outline) pb-4">
+        <p className="text-xs font-semibold uppercase tracking-wider text-(--prose-3)">
           RNGdle Unlocked
         </p>
-        <h1 className="text-xl font-bold tracking-tight text-[var(--prose)]">
+        <h1 className="text-xl font-bold tracking-tight text-(--prose)">
           {title}
         </h1>
-        <p className="text-xs text-[var(--prose-3)]">Last updated: {UPDATED}</p>
+        <p className="text-xs text-(--prose-3)">Last updated: {UPDATED}</p>
       </header>
       {children}
-      <footer className="space-y-2 border-t border-[var(--outline)] pt-4 text-xs text-[var(--prose-3)]">
+      <footer className="space-y-2 border-t border-(--outline) pt-4 text-xs text-(--prose-3)">
         <p>
           Questions:{' '}
           <a className="underline" href={`mailto:${CONTACT}`}>
@@ -55,17 +55,17 @@ function TermsBody() {
   return (
     <>
       <section className="space-y-2">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--prose)]">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
           1. The service
         </h2>
         <p>
-          <strong className="text-[var(--prose)]">RNGdle Unlocked</strong> (
+          <strong className="text-(--prose)">RNGdle Unlocked</strong> (
           <a className="underline" href={SITE}>
             {SITE}
           </a>
           ) is a free, fan-made random-number game (roll 0–1,000,000, badges,
           EP, optional accounts). It is{' '}
-          <strong className="text-[var(--prose)]">
+          <strong className="text-(--prose)">
             not affiliated with rngdle.com
           </strong>
           .
@@ -77,7 +77,7 @@ function TermsBody() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--prose)]">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
           2. Accounts &amp; sign-in
         </h2>
         <p>You may create or link an account via:</p>
@@ -94,33 +94,31 @@ function TermsBody() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--prose)]">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
           3. Fair play
         </h2>
         <ul className="list-disc space-y-1 pl-5">
           <li>
-            <strong className="text-[var(--prose)]">
-              Free play / Practice
-            </strong>{' '}
-            is client-side RNG synced on an honor system. Do not treat Practice
+            <strong className="text-(--prose)">Free play / Practice</strong> is
+            client-side RNG synced on an honor system. Do not treat Practice
             leaderboards as competitive proof.
           </li>
           <li>
-            <strong className="text-[var(--prose)]">Ranked</strong> rolls are
-            issued by the server. Attempting to forge Ranked scores, abuse rate
-            limits, harass players, or exploit the service may result in bans or
-            account removal.
+            <strong className="text-(--prose)">Ranked</strong> rolls are issued
+            by the server. Attempting to forge Ranked scores, abuse rate limits,
+            harass players, or exploit the service may result in bans or account
+            removal.
           </li>
           <li>
-            <strong className="text-[var(--prose)]">Arcade</strong> Digits runs
-            are server-authoritative and never convertible to EP. Do not treat
+            <strong className="text-(--prose)">Arcade</strong> Digits runs are
+            server-authoritative and never convertible to EP. Do not treat
             Arcade high scores as interchangeable with Ranked or Practice EP.
           </li>
         </ul>
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--prose)]">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
           4. Content &amp; conduct
         </h2>
         <p>
@@ -131,7 +129,7 @@ function TermsBody() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--prose)]">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
           5. Availability
         </h2>
         <p>
@@ -142,7 +140,7 @@ function TermsBody() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--prose)]">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
           6. Third-party sign-in
         </h2>
         <p>
@@ -153,7 +151,7 @@ function TermsBody() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--prose)]">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
           7. Changes
         </h2>
         <p>
@@ -170,50 +168,47 @@ function PrivacyBody() {
   return (
     <>
       <section className="space-y-2">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--prose)]">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
           1. Overview
         </h2>
         <p>
           This Privacy Policy explains what{' '}
-          <strong className="text-[var(--prose)]">RNGdle Unlocked</strong>{' '}
-          collects when you play or sign in, and how we use it. Solo play can
-          stay entirely in your browser (
+          <strong className="text-(--prose)">RNGdle Unlocked</strong> collects
+          when you play or sign in, and how we use it. Solo play can stay
+          entirely in your browser (
           <code className="text-xs">localStorage</code>). Cloud features are
           optional.
         </p>
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--prose)]">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
           2. Data we collect
         </h2>
         <ul className="list-disc space-y-1.5 pl-5">
           <li>
-            <strong className="text-[var(--prose)]">Account</strong> — email,
-            display name, optional @username, password hash (if you use
-            password), profile fields you set (bio, flair, avatar choice,
-            accent).
+            <strong className="text-(--prose)">Account</strong> — email, display
+            name, optional @username, password hash (if you use password),
+            profile fields you set (bio, flair, avatar choice, accent).
           </li>
           <li>
-            <strong className="text-[var(--prose)]">
-              OAuth (Discord / GitHub)
-            </strong>{' '}
+            <strong className="text-(--prose)">OAuth (Discord / GitHub)</strong>{' '}
             — provider account id, email (if the provider returns one), and
             tokens needed to keep the link working. We do not post to Discord or
             GitHub on your behalf.
           </li>
           <li>
-            <strong className="text-[var(--prose)]">Game progress</strong> —
-            rolls, badges, EP, stats, and related sync data when you use cloud
-            sync or Ranked.
+            <strong className="text-(--prose)">Game progress</strong> — rolls,
+            badges, EP, stats, and related sync data when you use cloud sync or
+            Ranked.
           </li>
           <li>
-            <strong className="text-[var(--prose)]">Social</strong> — follows,
-            public profile visibility settings, reports you submit, and
-            notifications we generate for you.
+            <strong className="text-(--prose)">Social</strong> — follows, public
+            profile visibility settings, reports you submit, and notifications
+            we generate for you.
           </li>
           <li>
-            <strong className="text-[var(--prose)]">Technical</strong> — session
+            <strong className="text-(--prose)">Technical</strong> — session
             cookies, approximate IP for rate limiting, and standard hosting /
             analytics logs (e.g. Vercel).
           </li>
@@ -221,7 +216,7 @@ function PrivacyBody() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--prose)]">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
           3. How we use data
         </h2>
         <ul className="list-disc space-y-1 pl-5">
@@ -231,14 +226,14 @@ function PrivacyBody() {
           <li>Improve reliability (error and access logs)</li>
         </ul>
         <p>
-          We do <strong className="text-[var(--prose)]">not</strong> sell your
+          We do <strong className="text-(--prose)">not</strong> sell your
           personal information. We do not use Discord/GitHub access to message
           your friends or modify your repos.
         </p>
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--prose)]">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
           4. Processors / hosting
         </h2>
         <p>Depending on features you use, data may be processed by:</p>
@@ -252,7 +247,7 @@ function PrivacyBody() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--prose)]">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
           5. Public information
         </h2>
         <p>
@@ -264,7 +259,7 @@ function PrivacyBody() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--prose)]">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
           6. Retention &amp; deletion
         </h2>
         <p>
@@ -285,7 +280,7 @@ function PrivacyBody() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--prose)]">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
           7. Children
         </h2>
         <p>
@@ -295,7 +290,7 @@ function PrivacyBody() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--prose)]">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
           8. Changes
         </h2>
         <p>

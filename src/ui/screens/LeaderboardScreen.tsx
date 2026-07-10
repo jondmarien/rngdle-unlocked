@@ -1,9 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { coerceRarity } from '../../game';
 import { fetchArcadeLeaderboard } from '../../lib/arcade-api';
 import { useSession } from '../../lib/auth-client';
-import { formatDateTime } from '../../lib/format';
 import {
   fetchBestRollLeaderboard,
   fetchFeed,
@@ -13,12 +12,19 @@ import {
   type LeaderboardSort,
 } from '../../lib/leaderboard-api';
 import {
+  FOLLOWING_USERNAMES_QUERY_KEY,
   fetchFollowingUsernames,
   followUser,
   unfollowUser,
 } from '../../lib/notifications-api';
 import { FindPlayers } from '../components/FindPlayers';
+import { QueryErrorBanner } from '../components/QueryErrorBanner';
 import { RarityBadge } from '../components/RarityBadge';
+import {
+  laneFromSource,
+  RelativeTime,
+  RollMetaLine,
+} from '../components/RollRow';
 import { SegmentedToggle } from '../components/SegmentedToggle';
 
 /** Mode-first primary tabs (replaces Board/Feed/Find + nested Ranked/Practice). */
@@ -62,14 +68,21 @@ export function LeaderboardScreen({
   onOpenProfile: (username: string) => void;
 }) {
   const { data: session } = useSession();
+  const queryClient = useQueryClient();
   const myUsername = session?.user.username ?? null;
 
   const [view, setView] = useState<BoardView>('ranked');
   const [metricKey, setMetricKey] = useState<BoardMetricKey>('total-ep');
   const [period, setPeriod] = useState<'all' | 'week'>('all');
   const [feedSource, setFeedSource] = useState<FeedSource>('all');
-  const [following, setFollowing] = useState<Set<string>>(new Set());
   const [followBusy, setFollowBusy] = useState<string | null>(null);
+  const followingQuery = useQuery({
+    queryKey: FOLLOWING_USERNAMES_QUERY_KEY,
+    queryFn: fetchFollowingUsernames,
+    enabled: Boolean(session?.user),
+    staleTime: 60_000,
+  });
+  const following = followingQuery.data ?? new Set<string>();
 
   const { metric, sort, sortBy } = metricToState(metricKey);
   const scope = view === 'practice' ? 'practice' : 'ranked';
@@ -80,14 +93,6 @@ export function LeaderboardScreen({
     scope === 'ranked' && sort === 'badges' ? 'ep' : sort;
   const effectiveMetricKey: BoardMetricKey =
     scope === 'ranked' && metricKey === 'total-badges' ? 'total-ep' : metricKey;
-
-  useEffect(() => {
-    if (session?.user) {
-      void fetchFollowingUsernames().then(setFollowing);
-    } else {
-      setFollowing(new Set());
-    }
-  }, [session?.user]);
 
   useEffect(() => {
     if (
@@ -180,12 +185,12 @@ export function LeaderboardScreen({
         await unfollowUser(username);
         const next = new Set(following);
         next.delete(key);
-        setFollowing(next);
+        queryClient.setQueryData(FOLLOWING_USERNAMES_QUERY_KEY, next);
       } else {
         await followUser(username);
         const next = new Set(following);
         next.add(key);
-        setFollowing(next);
+        queryClient.setQueryData(FOLLOWING_USERNAMES_QUERY_KEY, next);
       }
     } catch {
       /* keep previous following set */
@@ -233,12 +238,11 @@ export function LeaderboardScreen({
     <div className="space-y-4">
       <div>
         <h1 className="text-xl font-bold tracking-tight">Leaderboard</h1>
-        <p className="text-sm text-[var(--prose-2)]">
-          <strong className="text-[var(--prose)]">Ranked</strong> (server free
-          play) and <strong className="text-[var(--prose)]">Practice</strong>{' '}
-          (synced Free play) use EP.{' '}
-          <strong className="text-[var(--prose)]">Arcade</strong> ranks best
-          Digits run — separate from EP. Feed and Find stay social.
+        <p className="text-sm text-(--prose-2)">
+          <strong className="text-(--prose)">Ranked</strong> (server free play)
+          and <strong className="text-(--prose)">Practice</strong> (synced Free
+          play) use EP. <strong className="text-(--prose)">Arcade</strong> ranks
+          best Digits run — separate from EP. Feed and Find stay social.
         </p>
       </div>
 
@@ -257,17 +261,19 @@ export function LeaderboardScreen({
       {view === 'find' && (
         <FindPlayers
           following={following}
-          onFollowingChange={setFollowing}
+          onFollowingChange={(next) =>
+            queryClient.setQueryData(FOLLOWING_USERNAMES_QUERY_KEY, next)
+          }
           onOpenProfile={onOpenProfile}
         />
       )}
 
       {view === 'feed' && (
         <div className="space-y-3">
-          <p className="text-sm text-[var(--prose-2)]">
-            Public rolls from{' '}
-            <strong className="text-[var(--prose)]">you</strong> and people you
-            follow (last 14 days). Use Find or + on the board to follow others.
+          <p className="text-sm text-(--prose-2)">
+            Public rolls from <strong className="text-(--prose)">you</strong>{' '}
+            and people you follow (last 14 days). Use Find or + on the board to
+            follow others.
           </p>
           <SegmentedToggle
             options={[
@@ -278,7 +284,7 @@ export function LeaderboardScreen({
             value={feedSource}
             onChange={setFeedSource}
           />
-          <p className="text-xs text-[var(--prose-3)]">
+          <p className="text-xs text-(--prose-3)">
             {feedSource === 'ranked'
               ? 'Server Ranked free-play rolls only.'
               : feedSource === 'practice'
@@ -286,40 +292,44 @@ export function LeaderboardScreen({
                 : 'Both Ranked and Free play public rolls.'}
           </p>
           {feedLoading && (
-            <p className="text-sm text-[var(--prose-2)]">Loading feed…</p>
+            <p className="text-sm text-(--prose-2)">Loading feed…</p>
           )}
           {feedError && (
-            <p className="text-sm text-[var(--prose-2)]">{feedError}</p>
+            <QueryErrorBanner
+              message={feedError}
+              onRetry={() => void feedQuery.refetch()}
+            />
           )}
           {!feedLoading && feed.length === 0 && !feedError && (
-            <p className="text-sm text-[var(--prose-2)]">
+            <p className="text-sm text-(--prose-2)">
               No public rolls in this lane yet. Roll Free or Ranked, or follow
               players from Ranked / Practice / Find.
             </p>
           )}
-          <ul className="divide-y divide-[var(--outline)] border border-[var(--outline)]">
+          <ul className="divide-y divide-(--outline) border border-(--outline)">
             {feed.map((item) => {
               const isMe =
                 item.isMe ||
                 (myUsername &&
                   item.username &&
                   item.username.toLowerCase() === myUsername.toLowerCase());
-              const lane =
-                item.source === 'ranked'
-                  ? 'Ranked'
-                  : item.source === 'challenge'
-                    ? 'Challenge'
-                    : 'Free play';
+              const lane = laneFromSource(item.source);
               return (
                 <li
                   key={`${item.id}-${item.rolledAt}`}
-                  className={`flex flex-wrap items-center justify-between gap-2 px-3 py-2 ${
+                  className={`relative overflow-hidden px-3 py-3 ${
                     isMe
                       ? 'bg-[color-mix(in_srgb,var(--accent)_12%,transparent)]'
-                      : ''
+                      : 'hover:bg-(--surface-raised)'
                   }`}
                 >
-                  <div>
+                  {lane === 'ranked' && (
+                    <span
+                      className="absolute inset-y-0 left-0 w-[3px] bg-amber-500"
+                      aria-hidden
+                    />
+                  )}
+                  <div className="pl-0.5">
                     <button
                       type="button"
                       className="font-bold hover:underline"
@@ -329,7 +339,7 @@ export function LeaderboardScreen({
                     >
                       @{item.username}
                       {isMe && (
-                        <span className="ml-1.5 text-xs font-bold text-[var(--accent)]">
+                        <span className="ml-1.5 text-xs font-bold text-(--accent)">
                           you
                         </span>
                       )}
@@ -337,20 +347,13 @@ export function LeaderboardScreen({
                     <div className="mono-number text-lg font-bold">
                       {item.number.toLocaleString()}
                     </div>
-                    <p className="text-[11px] text-[var(--prose-3)]">
-                      {lane}
-                      {item.rolledAt
-                        ? ` · ${new Date(item.rolledAt).toLocaleString()}`
-                        : ''}
-                    </p>
-                  </div>
-                  <div className="text-sm text-[var(--prose-2)]">
-                    <span className="font-semibold capitalize text-amber-600 dark:text-amber-400">
-                      {item.rarity}
-                    </span>
-                    {' · '}
-                    {item.totalEP.toLocaleString()} EP
-                    {item.attested ? ' · sealed' : ''}
+                    <RollMetaLine
+                      lane={lane}
+                      rarity={coerceRarity(item.rarity)}
+                      totalEP={item.totalEP}
+                      rolledAt={item.rolledAt}
+                      attested={item.attested}
+                    />
                   </div>
                 </li>
               );
@@ -361,7 +364,7 @@ export function LeaderboardScreen({
 
       {view === 'arcade' && (
         <>
-          <p className="text-xs leading-snug text-[var(--prose-3)]">
+          <p className="text-xs leading-snug text-(--prose-3)">
             Best single Arcade run (Digits). Separate from EP — play from the
             Arcade tab.
           </p>
@@ -370,22 +373,22 @@ export function LeaderboardScreen({
             <div
               className={`rounded-lg border-2 px-3 py-2 text-sm ${
                 meOnPage
-                  ? 'border-[var(--accent)] bg-[var(--surface-raised)]'
-                  : 'border-[var(--outline)] bg-[var(--surface)]'
+                  ? 'border-(--accent) bg-(--surface-raised)'
+                  : 'border-(--outline) bg-(--surface)'
               }`}
             >
-              <span className="text-sm font-semibold text-[var(--prose-2)]">
+              <span className="text-sm font-semibold text-(--prose-2)">
                 You on the board
               </span>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="font-bold">
                   #{arcadeMe.rank}{' '}
                   {arcadeMe.username ? `@${arcadeMe.username}` : arcadeMe.name}
-                  <span className="ml-2 rounded bg-[var(--prose)] px-1.5 py-0.5 text-xs text-[var(--bg)]">
+                  <span className="ml-2 rounded bg-(--prose) px-1.5 py-0.5 text-xs text-(--bg)">
                     you
                   </span>
                 </span>
-                <span className="text-sm text-[var(--prose-2)]">
+                <span className="text-sm text-(--prose-2)">
                   {arcadeMe.bestRunScore.toLocaleString()} Digits ·{' '}
                   {arcadeMe.totalRunsCompleted.toLocaleString()} runs
                 </span>
@@ -394,17 +397,30 @@ export function LeaderboardScreen({
           )}
 
           {session?.user && !loading && !arcadeMe && (
-            <p className="text-sm text-[var(--prose-2)]">
+            <p className="text-sm text-(--prose-2)">
               Claim @username and complete an Arcade run to place here.
             </p>
           )}
 
-          {loading && <p className="text-sm text-[var(--prose-2)]">Loading…</p>}
+          {loading && <p className="text-sm text-(--prose-2)">Loading…</p>}
           {error && (
-            <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+            <QueryErrorBanner
+              message={error}
+              onRetry={() => {
+                if (view === 'arcade') void arcadeQuery.refetch();
+                else void activeQuery.refetch();
+              }}
+            />
           )}
 
-          <ol className="divide-y divide-[var(--outline)] border border-[var(--outline)]">
+          {!loading && !error && arcadeEntries.length === 0 && (
+            <div className="rounded-lg border border-dashed border-(--outline) px-4 py-6 text-center text-sm text-(--prose-2)">
+              No Arcade runs on the board yet. Start a Digits run from the
+              Arcade tab.
+            </div>
+          )}
+
+          <ol className="divide-y divide-(--outline) border border-(--outline)">
             {arcadeEntries.map((e) => {
               const isMe =
                 (myUsername &&
@@ -420,12 +436,12 @@ export function LeaderboardScreen({
                   key={`arcade-${e.rank}-${e.username}`}
                   className={`flex flex-wrap items-center justify-between gap-2 px-3 py-2 ${
                     isMe
-                      ? 'bg-[color-mix(in_srgb,var(--accent)_18%,transparent)] ring-1 ring-inset ring-[var(--accent)]'
+                      ? 'bg-[color-mix(in_srgb,var(--accent)_18%,transparent)] ring-1 ring-inset ring-(--accent)'
                       : ''
                   }`}
                 >
                   <div className="flex min-w-0 items-center gap-3">
-                    <span className="mono-number w-8 text-[var(--prose-2)]">
+                    <span className="mono-number w-8 text-(--prose-2)">
                       #{e.rank}
                     </span>
                     <button
@@ -436,14 +452,14 @@ export function LeaderboardScreen({
                     >
                       {e.username ? `@${e.username}` : e.name}
                       {isMe && (
-                        <span className="ml-2 text-xs font-bold text-[var(--accent)]">
+                        <span className="ml-2 text-xs font-bold text-(--accent)">
                           you
                         </span>
                       )}
                     </button>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <div className="text-sm text-[var(--prose-2)]">
+                    <div className="text-sm text-(--prose-2)">
                       <span className="font-semibold text-amber-700 dark:text-amber-400">
                         {e.bestRunScore.toLocaleString()} Digits
                       </span>
@@ -454,12 +470,17 @@ export function LeaderboardScreen({
                       <button
                         type="button"
                         title={isFollowing ? 'Unfollow' : 'Follow'}
+                        aria-label={
+                          isFollowing
+                            ? `Unfollow @${e.username}`
+                            : `Follow @${e.username}`
+                        }
                         disabled={followBusy === uname}
                         onClick={() => void toggleFollow(e.username!)}
-                        className={`flex h-8 w-8 items-center justify-center rounded-md border text-lg font-bold leading-none ${
+                        className={`flex h-11 w-11 items-center justify-center rounded-md border text-lg font-bold leading-none ${
                           isFollowing
-                            ? 'border-[var(--outline)] text-[var(--prose-2)]'
-                            : 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
+                            ? 'border-(--outline) text-(--prose-2)'
+                            : 'border-(--prose) bg-(--prose) text-(--bg)'
                         }`}
                       >
                         {isFollowing ? '✓' : '+'}
@@ -476,11 +497,11 @@ export function LeaderboardScreen({
       {onEpBoard && (
         <>
           <div className="space-y-2">
-            <label className="block text-xs font-semibold uppercase tracking-wide text-[var(--prose-3)]">
+            <label className="block text-xs font-semibold uppercase tracking-wide text-(--prose-3)">
               Metric
             </label>
             <select
-              className="w-full max-w-md rounded-md border border-[var(--outline)] bg-[var(--surface)] px-2.5 py-2 text-sm font-semibold"
+              className="w-full max-w-md rounded-md border border-(--outline) bg-(--surface) px-2.5 py-2 text-sm font-semibold"
               value={effectiveMetricKey}
               onChange={(e) => setMetricKey(e.target.value as BoardMetricKey)}
             >
@@ -490,7 +511,7 @@ export function LeaderboardScreen({
                 </option>
               ))}
             </select>
-            <p className="text-xs leading-snug text-[var(--prose-3)]">
+            <p className="text-xs leading-snug text-(--prose-3)">
               {view === 'ranked'
                 ? 'Only rolls from Roll → Ranked (server CSPRNG). Sign-in + @username required. Crowns use this board too.'
                 : metric === 'best'
@@ -500,7 +521,7 @@ export function LeaderboardScreen({
           </div>
 
           <div className="space-y-1">
-            <span className="text-xs font-semibold uppercase tracking-wide text-[var(--prose-3)]">
+            <span className="text-xs font-semibold uppercase tracking-wide text-(--prose-3)">
               Period
             </span>
             <SegmentedToggle
@@ -518,21 +539,21 @@ export function LeaderboardScreen({
             <div
               className={`rounded-lg border-2 px-3 py-2 text-sm ${
                 meOnPage
-                  ? 'border-[var(--accent)] bg-[var(--surface-raised)]'
-                  : 'border-[var(--outline)] bg-[var(--surface)]'
+                  ? 'border-(--accent) bg-(--surface-raised)'
+                  : 'border-(--outline) bg-(--surface)'
               }`}
             >
-              <span className="text-sm font-semibold text-[var(--prose-2)]">
+              <span className="text-sm font-semibold text-(--prose-2)">
                 You on the board
               </span>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="font-bold">
                   #{me.rank} {me.username ? `@${me.username}` : me.name}
-                  <span className="ml-2 rounded bg-[var(--prose)] px-1.5 py-0.5 text-xs text-[var(--bg)]">
+                  <span className="ml-2 rounded bg-(--prose) px-1.5 py-0.5 text-xs text-(--bg)">
                     you
                   </span>
                 </span>
-                <span className="text-sm text-[var(--prose-2)]">
+                <span className="text-sm text-(--prose-2)">
                   {me.lifetimeEP.toLocaleString()} EP ·{' '}
                   {me.lifetimeRollCount.toLocaleString()} rolls
                 </span>
@@ -544,22 +565,22 @@ export function LeaderboardScreen({
             <div
               className={`rounded-lg border-2 px-3 py-2 text-sm ${
                 meOnPage
-                  ? 'border-[var(--accent)] bg-[var(--surface-raised)]'
-                  : 'border-[var(--outline)] bg-[var(--surface)]'
+                  ? 'border-(--accent) bg-(--surface-raised)'
+                  : 'border-(--outline) bg-(--surface)'
               }`}
             >
-              <span className="text-sm font-semibold text-[var(--prose-2)]">
+              <span className="text-sm font-semibold text-(--prose-2)">
                 You on the board
               </span>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="font-bold">
                   #{bestMe.rank}{' '}
                   {bestMe.username ? `@${bestMe.username}` : bestMe.name}
-                  <span className="ml-2 rounded bg-[var(--prose)] px-1.5 py-0.5 text-xs text-[var(--bg)]">
+                  <span className="ml-2 rounded bg-(--prose) px-1.5 py-0.5 text-xs text-(--bg)">
                     you
                   </span>
                 </span>
-                <span className="text-sm text-[var(--prose-2)]">
+                <span className="text-sm text-(--prose-2)">
                   {bestMe.number.toLocaleString()} ·{' '}
                   {bestMe.totalEP.toLocaleString()} EP
                 </span>
@@ -570,7 +591,7 @@ export function LeaderboardScreen({
           {session?.user &&
             !loading &&
             ((metric === 'total' && !me) || (metric === 'best' && !bestMe)) && (
-              <p className="text-sm text-[var(--prose-2)]">
+              <p className="text-sm text-(--prose-2)">
                 {view === 'ranked'
                   ? 'Claim @username and generate Ranked free-play rolls to place here.'
                   : metric === 'best'
@@ -579,13 +600,27 @@ export function LeaderboardScreen({
               </p>
             )}
 
-          {loading && <p className="text-sm text-[var(--prose-2)]">Loading…</p>}
+          {loading && <p className="text-sm text-(--prose-2)">Loading…</p>}
           {error && (
-            <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+            <QueryErrorBanner
+              message={error}
+              onRetry={() => void activeQuery.refetch()}
+            />
           )}
 
+          {!loading &&
+            !error &&
+            ((metric === 'total' && entries.length === 0) ||
+              (metric === 'best' && bestEntries.length === 0)) && (
+              <div className="rounded-lg border border-dashed border-(--outline) px-4 py-6 text-center text-sm text-(--prose-2)">
+                {view === 'ranked'
+                  ? 'No Ranked rolls on the board yet. Sign in, claim @username, and Generate with Roll → Ranked.'
+                  : 'No Practice entries yet. Sync Free play progress or make a public Free play roll.'}
+              </div>
+            )}
+
           {metric === 'total' && (
-            <ol className="divide-y divide-[var(--outline)] border border-[var(--outline)]">
+            <ol className="divide-y divide-(--outline) border border-(--outline)">
               {entries.map((e) => {
                 const isMe =
                   (myUsername &&
@@ -601,12 +636,12 @@ export function LeaderboardScreen({
                     key={`${e.rank}-${e.username}`}
                     className={`flex flex-wrap items-center justify-between gap-2 px-3 py-2 ${
                       isMe
-                        ? 'bg-[color-mix(in_srgb,var(--accent)_18%,transparent)] ring-1 ring-inset ring-[var(--accent)]'
+                        ? 'bg-[color-mix(in_srgb,var(--accent)_18%,transparent)] ring-1 ring-inset ring-(--accent)'
                         : ''
                     }`}
                   >
                     <div className="flex min-w-0 items-center gap-3">
-                      <span className="mono-number w-8 text-[var(--prose-2)]">
+                      <span className="mono-number w-8 text-(--prose-2)">
                         #{e.rank}
                       </span>
                       <button
@@ -617,14 +652,14 @@ export function LeaderboardScreen({
                       >
                         {e.username ? `@${e.username}` : e.name}
                         {isMe && (
-                          <span className="ml-2 text-xs font-bold text-[var(--accent)]">
+                          <span className="ml-2 text-xs font-bold text-(--accent)">
                             you
                           </span>
                         )}
                       </button>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <div className="text-sm text-[var(--prose-2)]">
+                      <div className="text-sm text-(--prose-2)">
                         <span className="font-semibold text-amber-700 dark:text-amber-400">
                           {e.lifetimeEP.toLocaleString()} EP
                         </span>
@@ -635,12 +670,17 @@ export function LeaderboardScreen({
                         <button
                           type="button"
                           title={isFollowing ? 'Unfollow' : 'Follow'}
+                          aria-label={
+                            isFollowing
+                              ? `Unfollow @${e.username}`
+                              : `Follow @${e.username}`
+                          }
                           disabled={followBusy === uname}
                           onClick={() => void toggleFollow(e.username!)}
-                          className={`flex h-8 w-8 items-center justify-center rounded-md border text-lg font-bold leading-none ${
+                          className={`flex h-11 w-11 items-center justify-center rounded-md border text-lg font-bold leading-none ${
                             isFollowing
-                              ? 'border-[var(--outline)] text-[var(--prose-2)]'
-                              : 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
+                              ? 'border-(--outline) text-(--prose-2)'
+                              : 'border-(--prose) bg-(--prose) text-(--bg)'
                           }`}
                         >
                           {isFollowing ? '✓' : '+'}
@@ -654,7 +694,7 @@ export function LeaderboardScreen({
           )}
 
           {metric === 'best' && (
-            <ol className="divide-y divide-[var(--outline)] border border-[var(--outline)]">
+            <ol className="divide-y divide-(--outline) border border-(--outline)">
               {bestEntries.map((e) => {
                 const isMe =
                   (myUsername &&
@@ -670,12 +710,12 @@ export function LeaderboardScreen({
                     key={`best-${e.rank}-${e.username}`}
                     className={`flex flex-wrap items-center justify-between gap-2 px-3 py-2 ${
                       isMe
-                        ? 'bg-[color-mix(in_srgb,var(--accent)_18%,transparent)] ring-1 ring-inset ring-[var(--accent)]'
+                        ? 'bg-[color-mix(in_srgb,var(--accent)_18%,transparent)] ring-1 ring-inset ring-(--accent)'
                         : ''
                     }`}
                   >
                     <div className="flex min-w-0 items-center gap-3">
-                      <span className="mono-number w-8 text-[var(--prose-2)]">
+                      <span className="mono-number w-8 text-(--prose-2)">
                         #{e.rank}
                       </span>
                       <div className="min-w-0">
@@ -689,7 +729,7 @@ export function LeaderboardScreen({
                         >
                           {e.username ? `@${e.username}` : e.name}
                           {isMe && (
-                            <span className="ml-2 text-xs font-bold text-[var(--accent)]">
+                            <span className="ml-2 text-xs font-bold text-(--accent)">
                               you
                             </span>
                           )}
@@ -697,13 +737,14 @@ export function LeaderboardScreen({
                         <div className="mono-number text-lg font-bold">
                           {e.number.toLocaleString()}
                         </div>
-                        <p className="text-[11px] text-[var(--prose-3)]">
-                          {formatDateTime(e.rolledAt)}
-                        </p>
+                        <RelativeTime
+                          iso={e.rolledAt}
+                          className="text-[11px] text-(--prose-3)"
+                        />
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <div className="text-right text-sm text-[var(--prose-2)]">
+                      <div className="text-right text-sm text-(--prose-2)">
                         <RarityBadge rarity={coerceRarity(e.rarity)} />
                         <div className="font-semibold text-amber-700 dark:text-amber-400">
                           {e.totalEP.toLocaleString()} EP
@@ -713,12 +754,17 @@ export function LeaderboardScreen({
                         <button
                           type="button"
                           title={isFollowing ? 'Unfollow' : 'Follow'}
+                          aria-label={
+                            isFollowing
+                              ? `Unfollow @${e.username}`
+                              : `Follow @${e.username}`
+                          }
                           disabled={followBusy === uname}
                           onClick={() => void toggleFollow(e.username!)}
-                          className={`flex h-8 w-8 items-center justify-center rounded-md border text-lg font-bold leading-none ${
+                          className={`flex h-11 w-11 items-center justify-center rounded-md border text-lg font-bold leading-none ${
                             isFollowing
-                              ? 'border-[var(--outline)] text-[var(--prose-2)]'
-                              : 'border-[var(--prose)] bg-[var(--prose)] text-[var(--bg)]'
+                              ? 'border-(--outline) text-(--prose-2)'
+                              : 'border-(--prose) bg-(--prose) text-(--bg)'
                           }`}
                         >
                           {isFollowing ? '✓' : '+'}

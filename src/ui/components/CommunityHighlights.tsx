@@ -3,6 +3,7 @@ import { coerceRarity } from '../../game';
 import { rarityRing } from '../../lib/badge-theme';
 import { fetchHighlights, type HighlightRoll } from '../../lib/highlights-api';
 import { BadgePill } from './BadgePill';
+import { QueryErrorBanner } from './QueryErrorBanner';
 import { RarityBadge } from './RarityBadge';
 
 export type { HighlightRoll };
@@ -19,7 +20,7 @@ export function CommunityHighlights({
 } = {}) {
   // Query cache replaces the old module-level "soft session cache":
   // last good board survives remounts, poll + focus refresh, one soft retry.
-  const { data, error } = useQuery({
+  const { data, error, refetch } = useQuery({
     queryKey: ['highlights'],
     queryFn: ({ signal }) => fetchHighlights(signal),
     refetchInterval: POLL_MS,
@@ -30,15 +31,18 @@ export function CommunityHighlights({
 
   if (error && !data) {
     return (
-      <p className="mx-auto w-full max-w-md text-center text-xs text-[var(--prose-3)]">
-        Could not load community highlights
-      </p>
+      <div className="mx-auto w-full max-w-md">
+        <QueryErrorBanner
+          message="Could not load community highlights"
+          onRetry={() => void refetch()}
+        />
+      </div>
     );
   }
 
   if (!data) {
     return (
-      <p className="mx-auto w-full max-w-md text-center text-xs text-[var(--prose-3)]">
+      <p className="mx-auto w-full max-w-md text-center text-xs text-(--prose-3)">
         Loading community rolls…
       </p>
     );
@@ -47,11 +51,11 @@ export function CommunityHighlights({
   const empty = !data.today && !data.week;
   if (empty) {
     return (
-      <div className="mx-auto w-full max-w-md rounded-xl border border-dashed border-[var(--outline)] bg-[var(--surface)]/60 px-4 py-5 text-center">
-        <p className="text-sm font-semibold text-[var(--prose-2)]">
+      <div className="mx-auto w-full max-w-md rounded-xl border border-dashed border-(--outline) bg-(--surface)/60 px-4 py-5 text-center">
+        <p className="text-sm font-semibold text-(--prose-2)">
           No Ranked rolls on the board yet
         </p>
-        <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-[var(--prose-3)]">
+        <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-(--prose-3)">
           Sign in, claim @username, and use Ranked free play — only server rolls
           claim today&apos;s / this week&apos;s crowns.
         </p>
@@ -121,8 +125,8 @@ function HighlightCard({
             : 'text-xs';
 
   return (
-    <section className="flex h-full min-w-0 flex-col overflow-hidden rounded-xl border border-[var(--outline)] bg-[var(--surface)] px-3 py-3.5 text-center shadow-sm sm:px-4 sm:py-4">
-      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--prose-3)] sm:text-[11px]">
+    <section className="flex h-full min-w-0 flex-col overflow-hidden rounded-xl border border-(--outline) bg-(--surface) px-3 py-3.5 text-center shadow-sm sm:px-4 sm:py-4">
+      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-(--prose-3) sm:text-[11px]">
         {label}
       </p>
 
@@ -130,7 +134,7 @@ function HighlightCard({
         type="button"
         disabled={!clickable}
         onClick={() => onOpenRoll?.(roll.id, roll.username)}
-        className={`mx-auto mt-2.5 flex h-[4.75rem] w-[4.75rem] shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 bg-gradient-to-br from-[var(--surface-raised)] to-[var(--bg)] p-1.5 shadow-[0_0_28px_color-mix(in_srgb,var(--accent)_22%,transparent)] sm:mt-3 sm:h-24 sm:w-24 sm:p-2 ${rarityRing(rarity)} ${
+        className={`mx-auto mt-2.5 flex h-19 w-19 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 bg-linear-to-br from-(--surface-raised) to-(--bg) p-1.5 shadow-[0_0_28px_color-mix(in_srgb,var(--accent)_22%,transparent)] sm:mt-3 sm:h-24 sm:w-24 sm:p-2 ${rarityRing(rarity)} ${
           clickable
             ? 'cursor-pointer transition hover:scale-[1.03] active:scale-[0.98]'
             : ''
@@ -138,24 +142,24 @@ function HighlightCard({
         title={clickable ? 'Open roll' : undefined}
       >
         <span
-          className={`mono-number max-w-full truncate text-center font-bold leading-none tracking-tight text-[var(--prose)] ${tileFont}`}
+          className={`mono-number max-w-full truncate text-center font-bold leading-none tracking-tight text-(--prose) ${tileFont}`}
         >
           {display}
         </span>
       </button>
 
-      <p className="mt-2.5 truncate text-xs text-[var(--prose-2)] sm:text-sm">
+      <p className="mt-2.5 truncate text-xs text-(--prose-2) sm:text-sm">
         by{' '}
         {roll.username && onOpenProfile ? (
           <button
             type="button"
-            className="font-semibold text-[var(--accent)] underline-offset-2 hover:underline"
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
             onClick={() => onOpenProfile(roll.username!)}
           >
             {roll.username}
           </button>
         ) : (
-          <span className="font-semibold text-[var(--prose)]">
+          <span className="font-semibold text-(--prose)">
             {roll.username ?? 'someone'}
           </span>
         )}
@@ -171,7 +175,7 @@ function HighlightCard({
             <BadgePill key={`${b.name}-${i}`} badge={b} compact />
           ))}
           {extra > 0 && (
-            <span className="rounded-full border border-[var(--outline)] bg-[var(--bg)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--prose-2)]">
+            <span className="rounded-full border border-(--outline) bg-(--bg) px-1.5 py-0.5 text-[10px] font-semibold text-(--prose-2)">
               +{extra}
             </span>
           )}
@@ -182,7 +186,7 @@ function HighlightCard({
         <p className="mono-number text-sm font-bold text-red-600 dark:text-red-400 sm:text-base">
           {roll.totalEP.toLocaleString()} EP
         </p>
-        <p className="mt-0.5 text-[10px] text-[var(--prose-3)] sm:text-[11px]">
+        <p className="mt-0.5 text-[10px] text-(--prose-3) sm:text-[11px]">
           {footer}
         </p>
       </div>

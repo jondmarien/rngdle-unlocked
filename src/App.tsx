@@ -272,6 +272,7 @@ function AppRoutes() {
       {route.kind === 'tab' && tab === 'home' && (
         <HomeScreen
           onGoAccount={() => goTab('account')}
+          onGoTab={goTab}
           onOpenProfile={goProfile}
           onOpenRoll={goRoll}
         />

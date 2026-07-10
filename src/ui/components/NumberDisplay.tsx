@@ -192,19 +192,19 @@ export function NumberDisplay({
       ? RARITY_GLOW[rarity]
       : isAnimating
         ? 'shadow-[0_0_32px_rgba(255,255,255,0.12)] ring-white/15'
-        : 'shadow-sm ring-[var(--outline)]';
+        : 'shadow-sm ring-(--outline)';
 
   const colorClass =
     fullySettled && rarity
       ? `rarity-${rarity}`
       : isAnimating
-        ? 'text-[var(--prose-2)]'
-        : 'text-[var(--prose)]';
+        ? 'text-(--prose-2)'
+        : 'text-(--prose)';
 
   return (
     <div
       className={[
-        'mono-number relative inline-flex justify-center gap-[0.08em] rounded-2xl border border-transparent bg-[var(--surface)] px-6 py-4 text-5xl font-bold tracking-tight ring-2 transition-[box-shadow,color] duration-300 sm:px-8 sm:py-5 sm:text-7xl',
+        'mono-number relative inline-flex justify-center gap-[0.08em] rounded-2xl border border-transparent bg-(--surface) px-6 py-4 text-5xl font-bold tracking-tight ring-2 transition-[box-shadow,color] duration-300 sm:px-8 sm:py-5 sm:text-7xl',
         glow,
         colorClass,
         isAnimating ? 'number-reel-pulse' : '',

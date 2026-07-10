@@ -1,7 +1,14 @@
 import { eq } from 'drizzle-orm';
 import { requireAdmin, writeAdminAudit } from '../../../server/admin.js';
 import { rateGuard, readJson } from '../../../server/apiGuards.js';
-import { rolls, user, userProgress } from '../../../server/db/schema.js';
+import {
+  arcadeMeta,
+  arcadeRunRolls,
+  arcadeRuns,
+  rolls,
+  user,
+  userProgress,
+} from '../../../server/db/schema.js';
 import { createLogger } from '../../../server/logger.js';
 import { LIMITS } from '../../../server/rateLimit.js';
 import { defineHandler } from '../../../server/vercel-adapter.js';
@@ -67,6 +74,10 @@ export default defineHandler(async (request) => {
 
   await db.delete(rolls).where(eq(rolls.userId, targetId));
   await db.delete(userProgress).where(eq(userProgress.userId, targetId));
+  // Arcade: run_rolls → runs → meta (FK order; run_rolls also cascade from runs)
+  await db.delete(arcadeRunRolls).where(eq(arcadeRunRolls.userId, targetId));
+  await db.delete(arcadeRuns).where(eq(arcadeRuns.userId, targetId));
+  await db.delete(arcadeMeta).where(eq(arcadeMeta.userId, targetId));
 
   await writeAdminAudit(db, {
     actorUserId: adminUser.id,

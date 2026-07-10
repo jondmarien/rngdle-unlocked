@@ -1,5 +1,11 @@
 import { STORAGE_KEYS } from './storage-keys';
 
+/** Shared TanStack Query key for inbox polling (AppShell + NotificationsScreen). */
+export const NOTIFICATIONS_QUERY_KEY = ['notifications'] as const;
+
+/** Shared key for following usernames (Leaderboard + Profile). */
+export const FOLLOWING_USERNAMES_QUERY_KEY = ['following-usernames'] as const;
+
 export type InboxItem = {
   id: string;
   tab: 'activity' | 'system';

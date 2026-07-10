@@ -77,6 +77,8 @@ type GameContextValue = {
   stats: PlayStats;
   rolling: boolean;
   saveError: string | null;
+  /** Surface an unexpected client error on the Home reel (e.g. handleRoll catch). */
+  reportSaveError: (message: string) => void;
   lastJourneyUnlocks: BadgeHit[];
   lastSecretUnlocks: BadgeHit[];
   /** Badge ids first-time unlocked on the most recent roll (for NEW labels). */
@@ -536,6 +538,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setCelebrateRarity(null);
   }, []);
 
+  const reportSaveError = useCallback((message: string) => {
+    setSaveError(message);
+  }, []);
+
   const gameValue = useMemo<GameContextValue>(
     () => ({
       lastRoll,
@@ -547,6 +553,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       stats: state.stats,
       rolling,
       saveError,
+      reportSaveError,
       lastJourneyUnlocks,
       lastSecretUnlocks,
       lastNewBadgeIds,
@@ -568,6 +575,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       state,
       rolling,
       saveError,
+      reportSaveError,
       lastJourneyUnlocks,
       lastSecretUnlocks,
       lastNewBadgeIds,
