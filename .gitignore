@@ -38,4 +38,6 @@ next notes.txt
 api/**/*.js
 api/.bundled
 api/_bundles/
+# Copied from @resvg/resvg-wasm during bundle:api for Vercel includeFiles
+server/assets/index_bg.wasm
 /references

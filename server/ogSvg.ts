@@ -50,11 +50,35 @@ async function loadOgFonts(): Promise<Uint8Array[]> {
   return fontBuffers;
 }
 
+async function resolveResvgWasmBytes(): Promise<Uint8Array> {
+  // Prefer cwd/server/assets (Vercel includeFiles + bundle-api copy) over
+  // require.resolve — NFT does not ship node_modules/.../index_bg.wasm.
+  const candidates = [
+    join(process.cwd(), 'server', 'assets', 'index_bg.wasm'),
+    join(here, 'assets', 'index_bg.wasm'),
+    join(here, '..', '..', 'server', 'assets', 'index_bg.wasm'),
+  ];
+  for (const path of candidates) {
+    try {
+      return new Uint8Array(await readFile(path));
+    } catch {
+      /* try next */
+    }
+  }
+  try {
+    const resolved = require.resolve('@resvg/resvg-wasm/index_bg.wasm');
+    return new Uint8Array(await readFile(resolved));
+  } catch {
+    throw new Error(
+      'resvg WASM not found under server/assets or @resvg/resvg-wasm',
+    );
+  }
+}
+
 function ensureResvgWasm(): Promise<void> {
   if (!wasmReady) {
     wasmReady = (async () => {
-      const wasmPath = require.resolve('@resvg/resvg-wasm/index_bg.wasm');
-      await initWasm(await readFile(wasmPath));
+      await initWasm(await resolveResvgWasmBytes());
     })().catch((err) => {
       wasmReady = null;
       throw err;
