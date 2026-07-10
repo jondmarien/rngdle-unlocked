@@ -32,6 +32,34 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Arcade Mode and a clearer Board',
+    date: '2026-07-09',
+    version: '0.7.0',
+    tags: ['Feature', 'Arcade', 'Board'],
+    content: [
+      {
+        body: 'A new Digits run mode with upgrades and cash-out, plus Leaderboard tabs that put Ranked, Practice, and Arcade first.',
+      },
+      {
+        heading: 'Arcade',
+        body: 'Separate from Free / Daily / Ranked — Digits never become EP.',
+        bullets: [
+          '**Runs**: roll, buy upgrades, cash out, or bust on Double or Nothing.',
+          '**Meta unlocks**: complete runs and chase high scores to expand the shop.',
+          '**Board**: Leaderboard → Arcade ranks best Digits run.',
+        ],
+      },
+      {
+        heading: 'Leaderboard',
+        body: 'Primary tabs are now Ranked | Practice | Arcade | Feed | Find.',
+        bullets: [
+          '**Less clutter**: metric + sort collapse into one control; period stays secondary.',
+          '**Feed and Find**: same behavior, re-homed under the new tabs.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Best Roll, Features, and clearer About',
     date: '2026-07-09',
     version: '0.6.0',

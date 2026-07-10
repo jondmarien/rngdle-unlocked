@@ -2,14 +2,14 @@
 
 **For the next agent.** Read this + [`AGENTS.md`](./AGENTS.md) + [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) before large changes.
 
-|                            |                                                                             |
-| -------------------------- | --------------------------------------------------------------------------- |
-| **Repo**                   | `jondmarien/rngdle-unlocked`                                                |
-| **Live**                   | https://rngdle-unlocked.chron0.tech                                         |
-| **Branch**                 | `main` (auto-deploys Vercel)                                                |
-| **Version**                | `0.6.0` (`package.json`; Settings uses `VITE_APP_VERSION`)                  |
-| **Latest release**         | [v0.6.0](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.6.0) |
-| **Handoff commit context** | Opus audit refactor (`aa8e91e`…`fc4fa65` on `main`) + prior P0/P1 wave      |
+|                            |                                                                                               |
+| -------------------------- | --------------------------------------------------------------------------------------------- |
+| **Repo**                   | `jondmarien/rngdle-unlocked`                                                                  |
+| **Live**                   | https://rngdle-unlocked.chron0.tech                                                           |
+| **Branch**                 | `main` (auto-deploys Vercel)                                                                  |
+| **Version**                | `0.7.0` (`package.json`; Settings uses `VITE_APP_VERSION`)                                    |
+| **Latest release**         | [v0.7.0](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.7.0) (cut when tagged) |
+| **Handoff commit context** | Opus audit refactor (`aa8e91e`…`fc4fa65` on `main`) + prior P0/P1 wave                        |
 
 ---
 
@@ -157,31 +157,32 @@ Daily/Weekly            →  seed challenge    →  source=challenge
 
 ## 4. Key files
 
-| Area                   | Path                                                                                          |
-| ---------------------- | --------------------------------------------------------------------------------------------- |
-| Roll orchestration     | `src/state/GameProvider.tsx`                                                                  |
-| Cloud sync             | `src/state/useSync.ts`, `useCloudSync`                                                        |
-| Settings               | `src/state/settings.ts`, `useGameSettings`                                                    |
-| Client API wrappers    | `src/lib/*-api.ts` (`roll-api`, `leaderboard-api`, `profile-api`, …)                          |
-| Zod schemas            | `src/lib/schemas.ts`                                                                          |
-| QueryClient            | `src/main.tsx`                                                                                |
-| Handler guards         | `server/apiGuards.ts`                                                                         |
-| Read pipelines         | `server/leaderboard.ts`, `profile.ts`, `feed.ts`, `ogSvg.ts`, `featureRequests.ts`            |
-| Home reel + mode reset | `src/ui/screens/HomeScreen.tsx`, `NumberDisplay.tsx`                                          |
-| Latest runs            | `src/ui/components/LatestRunsPanel.tsx`                                                       |
-| Mode copy              | `src/ui/components/RollModePicker.tsx`                                                        |
-| Celebrate FX           | `src/ui/components/Celebration.tsx`, `src/styles/global.css`, `src/game/fx.ts`                |
-| Ranked issue           | `server/rankedRoll.ts`, `api/ranked-roll.ts`                                                  |
-| Crowns / overtake      | `server/rollActivity.ts`                                                                      |
-| Sync                   | `server/sync.ts`, `api/sync.ts`                                                               |
-| Leaderboard            | `server/leaderboard.ts`, `api/leaderboard.ts`, `LeaderboardScreen.tsx` (Total EP + Best Roll) |
-| Feature requests       | `server/featureRequests.ts`, `api/feature-requests*`, `FeatureRequestsScreen.tsx`             |
-| Feed                   | `server/feed.ts`, `api/feed.ts`                                                               |
-| Schema                 | `server/db/schema.ts` (`rolls.source`)                                                        |
-| Badge catalog          | `src/game/badges/catalog.ts`                                                                  |
-| Absolute Ceiling art   | `public/badges/ceiling.jpg`                                                                   |
-| Migrations             | `scripts/add-roll-source.mjs`, `scripts/migrate-feature-wave.mjs`, `scripts/migrate-features-and-best-roll.mjs` |
-| Refactor notes         | `docs/refactor-notes-2026-07.md`, `docs/opus-report.md` §H                                    |
+| Area                   | Path                                                                                                                                          |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Roll orchestration     | `src/state/GameProvider.tsx`                                                                                                                  |
+| Cloud sync             | `src/state/useSync.ts`, `useCloudSync`                                                                                                        |
+| Settings               | `src/state/settings.ts`, `useGameSettings`                                                                                                    |
+| Client API wrappers    | `src/lib/*-api.ts` (`roll-api`, `leaderboard-api`, `profile-api`, …)                                                                          |
+| Zod schemas            | `src/lib/schemas.ts`                                                                                                                          |
+| QueryClient            | `src/main.tsx`                                                                                                                                |
+| Handler guards         | `server/apiGuards.ts`                                                                                                                         |
+| Read pipelines         | `server/leaderboard.ts`, `profile.ts`, `feed.ts`, `ogSvg.ts`, `featureRequests.ts`                                                            |
+| Home reel + mode reset | `src/ui/screens/HomeScreen.tsx`, `NumberDisplay.tsx`                                                                                          |
+| Latest runs            | `src/ui/components/LatestRunsPanel.tsx`                                                                                                       |
+| Mode copy              | `src/ui/components/RollModePicker.tsx`                                                                                                        |
+| Celebrate FX           | `src/ui/components/Celebration.tsx`, `src/styles/global.css`, `src/game/fx.ts`                                                                |
+| Ranked issue           | `server/rankedRoll.ts`, `api/ranked-roll.ts`                                                                                                  |
+| Crowns / overtake      | `server/rollActivity.ts`                                                                                                                      |
+| Sync                   | `server/sync.ts`, `api/sync.ts`                                                                                                               |
+| Leaderboard            | `server/leaderboard.ts`, `api/leaderboard.ts`, `LeaderboardScreen.tsx` (Ranked/Practice/Arcade)                                               |
+| Feature requests       | `server/featureRequests.ts`, `api/feature-requests*`, `FeatureRequestsScreen.tsx`                                                             |
+| Arcade Mode            | `src/game/arcade/`, `server/arcade.ts`, `arcadeLeaderboard.ts`, `api/arcade/*`, `ArcadeScreen.tsx`                                            |
+| Feed                   | `server/feed.ts`, `api/feed.ts`                                                                                                               |
+| Schema                 | `server/db/schema.ts` (`rolls.source`, arcade\_\*)                                                                                            |
+| Badge catalog          | `src/game/badges/catalog.ts`                                                                                                                  |
+| Absolute Ceiling art   | `public/badges/ceiling.jpg`                                                                                                                   |
+| Migrations             | `scripts/add-roll-source.mjs`, `scripts/migrate-feature-wave.mjs`, `scripts/migrate-features-and-best-roll.mjs`, `scripts/migrate-arcade.mjs` |
+| Refactor notes         | `docs/refactor-notes-2026-07.md`, `docs/opus-report.md` §H                                                                                    |
 
 ---
 
@@ -229,6 +230,7 @@ node scripts/add-roll-source.mjs   # if source column missing
 - [x] Commit diagnostic scripts; bump `0.4.1`
 - [x] Cut annotated **`v0.5.0`** (architecture refactor docs + version)
 - [x] **v0.6.0** — Best Roll leaderboard + Features request tab
+- [x] **v0.7.0** — Arcade Mode (Digits runs) + mode-first Leaderboard (Ranked | Practice | Arcade | Feed | Find)
 
 ### Still open for you / ops
 
@@ -255,20 +257,22 @@ node scripts/add-roll-source.mjs   # if source column missing
 1. **Free play** Generate → digits settle → History Free lane updates → Latest runs Free tab.
 2. Switch **Daily** Generate → settles → switch **Free** again → still settles (no stuck `?????`).
 3. **Ranked** (signed in + `@username`) → Generate → History Ranked + Leaderboard Ranked + system crown if #1.
-4. **Feed** tabs All / Ranked / Free play; own rolls appear without self-follow.
-5. **System messages** tab → unread clears without clicking each.
-6. **Epic+** settle with confetti enabled → tiered FX; reduced-motion → soft edges only.
+4. **Arcade** (`/arcade`) → Start run → Roll → buy upgrade → Cash out; Board → Arcade shows Digits score. Abandon uses two-step confirm.
+5. **Feed** tabs All / Ranked / Free play; own rolls appear without self-follow. Leaderboard primary tabs: Ranked | Practice | Arcade | Feed | Find.
+6. **System messages** tab → unread clears without clicking each.
+7. **Epic+** settle with confetti enabled → tiered FX; reduced-motion → soft edges only.
 
 ---
 
 ## 9. Product copy principles
 
-Keep language consistent everywhere (About, RollModePicker, Leaderboard, README):
+Keep language consistent everywhere (About, RollModePicker, Leaderboard, README, Arcade):
 
 - Free play = practice / Practice board / not crowns
 - Ranked = server RNG / Ranked board / crowns + overtake
 - Practice leaderboard = social honor system
 - Ranked leaderboard = fair competition baseline
+- Arcade = Digits runs / Arcade board / Digits ≠ EP / not a Home RollMode
 
 ---
 

@@ -54,9 +54,9 @@ export function AboutScreen() {
         </p>
         <p className="max-w-[65ch]">
           Solo by default (everything stays in your browser). Optional cloud
-          accounts unlock usernames, auto-sync, dual leaderboards (Ranked +
-          Practice), Best Roll boards, Features requests, follows, public
-          profiles, share links, challenges, and roll seals.
+          accounts unlock usernames, auto-sync, dual EP leaderboards (Ranked +
+          Practice), Arcade Digits runs, Best Roll boards, Features requests,
+          follows, public profiles, share links, challenges, and roll seals.
         </p>
         <p className="text-xs text-[var(--prose-3)]">
           Version{' '}
@@ -129,6 +129,14 @@ export function AboutScreen() {
                 anytime.
               </li>
             </ul>
+          </li>
+          <li>
+            <strong className="text-[var(--prose)]">Arcade</strong> — separate
+            tab (not a Roll mode). Server-issued runs earn{' '}
+            <strong className="text-[var(--prose)]">Digits</strong> (never EP).
+            Buy passive/active upgrades between rolls; cash out or bust on
+            Double or Nothing. Meta unlocks expand the shop across runs. Digits
+            board is on Leaderboard → Arcade.
           </li>
           <li>
             <strong className="text-[var(--prose)]">Community bests</strong> —
@@ -334,8 +342,9 @@ export function AboutScreen() {
             <a className="underline" href="/leaderboard">
               leaderboard
             </a>{' '}
-            (Ranked and Practice; Total EP and Best Roll), profiles at{' '}
-            <code className="text-xs">/u/you</code>, and vanity share paths.
+            (Ranked, Practice, Arcade; Total EP and Best Roll on EP boards),
+            profiles at <code className="text-xs">/u/you</code>, and vanity
+            share paths.
           </li>
           <li>
             <strong className="text-[var(--prose)]">Features</strong> — submit
@@ -463,6 +472,10 @@ export function AboutScreen() {
             synced free-play / overall progress. Social honor system; still
             client-authoritative for Free play RNG.
           </li>
+          <li>
+            <strong className="text-[var(--prose)]">Arcade board</strong> — best
+            Digits run score. Server-authoritative; never mixes with EP.
+          </li>
           <li>Community crowns and overtake alerts use Ranked rolls only.</li>
           <li>
             Optional seals and challenge seeds add competitive flavor without
@@ -497,8 +510,13 @@ export function AboutScreen() {
             &amp; calendar
           </li>
           <li>
-            <strong className="text-[var(--prose)]">Board</strong> — Total EP /
-            Best Roll, Ranked + Practice, feed, Find
+            <strong className="text-[var(--prose)]">Board</strong> — Ranked /
+            Practice / Arcade / Feed / Find; EP metric dropdown + period on
+            Ranked/Practice; Arcade best Digits run
+          </li>
+          <li>
+            <strong className="text-[var(--prose)]">Arcade</strong> — Digits
+            runs, shop upgrades, cash out / bust
           </li>
           <li>
             <strong className="text-[var(--prose)]">Features</strong> — submit

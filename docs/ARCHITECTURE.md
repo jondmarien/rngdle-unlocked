@@ -1,8 +1,8 @@
 # Architecture
 
-RNGdle Unlocked is a **client-first** number game with an **optional** cloud social layer and a **server-issued Ranked** free-play path for fair competition.
+RNGdle Unlocked is a **client-first** number game with an **optional** cloud social layer, a **server-issued Ranked** free-play path for fair competition, and an additive **Arcade Mode** Digits run layer (never EP).
 
-July 2026 readability refactor summary: [`refactor-notes-2026-07.md`](./refactor-notes-2026-07.md).
+July 2026 readability refactor summary: [`refactor-notes-2026-07.md`](./refactor-notes-2026-07.md). Arcade design: [`superpowers/specs/2026-07-09-arcade-mode-design.md`](./superpowers/specs/2026-07-09-arcade-mode-design.md).
 
 ## High-level
 
@@ -44,13 +44,14 @@ flowchart TB
 
 ## Roll modes
 
-| Mode               | RNG                | Persist                                           | Competitive surfaces                                  |
-| ------------------ | ------------------ | ------------------------------------------------- | ----------------------------------------------------- |
-| **Free play**      | Browser CSPRNG     | localStorage → sync as `source=client`            | **Leaderboard → Practice** only                       |
-| **Ranked**         | Server CSPRNG      | Neon `source=ranked` first; client merges history | **Leaderboard → Ranked**, community crowns, overtakes |
-| **Daily / Weekly** | Deterministic seed | sync as `source=challenge`                        | Optional challenge; not Ranked crowns                 |
+| Mode               | RNG                | Persist                                           | Competitive surfaces                                    |
+| ------------------ | ------------------ | ------------------------------------------------- | ------------------------------------------------------- |
+| **Free play**      | Browser CSPRNG     | localStorage → sync as `source=client`            | **Leaderboard → Practice** only                         |
+| **Ranked**         | Server CSPRNG      | Neon `source=ranked` first; client merges history | **Leaderboard → Ranked**, community crowns, overtakes   |
+| **Daily / Weekly** | Deterministic seed | sync as `source=challenge`                        | Optional challenge; not Ranked crowns                   |
+| **Arcade**         | Server CSPRNG      | `arcade_*` tables only (Digits)                   | **Leaderboard → Arcade** (best Digits run); Digits ≠ EP |
 
-Mode switch fully resets the home reel / session roll (and abandons in-flight Generate).
+Mode switch fully resets the home reel / session roll (and abandons in-flight Generate). Arcade is a **separate `/arcade` screen**, not a Home `RollMode`.
 
 ## Free play lifecycle
 
@@ -110,14 +111,14 @@ sequenceDiagram
 ## Client data layer
 
 - **Mandatory `src/lib/*-api.ts` wrappers** — UI must not call `fetch('/api/...')` directly (PNG `dataUrl` blob fetches are fine).
-- **TanStack Query** (`QueryClientProvider` in `src/main.tsx`) caches leaderboard, feed, highlights, profile, and admin-check reads. Some screens still use effects + wrappers (notifications, account).
-- **Zod** validates save import payloads, cloud sync POST bodies, public profile GET responses, and best-roll / feature-request API payloads — not every endpoint.
+- **TanStack Query** (`QueryClientProvider` in `src/main.tsx`) caches leaderboard, arcade state/leaderboard, feed, highlights, profile, and admin-check reads. Some screens still use effects + wrappers (notifications, account).
+- **Zod** validates save import payloads, cloud sync POST bodies, public profile GET responses, best-roll / feature-request / arcade API payloads — not every endpoint.
 - **TanStack Query** also caches feature-request list reads; upvote uses optimistic `useMutation`.
 
 ## Server handler pattern
 
 - Thin `api/*` entrypoints use `defineHandler` + [`server/apiGuards.ts`](../server/apiGuards.ts) (`requireUser` / `readJson` / `rateGuard`).
-- **Read pipelines** live in `server/{leaderboard,profile,feed,ogSvg,notifications,featureRequests}.ts`.
+- **Read pipelines** live in `server/{leaderboard,arcadeLeaderboard,profile,feed,ogSvg,notifications,featureRequests,arcade}.ts`.
 - Some write handlers (`follow`, `me`, `attest`, sync orchestration) still keep more logic inline — prefer extracting when touching them.
 - **`tsconfig.server.json`** uses **NodeNext** / **nodenext** so extensionless relative imports fail `pnpm typecheck` before deploy.
 
@@ -133,9 +134,13 @@ flowchart LR
   RankedBoard --> BestRoll[Best Roll view]
   Practice --> TotalEP
   Practice --> BestRoll
+  ArcadeRuns[Arcade Digits runs] --> ArcadeBoard[Leaderboard Arcade]
+  ArcadeBoard --> BestDigits[Best Digits run]
 ```
 
+- **UI tabs (v0.7+):** Ranked | Practice | Arcade | Feed | Find (mode-first).
 - **Practice all-time (Total EP)** — `user_progress` lifetime EP / rolls / badge counts (synced free play).
+- **Arcade** — `arcade_meta.best_run_score` (Digits); never mixes with EP boards.
 - **Practice week (Total EP)** — public rolls with `source != ranked`.
 - **Ranked all-time / week (Total EP)** — sum of public `source=ranked` rolls only.
 - **Best Roll (`?view=best`)** — one personal best per player from public rolls matching scope/period; sort by EP or rarity (`RARITY_ORDER`); earliest `rolled_at` ties. Practice all-time Best Roll uses public practice rolls (not `user_progress`).
@@ -174,7 +179,7 @@ flowchart TB
   HTML --> Img["/api/og SVG"]
   Profile["/u/:user"] -->|bot UA| UHTML["/api/u · profile OG"]
   UHTML --> Img
-  Pages["/ · /leaderboard · /features · /about · …"] -->|bot UA| PageHTML["/api/page/:slug"]
+  Pages["/ · /leaderboard · /arcade · /features · /about · …"] -->|bot UA| PageHTML["/api/page/:slug"]
   PageHTML --> PageImg["/api/og?type=page"]
 ```
 
