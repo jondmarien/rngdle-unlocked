@@ -10,6 +10,7 @@ const TAB_DOCUMENT_TITLE: Record<TabId, string> = {
   stats: 'Stats · RNGdle Unlocked',
   leaderboard: 'Leaderboard · RNGdle Unlocked',
   features: 'Features · RNGdle Unlocked',
+  'whats-new': "What's new · RNGdle Unlocked",
   notifications: 'Alerts · RNGdle Unlocked',
   account: 'Account · RNGdle Unlocked',
   about: 'About · RNGdle Unlocked',

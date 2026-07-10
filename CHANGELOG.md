@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **What’s new** moved to a dedicated chronicle timeline at `/whats-new` (nav tab; `/changelog` alias). Layout inspired by the CTFD scoreboard chronicle: date + version rail, tags, section headings. About now links out instead of embedding the full list.
+- Open Graph + bot rewrite for `/whats-new` (and `/changelog`).
+
 ## [0.6.0] - 2026-07-09
 
 ### Added

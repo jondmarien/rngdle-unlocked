@@ -82,6 +82,28 @@
       "destination": "/api/page/leaderboard"
     },
     {
+      "source": "/whats-new",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(bot|crawl|slurp|discord|twitter|facebook|slack|linkedin|telegram|whatsapp|preview|embed).*"
+        }
+      ],
+      "destination": "/api/page/whats-new"
+    },
+    {
+      "source": "/changelog",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(bot|crawl|slurp|discord|twitter|facebook|slack|linkedin|telegram|whatsapp|preview|embed).*"
+        }
+      ],
+      "destination": "/api/page/whats-new"
+    },
+    {
       "source": "/about",
       "has": [
         {

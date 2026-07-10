@@ -7,6 +7,7 @@ export type PageOgSlug =
   | 'home'
   | 'leaderboard'
   | 'features'
+  | 'whats-new'
   | 'about'
   | 'collection'
   | 'showcase'
@@ -54,14 +55,23 @@ export const PAGE_OG: Record<PageOgSlug, PageOgMeta> = {
     cardHeadline: 'Features',
     cardLabel: 'Requests · upvotes · roadmap',
   },
+  'whats-new': {
+    slug: 'whats-new',
+    path: '/whats-new',
+    title: "What's new · RNGdle Unlocked",
+    description:
+      'Player-facing release highlights for RNGdle Unlocked: Ranked, boards, Features, account tools, and more.',
+    cardHeadline: "What's new",
+    cardLabel: 'Release chronicle · player notes',
+  },
   about: {
     slug: 'about',
     path: '/about',
     title: 'About · RNGdle Unlocked',
     description:
-      'How to play Free, Ranked, Daily & Weekly — fairness notes, What’s new, and stack. Unlimited random numbers, no 24-hour lock.',
+      'How to play Free, Ranked, Daily & Weekly, rarity ladders, fairness notes, and stack. Unlimited random numbers, no 24-hour lock.',
     cardHeadline: 'About',
-    cardLabel: 'How to play · fairness · What’s new',
+    cardLabel: 'How to play · rarity · fairness',
   },
   collection: {
     slug: 'collection',
@@ -118,6 +128,8 @@ const PATH_TO_SLUG: Record<string, PageOgSlug> = {
   leaderboard: 'leaderboard',
   board: 'leaderboard',
   features: 'features',
+  'whats-new': 'whats-new',
+  changelog: 'whats-new',
   about: 'about',
   collection: 'collection',
   showcase: 'showcase',

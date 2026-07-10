@@ -5,7 +5,7 @@ import {
   RARITY_THRESHOLDS,
   type RarityTier,
 } from '../../game';
-import { WHATS_NEW } from '../../lib/whats-new';
+import { getWhatsNew } from '../../lib/whats-new';
 import { RarityBadge } from '../components/RarityBadge';
 
 const ROLL_MAX = '1,000,000';
@@ -66,48 +66,29 @@ export function AboutScreen() {
         </p>
       </header>
 
-      <section className="space-y-4">
-        <div className="space-y-1">
-          <h2 className="font-display text-lg font-bold text-[var(--prose)]">
-            What&apos;s new
-          </h2>
-          <p className="text-xs text-[var(--prose-3)]">
-            Highlights for players, not a full engineering changelog.
-          </p>
-        </div>
-        <ol className="space-y-5">
-          {WHATS_NEW.map((entry) => (
-            <li key={entry.version} className="space-y-2">
-              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                <span className="font-mono text-xs font-semibold tabular-nums text-[var(--prose)]">
-                  v{entry.version}
-                </span>
-                <span className="text-xs text-[var(--prose-3)]">
-                  {entry.date}
-                </span>
-                <span className="text-sm font-semibold text-[var(--prose)]">
-                  {entry.title}
-                </span>
-              </div>
-              <ul className="list-disc space-y-1.5 pl-5">
-                {entry.highlights.map((line) => (
-                  <li key={line}>{line}</li>
-                ))}
-              </ul>
-            </li>
-          ))}
-        </ol>
-        <p className="text-xs text-[var(--prose-3)]">
-          Full release notes on{' '}
+      <section className="space-y-3 rounded-lg border border-[var(--outline)] bg-[var(--surface)] px-4 py-3">
+        <h2 className="font-display text-lg font-bold text-[var(--prose)]">
+          What&apos;s new
+        </h2>
+        <p className="max-w-[65ch] text-sm text-[var(--prose-2)]">
+          Release highlights moved to their own timeline (
+          <span className="font-mono tabular-nums">
+            v{getWhatsNew()[0]?.version ?? '…'}
+          </span>{' '}
+          latest).
+        </p>
+        <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+          <a className="font-semibold underline" href="/whats-new">
+            Open What&apos;s new
+          </a>
           <a
-            className="underline"
+            className="underline text-[var(--prose-3)]"
             href="https://github.com/jondmarien/rngdle-unlocked/releases"
             target="_blank"
             rel="noreferrer"
           >
             GitHub Releases
           </a>
-          .
         </p>
       </section>
 
@@ -521,6 +502,10 @@ export function AboutScreen() {
           <li>
             <strong className="text-[var(--prose)]">Features</strong> — submit
             and upvote requests
+          </li>
+          <li>
+            <strong className="text-[var(--prose)]">What&apos;s new</strong> —
+            release chronicle timeline
           </li>
           <li>
             <strong className="text-[var(--prose)]">Alerts</strong> — activity

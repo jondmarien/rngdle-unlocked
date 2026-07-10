@@ -14,6 +14,7 @@ import { CelebrationLayer } from './ui/components/Celebration';
 import { AppShell } from './ui/layout/AppShell';
 import { AccountScreen } from './ui/screens/AccountScreen';
 import { AboutScreen } from './ui/screens/AboutScreen';
+import { WhatsNewScreen } from './ui/screens/WhatsNewScreen';
 import { AdminScreen } from './ui/screens/AdminScreen';
 import { CollectionScreen } from './ui/screens/CollectionScreen';
 import { HistoryScreen } from './ui/screens/HistoryScreen';
@@ -202,6 +203,7 @@ function AppRoutes() {
       {route.kind === 'tab' && tab === 'account' && (
         <AccountScreen onOpenAdmin={() => goTab('admin')} />
       )}
+      {route.kind === 'tab' && tab === 'whats-new' && <WhatsNewScreen />}
       {route.kind === 'tab' && tab === 'about' && <AboutScreen />}
       {route.kind === 'tab' && tab === 'admin' && (
         <AdminScreen onBack={() => goTab('account')} />

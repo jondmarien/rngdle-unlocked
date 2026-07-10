@@ -27,6 +27,7 @@ const NAV_BASE: NavItem[] = [
   { kind: 'tab', id: 'features', label: 'Features' },
   { kind: 'profile', label: 'Profile' },
   { kind: 'tab', id: 'account', label: 'Account' },
+  { kind: 'tab', id: 'whats-new', label: "What's new" },
   { kind: 'tab', id: 'about', label: 'About' },
   { kind: 'tab', id: 'settings', label: 'Settings' },
 ];
