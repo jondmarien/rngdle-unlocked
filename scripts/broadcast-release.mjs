@@ -5,11 +5,11 @@
 import { neon } from '@neondatabase/serverless';
 import { randomUUID } from 'node:crypto';
 
-const sql = neon(process.env.DATABASE_URL);
 if (!process.env.DATABASE_URL) {
   console.error('DATABASE_URL required');
   process.exit(1);
 }
+const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
 const title = 'New Update! v0.7.1 — Clearer Alerts & Features';
