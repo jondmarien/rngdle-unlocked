@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Discord OG embeds** — ship `@resvg/resvg-wasm` `index_bg.wasm` under `server/assets/` during `bundle:api` and load it via the same multi-path resolver as Inter fonts. Without the binary, `/api/og` fell back to SVG (HTTP 200) which Discord ignores.
+- **Sync quota stopgap** (PR #4) — reject `/api/sync` bodies over 256KB (413), log payload sizes, debounce auto-sync by 12s, and stop re-POSTing full saves during share-publish polls.
+
 ## [0.10.2] - 2026-07-10
 
 ### Added

@@ -16,13 +16,29 @@
  * Usage: node scripts/bundle-api.mjs
  */
 import { build } from 'esbuild';
-import { mkdir, readdir, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readdir, writeFile } from 'node:fs/promises';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const apiRoot = join(root, 'api');
 const bundlesRoot = join(apiRoot, '_bundles');
+
+/** Ship resvg WASM next to OG fonts so Vercel includeFiles picks it up. */
+async function copyResvgWasm() {
+  const src = join(
+    root,
+    'node_modules',
+    '@resvg',
+    'resvg-wasm',
+    'index_bg.wasm',
+  );
+  const destDir = join(root, 'server', 'assets');
+  const dest = join(destDir, 'index_bg.wasm');
+  await mkdir(destDir, { recursive: true });
+  await copyFile(src, dest);
+  console.log('[bundle-api] copied resvg WASM → server/assets/index_bg.wasm');
+}
 
 async function collectTsEntries(dir) {
   /** @type {string[]} */
@@ -61,6 +77,7 @@ async function main() {
   );
   const started = Date.now();
 
+  await copyResvgWasm();
   await mkdir(bundlesRoot, { recursive: true });
 
   await build({
