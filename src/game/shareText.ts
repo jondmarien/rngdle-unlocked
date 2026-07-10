@@ -10,6 +10,7 @@ const RARITY_SQUARE: Record<RarityTier, string> = {
   epic: '🟪',
   anomaly: '🟧',
   mythic: '🟨',
+  divine: '✨',
 };
 
 /** Keep Discord paste short — full badge list is on the share link. */

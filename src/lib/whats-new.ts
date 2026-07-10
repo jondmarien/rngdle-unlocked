@@ -32,6 +32,27 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Divine rarity, sharper poker hands, badge proofs',
+    date: '2026-07-10',
+    version: '0.9.0',
+    tags: ['Rarity', 'Badges', 'Poker', 'UI'],
+    content: [
+      {
+        body: 'A new top rarity above Mythic, fairer poker scoring for rare digit shapes, and math proofs on more badge cards — plus a spoiler toggle on Latest Runs.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'New rolls only for scoring changes; past history stays as it was.',
+        bullets: [
+          '**Divine** sits above Mythic for ultra-high EP rolls (gold treatment, bigger celebration).',
+          '**Poker hands** — Two Trips, Three Pair, and Full Quads score shapes that used to under-count.',
+          '**Badge proofs** — divisibility, powers, pronic, and digit-sum cards show the equation under the description.',
+          '**Latest Runs** — optional eye toggle blurs numbers / rarity / EP so you can keep rolling spoiler-free.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Checklist that checks, challenge timers',
     date: '2026-07-10',
     version: '0.8.1',

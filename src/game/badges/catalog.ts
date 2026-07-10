@@ -12,6 +12,19 @@ import {
   uniqueDigitCount,
 } from '../highlights.js';
 import {
+  cubeEquation,
+  digitSum10Equation,
+  digitSum21Equation,
+  digitSumHighEquation,
+  digitSumLowEquation,
+  fixedDivEquation,
+  fourthPowerEquation,
+  harshadEquation,
+  powerOfTwoEquation,
+  pronicEquation,
+  squareEquation,
+} from './equation.js';
+import {
   allEvenDigits,
   allOddDigits,
   allUniqueDigits,
@@ -296,6 +309,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'math',
     emoji: '💻',
     matches: isPowerOfTwo,
+    equation: powerOfTwoEquation,
   },
   {
     id: 'square',
@@ -305,6 +319,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'math',
     emoji: '⬜',
     matches: (n) => n > 1 && isSquare(n),
+    equation: squareEquation,
   },
   {
     id: 'cube',
@@ -314,6 +329,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'math',
     emoji: '🧊',
     matches: (n) => n > 1 && isCube(n),
+    equation: cubeEquation,
   },
   {
     id: 'fourth-power',
@@ -323,6 +339,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'math',
     emoji: '4️⃣',
     matches: (n) => n > 1 && isPerfectPower(n, 4),
+    equation: fourthPowerEquation,
   },
   {
     id: 'fibonacci',
@@ -350,6 +367,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'math',
     emoji: '🔗',
     matches: (n) => n > 0 && isPronic(n),
+    equation: pronicEquation,
   },
   {
     id: 'harshad',
@@ -359,6 +377,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'math',
     emoji: '➕',
     matches: isHarshad,
+    equation: harshadEquation,
   },
   {
     id: 'even',
@@ -388,6 +407,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'math',
     emoji: '🔺',
     matches: (n) => isDivisibleBy(n, 3),
+    equation: fixedDivEquation(3),
   },
   {
     id: 'div4',
@@ -397,6 +417,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'math',
     emoji: '▦',
     matches: (n) => isDivisibleBy(n, 4),
+    equation: fixedDivEquation(4),
   },
   {
     id: 'div5',
@@ -406,6 +427,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'math',
     emoji: '🖐️',
     matches: (n) => isDivisibleBy(n, 5),
+    equation: fixedDivEquation(5),
   },
   {
     id: 'div7',
@@ -415,6 +437,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'math',
     emoji: '🍀',
     matches: (n) => isDivisibleBy(n, 7),
+    equation: fixedDivEquation(7),
   },
   {
     id: 'div8',
@@ -424,6 +447,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'math',
     emoji: '🎵',
     matches: (n) => isDivisibleBy(n, 8),
+    equation: fixedDivEquation(8),
   },
   {
     id: 'div9',
@@ -433,6 +457,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'math',
     emoji: '☁️',
     matches: (n) => isDivisibleBy(n, 9),
+    equation: fixedDivEquation(9),
   },
   {
     id: 'div11',
@@ -442,6 +467,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'math',
     emoji: '1️⃣1️⃣',
     matches: (n) => isDivisibleBy(n, 11),
+    equation: fixedDivEquation(11),
   },
   {
     id: 'div12',
@@ -451,6 +477,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'math',
     emoji: '🥚',
     matches: (n) => isDivisibleBy(n, 12),
+    equation: fixedDivEquation(12),
   },
   {
     id: 'div13',
@@ -460,6 +487,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'math',
     emoji: '🦇',
     matches: (n) => isDivisibleBy(n, 13),
+    equation: fixedDivEquation(13),
   },
   {
     id: 'div25',
@@ -469,6 +497,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'math',
     emoji: '🪙',
     matches: (n) => isDivisibleBy(n, 25),
+    equation: fixedDivEquation(25),
   },
   {
     id: 'div100',
@@ -478,6 +507,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'math',
     emoji: '💯',
     matches: (n) => isDivisibleBy(n, 100),
+    equation: fixedDivEquation(100),
   },
   {
     id: 'div1000',
@@ -487,6 +517,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'math',
     emoji: '📦',
     matches: (n) => isDivisibleBy(n, 1000),
+    equation: fixedDivEquation(1000),
   },
   {
     id: 'digit-sum-10',
@@ -496,6 +527,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'math',
     emoji: '🔟',
     matches: (n) => digitSum(n) === 10,
+    equation: digitSum10Equation,
   },
   {
     id: 'digit-sum-21',
@@ -505,6 +537,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'math',
     emoji: '🃏',
     matches: (n) => digitSum(n) === 21,
+    equation: digitSum21Equation,
   },
   {
     id: 'digit-sum-high',
@@ -514,6 +547,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'math',
     emoji: '🏋️',
     matches: (n) => digitSum(n) >= 40,
+    equation: digitSumHighEquation,
   },
   {
     id: 'digit-sum-low',
@@ -523,6 +557,7 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'math',
     emoji: '🪶',
     matches: (n) => n >= 10 && digitSum(n) <= 5,
+    equation: digitSumLowEquation,
   },
   {
     id: 'digit-product-0',
@@ -976,6 +1011,16 @@ export const NUMBER_BADGES: BadgeDef[] = [
     highlight: maskPairedDigits,
   },
   {
+    id: 'three-pair',
+    name: 'Three Pair',
+    description: 'Three distinct digits each appearing exactly twice.',
+    ep: 2_000,
+    family: 'poker',
+    emoji: '👥👥',
+    matches: (n) => pokerHand(n) === 'three-pair',
+    highlight: maskPairedDigits,
+  },
+  {
     id: 'trips',
     name: 'Three of a Kind',
     description: 'Three matching digits.',
@@ -983,6 +1028,16 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'poker',
     emoji: '🎲',
     matches: (n) => pokerHand(n) === 'trips',
+    highlight: maskPairedDigits,
+  },
+  {
+    id: 'two-trips',
+    name: 'Two Trips',
+    description: 'Two distinct digits each appearing exactly three times.',
+    ep: 2_400,
+    family: 'poker',
+    emoji: '🎲🎲',
+    matches: (n) => pokerHand(n) === 'two-trips',
     highlight: maskPairedDigits,
   },
   {
@@ -1003,6 +1058,16 @@ export const NUMBER_BADGES: BadgeDef[] = [
     family: 'poker',
     emoji: '💎',
     matches: (n) => pokerHand(n) === 'quads',
+    highlight: maskPairedDigits,
+  },
+  {
+    id: 'full-quads',
+    name: 'Full Quads',
+    description: 'Four matching digits and a pair of another.',
+    ep: 5_000,
+    family: 'poker',
+    emoji: '💎🏠',
+    matches: (n) => pokerHand(n) === 'full-quads',
     highlight: maskPairedDigits,
   },
   {

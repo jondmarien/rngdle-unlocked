@@ -206,7 +206,9 @@ export function HomeScreen({
       }
       if (
         settings.autoShareHighRarity &&
-        (settled.rarity === 'mythic' || settled.rarity === 'anomaly')
+        (settled.rarity === 'mythic' ||
+          settled.rarity === 'anomaly' ||
+          settled.rarity === 'divine')
       ) {
         const rollId = settled.id;
         clearShareTimer();

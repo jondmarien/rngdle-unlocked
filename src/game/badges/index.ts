@@ -10,6 +10,7 @@ export function evaluateBadges(n: number): BadgeHit[] {
   for (const b of NUMBER_BADGES) {
     if (b.matches(n)) {
       const highlights = b.highlight ? b.highlight(n) : maskAll(n);
+      const equation = b.equation?.(n);
       hits.push({
         id: b.id,
         name: b.name,
@@ -20,6 +21,7 @@ export function evaluateBadges(n: number): BadgeHit[] {
         highlights,
         rarity: badgeRarityFromEP(b.ep),
         ...(b.image ? { image: b.image } : {}),
+        ...(equation ? { equation } : {}),
       });
     }
   }

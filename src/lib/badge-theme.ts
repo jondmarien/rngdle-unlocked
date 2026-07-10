@@ -56,11 +56,13 @@ export const RARITY_PILL: Record<RarityTier, string> = {
   anomaly:
     'border-orange-500/40 bg-orange-500/15 text-orange-800 dark:text-orange-200',
   mythic: 'border-pink-500/45 bg-pink-500/15 text-pink-900 dark:text-pink-200',
+  divine:
+    'border-amber-400/55 bg-amber-400/18 text-amber-950 dark:text-amber-100',
 };
 
 /**
  * Highlighted digit tiles on badge cards — solid fill by rarity tier.
- * trash grey · common green · uncommon teal · rare blue · epic purple · anomaly orange · mythic pink
+ * trash grey · common green · uncommon teal · rare blue · epic purple · anomaly orange · mythic pink · divine gold
  */
 export const RARITY_DIGIT_ON: Record<RarityTier, string> = {
   trash:
@@ -75,6 +77,8 @@ export const RARITY_DIGIT_ON: Record<RarityTier, string> = {
     'border-orange-600/40 bg-orange-500 text-white shadow-sm dark:bg-orange-400 dark:text-orange-950',
   mythic:
     'border-pink-600/40 bg-pink-500 text-white shadow-sm dark:bg-pink-400 dark:text-pink-950',
+  divine:
+    'border-amber-500/50 bg-amber-400 text-amber-950 shadow-sm dark:bg-amber-300 dark:text-amber-950',
 };
 
 export const RARITY_DIGIT_OFF =
@@ -89,6 +93,7 @@ export const RARITY_GLOW: Record<RarityTier, string> = {
   epic: 'shadow-[0_0_48px_rgba(167,139,250,0.55)] ring-violet-400/60',
   anomaly: 'shadow-[0_0_52px_rgba(234,88,12,0.55)] ring-orange-400/65',
   mythic: 'shadow-[0_0_56px_rgba(219,39,119,0.55)] ring-pink-400/70',
+  divine: 'shadow-[0_0_64px_rgba(245,158,11,0.6)] ring-amber-300/80',
 };
 
 /** Histogram bar fill per rarity (Stats). */
@@ -100,11 +105,14 @@ export const RARITY_BAR: Record<RarityTier, string> = {
   epic: 'bg-violet-500',
   anomaly: 'bg-orange-500',
   mythic: 'bg-amber-400',
+  divine: 'bg-yellow-300',
 };
 
 /** Border ring for highlight tiles (Community bests). */
 export function rarityRing(r: RarityTier): string {
   switch (r) {
+    case 'divine':
+      return 'border-yellow-300/80';
     case 'mythic':
       return 'border-amber-400/70';
     case 'anomaly':

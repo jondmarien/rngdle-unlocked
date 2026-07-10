@@ -48,7 +48,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   trashCrackEnabled: true,
   /** Default on; users can turn off under Settings (localStorage). */
   autoScrollBadges: true,
-  /** Default off — anomaly/mythic share is manual unless enabled. */
+  /** Default off — anomaly/mythic/divine share is manual unless enabled. */
   autoShareHighRarity: false,
   /** Default on; hide Latest runs rail / mobile list under Settings. */
   showLatestRuns: true,

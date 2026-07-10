@@ -18,6 +18,8 @@ describe('rarityFromEP', () => {
     expect(rarityFromEP(8_000)).toBe('anomaly');
     expect(rarityFromEP(10_999)).toBe('anomaly');
     expect(rarityFromEP(11_000)).toBe('mythic');
+    expect(rarityFromEP(24_999)).toBe('mythic');
+    expect(rarityFromEP(25_000)).toBe('divine');
   });
 });
 
@@ -40,8 +42,8 @@ describe('percentileFromEP', () => {
     expect(100 - percentileFromEP(8_000)).toBeCloseTo(5, 0);
     // mythic floor → top 1%
     expect(100 - percentileFromEP(11_000)).toBeCloseTo(1, 0);
-    // deep mythic still rarer than floor
-    expect(percentileFromEP(20_000)).toBeGreaterThan(percentileFromEP(11_000));
+    // deep mythic / divine still rarer than floor
+    expect(percentileFromEP(25_000)).toBeGreaterThan(percentileFromEP(11_000));
   });
 });
 

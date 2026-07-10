@@ -1,3 +1,7 @@
+import type { BadgeEquation } from './badges/equation.js';
+
+export type { BadgeEquation };
+
 export type RarityTier =
   | 'trash'
   | 'common'
@@ -5,7 +9,8 @@ export type RarityTier =
   | 'rare'
   | 'epic'
   | 'anomaly'
-  | 'mythic';
+  | 'mythic'
+  | 'divine';
 
 export type BadgeFamily =
   | 'math'
@@ -30,6 +35,8 @@ export type BadgeHit = {
   rarity: RarityTier;
   /** Optional custom Grok art (e.g. Absolute Ceiling). */
   image?: string;
+  /** Optional equation proof on the badge card. */
+  equation?: BadgeEquation;
 };
 
 export type BadgeDef = {
@@ -41,6 +48,8 @@ export type BadgeDef = {
   emoji: string;
   matches: (n: number) => boolean;
   highlight?: (n: number) => boolean[];
+  /** Optional equation annotator (sibling to highlight). */
+  equation?: (n: number) => BadgeEquation | undefined;
   /** Optional custom art under /public (ultra-rare seals). */
   image?: string;
 };
@@ -87,7 +96,7 @@ export type AppSettings = {
    */
   autoScrollBadges: boolean;
   /**
-   * Auto-open share panel after anomaly/mythic rolls settle.
+   * Auto-open share panel after anomaly/mythic/divine rolls settle.
    * Default off; localStorage only.
    */
   autoShareHighRarity: boolean;

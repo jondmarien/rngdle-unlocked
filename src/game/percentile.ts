@@ -4,8 +4,9 @@
  * UI copy: “Top X% of roll scores” where X = 100 - percentile (clamped).
  *
  * Anchored to the rarity ladder (see rarity.ts) so labels match how rare the
- * tier feels: anomaly ≈ top 5%, mythic ≈ top 1%. A raw log10(EP) curve used to
- * put 8k–11k EP around top ~20%, which felt far too common for those tiers.
+ * tier feels: anomaly ≈ top 5%, mythic ≈ top 1%, divine ≪1%. A raw log10(EP)
+ * curve used to put 8k–11k EP around top ~20%, which felt far too common for
+ * those tiers.
  */
 const ANCHORS: readonly { ep: number; percentile: number }[] = [
   { ep: 0, percentile: 0 },
@@ -15,7 +16,7 @@ const ANCHORS: readonly { ep: number; percentile: number }[] = [
   { ep: 6_500, percentile: 88 }, // rare → epic     (~top 12%)
   { ep: 8_000, percentile: 95 }, // epic → anomaly  (~top 5%)
   { ep: 11_000, percentile: 99 }, // anomaly → mythic (~top 1%)
-  { ep: 20_000, percentile: 99.7 },
+  { ep: 25_000, percentile: 99.85 }, // mythic → divine
   { ep: 50_000, percentile: 99.9 },
 ];
 

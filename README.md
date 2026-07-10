@@ -157,7 +157,7 @@ Or `pnpm dev` for the SPA only and point APIs at a deployed preview.
 - **NEW ribbons** on first-time unlocks in the roll breakdown
 - **Family-colored badge pills** + custom rarity/family icon art
 - **Typography** — Outfit (UI), Syne (display), JetBrains Mono (numbers)
-- **EP + rarity ladder** (trash → mythic) and percentile framing
+- **EP + rarity ladder** (trash → divine) and percentile framing
 - **Journey milestones** (lifetime EP)
 - **History, showcase, stats** — rarity histogram, EP/hour, 28-day streak calendar
 - **Streaks**, optional confetti / SFX
@@ -193,7 +193,7 @@ Switch modes anytime (board fully resets). Badges, EP, history, and share work a
 - **Profiles** — `/u/:username` with accent, flair, bio, **preset emblem avatars**, secret seals, recent rolls + Follow
 - **Vanity share URLs** — `/s/:username/:shortCode`
 - **Share gates** — no public link until cloud confirms
-- **Mythic / anomaly** auto-open share after reveal (optional setting)
+- **Mythic / anomaly / divine** auto-open share after reveal (optional setting)
 - **Prove this roll** — optional server HMAC seal (`/api/attest`) for claims
 - **Dynamic OG** — `/api/og` PNG cards for Discord/social (SVG is not supported by Discord); bot rewrite of `/u/:user` → profile OG HTML
 - **Soft rate limits** on sync, Ranked rolls (~90/h), and public APIs
@@ -418,6 +418,7 @@ The Account screen times out after a few seconds and shows the sign-in form. Che
 | Codex search (spoiler-safe badge filter)                                 | ✅ Shipped (`v0.7.4`)                                                             |
 | Gap remediation (onboarding, Retry, a11y, shared roll rows, admin/trust) | ✅ Shipped (`v0.8.0`)                                                             |
 | Checklist detection + challenge reset countdown + sync integrity         | ✅ Shipped (`v0.8.1`)                                                             |
+| Divine rarity + poker hand fixes + badge equation proofs                 | ✅ Shipped (`v0.9.0`)                                                             |
 | Server Ranked free play (`/api/ranked-roll`)                             | ✅ Shipped                                                                        |
 | Profiles (vanity + avatars) + follows                                    | ✅ Shipped                                                                        |
 | Activity unlocks + Ranked crown msgs + overtake notifs                   | ✅ Shipped                                                                        |

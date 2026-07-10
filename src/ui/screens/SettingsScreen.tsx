@@ -91,7 +91,7 @@ export function SettingsScreen() {
             checked={settings.autoShareHighRarity === true}
             onChange={(e) => setAutoShareHighRarity(e.target.checked)}
           />
-          Auto-open share after anomaly / mythic rolls
+          Auto-open share after anomaly / mythic / divine rolls
         </label>
         <label className="flex items-center gap-2 text-sm">
           <input

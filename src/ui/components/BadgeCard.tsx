@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import type { BadgeHit } from '../../game';
+import {
+  equationForBadge,
+  isProductEquation,
+  type BadgeEquation,
+} from '../../game/badges/equation';
 import { formatRollDigits } from '../../game/digits';
 import { RARITY_LABELS } from '../../game/rarity';
 import {
@@ -21,6 +26,102 @@ const SCROLL_MS = CASCADE_MS;
 function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined') return false;
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+function BadgeEquationLine({
+  number,
+  equation,
+}: {
+  number: number;
+  equation: BadgeEquation;
+}) {
+  if (isProductEquation(equation)) {
+    return (
+      <p
+        className="mono-number mt-1.5 text-xs font-semibold tracking-tight sm:text-sm"
+        aria-label={`${number.toLocaleString()} equals ${equation.divisor.toLocaleString()} times ${equation.quotient.toLocaleString()}`}
+      >
+        <span className="text-(--prose)">{number.toLocaleString()}</span>
+        <span className="text-(--prose-2)"> = </span>
+        <span className="text-emerald-600 dark:text-emerald-400">
+          {equation.divisor.toLocaleString()}
+        </span>
+        <span className="text-(--prose-2)"> × </span>
+        <span className="text-sky-600 dark:text-sky-400">
+          {equation.quotient.toLocaleString()}
+        </span>
+      </p>
+    );
+  }
+
+  switch (equation.kind) {
+    case 'power':
+      return (
+        <p
+          className="mono-number mt-1.5 text-xs font-semibold tracking-tight sm:text-sm"
+          aria-label={`${number.toLocaleString()} equals ${equation.base.toLocaleString()} to the power of ${equation.exponent}`}
+        >
+          <span className="text-(--prose)">{number.toLocaleString()}</span>
+          <span className="text-(--prose-2)"> = </span>
+          <span className="text-emerald-600 dark:text-emerald-400">
+            {equation.base.toLocaleString()}
+            <sup className="text-[0.65em]">{equation.exponent}</sup>
+          </span>
+        </p>
+      );
+    case 'pronic':
+      return (
+        <p
+          className="mono-number mt-1.5 text-xs font-semibold tracking-tight sm:text-sm"
+          aria-label={`${number.toLocaleString()} equals ${equation.k.toLocaleString()} times ${equation.k + 1}`}
+        >
+          <span className="text-(--prose)">{number.toLocaleString()}</span>
+          <span className="text-(--prose-2)"> = </span>
+          <span className="text-emerald-600 dark:text-emerald-400">
+            {equation.k.toLocaleString()}
+          </span>
+          <span className="text-(--prose-2)"> × </span>
+          <span className="text-sky-600 dark:text-sky-400">
+            {(equation.k + 1).toLocaleString()}
+          </span>
+        </p>
+      );
+    case 'digitSum': {
+      const compareNote =
+        equation.compare === 'gte' && equation.threshold !== undefined
+          ? ` (≥ ${equation.threshold})`
+          : equation.compare === 'lte' && equation.threshold !== undefined
+            ? ` (≤ ${equation.threshold})`
+            : '';
+      return (
+        <p
+          className="mono-number mt-1.5 text-xs font-semibold tracking-tight sm:text-sm"
+          aria-label={`digits sum to ${equation.total}${compareNote}`}
+        >
+          {equation.digits.map((d, i) => (
+            <span key={i}>
+              {i > 0 ? <span className="text-(--prose-2)"> + </span> : null}
+              <span className="text-emerald-600 dark:text-emerald-400">
+                {d}
+              </span>
+            </span>
+          ))}
+          <span className="text-(--prose-2)"> = </span>
+          <span className="text-sky-600 dark:text-sky-400">
+            {equation.total}
+          </span>
+          {compareNote ? (
+            <span className="text-(--prose-3)">{compareNote}</span>
+          ) : null}
+        </p>
+      );
+    }
+    default: {
+      const _exhaustive: never = equation;
+      void _exhaustive;
+      return null;
+    }
+  }
 }
 
 /** Ease-out window scroll — duration matched to badge cascade. */
@@ -95,6 +196,7 @@ export function BadgeCard({
     badge.highlights.length === digits.length
       ? badge.highlights
       : digits.map(() => false);
+  const equation = badge.equation ?? equationForBadge(badge.id, number);
 
   // Parent already staggers mount timing — only a short fade-in here (no re-delay)
   const [visible, setVisible] = useState(!animateIn || prefersReducedMotion());
@@ -116,7 +218,7 @@ export function BadgeCard({
       className={[
         'relative rounded-xl border bg-(--surface) p-3.5 text-left transition-all duration-300 sm:p-4',
         hasArt
-          ? 'border-amber-400/50 bg-gradient-to-br from-amber-500/15 via-violet-500/10 to-transparent shadow-[0_0_28px_rgba(251,191,36,0.18)]'
+          ? 'border-amber-400/50 bg-linear-to-br from-amber-500/15 via-violet-500/10 to-transparent shadow-[0_0_28px_rgba(251,191,36,0.18)]'
           : isNew
             ? 'border-amber-400/35 shadow-[0_0_0_1px_rgba(251,191,36,0.08)]'
             : 'border-(--outline)',
@@ -133,7 +235,7 @@ export function BadgeCard({
               alt=""
               className="h-full w-full object-cover"
             />
-            <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-1.5 py-1 text-center text-[9px] font-black uppercase tracking-[0.14em] text-amber-200">
+            <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-t from-black/70 to-transparent px-1.5 py-1 text-center text-[9px] font-black uppercase tracking-[0.14em] text-amber-200">
               Ultra rare
             </span>
           </div>
@@ -189,6 +291,10 @@ export function BadgeCard({
       <p className="mt-1.5 text-xs leading-relaxed text-(--prose-2) sm:text-sm">
         {badge.description}
       </p>
+
+      {equation ? (
+        <BadgeEquationLine number={number} equation={equation} />
+      ) : null}
 
       <div className="mt-2.5 flex flex-wrap gap-1 sm:gap-1.5">
         {digits.map((d, i) => {

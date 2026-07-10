@@ -22,9 +22,10 @@
   --uncommon: #2a7a8c;
   --rare: #3b5bdb;
   --epic: #7c3aed;
-  /* anomaly = orange, mythic = pink (digit chips + rarity labels) */
+  /* anomaly = orange, mythic = pink, divine = gold (digit chips + rarity labels) */
   --anomaly: #ea580c;
   --mythic: #db2777;
+  --divine: #d97706;
 
   /* Feature-request status (dedicated — do not reuse rarity tokens) */
   --feature-submitted: #6b6560;
@@ -199,6 +200,9 @@ p {
 }
 .rarity-mythic {
   color: var(--mythic);
+}
+.rarity-divine {
+  color: var(--divine);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -522,6 +526,35 @@ html.celebrate-shake-mythic {
     );
 }
 
+.celebrate-edge-divine {
+  background:
+    radial-gradient(
+      ellipse 70% 100% at 0% 50%,
+      rgba(245, 158, 11, 0.55),
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 70% 100% at 100% 50%,
+      rgba(103, 232, 249, 0.4),
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 90% 55% at 50% -5%,
+      rgba(253, 224, 71, 0.45),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 80% 45% at 50% 105%,
+      rgba(255, 255, 255, 0.25),
+      transparent 58%
+    ),
+    radial-gradient(
+      circle at 50% 40%,
+      rgba(255, 255, 255, 0.12),
+      transparent 45%
+    );
+}
+
 @keyframes celebrate-flash-in {
   0% {
     opacity: 0.55;
@@ -550,6 +583,15 @@ html.celebrate-shake-mythic {
     circle at 50% 38%,
     rgba(255, 255, 255, 0.45),
     rgba(251, 191, 36, 0.2) 30%,
+    transparent 58%
+  );
+}
+
+.celebrate-flash-divine {
+  background: radial-gradient(
+    circle at 50% 38%,
+    rgba(255, 255, 255, 0.55),
+    rgba(253, 224, 71, 0.28) 28%,
     transparent 58%
   );
 }

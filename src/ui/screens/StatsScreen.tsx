@@ -19,6 +19,7 @@ export function StatsScreen() {
       epic: 0,
       anomaly: 0,
       mythic: 0,
+      divine: 0,
     };
     for (const r of history) {
       counts[r.rarity] = (counts[r.rarity] ?? 0) + 1;

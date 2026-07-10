@@ -7,10 +7,13 @@ import { useGame, useGameSettings } from '../../state/GameProvider';
 type Burst = {
   id: number;
   rarity: RarityTier;
-  intensity: 1 | 2 | 3 | 4 | 'trash';
+  intensity: 1 | 2 | 3 | 4 | 5 | 'trash';
 };
 
-const PALETTES: Record<'rare' | 'epic' | 'anomaly' | 'mythic', string[]> = {
+const PALETTES: Record<
+  'rare' | 'epic' | 'anomaly' | 'mythic' | 'divine',
+  string[]
+> = {
   rare: ['#3b82f6', '#60a5fa', '#93c5fd', '#38bdf8', '#e0f2fe'],
   epic: ['#7c3aed', '#a78bfa', '#c4b5fd', '#8b5cf6', '#ddd6fe', '#f5f3ff'],
   anomaly: ['#ea580c', '#f97316', '#fb923c', '#fdba74', '#c026d3', '#e879f9'],
@@ -22,6 +25,15 @@ const PALETTES: Record<'rare' | 'epic' | 'anomaly' | 'mythic', string[]> = {
     '#a855f7',
     '#fde68a',
     '#ffffff',
+  ],
+  divine: [
+    '#fbbf24',
+    '#f59e0b',
+    '#fde68a',
+    '#ffffff',
+    '#67e8f9',
+    '#a5f3fc',
+    '#fef3c7',
   ],
 };
 
@@ -106,19 +118,21 @@ export function CelebrationLayer() {
       if (intensity === 'trash') root.classList.add('celebrate-shake-trash');
       else if (intensity === 2) root.classList.add('celebrate-shake-epic');
       else if (intensity === 3) root.classList.add('celebrate-shake-anomaly');
-      else if (intensity === 4) root.classList.add('celebrate-shake-mythic');
+      else if (intensity >= 4) root.classList.add('celebrate-shake-mythic');
     }
 
     const clearMs =
       intensity === 'trash'
         ? 2400
-        : intensity >= 4
-          ? 5200
-          : intensity === 3
-            ? 4200
-            : intensity === 2
-              ? 3600
-              : 2800;
+        : intensity >= 5
+          ? 5800
+          : intensity >= 4
+            ? 5200
+            : intensity === 3
+              ? 4200
+              : intensity === 2
+                ? 3600
+                : 2800;
     const t = window.setTimeout(() => {
       setBurst((b) => (b?.id === id ? null : b));
       clearShake(root);
@@ -174,13 +188,15 @@ export function CelebrationLayer() {
   const palette =
     PALETTES[burst.rarity as keyof typeof PALETTES] ?? PALETTES.rare;
   const pieces =
-    burst.intensity === 4
-      ? 380
-      : burst.intensity === 3
-        ? 280
-        : burst.intensity === 2
-          ? 200
-          : 140;
+    burst.intensity >= 5
+      ? 460
+      : burst.intensity === 4
+        ? 380
+        : burst.intensity === 3
+          ? 280
+          : burst.intensity === 2
+            ? 200
+            : 140;
   const gravity =
     burst.intensity >= 3 ? 0.18 : burst.intensity === 2 ? 0.2 : 0.24;
 

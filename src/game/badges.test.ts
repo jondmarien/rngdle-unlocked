@@ -60,7 +60,7 @@ describe('badge fixtures', () => {
     expect(hit?.name).toBe('Absolute Ceiling');
     expect(hit?.image).toBe('/badges/ceiling.jpg');
     expect(hit?.ep).toBe(100_000);
-    expect(hit?.rarity).toBe('mythic');
+    expect(hit?.rarity).toBe('divine');
   });
   it('even 8', () => {
     expect(ids(8)).toContain('even');
@@ -70,6 +70,103 @@ describe('badge fixtures', () => {
   });
   it('full house 11222', () => {
     expect(ids(11222)).toContain('full-house');
+  });
+  it('two-trips 233223 fires and excludes trips/full-house', () => {
+    const handIds = ids(233223);
+    expect(handIds).toContain('two-trips');
+    expect(handIds).not.toContain('trips');
+    expect(handIds).not.toContain('full-house');
+  });
+  it('two-trips 222333 and 333222 — no double-fire with trips', () => {
+    for (const n of [222333, 333222]) {
+      const handIds = ids(n);
+      expect(handIds).toContain('two-trips');
+      expect(handIds).not.toContain('trips');
+      expect(handIds).not.toContain('full-house');
+    }
+  });
+  it('full-house 112223 excludes two-trips and trips', () => {
+    const handIds = ids(112223);
+    expect(handIds).toContain('full-house');
+    expect(handIds).not.toContain('two-trips');
+    expect(handIds).not.toContain('trips');
+  });
+  it('pure trips excludes two-trips', () => {
+    // three 1s, rest unique → trips only (not 3+3, not 3+2)
+    const handIds = ids(111234);
+    expect(handIds).toContain('trips');
+    expect(handIds).not.toContain('two-trips');
+    expect(handIds).not.toContain('full-house');
+  });
+  it('three-pair 112233 fires and excludes two-pair', () => {
+    const handIds = ids(112233);
+    expect(handIds).toContain('three-pair');
+    expect(handIds).not.toContain('two-pair');
+    expect(handIds).not.toContain('pair');
+  });
+  it('two-pair 112234 excludes three-pair', () => {
+    const handIds = ids(112234);
+    expect(handIds).toContain('two-pair');
+    expect(handIds).not.toContain('three-pair');
+  });
+  it('full-quads 111122 fires and excludes quads/pair', () => {
+    const handIds = ids(111122);
+    expect(handIds).toContain('full-quads');
+    expect(handIds).not.toContain('quads');
+    expect(handIds).not.toContain('pair');
+  });
+  it('quads 111123 excludes full-quads', () => {
+    const handIds = ids(111123);
+    expect(handIds).toContain('quads');
+    expect(handIds).not.toContain('full-quads');
+  });
+  it('harshad and div7 expose equation proofs', () => {
+    const harshad = evaluateBadges(18).find((h) => h.id === 'harshad');
+    expect(harshad?.equation).toEqual({
+      kind: 'product',
+      divisor: 9,
+      quotient: 2,
+    });
+    const lucky = evaluateBadges(709590).find((h) => h.id === 'div7');
+    expect(lucky?.equation).toEqual({
+      kind: 'product',
+      divisor: 7,
+      quotient: 101370,
+    });
+  });
+  it('square cube pronic and digit-sum expose equation proofs', () => {
+    expect(evaluateBadges(36).find((h) => h.id === 'square')?.equation).toEqual(
+      { kind: 'power', base: 6, exponent: 2 },
+    );
+    expect(evaluateBadges(27).find((h) => h.id === 'cube')?.equation).toEqual({
+      kind: 'power',
+      base: 3,
+      exponent: 3,
+    });
+    expect(
+      evaluateBadges(65536).find((h) => h.id === 'power-of-two')?.equation,
+    ).toEqual({ kind: 'power', base: 2, exponent: 16 });
+    expect(evaluateBadges(12).find((h) => h.id === 'pronic')?.equation).toEqual(
+      { kind: 'pronic', k: 3 },
+    );
+    expect(
+      evaluateBadges(19).find((h) => h.id === 'digit-sum-10')?.equation,
+    ).toEqual({
+      kind: 'digitSum',
+      digits: [1, 9],
+      total: 10,
+      compare: 'eq',
+      threshold: 10,
+    });
+  });
+  it('prime has no equation proof', () => {
+    expect(
+      evaluateBadges(97).find((h) => h.id === 'prime')?.equation,
+    ).toBeUndefined();
+  });
+  it('twin-gate-prime fires for length-2 bookends (11)', () => {
+    expect(ids(11)).toContain('twin-prime-adjacent');
+    expect(ids(11)).toContain('bookends');
   });
   it('six-seven contains 67', () => {
     expect(ids(356773)).toContain('six-seven');

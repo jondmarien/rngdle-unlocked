@@ -6,7 +6,14 @@ import type {
 } from './types.js';
 import { rollToHighlight } from './types.js';
 
-const QUALITY: RarityTier[] = ['uncommon', 'rare', 'epic', 'anomaly', 'mythic'];
+const QUALITY: RarityTier[] = [
+  'uncommon',
+  'rare',
+  'epic',
+  'anomaly',
+  'mythic',
+  'divine',
+];
 
 const WINDOWS = [3, 5, 10] as const;
 

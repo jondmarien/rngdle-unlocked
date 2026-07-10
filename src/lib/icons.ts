@@ -9,6 +9,7 @@ export const RARITY_ICON: Record<RarityTier, string> = {
   epic: '/icons/rarity/epic.jpg',
   anomaly: '/icons/rarity/anomaly.jpg',
   mythic: '/icons/rarity/mythic.jpg',
+  divine: '/icons/rarity/divine.jpg',
 };
 
 /** Custom category icons for codex filters (public/icons/family). */

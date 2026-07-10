@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-07-10
+
+### Added
+
+- **Latest Runs spoiler eye** — optional header toggle blurs number / rarity / EP / badge count (session-only; default off).
+- **Divine rarity** — new top tier above Mythic (≥25,000 EP roll / ≥20,000 badge EP); Arcade Digits base 160; gold visual treatment. Forward-only for new rolls (no history backfill).
+- **Two Trips poker badge** — two distinct digits each appearing three times (2,400 EP); mutually exclusive with trips / full-house. Forward-only; announcement draft in `docs/announcements/two-trips-draft.md`.
+- **Three Pair & Full Quads** — three distinct pairs (2,000 EP) and four-of-a-kind plus a pair (5,000 EP); mutually exclusive with two-pair / quads. Forward-only; announcement draft in `docs/announcements/poker-three-pair-full-quads-draft.md`.
+- **Badge equation proofs** — Harshad and div3–div1000 cards show `N = divisor × quotient` under the description (digit highlights unchanged).
+- **Badge equation proofs (v2)** — square / cube / fourth-power / power-of-two / pronic / digit-sum badges show kind-aware proofs (powers, `k×(k+1)`, digit sums).
+- **Twin Gate Prime on length-2** — `hasBookends` allows matching ends on 2+ digit numbers (e.g. `11`). Forward-only.
+
+### Notes
+
+- Poker / rarity / bookend scoring changes are **forward-only** (no history backfill). No schema migration required.
+
 ## [0.8.1] - 2026-07-10
 
 ### Fixed

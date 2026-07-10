@@ -16,6 +16,7 @@ export const DIGITS_BASE_BY_RARITY: Record<RarityTier, number> = {
   epic: 25,
   anomaly: 40,
   mythic: 80,
+  divine: 160,
 };
 
 /** `floor(base + totalEP / EP_DIVISOR)` — soft v1 curve. */

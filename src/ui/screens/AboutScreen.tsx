@@ -21,6 +21,7 @@ const NUMBER_RARITY_BAND: Record<RarityTier, { minEp: number; band: string }> =
     epic: { minEp: 6_500, band: 'About top 12%+' },
     anomaly: { minEp: 8_000, band: 'About top 5%+' },
     mythic: { minEp: 11_000, band: 'About top 1%+' },
+    divine: { minEp: 25_000, band: 'About top 0.15%+' },
   };
 
 /** Soft badge-EP ladder (catalog weight), not published hit rates. */
@@ -31,7 +32,8 @@ const BADGE_RARITY_BAND: Record<RarityTier, { minEp: number; note: string }> = {
   rare: { minEp: 900, note: 'Strong chip weight' },
   epic: { minEp: 2_500, note: 'Heavy chip weight' },
   anomaly: { minEp: 4_000, note: 'Very heavy chip' },
-  mythic: { minEp: 8_000, note: 'Heaviest chips' },
+  mythic: { minEp: 8_000, note: 'Heaviest common chips' },
+  divine: { minEp: 20_000, note: 'Ultra chip weight' },
 };
 
 function thresholdMin(
@@ -227,7 +229,7 @@ export function AboutScreen() {
             rngdle.com
           </a>
           : they label tiers with population bands (e.g. Mythic = top 1%). We
-          use the same seven tier names, but thresholds are{' '}
+          use the same eight tier names, but thresholds are{' '}
           <strong className="text-(--prose-2)">EP-calibrated</strong> for this
           catalog (dense badge stacking), and we show{' '}
           <strong className="text-(--prose-2)">Top X% of scores</strong> from

@@ -7,9 +7,10 @@ import type { RarityTier } from './types.js';
  * most random 0..1e6 rolls land ~1.5k–8k EP, so low tiers need high bars
  * or trash/common/uncommon never appear. Target shape ~:
  * trash 15–20% · common 20–25% · uncommon 20–25% · rare 15–20% ·
- * epic ~10% · anomaly ~5–7% · mythic ~1%.
+ * epic ~10% · anomaly ~5–7% · mythic ~1% · divine ≪1% (ultra stacks / Absolute Ceiling).
  */
 export const RARITY_THRESHOLDS: { tier: RarityTier; minEP: number }[] = [
+  { tier: 'divine', minEP: 25_000 },
   { tier: 'mythic', minEP: 11_000 },
   { tier: 'anomaly', minEP: 8_000 },
   { tier: 'epic', minEP: 6_500 },
@@ -21,6 +22,7 @@ export const RARITY_THRESHOLDS: { tier: RarityTier; minEP: number }[] = [
 
 /** Softer ladder for individual badge chips (single-badge EP, not full roll). */
 export const BADGE_RARITY_THRESHOLDS: { tier: RarityTier; minEP: number }[] = [
+  { tier: 'divine', minEP: 20_000 },
   { tier: 'mythic', minEP: 8_000 },
   { tier: 'anomaly', minEP: 4_000 },
   { tier: 'epic', minEP: 2_500 },
@@ -57,6 +59,7 @@ export const RARITY_LABELS: Record<RarityTier, string> = {
   epic: 'Epic',
   anomaly: 'Anomaly',
   mythic: 'Mythic',
+  divine: 'Divine',
 };
 
 /** Canonical low→high tier order (single source for sorting/ranking). */
@@ -68,9 +71,10 @@ export const RARITY_ORDER: readonly RarityTier[] = [
   'epic',
   'anomaly',
   'mythic',
+  'divine',
 ];
 
-/** Rank for sorting: trash = 0 … mythic = 6 (-1 never occurs for valid tiers). */
+/** Rank for sorting: trash = 0 … divine = 7 (-1 never occurs for valid tiers). */
 export function rarityRank(tier: RarityTier): number {
   return RARITY_ORDER.indexOf(tier);
 }

@@ -161,7 +161,7 @@ export function isAlternating(n: number): boolean {
 
 export function hasBookends(n: number): boolean {
   const s = digitsOf(n);
-  return s.length >= 3 && s[0] === s[s.length - 1];
+  return s.length >= 2 && s[0] === s[s.length - 1];
 }
 
 export function zeroCount(n: number): number {
@@ -185,18 +185,25 @@ export function pokerHand(
 ):
   | 'pair'
   | 'two-pair'
+  | 'three-pair'
   | 'trips'
+  | 'two-trips'
   | 'full-house'
   | 'quads'
+  | 'full-quads'
   | 'five'
   | 'six'
   | null {
   const counts = [...digitCounts(n).values()].sort((a, b) => b - a);
   if (counts[0] === 6) return 'six';
   if (counts[0] === 5) return 'five';
+  if (counts[0] === 4 && counts[1] === 2) return 'full-quads';
   if (counts[0] === 4) return 'quads';
+  if (counts[0] === 3 && counts[1] === 3) return 'two-trips';
   if (counts[0] === 3 && counts[1] === 2) return 'full-house';
   if (counts[0] === 3) return 'trips';
+  if (counts[0] === 2 && counts[1] === 2 && counts[2] === 2)
+    return 'three-pair';
   if (counts[0] === 2 && counts[1] === 2) return 'two-pair';
   if (counts[0] === 2) return 'pair';
   return null;

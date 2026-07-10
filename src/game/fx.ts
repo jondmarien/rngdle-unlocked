@@ -32,6 +32,15 @@ export function playRollSound(rarity: RarityTier, enabled: boolean): void {
       o.stop(start + dur + 0.02);
     };
 
+    if (rarity === 'divine') {
+      blip(523, 'triangle', t0, 0.2, 0.07);
+      blip(659, 'triangle', t0 + 0.07, 0.26, 0.09);
+      blip(784, 'sine', t0 + 0.14, 0.32, 0.1);
+      blip(1046, 'sine', t0 + 0.24, 0.4, 0.09);
+      blip(1319, 'sine', t0 + 0.36, 0.5, 0.07);
+      window.setTimeout(() => void ctx.close(), 1000);
+      return;
+    }
     if (rarity === 'mythic') {
       // Rising triad + shimmer
       blip(523, 'triangle', t0, 0.22, 0.07);
@@ -63,6 +72,7 @@ export function playRollSound(rarity: RarityTier, enabled: boolean): void {
       epic: 659,
       anomaly: 784,
       mythic: 988,
+      divine: 1175,
     };
     blip(tierFreq[rarity], 'sine', t0, 0.35, 0.08);
     window.setTimeout(() => void ctx.close(), 500);
@@ -76,7 +86,8 @@ export function shouldCelebrate(rarity: RarityTier): boolean {
     rarity === 'rare' ||
     rarity === 'epic' ||
     rarity === 'anomaly' ||
-    rarity === 'mythic'
+    rarity === 'mythic' ||
+    rarity === 'divine'
   );
 }
 
@@ -88,7 +99,7 @@ export function shouldTrashCrack(rarity: RarityTier): boolean {
 /** Intensity ladder for screen FX (0 = none, 'trash' = crack + heavy shake). */
 export function celebrateIntensity(
   rarity: RarityTier,
-): 0 | 1 | 2 | 3 | 4 | 'trash' {
+): 0 | 1 | 2 | 3 | 4 | 5 | 'trash' {
   switch (rarity) {
     case 'trash':
       return 'trash';
@@ -100,6 +111,8 @@ export function celebrateIntensity(
       return 3;
     case 'mythic':
       return 4;
+    case 'divine':
+      return 5;
     default:
       return 0;
   }

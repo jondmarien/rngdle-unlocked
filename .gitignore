@@ -38,3 +38,4 @@ next notes.txt
 api/**/*.js
 api/.bundled
 api/_bundles/
+/references

@@ -22,6 +22,7 @@ export const rarityTierSchema = z.enum([
   'epic',
   'anomaly',
   'mythic',
+  'divine',
 ]);
 
 export const badgeFamilySchema = z.enum([
@@ -37,6 +38,30 @@ export const badgeFamilySchema = z.enum([
   'secret',
 ]);
 
+export const badgeEquationSchema = z.union([
+  z.object({
+    kind: z.literal('product').optional(),
+    divisor: z.number(),
+    quotient: z.number(),
+  }),
+  z.object({
+    kind: z.literal('power'),
+    base: z.number(),
+    exponent: z.number(),
+  }),
+  z.object({
+    kind: z.literal('pronic'),
+    k: z.number(),
+  }),
+  z.object({
+    kind: z.literal('digitSum'),
+    digits: z.array(z.number()),
+    total: z.number(),
+    compare: z.enum(['eq', 'gte', 'lte']).optional(),
+    threshold: z.number().optional(),
+  }),
+]);
+
 export const badgeHitSchema = z.object({
   id: z.string().min(1),
   name: z.string(),
@@ -47,6 +72,7 @@ export const badgeHitSchema = z.object({
   highlights: z.array(z.boolean()),
   rarity: rarityTierSchema,
   image: z.string().optional(),
+  equation: badgeEquationSchema.optional(),
 });
 
 export const rollResultSchema = z.object({

@@ -7,8 +7,8 @@
 | **Repo**                   | `jondmarien/rngdle-unlocked`                                                |
 | **Live**                   | https://rngdle-unlocked.chron0.tech                                         |
 | **Branch**                 | `main` (auto-deploys Vercel)                                                |
-| **Version**                | `0.8.1` (`package.json`; Settings uses `VITE_APP_VERSION`)                  |
-| **Latest release**         | [v0.8.1](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.8.1) |
+| **Version**                | `0.9.0` (`package.json`; Settings uses `VITE_APP_VERSION`)                  |
+| **Latest release**         | [v0.9.0](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.9.0) |
 | **Handoff commit context** | Opus audit refactor (`aa8e91e`…`fc4fa65` on `main`) + prior P0/P1 wave      |
 
 ---
@@ -238,6 +238,7 @@ node scripts/add-roll-source.mjs   # if source column missing
 - [x] **v0.7.4** — Codex search (spoiler-safe name/description filter)
 - [x] **v0.8.0** — Gap remediation: onboarding checklist, shared roll rows, Retry banners, a11y, admin/trust polish, Tailwind v4 canonical classes
 - [x] **v0.8.1** — Onboarding checklist detection, Daily/Weekly reset countdown, sync integrity + `rolls.source` on cloud pull
+- [x] **v0.9.0** — Divine rarity; Two Trips / Three Pair / Full Quads; badge equation proofs; Latest Runs spoiler eye; Twin Gate length-2
 
 ### Still open for you / ops
 
