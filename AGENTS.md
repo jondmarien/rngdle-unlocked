@@ -112,6 +112,7 @@ See [`.env.example`](./.env.example). Typical vars:
 | `BETTER_AUTH_SECRET`                          | Auth + HMAC attestations                                                                           |
 | `BETTER_AUTH_URL`                             | Site origin (production must match real domain)                                                    |
 | `VITE_APP_URL`                                | Client trusted origin                                                                              |
+| `EXTRA_TRUSTED_ORIGINS`                       | Optional comma-separated extra Better Auth origins (prod + beta chron0.tech already hardcoded)     |
 | `RESEND_API_KEY`                              | Outbound mail (magic link + email verification) — see [`docs/email-auth.md`](./docs/email-auth.md) |
 | `EMAIL_FROM`                                  | Optional; default `RNGdle Unlocked <noreply@outreach.chron0.tech>`                                 |
 | `ADMIN_SECRET`                                | Optional; bootstrap only (`scripts/promote-admin.mjs`) — not for browser admin                     |

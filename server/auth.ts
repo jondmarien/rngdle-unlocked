@@ -172,6 +172,13 @@ export function createAuth() {
       baseURL,
       process.env.VITE_APP_URL,
       process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined,
+      // Production + beta custom domains (CORS / CSRF for Better Auth)
+      'https://rngdle-unlocked.chron0.tech',
+      'https://rngdle-unlocked-beta.chron0.tech',
+      ...(process.env.EXTRA_TRUSTED_ORIGINS ?? '')
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean),
       'http://localhost:5173',
       'http://localhost:3000',
       'http://127.0.0.1:5173',
