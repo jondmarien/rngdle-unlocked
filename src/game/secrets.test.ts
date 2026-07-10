@@ -7,6 +7,7 @@ import {
   isSectionComplete,
   mergeSecretUnlocks,
   newlyUnlockedSecrets,
+  secretHits,
   sectionProgress,
 } from './secrets';
 import {
@@ -113,6 +114,12 @@ describe('secrets', () => {
 });
 
 describe('streak secrets', () => {
+  it('secretHits carries streak image paths for Home celebration', () => {
+    const hits = secretHits(STREAK_SECRETS);
+    const veryOdd = hits.find((h) => h.id === 'secret-streak-odd-5');
+    expect(veryOdd?.image).toBe('/secrets/streak-odd-5.jpg');
+  });
+
   it('unlocks Very Odd at oddStreak 5', () => {
     const stats: PlayStats = { ...defaultPlayStats(), oddStreak: 5 };
     const nu = newlyUnlockedStreakSecrets(stats, [], new Set());

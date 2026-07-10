@@ -365,9 +365,10 @@ export function HomeScreen({
             <div className="mt-2 flex flex-wrap gap-2">
               {lastSecretUnlocks.map((s) => {
                 const img =
-                  s.id === 'secret-omega-codex'
+                  s.image ??
+                  (s.id === 'secret-omega-codex'
                     ? '/secrets/omega.jpg'
-                    : `/secrets/${s.id.replace('secret-master-', '')}.jpg`;
+                    : `/secrets/${s.id.replace('secret-master-', '')}.jpg`);
                 return (
                   <div
                     key={s.id}

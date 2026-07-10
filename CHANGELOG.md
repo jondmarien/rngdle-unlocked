@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Streak secret unlock art on Home** — celebration card used a `secret-master-*` path heuristic, so streak ids resolved to missing files (e.g. `/secrets/secret-streak-odd-5.jpg`). Now prefers each secret’s `image` field from `secretHits`.
+
 ## [0.10.0] - 2026-07-10
 
 ### Added
