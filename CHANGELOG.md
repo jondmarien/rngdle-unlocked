@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Badge art lightbox** — click Lifetime / Secret / Mastery badge art on Profile or Codex to view full-resolution art (Escape, backdrop, or Close).
 - **Share unlocked seals toggle** — Settings default-on to include journey / secret / mastery seal names on Discord paste + share PNG. Profile OG supports `?seals=1` and reuses the existing `collectionJson` read (no extra Neon query).
 - **Feature request tags** — single-select categories (Bug Fix, New Feature, Change/Improvement, Badge Update) with dedicated `--feature-tag-*` colors (not status/rarity). Legacy rows stay Uncategorized (`tag` null). Run `node --env-file=.env.local scripts/add-feature-request-tag.mjs`.
+- **Feature request author edit** — authors (and admins) can edit title / description / tag via `PATCH /api/feature-requests/:id`. Status remains admin-only.
 
 ### Fixed
 

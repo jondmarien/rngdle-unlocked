@@ -42,6 +42,9 @@ export type FeatureRequestItem = {
   votedByMe: boolean;
   username: string | null;
   name: string;
+  /** Author user id — for edit permission on the client. */
+  userId: string;
+  isMine: boolean;
 };
 
 function isStatus(s: string): s is FeatureRequestStatus {
@@ -105,6 +108,7 @@ export async function listFeatureRequests(
   const rows = await db
     .select({
       id: featureRequests.id,
+      userId: featureRequests.userId,
       title: featureRequests.title,
       description: featureRequests.description,
       status: featureRequests.status,
@@ -122,6 +126,7 @@ export async function listFeatureRequests(
     )
     .groupBy(
       featureRequests.id,
+      featureRequests.userId,
       featureRequests.title,
       featureRequests.description,
       featureRequests.status,
@@ -161,6 +166,8 @@ export async function listFeatureRequests(
     votedByMe: votedIds.has(r.id),
     username: r.username,
     name: r.name,
+    userId: r.userId,
+    isMine: opts.meUserId != null && r.userId === opts.meUserId,
   }));
 }
 
@@ -215,6 +222,134 @@ export async function submitFeatureRequest(
     votedByMe: false,
     username: row!.username,
     name: row!.name,
+    userId: opts.userId,
+    isMine: true,
+  };
+}
+
+export async function updateFeatureRequest(
+  db: Db,
+  opts: {
+    requestId: string;
+    actorUserId: string;
+    isAdmin: boolean;
+    title?: string;
+    description?: string;
+    tag?: FeatureRequestTag | null;
+  },
+): Promise<
+  | { ok: true; item: FeatureRequestItem }
+  | { ok: false; status: 400 | 403 | 404; error: string }
+> {
+  const [row] = await db
+    .select({
+      id: featureRequests.id,
+      userId: featureRequests.userId,
+      title: featureRequests.title,
+      description: featureRequests.description,
+      tag: featureRequests.tag,
+      status: featureRequests.status,
+      createdAt: featureRequests.createdAt,
+    })
+    .from(featureRequests)
+    .where(eq(featureRequests.id, opts.requestId))
+    .limit(1);
+  if (!row) {
+    return { ok: false, status: 404, error: 'Feature request not found' };
+  }
+  if (row.userId !== opts.actorUserId && !opts.isAdmin) {
+    return { ok: false, status: 403, error: 'Forbidden' };
+  }
+
+  const nextTitle =
+    opts.title !== undefined ? opts.title.trim() : row.title;
+  const nextDesc =
+    opts.description !== undefined
+      ? opts.description.trim()
+      : row.description;
+  if (nextTitle.length < FEATURE_TITLE_MIN) {
+    return {
+      ok: false,
+      status: 400,
+      error: `title must be at least ${FEATURE_TITLE_MIN} characters`,
+    };
+  }
+  if (!nextDesc) {
+    return { ok: false, status: 400, error: 'description is required' };
+  }
+
+  let nextTag: string | null = row.tag ?? null;
+  if (opts.tag !== undefined) {
+    if (opts.tag === null) {
+      nextTag = null;
+    } else if (!isTag(opts.tag)) {
+      return {
+        ok: false,
+        status: 400,
+        error: `tag must be one of: ${FEATURE_REQUEST_TAGS.join(', ')}`,
+      };
+    } else {
+      nextTag = opts.tag;
+    }
+  }
+
+  await db
+    .update(featureRequests)
+    .set({
+      title: nextTitle.slice(0, FEATURE_TITLE_MAX),
+      description: nextDesc.slice(0, FEATURE_DESC_MAX),
+      tag: nextTag,
+    })
+    .where(eq(featureRequests.id, opts.requestId));
+
+  const [full] = await db
+    .select({
+      id: featureRequests.id,
+      userId: featureRequests.userId,
+      title: featureRequests.title,
+      description: featureRequests.description,
+      status: featureRequests.status,
+      tag: featureRequests.tag,
+      createdAt: featureRequests.createdAt,
+      username: user.username,
+      name: user.name,
+    })
+    .from(featureRequests)
+    .innerJoin(user, eq(user.id, featureRequests.userId))
+    .where(eq(featureRequests.id, opts.requestId))
+    .limit(1);
+
+  const [countRow] = await db
+    .select({
+      n: sql<number>`count(*)`.mapWith(Number),
+    })
+    .from(featureRequestVotes)
+    .where(eq(featureRequestVotes.requestId, opts.requestId));
+
+  log.info('updated', {
+    requestId: opts.requestId,
+    actorUserId: opts.actorUserId,
+  });
+
+  return {
+    ok: true,
+    item: {
+      id: full!.id,
+      title: full!.title,
+      description: full!.description,
+      status: full!.status,
+      tag: full!.tag ?? null,
+      createdAt:
+        full!.createdAt instanceof Date
+          ? full!.createdAt.toISOString()
+          : String(full!.createdAt),
+      voteCount: countRow?.n ?? 0,
+      votedByMe: false,
+      username: full!.username,
+      name: full!.name,
+      userId: full!.userId,
+      isMine: full!.userId === opts.actorUserId,
+    },
   };
 }
 
