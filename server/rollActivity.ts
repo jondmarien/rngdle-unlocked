@@ -1,6 +1,7 @@
 import { and, desc, eq, gte, isNotNull, ne } from 'drizzle-orm';
 import { NUMBER_BADGES } from '../src/game/badges/catalog.js';
 import { JOURNEY_BADGES } from '../src/game/journey.js';
+import { LIFETIME_EP_BADGES } from '../src/game/lifetimeEp.js';
 import { SECRET_BADGES } from '../src/game/secrets.js';
 import type { CollectionEntry, RollResult } from '../src/game/types.js';
 import type { Db } from './db/index.js';
@@ -18,6 +19,9 @@ for (const b of NUMBER_BADGES) {
   NAME_BY_ID.set(b.id, { name: b.name, emoji: b.emoji });
 }
 for (const b of JOURNEY_BADGES) {
+  NAME_BY_ID.set(b.id, { name: b.name, emoji: b.emoji });
+}
+for (const b of LIFETIME_EP_BADGES) {
   NAME_BY_ID.set(b.id, { name: b.name, emoji: b.emoji });
 }
 for (const b of SECRET_BADGES) {

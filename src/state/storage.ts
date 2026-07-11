@@ -62,7 +62,24 @@ export const DEFAULT_SETTINGS: AppSettings = {
 type SettingsMigrations = {
   /** Presence-check backfill for shareShowRollCount default-on. */
   shareShowRollCountPresence?: boolean;
+  /** One-shot Lifetime EP badge collection backfill (cosmetic, no EP). */
+  lifetimeEpBackfillV1?: boolean;
 };
+
+function readMigrations(): SettingsMigrations {
+  if (typeof localStorage === 'undefined') return {};
+  const migRaw = localStorage.getItem(STORAGE_KEYS.migrations);
+  if (migRaw == null) return {};
+  try {
+    return JSON.parse(migRaw) as SettingsMigrations;
+  } catch {
+    return {};
+  }
+}
+
+function writeMigrations(mig: SettingsMigrations): void {
+  writeJSON(STORAGE_KEYS.migrations, mig);
+}
 
 /**
  * One-time: if raw settings JSON never had `shareShowRollCount`, turn it on.
@@ -72,15 +89,7 @@ export function migrateShareShowRollCountPresence(
   rawSettingsJson: string | null,
 ): Partial<AppSettings> | null {
   if (typeof localStorage === 'undefined') return null;
-  const migRaw = localStorage.getItem(STORAGE_KEYS.migrations);
-  let mig: SettingsMigrations = {};
-  if (migRaw != null) {
-    try {
-      mig = JSON.parse(migRaw) as SettingsMigrations;
-    } catch {
-      mig = {};
-    }
-  }
+  const mig = readMigrations();
   if (mig.shareShowRollCountPresence) return null;
 
   let patch: Partial<AppSettings> | null = null;
@@ -95,11 +104,25 @@ export function migrateShareShowRollCountPresence(
     }
   }
   // No settings key at all → DEFAULT_SETTINGS already true; still mark done.
-  writeJSON(STORAGE_KEYS.migrations, {
+  writeMigrations({
     ...mig,
     shareShowRollCountPresence: true,
   });
   return patch;
+}
+
+/** Whether the Lifetime EP cosmetic backfill has already run. */
+export function isLifetimeEpBackfillDone(): boolean {
+  return Boolean(readMigrations().lifetimeEpBackfillV1);
+}
+
+/** Mark Lifetime EP backfill complete (collection granted; no EP awards). */
+export function markLifetimeEpBackfillDone(): void {
+  if (typeof localStorage === 'undefined') return;
+  writeMigrations({
+    ...readMigrations(),
+    lifetimeEpBackfillV1: true,
+  });
 }
 
 export function defaultState(): PersistedState {

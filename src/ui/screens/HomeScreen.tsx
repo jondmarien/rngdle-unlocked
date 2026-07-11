@@ -51,6 +51,7 @@ export function HomeScreen({
     saveError,
     reportSaveError,
     lastJourneyUnlocks,
+    lastLifetimeEpUnlocks,
     lastSecretUnlocks,
     lastNewBadgeIds,
     lifetimeRollCount,
@@ -391,6 +392,51 @@ export function HomeScreen({
                 .toLocaleString()}{' '}
               lifetime EP
             </p>
+          </div>
+        )}
+
+        {revealDone && lastLifetimeEpUnlocks.length > 0 && (
+          <div className="number-fade-in w-full max-w-md rounded-lg border border-amber-500/50 bg-(--surface-raised) px-3 py-2.5 text-left text-sm leading-snug">
+            <p className="text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300">
+              Lifetime EP unlocked
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {lastLifetimeEpUnlocks.map((j) => (
+                <div
+                  key={j.id}
+                  className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-black/10 p-1.5 pr-2 dark:bg-black/20"
+                >
+                  {j.image ? (
+                    <img
+                      src={j.image}
+                      alt=""
+                      className="h-10 w-10 rounded-md object-cover"
+                    />
+                  ) : (
+                    <span
+                      className="flex h-10 w-10 items-center justify-center text-xl"
+                      aria-hidden
+                    >
+                      {j.emoji}
+                    </span>
+                  )}
+                  <span className="font-semibold text-(--prose)">{j.name}</span>
+                </div>
+              ))}
+            </div>
+            {lastLifetimeEpUnlocks.reduce((a, b) => a + b.ep, 0) > 0 ? (
+              <p className="mt-2 text-(--prose-2)">
+                +
+                {lastLifetimeEpUnlocks
+                  .reduce((a, b) => a + b.ep, 0)
+                  .toLocaleString()}{' '}
+                lifetime EP
+              </p>
+            ) : (
+              <p className="mt-2 text-(--prose-2)">
+                Past milestones claimed — open Codex → Lifetime EP
+              </p>
+            )}
           </div>
         )}
 

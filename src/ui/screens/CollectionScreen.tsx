@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   JOURNEY_BADGES,
+  LIFETIME_EP_BADGES,
   NUMBER_BADGES,
   SECTION_SECRETS,
   SECRET_BADGES,
@@ -34,6 +35,7 @@ const FAMILIES: { id: FilterId; label: string }[] = [
   { id: 'element', label: 'Element' },
   { id: 'bases', label: 'Bases' },
   { id: 'journey', label: 'Journey' },
+  { id: 'lifetime', label: 'Lifetime EP' },
   { id: 'secret', label: 'Secret' },
 ];
 
@@ -48,6 +50,7 @@ const FAMILY_HINT: Record<Exclude<BadgeFamily, 'secret'>, string> = {
   element: 'Periodic-table vibes.',
   bases: 'A numeral-base pattern hides here.',
   journey: 'Lifetime milestone — keep rolling.',
+  lifetime: 'Lifetime EP milestone — keep earning.',
 };
 
 const CEILING_LOCKED_TITLE = 'Ultra-rare seal';
@@ -57,7 +60,7 @@ const SECRET_LOCKED_BODY =
   'Collect every badge in this codex section to reveal the seal.';
 const OMEGA_LOCKED_TITLE = '???? · ????';
 const OMEGA_LOCKED_BODY =
-  'Unlock every number badge, every journey mark, and every section mastery. Then this appears.';
+  'Unlock every number badge, every journey mark, every lifetime EP seal, and every section mastery. Then this appears.';
 
 function isRecentUnlock(iso: string | undefined, now: number): boolean {
   if (!iso) return false;
@@ -108,6 +111,10 @@ function journeyLockedHaystack(): string[] {
   return ['????', FAMILY_HINT.journey, 'Locked milestone'];
 }
 
+function lifetimeLockedHaystack(): string[] {
+  return ['????', FAMILY_HINT.lifetime, 'Locked milestone'];
+}
+
 function secretLockedHaystack(secret: SecretBadgeDef): string[] {
   if (secret.tier === 'omega') {
     return [OMEGA_LOCKED_TITLE, OMEGA_LOCKED_BODY, 'Final seal'];
@@ -156,10 +163,14 @@ export function CollectionScreen() {
   const journeyUnlocked = JOURNEY_BADGES.filter((b) =>
     unlocked.has(b.id),
   ).length;
+  const lifetimeUnlocked = LIFETIME_EP_BADGES.filter((b) =>
+    unlocked.has(b.id),
+  ).length;
   const secretUnlocked = SECRET_BADGES.filter((b) => unlocked.has(b.id)).length;
 
   const numberList = useMemo(() => {
-    if (filter === 'journey' || filter === 'secret') return [];
+    if (filter === 'journey' || filter === 'lifetime' || filter === 'secret')
+      return [];
     let list = NUMBER_BADGES;
     if (filter === 'new') {
       list = list
@@ -191,6 +202,7 @@ export function CollectionScreen() {
   const journeyList = useMemo(() => {
     if (
       filter === 'secret' ||
+      filter === 'lifetime' ||
       (filter !== 'all' && filter !== 'journey' && filter !== 'new')
     ) {
       return [];
@@ -220,9 +232,43 @@ export function CollectionScreen() {
     return list;
   }, [filter, showLocked, unlocked, recentIds, unlockedAt, query]);
 
+  const lifetimeList = useMemo(() => {
+    if (
+      filter === 'secret' ||
+      filter === 'journey' ||
+      (filter !== 'all' && filter !== 'lifetime' && filter !== 'new')
+    ) {
+      return [];
+    }
+    let list = [...LIFETIME_EP_BADGES];
+    if (filter === 'new') {
+      list = list
+        .filter((b) => recentIds.has(b.id))
+        .sort(
+          (a, b) =>
+            Date.parse(unlockedAt.get(b.id) ?? '') -
+            Date.parse(unlockedAt.get(a.id) ?? ''),
+        );
+    } else if (!showLocked) {
+      list = list.filter((b) => unlocked.has(b.id));
+    }
+    if (query.trim()) {
+      list = list.filter((b) =>
+        badgeMatchesQuery(
+          unlocked.has(b.id),
+          query,
+          { name: b.name, description: b.description },
+          lifetimeLockedHaystack(),
+        ),
+      );
+    }
+    return list;
+  }, [filter, showLocked, unlocked, recentIds, unlockedAt, query]);
+
   const secretList = useMemo(() => {
     if (
       filter === 'journey' ||
+      filter === 'lifetime' ||
       (filter !== 'all' && filter !== 'secret' && filter !== 'new')
     ) {
       return [];
@@ -258,8 +304,9 @@ export function CollectionScreen() {
         <h1 className="text-xl font-bold tracking-tight">Badge codex</h1>
         <p className="text-sm text-(--prose-2)">
           Number: {numberUnlocked}/{NUMBER_BADGES.length} · Journey:{' '}
-          {journeyUnlocked}/{JOURNEY_BADGES.length} · Secrets: {secretUnlocked}/
-          {SECRET_BADGES.length}
+          {journeyUnlocked}/{JOURNEY_BADGES.length} · Lifetime EP:{' '}
+          {lifetimeUnlocked}/{LIFETIME_EP_BADGES.length} · Secrets:{' '}
+          {secretUnlocked}/{SECRET_BADGES.length}
         </p>
         <p className="mt-1 text-sm text-(--prose-2)">
           Complete every badge in a section to unlock a Secret mastery. Finish
@@ -602,6 +649,121 @@ export function CollectionScreen() {
         </section>
       )}
 
+      {lifetimeList.length > 0 && (
+        <section>
+          <h2 className="mb-2 text-base font-bold text-(--prose)">
+            {filter === 'new' ? 'New lifetime EP marks' : 'Lifetime EP'}
+          </h2>
+          {filter !== 'new' && (
+            <p className="mb-2 text-sm text-(--prose-2)">
+              Lifetime EP milestones — does not change a single roll&apos;s
+              rarity.
+            </p>
+          )}
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {lifetimeList.map((b) => {
+              const has = unlocked.has(b.id);
+              const at = unlockedAt.get(b.id);
+              const when = has ? formatDateTimeMedium(at) : null;
+              const age = filter === 'new' ? formatRelative(at, now) : null;
+              const fresh = has && recentIds.has(b.id);
+              return (
+                <article
+                  key={b.id}
+                  className={`rounded-lg border p-3 text-left text-sm ${
+                    b.image && has
+                      ? 'border-amber-400/55 bg-linear-to-br from-amber-500/15 via-teal-500/10 to-(--surface) shadow-[0_0_20px_rgba(251,191,36,0.12)]'
+                      : fresh
+                        ? 'border-amber-400/45 bg-(--surface)'
+                        : has
+                          ? 'border-(--outline) bg-(--surface)'
+                          : 'border-(--outline) opacity-70'
+                  }`}
+                >
+                  <div className="flex gap-3">
+                    {b.image && (
+                      <button
+                        type="button"
+                        disabled={!has}
+                        className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border sm:h-20 sm:w-20 ${
+                          has
+                            ? 'cursor-pointer border-amber-400/70 shadow-[0_0_12px_rgba(251,191,36,0.25)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400'
+                            : 'cursor-default border-(--outline) grayscale'
+                        }`}
+                        onClick={() => {
+                          if (!has || !b.image) return;
+                          setLightbox({
+                            image: b.image,
+                            name: b.name,
+                            description: b.description,
+                            ep: b.ep,
+                            kind: 'Lifetime EP',
+                          });
+                        }}
+                        aria-label={
+                          has ? `View ${b.name} full size` : undefined
+                        }
+                      >
+                        <img
+                          src={b.image}
+                          alt={has ? '' : 'Locked lifetime EP milestone'}
+                          className={`h-full w-full object-cover ${has ? '' : 'opacity-40 blur-[1px]'}`}
+                        />
+                        {!has && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-base">
+                            🔒
+                          </div>
+                        )}
+                      </button>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className="font-bold tracking-tight">
+                        {has ? (
+                          <>
+                            {!b.image && (
+                              <span className="mr-1" aria-hidden>
+                                {b.emoji}
+                              </span>
+                            )}
+                            {b.name}
+                            {fresh && (
+                              <span className="ml-1.5 inline-flex rounded bg-amber-400 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-black">
+                                New
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          '????'
+                        )}
+                      </div>
+                      <p className="mt-1 text-(--prose-2)">
+                        {has ? b.description : FAMILY_HINT.lifetime}
+                      </p>
+                      <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 text-sm text-(--prose-2)">
+                        <span>
+                          {has
+                            ? `+${b.ep.toLocaleString()} life EP`
+                            : 'Locked milestone'}
+                        </span>
+                        {(age || when) && (
+                          <time
+                            dateTime={at}
+                            className="text-xs text-(--prose-3)"
+                            title="First unlocked"
+                          >
+                            {age ? `Unlocked ${age}` : `Unlocked ${when}`}
+                          </time>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       {secretList.length > 0 && (
         <section>
           <h2 className="mb-2 text-base font-bold text-(--prose)">
@@ -645,6 +807,7 @@ export function CollectionScreen() {
 
       {numberList.length === 0 &&
         journeyList.length === 0 &&
+        lifetimeList.length === 0 &&
         secretList.length === 0 && (
           <p className="text-sm text-(--prose-2)">
             {query.trim()

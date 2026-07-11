@@ -9,10 +9,10 @@ import { rolls } from './db/schema.js';
 import type { CloudSavePayload } from './sync.js';
 
 /**
- * Lifetime EP includes journey + secret seals (not on roll rows).
+ * Lifetime EP includes journey + secret + lifetime-EP seals (not on roll rows).
  * Allow a large one-sync award budget so real grinders are not rejected.
  */
-const JOURNEY_SECRET_EP_SLACK = 80_000;
+const JOURNEY_SECRET_EP_SLACK = 100_000;
 /**
  * Must match `HISTORY_CAP` in `server/sync.ts` / `src/state/storage.ts`.
  * Client history is retention-capped; `lifetimeRollCount` is not.
@@ -52,10 +52,12 @@ function badgeIdsFromRolls(history: RollResult[]): Set<string> {
   return ids;
 }
 
-/** Journey / secret seals are not attached to individual roll rows. */
-function isRollExplainableBadge(entry: CollectionEntry): boolean {
+/** Journey / secret / lifetime-EP seals are not attached to individual roll rows. */
+export function isRollExplainableBadge(entry: CollectionEntry): boolean {
   const family = entry.family;
-  if (family === 'journey' || family === 'secret') return false;
+  if (family === 'journey' || family === 'lifetime' || family === 'secret') {
+    return false;
+  }
   return true;
 }
 

@@ -168,6 +168,8 @@ export function AboutScreen() {
           <li>
             <strong className="text-(--prose)">Journey</strong> — lifetime
             milestones unlock as you keep rolling (journey EP is lifetime-only).
+            Lifetime EP seals unlock as your total EP climbs — also
+            lifetime-only.
           </li>
           <li>
             <strong className="text-(--prose)">Stats &amp; showcase</strong> —{' '}

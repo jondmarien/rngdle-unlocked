@@ -55,6 +55,14 @@ export {
   sumJourneyEP,
 } from './journey.js';
 export {
+  LIFETIME_EP_THRESHOLDS,
+  LIFETIME_EP_BADGES,
+  lifetimeEpBadgesForEp,
+  newlyUnlockedLifetimeEp,
+  lifetimeEpHits,
+  sumLifetimeEpAward,
+} from './lifetimeEp.js';
+export {
   applyStreaks,
   recomputeBestConsecutive,
   recomputeParityStreaks,

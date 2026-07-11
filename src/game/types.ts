@@ -23,6 +23,7 @@ export type BadgeFamily =
   | 'element'
   | 'bases'
   | 'journey'
+  | 'lifetime'
   | 'secret';
 
 export type BadgeHit = {

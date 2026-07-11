@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Lifetime EP badges** — 22 EP-scaled milestone seals (`family: lifetime`, art under `public/lifetime-ep/`) mirroring Journey unlock/toast/Codex/Profile/lightbox patterns. Future crossings grant lifetime EP; one-shot cosmetic backfill for already-reached tiers (toast shown, no EP). Section mastery Entropy Treasury + Codex Absolute now also requires all Lifetime EP seals.
+
 ### Fixed
 
 - **Discord OG embeds** — bump `og:image` URLs with `v=2` so Discord’s image CDN re-fetches after the SVG→PNG fix; `/api/og` never returns SVG on render failure (static `server/assets/og-fallback.png` or 503).

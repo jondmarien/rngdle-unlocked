@@ -26,5 +26,6 @@ export const FAMILY_ICON: Partial<
   element: '/icons/family/element.jpg',
   bases: '/icons/family/bases.jpg',
   journey: '/icons/family/journey.jpg',
+  lifetime: '/icons/family/lifetime.jpg',
   secret: '/secrets/omega.jpg',
 };

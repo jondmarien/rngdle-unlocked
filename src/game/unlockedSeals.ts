@@ -1,4 +1,5 @@
 import { JOURNEY_BADGES } from './journey.js';
+import { LIFETIME_EP_BADGES } from './lifetimeEp.js';
 import { OMEGA_SECRET, SECTION_SECRETS } from './secrets.js';
 import { STREAK_SECRETS } from './streakSecrets.js';
 
@@ -6,7 +7,7 @@ export type UnlockedSeal = {
   id: string;
   name: string;
   image?: string;
-  kind: 'journey' | 'streak' | 'section' | 'omega';
+  kind: 'journey' | 'lifetime' | 'streak' | 'section' | 'omega';
 };
 
 /** Lifetime / secret / mastery seals present in a collection id set. */
@@ -23,6 +24,16 @@ export function listUnlockedSeals(
         name: b.name,
         image: b.image,
         kind: 'journey',
+      });
+    }
+  }
+  for (const b of LIFETIME_EP_BADGES) {
+    if (have.has(b.id)) {
+      out.push({
+        id: b.id,
+        name: b.name,
+        image: b.image,
+        kind: 'lifetime',
       });
     }
   }

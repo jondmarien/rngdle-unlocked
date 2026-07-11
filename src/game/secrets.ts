@@ -1,5 +1,6 @@
 import { NUMBER_BADGES } from './badges/catalog.js';
 import { JOURNEY_BADGES } from './journey.js';
+import { LIFETIME_EP_BADGES } from './lifetimeEp.js';
 import { badgeRarityFromEP } from './rarity.js';
 import { STREAK_SECRETS } from './streakSecrets.js';
 import type { BadgeFamily, BadgeHit, CollectionEntry } from './types.js';
@@ -15,9 +16,15 @@ export const SECTION_FAMILIES = [
   'poker',
   'element',
   'bases',
-] as const satisfies readonly Exclude<BadgeFamily, 'journey' | 'secret'>[];
+] as const satisfies readonly Exclude<
+  BadgeFamily,
+  'journey' | 'lifetime' | 'secret'
+>[];
 
-export type SectionFamily = (typeof SECTION_FAMILIES)[number] | 'journey';
+export type SectionFamily =
+  | (typeof SECTION_FAMILIES)[number]
+  | 'journey'
+  | 'lifetime';
 
 export type SecretBadgeDef = {
   id: string;
@@ -125,13 +132,21 @@ const SECTION_META: Record<
     blurb: 'Every lifetime journey milestone has been walked.',
     image: '/secrets/journey.jpg',
   },
+  lifetime: {
+    id: 'secret-master-lifetime',
+    name: 'Entropy Treasury',
+    emoji: '💰',
+    ep: 5_000,
+    blurb: 'Every lifetime EP milestone seal is yours.',
+    image: '/secrets/lifetime.jpg',
+  },
 };
 
 export const OMEGA_SECRET: SecretBadgeDef = {
   id: 'secret-omega-codex',
   name: 'Codex Absolute',
   description:
-    'Every number badge, every journey mark, and every section mastery. The codex is complete. This is the final seal.',
+    'Every number badge, every journey mark, every lifetime EP seal, and every section mastery. The codex is complete. This is the final seal.',
   ep: 50_000,
   family: 'secret',
   emoji: '✨',
@@ -170,6 +185,9 @@ export function secretById(id: string): SecretBadgeDef | undefined {
 function idsForSection(section: SectionFamily): string[] {
   if (section === 'journey') {
     return JOURNEY_BADGES.map((b) => b.id);
+  }
+  if (section === 'lifetime') {
+    return LIFETIME_EP_BADGES.map((b) => b.id);
   }
   return NUMBER_BADGES.filter((b) => b.family === section).map((b) => b.id);
 }
@@ -216,11 +234,12 @@ export function evaluateOwnedSecrets(
 
   const allNumber = NUMBER_BADGES.every((b) => withSections.has(b.id));
   const allJourney = JOURNEY_BADGES.every((b) => withSections.has(b.id));
+  const allLifetimeEp = LIFETIME_EP_BADGES.every((b) => withSections.has(b.id));
   const allSectionSecrets = SECTION_SECRETS.every((s) =>
     withSections.has(s.id),
   );
 
-  if (allNumber && allJourney && allSectionSecrets) {
+  if (allNumber && allJourney && allLifetimeEp && allSectionSecrets) {
     owned.push(OMEGA_SECRET);
   }
   return owned;

@@ -16,11 +16,15 @@ import {
   findChallengeRollForPeriod,
   performRoll,
   journeyHits,
+  lifetimeEpBadgesForEp,
+  lifetimeEpHits,
   mergeSecretUnlocks,
   mergeStreakUnlocks,
   newlyUnlockedJourney,
+  newlyUnlockedLifetimeEp,
   secretHits,
   sumJourneyEP,
+  sumLifetimeEpAward,
   type AppSettings,
   type BadgeHit,
   type ChallengeKind,
@@ -45,7 +49,9 @@ import {
   clearState,
   defaultState,
   backfillCollectionTimestamps,
+  isLifetimeEpBackfillDone,
   loadState,
+  markLifetimeEpBackfillDone,
   mergeCollection,
   parseImportPayload,
   prependHistory,
@@ -63,6 +69,8 @@ export type RollOutcome = {
   roll: RollResult;
   journeyUnlocked: BadgeHit[];
   journeyEPGained: number;
+  lifetimeEpUnlocked: BadgeHit[];
+  lifetimeEpGained: number;
   secretsUnlocked: BadgeHit[];
   secretsEPGained: number;
 };
@@ -81,6 +89,7 @@ type GameContextValue = {
   /** Surface an unexpected client error on the Home reel (e.g. handleRoll catch). */
   reportSaveError: (message: string) => void;
   lastJourneyUnlocks: BadgeHit[];
+  lastLifetimeEpUnlocks: BadgeHit[];
   lastSecretUnlocks: BadgeHit[];
   /** Badge ids first-time unlocked on the most recent roll (for NEW labels). */
   lastNewBadgeIds: string[];
@@ -141,6 +150,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [rolling, setRolling] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [lastJourneyUnlocks, setLastJourneyUnlocks] = useState<BadgeHit[]>([]);
+  const [lastLifetimeEpUnlocks, setLastLifetimeEpUnlocks] = useState<
+    BadgeHit[]
+  >([]);
   const [lastSecretUnlocks, setLastSecretUnlocks] = useState<BadgeHit[]>([]);
   const [lastNewBadgeIds, setLastNewBadgeIds] = useState<string[]>([]);
   const [confettiToken, setConfettiToken] = useState(0);
@@ -226,6 +238,51 @@ export function GameProvider({ children }: { children: ReactNode }) {
     });
   }, [persist, enqueueAutoSync]);
 
+  // Policy C: one-shot Lifetime EP seal backfill (collection + toast, no EP)
+  useEffect(() => {
+    if (isLifetimeEpBackfillDone()) return;
+    setState((prev) => {
+      if (isLifetimeEpBackfillDone()) return prev;
+      const owned = new Set(prev.collection.map((c) => c.badgeId));
+      const defs = lifetimeEpBadgesForEp(prev.lifetimeEP).filter(
+        (b) => !owned.has(b.id),
+      );
+      markLifetimeEpBackfillDone();
+      if (defs.length === 0) return prev;
+      const at = new Date().toISOString();
+      const hits = lifetimeEpHits(defs).map((h) => ({ ...h, ep: 0 }));
+      const collection = mergeCollection(
+        prev.collection,
+        defs.map((b) => ({ id: b.id, family: b.family })),
+        at,
+      );
+      // Re-run secrets after lifetime seals land (section mastery / omega).
+      const secretMerge = mergeSecretUnlocks(collection, at);
+      const secretsEP = secretMerge.ep;
+      const next = {
+        ...prev,
+        collection: secretMerge.collection,
+        lifetimeEP: prev.lifetimeEP + secretsEP,
+        journeyEP: prev.journeyEP + secretsEP,
+      };
+      persist(next);
+      setLastLifetimeEpUnlocks(hits);
+      if (secretMerge.unlocked.length > 0) {
+        setLastSecretUnlocks(secretHits(secretMerge.unlocked));
+      }
+      log.info('lifetimeEp:backfill', {
+        count: defs.length,
+        ids: defs.map((d) => d.id),
+        epAwarded: 0,
+        secretsEP,
+      });
+      if (loggedInRef.current) {
+        enqueueAutoSync(toCloudPayload(next));
+      }
+      return next;
+    });
+  }, [persist, enqueueAutoSync]);
+
   /** Switch free/daily/weekly/ranked and abandon any in-flight roll UI. */
   const setRollMode = useCallback((m: RollMode) => {
     rollEpochRef.current += 1;
@@ -233,6 +290,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setRollModeState(m);
     setLastRoll(null);
     setLastJourneyUnlocks([]);
+    setLastLifetimeEpUnlocks([]);
     setLastSecretUnlocks([]);
     setLastNewBadgeIds([]);
     setRolling(false);
@@ -295,6 +353,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         if (existing) {
           setLastRoll(existing);
           setLastJourneyUnlocks([]);
+          setLastLifetimeEpUnlocks([]);
           setLastSecretUnlocks([]);
           setLastNewBadgeIds([]);
           log.debug('roll:challenge-locked', {
@@ -305,6 +364,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
             roll: existing,
             journeyUnlocked: [],
             journeyEPGained: 0,
+            lifetimeEpUnlocked: [],
+            lifetimeEpGained: 0,
             secretsUnlocked: [],
             secretsEPGained: 0,
           };
@@ -368,6 +429,86 @@ export function GameProvider({ children }: { children: ReactNode }) {
       ]);
       const secretsEPGained = secretMerge.ep + streakMerge.ep;
 
+      // Lifetime EP seals: check after roll + journey + secret EP, before own awards
+      const epBeforeLifetimeSeals =
+        base.lifetimeEP + result.totalEP + journeyEPGained + secretsEPGained;
+      const lifetimeEpDefs = newlyUnlockedLifetimeEp(
+        base.lifetimeEP,
+        epBeforeLifetimeSeals,
+      );
+      const lifetimeEpUnlocked = lifetimeEpHits(lifetimeEpDefs);
+      const lifetimeEpGained = sumLifetimeEpAward(lifetimeEpDefs);
+      if (lifetimeEpDefs.length > 0) {
+        collection = mergeCollection(
+          collection,
+          lifetimeEpDefs.map((b) => ({ id: b.id, family: b.family })),
+          at,
+        );
+        // Section mastery / omega may unlock from new lifetime seals
+        const lifetimeSecretMerge = mergeSecretUnlocks(collection, at);
+        collection = lifetimeSecretMerge.collection;
+        if (lifetimeSecretMerge.unlocked.length > 0) {
+          secretsUnlocked.push(...secretHits(lifetimeSecretMerge.unlocked));
+        }
+        // secretsEPGained already applied; add any mastery EP from lifetime seals
+        const extraSecretEp = lifetimeSecretMerge.ep;
+        const newBadgeIds = [
+          ...result.badges.map((b) => b.id),
+          ...journeyUnlocked.map((b) => b.id),
+          ...lifetimeEpUnlocked.map((b) => b.id),
+          ...secretsUnlocked.map((b) => b.id),
+        ].filter((id, i, arr) => arr.indexOf(id) === i && !ownedBefore.has(id));
+
+        const next: PersistedState = {
+          ...base,
+          history,
+          lifetimeRollCount: nextCount,
+          lifetimeEP: epBeforeLifetimeSeals + lifetimeEpGained + extraSecretEp,
+          journeyEP:
+            base.journeyEP +
+            journeyEPGained +
+            secretsEPGained +
+            lifetimeEpGained +
+            extraSecretEp,
+          collection,
+          stats,
+        };
+        persist(next);
+        setState(next);
+        setLastRoll(result);
+        setLastJourneyUnlocks(journeyUnlocked);
+        setLastLifetimeEpUnlocks(lifetimeEpUnlocked);
+        setLastSecretUnlocks(secretsUnlocked);
+        setLastNewBadgeIds(newBadgeIds);
+        if (secretsUnlocked.length > 0) {
+          setCelebrateRarity('mythic');
+          setConfettiToken((t) => t + 1);
+        }
+        log.info('roll:ok', {
+          number: result.number,
+          totalEP: result.totalEP,
+          rarity: result.rarity,
+          badges: result.badges.length,
+          journeyUnlocked: journeyUnlocked.length,
+          lifetimeEpUnlocked: lifetimeEpUnlocked.length,
+          secretsUnlocked: secretsUnlocked.length,
+          challengeKey: result.challengeKey,
+          willAutoSync: loggedInRef.current,
+        });
+
+        enqueueAutoSync(toCloudPayload(next));
+
+        return {
+          roll: result,
+          journeyUnlocked,
+          journeyEPGained,
+          lifetimeEpUnlocked,
+          lifetimeEpGained,
+          secretsUnlocked,
+          secretsEPGained: secretsEPGained + extraSecretEp,
+        };
+      }
+
       const newBadgeIds = [
         ...result.badges.map((b) => b.id),
         ...journeyUnlocked.map((b) => b.id),
@@ -378,8 +519,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         ...base,
         history,
         lifetimeRollCount: nextCount,
-        lifetimeEP:
-          base.lifetimeEP + result.totalEP + journeyEPGained + secretsEPGained,
+        lifetimeEP: epBeforeLifetimeSeals,
         journeyEP: base.journeyEP + journeyEPGained + secretsEPGained,
         collection,
         stats,
@@ -388,6 +528,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setState(next);
       setLastRoll(result);
       setLastJourneyUnlocks(journeyUnlocked);
+      setLastLifetimeEpUnlocks([]);
       setLastSecretUnlocks(secretsUnlocked);
       setLastNewBadgeIds(newBadgeIds);
       if (secretsUnlocked.length > 0) {
@@ -400,6 +541,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         rarity: result.rarity,
         badges: result.badges.length,
         journeyUnlocked: journeyUnlocked.length,
+        lifetimeEpUnlocked: 0,
         secretsUnlocked: secretsUnlocked.length,
         challengeKey: result.challengeKey,
         willAutoSync: loggedInRef.current,
@@ -412,6 +554,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
         roll: result,
         journeyUnlocked,
         journeyEPGained,
+        lifetimeEpUnlocked: [],
+        lifetimeEpGained: 0,
         secretsUnlocked,
         secretsEPGained,
       };
@@ -472,6 +616,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setState(defaultState());
     setLastRoll(null);
     setLastJourneyUnlocks([]);
+    setLastLifetimeEpUnlocks([]);
     setLastSecretUnlocks([]);
     setLastNewBadgeIds([]);
     setSaveError(null);
@@ -544,6 +689,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setState(next);
       setLastRoll(next.history[0] ?? null);
       setLastJourneyUnlocks([]);
+      setLastLifetimeEpUnlocks([]);
       setLastSecretUnlocks(
         secretHits([...secretMerge.unlocked, ...streakMerge.unlocked]),
       );
@@ -577,6 +723,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       saveError,
       reportSaveError,
       lastJourneyUnlocks,
+      lastLifetimeEpUnlocks,
       lastSecretUnlocks,
       lastNewBadgeIds,
       confettiToken,
@@ -599,6 +746,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       saveError,
       reportSaveError,
       lastJourneyUnlocks,
+      lastLifetimeEpUnlocks,
       lastSecretUnlocks,
       lastNewBadgeIds,
       confettiToken,

@@ -4,6 +4,7 @@ import {
   badgeRarityFromEP,
   coerceRarity,
   JOURNEY_BADGES,
+  LIFETIME_EP_BADGES,
   NUMBER_BADGES,
   OMEGA_SECRET,
   STREAK_SECRETS,
@@ -69,6 +70,17 @@ const BADGE_CATALOG = (() => {
       ...(b.image ? { image: b.image } : {}),
     });
   }
+  for (const b of LIFETIME_EP_BADGES) {
+    m.set(b.id, {
+      id: b.id,
+      name: b.name,
+      emoji: b.emoji,
+      family: b.family,
+      ep: b.ep,
+      description: b.description,
+      ...(b.image ? { image: b.image } : {}),
+    });
+  }
   return m;
 })();
 
@@ -102,6 +114,8 @@ export function ProfileScreen({
   const [codexFilter, setCodexFilter] = useState<BadgeFamily | 'all'>('all');
   const [openJourney, setOpenJourney] = useState(true);
   const [showAllJourney, setShowAllJourney] = useState(false);
+  const [openLifetimeEp, setOpenLifetimeEp] = useState(true);
+  const [showAllLifetimeEp, setShowAllLifetimeEp] = useState(false);
   const [openSecrets, setOpenSecrets] = useState(true);
   const [openStreakSecrets, setOpenStreakSecrets] = useState(true);
   const [openCodex, setOpenCodex] = useState(false);
@@ -144,7 +158,7 @@ export function ProfileScreen({
   });
   const following = Boolean(followingQuery.data?.has(username.toLowerCase()));
 
-  /** Public codex: number unlocks (journey + secrets have their own sections). */
+  /** Public codex: number unlocks (journey + lifetime EP + secrets have their own sections). */
   const codexUnlocks = useMemo(() => {
     const rows = profile?.collection ?? [];
     return rows
@@ -152,8 +166,10 @@ export function ProfileScreen({
         (e) =>
           e.family !== 'secret' &&
           e.family !== 'journey' &&
+          e.family !== 'lifetime' &&
           !e.badgeId.startsWith('secret-') &&
           !e.badgeId.startsWith('rolls-') &&
+          !e.badgeId.startsWith('ep-') &&
           BADGE_CATALOG.has(e.badgeId),
       )
       .map((e) => {
@@ -190,6 +206,27 @@ export function ProfileScreen({
       ? unlockedJourney
       : latestJourney
         ? [latestJourney]
+        : [];
+
+  /** Unlocked lifetime EP milestones only (dedicated art section). Catalog order = ascending. */
+  const unlockedLifetimeEp = useMemo(() => {
+    const rows = profile?.collection ?? [];
+    const ids = new Set(
+      rows
+        .filter((e) => e.family === 'lifetime' || e.badgeId.startsWith('ep-'))
+        .map((e) => e.badgeId),
+    );
+    return LIFETIME_EP_BADGES.filter((b) => ids.has(b.id));
+  }, [profile?.collection]);
+
+  /** Highest unlocked lifetime EP badge (last in ascending catalog order). */
+  const latestLifetimeEp =
+    unlockedLifetimeEp[unlockedLifetimeEp.length - 1] ?? null;
+  const visibleLifetimeEp =
+    showAllLifetimeEp || unlockedLifetimeEp.length <= 1
+      ? unlockedLifetimeEp
+      : latestLifetimeEp
+        ? [latestLifetimeEp]
         : [];
 
   /** Streak / giant secret badges from synced collection (not section masteries). */
@@ -638,6 +675,94 @@ export function ProfileScreen({
                   {showAllJourney
                     ? 'Show latest only'
                     : `Show all ${unlockedJourney.length} journey badges`}
+                </button>
+              )}
+            </>
+          )}
+        </section>
+      )}
+
+      {/* Lifetime EP badges — latest by default; expand to show all earned */}
+      {unlockedLifetimeEp.length > 0 && (
+        <section className="space-y-3">
+          <SectionHeader
+            title="Lifetime EP badges"
+            meta={
+              unlockedLifetimeEp.length === 1
+                ? '1 earned'
+                : showAllLifetimeEp
+                  ? `${unlockedLifetimeEp.length} earned`
+                  : `Latest of ${unlockedLifetimeEp.length}`
+            }
+            open={openLifetimeEp}
+            onToggle={() => setOpenLifetimeEp((v) => !v)}
+          />
+          {openLifetimeEp && (
+            <>
+              <p className="text-sm text-(--prose-2)">
+                {showAllLifetimeEp || unlockedLifetimeEp.length === 1
+                  ? `Lifetime EP milestones @${profile.username} has reached.`
+                  : `Highest lifetime EP milestone @${profile.username} has reached.`}
+              </p>
+              <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {visibleLifetimeEp.map((b) => (
+                  <li
+                    key={b.id}
+                    className="flex gap-3 rounded-xl border border-amber-400/45 bg-linear-to-br from-amber-500/15 via-teal-500/10 to-transparent p-3"
+                  >
+                    {b.image ? (
+                      <button
+                        type="button"
+                        className="shrink-0 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400"
+                        onClick={() =>
+                          setLightbox({
+                            image: b.image!,
+                            name: b.name,
+                            description: b.description,
+                            ep: b.ep,
+                            kind: 'Lifetime EP',
+                          })
+                        }
+                        aria-label={`View ${b.name} full size`}
+                      >
+                        <img
+                          src={b.image}
+                          alt=""
+                          className="h-20 w-20 rounded-lg border border-amber-400/50 object-cover"
+                        />
+                      </button>
+                    ) : (
+                      <span
+                        className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg border border-(--outline) bg-(--surface) text-3xl"
+                        aria-hidden
+                      >
+                        {b.emoji}
+                      </span>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
+                        Lifetime EP
+                        {!showAllLifetimeEp && unlockedLifetimeEp.length > 1
+                          ? ' · latest'
+                          : ''}
+                      </p>
+                      <p className="font-bold tracking-tight">{b.name}</p>
+                      <p className="text-sm text-amber-800 dark:text-amber-300">
+                        +{b.ep.toLocaleString()} life EP
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              {unlockedLifetimeEp.length > 1 && (
+                <button
+                  type="button"
+                  className="text-sm font-medium text-amber-800 underline-offset-2 hover:underline dark:text-amber-300"
+                  onClick={() => setShowAllLifetimeEp((v) => !v)}
+                >
+                  {showAllLifetimeEp
+                    ? 'Show latest only'
+                    : `Show all ${unlockedLifetimeEp.length} lifetime EP badges`}
                 </button>
               )}
             </>
