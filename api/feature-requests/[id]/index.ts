@@ -22,13 +22,16 @@ export default defineHandler(async (request) => {
   const me = gate.user;
   const db = createDb();
 
-  const limited = await rateGuard(
-    db,
-    `user:${me.id}:feature-edit`,
-    LIMITS.featureRequestSubmitPerHour,
-    60 * 60 * 1000,
-  );
-  if (limited) return limited;
+  // Admins skip edit rate limit (same pattern as submit) — server-side only.
+  if (!isAdminRole(me.role, me.id)) {
+    const limited = await rateGuard(
+      db,
+      `user:${me.id}:feature-edit`,
+      LIMITS.featureRequestEditPerHour,
+      60 * 60 * 1000,
+    );
+    if (limited) return limited;
+  }
 
   const url = requestUrl(request);
   const parts = url.pathname.split('/').filter(Boolean);

@@ -110,7 +110,9 @@ export async function editFeatureRequest(
       raw && typeof raw === 'object' && 'error' in raw
         ? String((raw as { error?: string }).error ?? 'Edit failed')
         : 'Edit failed';
-    throw new Error(err);
+    throw new Error(
+      res.status === 429 ? err || 'Too many edits — try again later.' : err,
+    );
   }
   const item =
     raw && typeof raw === 'object' && 'item' in raw

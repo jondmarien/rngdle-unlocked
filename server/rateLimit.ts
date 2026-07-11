@@ -190,6 +190,8 @@ export const LIMITS = {
   reportPerMinute: 10,
   /** Feature request submissions per user per hour. */
   featureRequestSubmitPerHour: 5,
+  /** Feature request author/admin edits (title/description/tag) per hour. */
+  featureRequestEditPerHour: 20,
   /** Feature request upvotes per user per minute. */
   featureRequestVotePerMinute: 30,
   /** Soft burst on feature request list GET. */

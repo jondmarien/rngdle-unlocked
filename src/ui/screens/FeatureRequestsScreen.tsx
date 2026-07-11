@@ -105,7 +105,7 @@ function FeatureRequestCard({
       description: string;
       tag: FeatureRequestTag | null;
     },
-  ) => void;
+  ) => void | Promise<unknown>;
 }) {
   const status = asStatus(item.status);
   const accent = `var(${statusAccentVar(status)})`;
@@ -182,12 +182,13 @@ function FeatureRequestCard({
                   disabled={editPending}
                   className="rounded-md border border-(--prose) bg-(--prose) px-2 py-1 text-xs font-semibold text-(--bg)"
                   onClick={() => {
-                    onEdit(item.id, {
-                      title: editTitle,
-                      description: editDesc,
-                      tag: editTag || null,
-                    });
-                    setEditing(false);
+                    void Promise.resolve(
+                      onEdit(item.id, {
+                        title: editTitle,
+                        description: editDesc,
+                        tag: editTag || null,
+                      }),
+                    ).then(() => setEditing(false));
                   }}
                 >
                   Save
@@ -385,7 +386,7 @@ function RequestList({
       description: string;
       tag: FeatureRequestTag | null;
     },
-  ) => void;
+  ) => void | Promise<unknown>;
 }) {
   if (items.length === 0) {
     return <p className="px-1 py-3 text-sm text-(--prose-3)">{emptyCopy}</p>;
@@ -427,6 +428,7 @@ export function FeatureRequestsScreen({
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [uploadBusy, setUploadBusy] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
   const [openShipped, setOpenShipped] = useState(false);
   const [openDeclined, setOpenDeclined] = useState(false);
 
@@ -517,8 +519,14 @@ export function FeatureRequestsScreen({
         tag: FeatureRequestTag | null;
       };
     }) => editFeatureRequest(id, patch),
+    retry: false,
     onSuccess: () => {
+      setEditError(null);
       void queryClient.invalidateQueries({ queryKey: ['feature-requests'] });
+    },
+    onError: (err) => {
+      const msg = err instanceof Error ? err.message : 'Edit failed';
+      setEditError(msg);
     },
   });
 
@@ -584,7 +592,10 @@ export function FeatureRequestsScreen({
         description: string;
         tag: FeatureRequestTag | null;
       },
-    ) => editMutation.mutate({ id, patch }),
+    ) => {
+      setEditError(null);
+      return editMutation.mutateAsync({ id, patch });
+    },
   };
 
   return (
@@ -595,6 +606,14 @@ export function FeatureRequestsScreen({
           Suggest improvements and upvote what you want next. Admins update
           status as ideas move through review.
         </p>
+        {editError && (
+          <p
+            className="mt-2 text-sm text-red-600 dark:text-red-400"
+            role="alert"
+          >
+            {editError}
+          </p>
+        )}
       </div>
 
       <form
