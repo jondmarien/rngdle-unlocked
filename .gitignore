@@ -42,3 +42,4 @@ api/_bundles/
 server/assets/index_bg.wasm
 /references
 *.tsbuildinfo
+/trailer
