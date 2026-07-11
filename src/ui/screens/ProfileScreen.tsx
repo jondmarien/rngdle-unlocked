@@ -5,6 +5,7 @@ import {
   coerceRarity,
   JOURNEY_BADGES,
   LIFETIME_EP_BADGES,
+  lifetimeEpBadgesForEp,
   NUMBER_BADGES,
   OMEGA_SECRET,
   STREAK_SECRETS,
@@ -209,16 +210,22 @@ export function ProfileScreen({
         ? [latestJourney]
         : [];
 
-  /** Unlocked lifetime EP milestones only (dedicated art section). Catalog order = ascending. */
+  /**
+   * Lifetime EP milestones for Profile: prefer collection ids, but also include
+   * tiers implied by public lifetimeEP so seals show even before cloud backfill sync.
+   */
   const unlockedLifetimeEp = useMemo(() => {
     const rows = profile?.collection ?? [];
-    const ids = new Set(
+    const fromCollection = new Set(
       rows
         .filter((e) => e.family === 'lifetime' || e.badgeId.startsWith('ep-'))
         .map((e) => e.badgeId),
     );
-    return LIFETIME_EP_BADGES.filter((b) => ids.has(b.id));
-  }, [profile?.collection]);
+    for (const b of lifetimeEpBadgesForEp(profile?.lifetimeEP ?? 0)) {
+      fromCollection.add(b.id);
+    }
+    return LIFETIME_EP_BADGES.filter((b) => fromCollection.has(b.id));
+  }, [profile?.collection, profile?.lifetimeEP]);
 
   /** Highest unlocked lifetime EP badge (last in ascending catalog order). */
   const latestLifetimeEp =
@@ -566,7 +573,7 @@ export function ProfileScreen({
         </div>
       )}
 
-      {/* Best roll — showcase style (above journey + secrets) */}
+      {/* Best roll — showcase style (above lifetime EP + journey + secrets) */}
       {best && (
         <section className="space-y-2">
           <SectionHeader
@@ -594,6 +601,94 @@ export function ProfileScreen({
                 </p>
               )}
             </div>
+          )}
+        </section>
+      )}
+
+      {/* Lifetime EP badges — directly under Best roll; latest by default */}
+      {unlockedLifetimeEp.length > 0 && (
+        <section className="space-y-3">
+          <SectionHeader
+            title="Lifetime EP badges"
+            meta={
+              unlockedLifetimeEp.length === 1
+                ? '1 earned'
+                : showAllLifetimeEp
+                  ? `${unlockedLifetimeEp.length} earned`
+                  : `Latest of ${unlockedLifetimeEp.length}`
+            }
+            open={openLifetimeEp}
+            onToggle={() => setOpenLifetimeEp((v) => !v)}
+          />
+          {openLifetimeEp && (
+            <>
+              <p className="text-sm text-(--prose-2)">
+                {showAllLifetimeEp || unlockedLifetimeEp.length === 1
+                  ? `Lifetime EP milestones @${profile.username} has reached.`
+                  : `Highest lifetime EP milestone @${profile.username} has reached.`}
+              </p>
+              <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {visibleLifetimeEp.map((b) => (
+                  <li
+                    key={b.id}
+                    className="flex gap-3 rounded-xl border border-amber-400/45 bg-linear-to-br from-amber-500/15 via-teal-500/10 to-transparent p-3"
+                  >
+                    {b.image ? (
+                      <button
+                        type="button"
+                        className="shrink-0 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400"
+                        onClick={() =>
+                          setLightbox({
+                            image: b.image!,
+                            name: b.name,
+                            description: b.description,
+                            ep: b.ep,
+                            kind: 'Lifetime EP',
+                          })
+                        }
+                        aria-label={`View ${b.name} full size`}
+                      >
+                        <img
+                          src={b.image}
+                          alt=""
+                          className="h-20 w-20 rounded-lg border border-amber-400/50 object-cover"
+                        />
+                      </button>
+                    ) : (
+                      <span
+                        className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg border border-(--outline) bg-(--surface) text-3xl"
+                        aria-hidden
+                      >
+                        {b.emoji}
+                      </span>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
+                        Lifetime EP
+                        {!showAllLifetimeEp && unlockedLifetimeEp.length > 1
+                          ? ' · latest'
+                          : ''}
+                      </p>
+                      <p className="font-bold tracking-tight">{b.name}</p>
+                      <p className="text-sm text-amber-800 dark:text-amber-300">
+                        +{b.ep.toLocaleString()} life EP
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              {unlockedLifetimeEp.length > 1 && (
+                <button
+                  type="button"
+                  className="text-sm font-medium text-amber-800 underline-offset-2 hover:underline dark:text-amber-300"
+                  onClick={() => setShowAllLifetimeEp((v) => !v)}
+                >
+                  {showAllLifetimeEp
+                    ? 'Show latest only'
+                    : `Show all ${unlockedLifetimeEp.length} lifetime EP badges`}
+                </button>
+              )}
+            </>
           )}
         </section>
       )}
@@ -679,94 +774,6 @@ export function ProfileScreen({
                   {showAllJourney
                     ? 'Show latest only'
                     : `Show all ${unlockedJourney.length} journey badges`}
-                </button>
-              )}
-            </>
-          )}
-        </section>
-      )}
-
-      {/* Lifetime EP badges — latest by default; expand to show all earned */}
-      {unlockedLifetimeEp.length > 0 && (
-        <section className="space-y-3">
-          <SectionHeader
-            title="Lifetime EP badges"
-            meta={
-              unlockedLifetimeEp.length === 1
-                ? '1 earned'
-                : showAllLifetimeEp
-                  ? `${unlockedLifetimeEp.length} earned`
-                  : `Latest of ${unlockedLifetimeEp.length}`
-            }
-            open={openLifetimeEp}
-            onToggle={() => setOpenLifetimeEp((v) => !v)}
-          />
-          {openLifetimeEp && (
-            <>
-              <p className="text-sm text-(--prose-2)">
-                {showAllLifetimeEp || unlockedLifetimeEp.length === 1
-                  ? `Lifetime EP milestones @${profile.username} has reached.`
-                  : `Highest lifetime EP milestone @${profile.username} has reached.`}
-              </p>
-              <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {visibleLifetimeEp.map((b) => (
-                  <li
-                    key={b.id}
-                    className="flex gap-3 rounded-xl border border-amber-400/45 bg-linear-to-br from-amber-500/15 via-teal-500/10 to-transparent p-3"
-                  >
-                    {b.image ? (
-                      <button
-                        type="button"
-                        className="shrink-0 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400"
-                        onClick={() =>
-                          setLightbox({
-                            image: b.image!,
-                            name: b.name,
-                            description: b.description,
-                            ep: b.ep,
-                            kind: 'Lifetime EP',
-                          })
-                        }
-                        aria-label={`View ${b.name} full size`}
-                      >
-                        <img
-                          src={b.image}
-                          alt=""
-                          className="h-20 w-20 rounded-lg border border-amber-400/50 object-cover"
-                        />
-                      </button>
-                    ) : (
-                      <span
-                        className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg border border-(--outline) bg-(--surface) text-3xl"
-                        aria-hidden
-                      >
-                        {b.emoji}
-                      </span>
-                    )}
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
-                        Lifetime EP
-                        {!showAllLifetimeEp && unlockedLifetimeEp.length > 1
-                          ? ' · latest'
-                          : ''}
-                      </p>
-                      <p className="font-bold tracking-tight">{b.name}</p>
-                      <p className="text-sm text-amber-800 dark:text-amber-300">
-                        +{b.ep.toLocaleString()} life EP
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-              {unlockedLifetimeEp.length > 1 && (
-                <button
-                  type="button"
-                  className="text-sm font-medium text-amber-800 underline-offset-2 hover:underline dark:text-amber-300"
-                  onClick={() => setShowAllLifetimeEp((v) => !v)}
-                >
-                  {showAllLifetimeEp
-                    ? 'Show latest only'
-                    : `Show all ${unlockedLifetimeEp.length} lifetime EP badges`}
                 </button>
               )}
             </>
