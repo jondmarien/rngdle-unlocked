@@ -26,6 +26,10 @@ import { fetchProfile } from '../../lib/profile-api';
 import { profileAvatarSrc } from '../../lib/profile-avatars';
 import { accentStyles, normalizeAccent } from '../../lib/profile-theme';
 import { EPPill } from '../components/EPPill';
+import {
+  BadgeArtLightbox,
+  type BadgeArtLightboxItem,
+} from '../components/BadgeArtLightbox';
 import { RarityBadge } from '../components/RarityBadge';
 import { SectionHeader } from '../components/SectionHeader';
 import { StatTile } from '../components/StatTile';
@@ -107,6 +111,7 @@ export function ProfileScreen({
   const [recentExpanded, setRecentExpanded] = useState(false);
   const [followBusy, setFollowBusy] = useState(false);
   const [followMsg, setFollowMsg] = useState<string | null>(null);
+  const [lightbox, setLightbox] = useState<BadgeArtLightboxItem | null>(null);
 
   const profileQuery = useQuery({
     queryKey: ['profile', username.toLowerCase()],
@@ -581,11 +586,26 @@ export function ProfileScreen({
                     className="flex gap-3 rounded-xl border border-amber-400/45 bg-linear-to-br from-amber-500/15 via-teal-500/10 to-transparent p-3"
                   >
                     {b.image ? (
-                      <img
-                        src={b.image}
-                        alt={b.name}
-                        className="h-20 w-20 shrink-0 rounded-lg border border-amber-400/50 object-cover"
-                      />
+                      <button
+                        type="button"
+                        className="shrink-0 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400"
+                        onClick={() =>
+                          setLightbox({
+                            image: b.image!,
+                            name: b.name,
+                            description: b.description,
+                            ep: b.ep,
+                            kind: 'Journey',
+                          })
+                        }
+                        aria-label={`View ${b.name} full size`}
+                      >
+                        <img
+                          src={b.image}
+                          alt=""
+                          className="h-20 w-20 rounded-lg border border-amber-400/50 object-cover"
+                        />
+                      </button>
                     ) : (
                       <span
                         className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg border border-(--outline) bg-(--surface) text-3xl"
@@ -645,11 +665,26 @@ export function ProfileScreen({
                     key={s.id}
                     className="flex gap-3 rounded-xl border border-fuchsia-400/45 bg-linear-to-br from-fuchsia-500/15 via-violet-500/10 to-transparent p-3"
                   >
-                    <img
-                      src={s.image}
-                      alt={s.name}
-                      className="h-20 w-20 shrink-0 rounded-lg border border-fuchsia-400/50 object-cover"
-                    />
+                    <button
+                      type="button"
+                      className="shrink-0 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-400"
+                      onClick={() =>
+                        setLightbox({
+                          image: s.image,
+                          name: s.name,
+                          description: s.description,
+                          ep: s.ep,
+                          kind: 'Streak secret',
+                        })
+                      }
+                      aria-label={`View ${s.name} full size`}
+                    >
+                      <img
+                        src={s.image}
+                        alt=""
+                        className="h-20 w-20 rounded-lg border border-fuchsia-400/50 object-cover"
+                      />
+                    </button>
                     <div className="min-w-0">
                       <p className="text-xs font-semibold uppercase tracking-wide text-fuchsia-800 dark:text-fuchsia-300">
                         Streak secret
@@ -684,11 +719,26 @@ export function ProfileScreen({
 
               {hasOmega && (
                 <div className="flex flex-col gap-3 rounded-xl border-2 border-amber-400/70 bg-linear-to-br from-amber-500/20 via-violet-500/15 to-teal-500/20 p-4 shadow-[0_0_32px_rgba(251,191,36,0.2)] sm:flex-row sm:items-center">
-                  <img
-                    src={OMEGA_SECRET.image}
-                    alt={OMEGA_SECRET.name}
-                    className="mx-auto h-28 w-28 rounded-xl border-2 border-amber-400/80 object-cover shadow-[0_0_20px_rgba(251,191,36,0.35)] sm:mx-0 sm:h-32 sm:w-32"
-                  />
+                  <button
+                    type="button"
+                    className="mx-auto shrink-0 rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400 sm:mx-0"
+                    onClick={() =>
+                      setLightbox({
+                        image: OMEGA_SECRET.image,
+                        name: OMEGA_SECRET.name,
+                        description: OMEGA_SECRET.description,
+                        ep: OMEGA_SECRET.ep,
+                        kind: 'Final seal',
+                      })
+                    }
+                    aria-label={`View ${OMEGA_SECRET.name} full size`}
+                  >
+                    <img
+                      src={OMEGA_SECRET.image}
+                      alt=""
+                      className="h-28 w-28 rounded-xl border-2 border-amber-400/80 object-cover shadow-[0_0_20px_rgba(251,191,36,0.35)] sm:h-32 sm:w-32"
+                    />
+                  </button>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">
                       Final seal
@@ -714,11 +764,25 @@ export function ProfileScreen({
                       className="flex gap-3 rounded-xl border border-violet-400/50 bg-linear-to-br from-violet-500/15 to-transparent p-3"
                     >
                       {s.image && (
-                        <img
-                          src={s.image}
-                          alt={s.name}
-                          className="h-20 w-20 shrink-0 rounded-lg border border-violet-400/50 object-cover"
-                        />
+                        <button
+                          type="button"
+                          className="shrink-0 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-400"
+                          onClick={() =>
+                            setLightbox({
+                              image: s.image!,
+                              name: s.name,
+                              ep: s.ep,
+                              kind: s.section,
+                            })
+                          }
+                          aria-label={`View ${s.name} full size`}
+                        >
+                          <img
+                            src={s.image}
+                            alt=""
+                            className="h-20 w-20 rounded-lg border border-violet-400/50 object-cover"
+                          />
+                        </button>
                       )}
                       <div className="min-w-0">
                         <p className="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
@@ -967,6 +1031,9 @@ export function ProfileScreen({
           </>
         )}
       </section>
+      {lightbox && (
+        <BadgeArtLightbox item={lightbox} onClose={() => setLightbox(null)} />
+      )}
     </div>
   );
 }

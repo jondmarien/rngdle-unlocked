@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Badge art lightbox** — click Lifetime / Secret / Mastery badge art on Profile or Codex to view full-resolution art (Escape, backdrop, or Close).
+
 ### Fixed
 
 - **Latest runs eye toggle** — spoiler blur preference now persists in localStorage via `AppSettings.latestRunsSpoilersHidden` (survives refresh).
