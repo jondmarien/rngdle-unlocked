@@ -232,6 +232,11 @@ export const featureRequests = pgTable('feature_requests', {
   title: text('title').notNull(),
   description: text('description').notNull(),
   status: text('status').notNull().default('submitted'),
+  /**
+   * Optional category: bug_fix | new_feature | change | badge_update.
+   * Null = Uncategorized (legacy rows).
+   */
+  tag: text('tag'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 

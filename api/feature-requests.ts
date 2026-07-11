@@ -57,9 +57,11 @@ export default defineHandler(async (request) => {
     );
     if (limited) return limited;
 
-    const parsed = await readJson<{ title?: string; description?: string }>(
-      request,
-    );
+    const parsed = await readJson<{
+      title?: string;
+      description?: string;
+      tag?: string | null;
+    }>(request);
     if (!parsed.ok) return parsed.response;
 
     const validated = validateFeatureRequestBody(parsed.body);
@@ -71,6 +73,7 @@ export default defineHandler(async (request) => {
       userId: me.id,
       title: validated.title,
       description: validated.description,
+      tag: validated.tag,
     });
     log.info('created', { id: item.id, userId: me.id });
     return Response.json({ item }, { status: 201 });

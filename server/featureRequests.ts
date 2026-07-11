@@ -22,11 +22,21 @@ export const FEATURE_TITLE_MAX = 200;
 export const FEATURE_TITLE_MIN = 3;
 export const FEATURE_DESC_MAX = 2000;
 
+export const FEATURE_REQUEST_TAGS = [
+  'bug_fix',
+  'new_feature',
+  'change',
+  'badge_update',
+] as const;
+
+export type FeatureRequestTag = (typeof FEATURE_REQUEST_TAGS)[number];
+
 export type FeatureRequestItem = {
   id: string;
   title: string;
   description: string;
   status: string;
+  tag: string | null;
   createdAt: string;
   voteCount: number;
   votedByMe: boolean;
@@ -38,11 +48,16 @@ function isStatus(s: string): s is FeatureRequestStatus {
   return (FEATURE_REQUEST_STATUSES as readonly string[]).includes(s);
 }
 
+function isTag(s: string): s is FeatureRequestTag {
+  return (FEATURE_REQUEST_TAGS as readonly string[]).includes(s);
+}
+
 export function validateFeatureRequestBody(input: {
   title?: string;
   description?: string;
+  tag?: string | null;
 }):
-  | { ok: true; title: string; description: string }
+  | { ok: true; title: string; description: string; tag: FeatureRequestTag | null }
   | { ok: false; error: string } {
   const title = input.title?.trim() ?? '';
   const description = input.description?.trim() ?? '';
@@ -55,10 +70,22 @@ export function validateFeatureRequestBody(input: {
   if (!description) {
     return { ok: false, error: 'description is required' };
   }
+  let tag: FeatureRequestTag | null = null;
+  if (input.tag != null && String(input.tag).trim() !== '') {
+    const t = String(input.tag).trim();
+    if (!isTag(t)) {
+      return {
+        ok: false,
+        error: `tag must be one of: ${FEATURE_REQUEST_TAGS.join(', ')}`,
+      };
+    }
+    tag = t;
+  }
   return {
     ok: true,
     title: title.slice(0, FEATURE_TITLE_MAX),
     description: description.slice(0, FEATURE_DESC_MAX),
+    tag,
   };
 }
 
@@ -81,6 +108,7 @@ export async function listFeatureRequests(
       title: featureRequests.title,
       description: featureRequests.description,
       status: featureRequests.status,
+      tag: featureRequests.tag,
       createdAt: featureRequests.createdAt,
       voteCount,
       username: user.username,
@@ -97,6 +125,7 @@ export async function listFeatureRequests(
       featureRequests.title,
       featureRequests.description,
       featureRequests.status,
+      featureRequests.tag,
       featureRequests.createdAt,
       user.username,
       user.name,
@@ -123,6 +152,7 @@ export async function listFeatureRequests(
     title: r.title,
     description: r.description,
     status: r.status,
+    tag: r.tag ?? null,
     createdAt:
       r.createdAt instanceof Date
         ? r.createdAt.toISOString()
@@ -136,7 +166,12 @@ export async function listFeatureRequests(
 
 export async function submitFeatureRequest(
   db: Db,
-  opts: { userId: string; title: string; description: string },
+  opts: {
+    userId: string;
+    title: string;
+    description: string;
+    tag?: FeatureRequestTag | null;
+  },
 ): Promise<FeatureRequestItem> {
   const id = crypto.randomUUID();
   await db.insert(featureRequests).values({
@@ -145,6 +180,7 @@ export async function submitFeatureRequest(
     title: opts.title,
     description: opts.description,
     status: 'submitted',
+    tag: opts.tag ?? null,
   });
 
   const [row] = await db
@@ -153,6 +189,7 @@ export async function submitFeatureRequest(
       title: featureRequests.title,
       description: featureRequests.description,
       status: featureRequests.status,
+      tag: featureRequests.tag,
       createdAt: featureRequests.createdAt,
       username: user.username,
       name: user.name,
@@ -162,13 +199,14 @@ export async function submitFeatureRequest(
     .where(eq(featureRequests.id, id))
     .limit(1);
 
-  log.info('submitted', { id, userId: opts.userId });
+  log.info('submitted', { id, userId: opts.userId, tag: opts.tag ?? null });
 
   return {
     id: row!.id,
     title: row!.title,
     description: row!.description,
     status: row!.status,
+    tag: row!.tag ?? null,
     createdAt:
       row!.createdAt instanceof Date
         ? row!.createdAt.toISOString()

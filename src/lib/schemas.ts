@@ -163,9 +163,17 @@ export const featureRequestStatusSchema = z.enum([
   'declined',
 ]);
 
+export const featureRequestTagSchema = z.enum([
+  'bug_fix',
+  'new_feature',
+  'change',
+  'badge_update',
+]);
+
 export const featureRequestSubmitSchema = z.object({
   title: z.string().trim().min(3).max(200),
   description: z.string().trim().min(1).max(2000),
+  tag: featureRequestTagSchema.nullable().optional(),
 });
 
 export const featureRequestItemSchema = z.object({
@@ -173,6 +181,7 @@ export const featureRequestItemSchema = z.object({
   title: z.string(),
   description: z.string(),
   status: z.string(),
+  tag: z.string().nullable().optional(),
   createdAt: isoDateSchema,
   voteCount: z.number(),
   votedByMe: z.boolean(),

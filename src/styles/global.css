@@ -35,6 +35,13 @@
   --feature-shipped: #0d8a6a;
   --feature-declined: #7a7670;
 
+  /* Feature-request tags (distinct from status + rarity) */
+  --feature-tag-bug: #7c6bb0;
+  --feature-tag-feature: #2a9d8f;
+  --feature-tag-change: #8b7e9e;
+  --feature-tag-badge: #a67c6d;
+  --feature-tag-uncat: #6e6a64;
+
   /* Typography */
   --font-sans: 'Outfit Variable', Outfit, system-ui, sans-serif;
   --font-display: 'Syne Variable', Syne, system-ui, sans-serif;
@@ -71,6 +78,12 @@
   --feature-progress: #e0a04a;
   --feature-shipped: #3dba96;
   --feature-declined: #8a857c;
+
+  --feature-tag-bug: #a89cd4;
+  --feature-tag-feature: #5ec4b6;
+  --feature-tag-change: #b5a8c4;
+  --feature-tag-badge: #c9a090;
+  --feature-tag-uncat: #8a857c;
 }
 
 * {
