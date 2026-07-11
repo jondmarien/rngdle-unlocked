@@ -32,6 +32,26 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Ranked all-time crown on Home',
+    date: '2026-07-11',
+    version: '0.12.1',
+    tags: ['Board', 'UI', 'Ranked'],
+    content: [
+      {
+        body: 'The Home community board now shows the Ranked all-time best roll next to today’s and this week’s crowns — still server Ranked only, never Free play.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'Clearer crowns and a Profile polish for Lifetime EP seals.',
+        bullets: [
+          '**Ranked · All-time best** — third highlight tile on Home (live from Ranked rolls).',
+          '**Clearer labels** — today / week / all-time tiles say Ranked · so Free play high rolls are not mistaken for crowns.',
+          '**Profile Lifetime EP** — seals sit under Best roll and show from public lifetime EP even before collection sync catches up.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Lifetime EP seals + compact numbers',
     date: '2026-07-10',
     version: '0.12.0',

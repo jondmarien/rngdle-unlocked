@@ -48,7 +48,7 @@ export function CommunityHighlights({
     );
   }
 
-  const empty = !data.today && !data.week;
+  const empty = !data.today && !data.week && !data.allTime;
   if (empty) {
     return (
       <div className="mx-auto w-full max-w-md rounded-xl border border-dashed border-(--outline) bg-(--surface)/60 px-4 py-5 text-center">
@@ -57,23 +57,27 @@ export function CommunityHighlights({
         </p>
         <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-(--prose-3)">
           Sign in, claim @username, and use Ranked free play — only server rolls
-          claim today&apos;s / this week&apos;s crowns.
+          claim today&apos;s / this week&apos;s / all-time crowns.
         </p>
       </div>
     );
   }
 
-  const both = Boolean(data.today && data.week);
+  const tileCount = [data.today, data.week, data.allTime].filter(
+    Boolean,
+  ).length;
+  const gridCols =
+    tileCount >= 3
+      ? 'grid-cols-1 sm:grid-cols-3'
+      : tileCount === 2
+        ? 'grid-cols-1 sm:grid-cols-2'
+        : 'grid-cols-1';
 
   return (
-    <div
-      className={`mx-auto grid w-full max-w-2xl gap-3 ${
-        both ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'
-      }`}
-    >
+    <div className={`mx-auto grid w-full max-w-4xl gap-3 ${gridCols}`}>
       {data.today && (
         <HighlightCard
-          label="Today's best"
+          label="Ranked · Today's best"
           roll={data.today}
           footer={`${data.todayRollCount.toLocaleString()} today`}
           onOpenProfile={onOpenProfile}
@@ -82,9 +86,18 @@ export function CommunityHighlights({
       )}
       {data.week && (
         <HighlightCard
-          label="Best this week"
+          label="Ranked · Best this week"
           roll={data.week}
           footer={`${data.weekRollCount.toLocaleString()} this week`}
+          onOpenProfile={onOpenProfile}
+          onOpenRoll={onOpenRoll}
+        />
+      )}
+      {data.allTime && (
+        <HighlightCard
+          label="Ranked · All-time best"
+          roll={data.allTime}
+          footer={`${data.allTimeRollCount.toLocaleString()} ranked`}
           onOpenProfile={onOpenProfile}
           onOpenRoll={onOpenRoll}
         />

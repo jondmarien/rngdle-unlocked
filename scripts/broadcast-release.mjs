@@ -12,10 +12,10 @@ if (!process.env.DATABASE_URL) {
 const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
-const title = 'New Update! v0.12.0 — Lifetime EP seals + compact numbers';
+const title = 'New Update! v0.12.1 — Ranked all-time crown on Home';
 const body = [
-  'Lifetime EP badges are live — 22 seals for the entropy you have earned over time, with a new Entropy Treasury mastery when you collect them all.',
-  'Optional Settings toggle abbreviates big EP and roll counts (hover for the exact number). Features edits are smoother for admins, and Discord share previews should refresh more reliably.',
+  'Home now shows Ranked · All-time best beside today’s and this week’s crowns — still server Ranked only, so Free play rolls never claim community crowns.',
+  'Crown tile labels say Ranked · for clarity, and Profile Lifetime EP seals sit under Best roll more reliably.',
   'Read the full player notes: https://rngdle-unlocked.chron0.tech/whats-new',
   'Open: /whats-new',
 ].join(' ');

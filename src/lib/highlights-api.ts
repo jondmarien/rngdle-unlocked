@@ -21,8 +21,10 @@ export type HighlightRoll = {
 export type HighlightsPayload = {
   today: HighlightRoll | null;
   week: HighlightRoll | null;
+  allTime: HighlightRoll | null;
   todayRollCount: number;
   weekRollCount: number;
+  allTimeRollCount: number;
 };
 
 /** Community Ranked bests for the home screen (tz-aware "today"). */

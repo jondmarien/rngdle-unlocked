@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.1] - 2026-07-11
+
+### Added
+
+- **Ranked all-time highlight tile** — Home community board shows Ranked · All-time best beside today/week (live query, Ranked-only). Crown labels prefixed with `Ranked ·` so Free play is not mistaken for crowns.
+
 ### Fixed
 
 - **Profile Lifetime EP badges** — section sits directly under Best roll; seals also derive from public `lifetimeEP` so they appear even before collection backfill syncs.

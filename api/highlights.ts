@@ -66,25 +66,38 @@ export default defineHandler(async (request) => {
     const dayStart = new Date(localMidnightUtcMs);
     const weekStart = new Date(now - 7 * 24 * 60 * 60 * 1000);
 
-    const [todayBest, weekBest, todayCount, weekCount] = await Promise.all([
+    const [
+      todayBest,
+      weekBest,
+      allTimeBest,
+      todayCount,
+      weekCount,
+      allTimeCount,
+    ] = await Promise.all([
       bestPublicRollSince(db, dayStart),
       bestPublicRollSince(db, weekStart),
+      bestPublicRollSince(db, null),
       countPublicRollsSince(db, dayStart),
       countPublicRollsSince(db, weekStart),
+      countPublicRollsSince(db, null),
     ]);
 
     log.info('ok', {
       today: todayBest?.number ?? null,
       week: weekBest?.number ?? null,
+      allTime: allTimeBest?.number ?? null,
       todayCount,
       weekCount,
+      allTimeCount,
     });
 
     return Response.json({
       today: todayBest,
       week: weekBest,
+      allTime: allTimeBest,
       todayRollCount: todayCount,
       weekRollCount: weekCount,
+      allTimeRollCount: allTimeCount,
       dayStart: dayStart.toISOString(),
       weekStart: weekStart.toISOString(),
     });
@@ -101,7 +114,8 @@ export default defineHandler(async (request) => {
 
 async function bestPublicRollSince(
   db: ReturnType<typeof createDb>,
-  since: Date,
+  /** Null = all-time (no lower bound). */
+  since: Date | null,
 ): Promise<HighlightRoll | null> {
   const [row] = await db
     .select({
@@ -118,7 +132,7 @@ async function bestPublicRollSince(
     .innerJoin(user, eq(user.id, rolls.userId))
     .where(
       and(
-        gte(rolls.rolledAt, since),
+        ...(since ? [gte(rolls.rolledAt, since)] : []),
         eq(rolls.isPublic, true),
         eq(rolls.source, 'ranked'),
         isNotNull(user.username),
@@ -133,14 +147,15 @@ async function bestPublicRollSince(
 
 async function countPublicRollsSince(
   db: ReturnType<typeof createDb>,
-  since: Date,
+  /** Null = all-time (no lower bound). */
+  since: Date | null,
 ): Promise<number> {
   const [row] = await db
     .select({ n: sql<number>`count(*)`.mapWith(Number) })
     .from(rolls)
     .where(
       and(
-        gte(rolls.rolledAt, since),
+        ...(since ? [gte(rolls.rolledAt, since)] : []),
         eq(rolls.isPublic, true),
         eq(rolls.source, 'ranked'),
       ),
