@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { RollResult } from '../../game';
+import { useGameSettings } from '../../state/GameProvider';
 import { RarityBadge } from './RarityBadge';
 import { laneFromSource, RelativeTime, type RollLaneKind } from './RollRow';
 
@@ -74,8 +75,9 @@ export function LatestRunsPanel({
   onSelect?: (roll: RollResult) => void;
   defaultLane?: Lane;
 }) {
+  const { settings, setLatestRunsSpoilersHidden } = useGameSettings();
+  const spoilersHidden = settings.latestRunsSpoilersHidden === true;
   const [lane, setLane] = useState<Lane>(defaultLane);
-  const [spoilersHidden, setSpoilersHidden] = useState(false);
   const [enteringIds, setEnteringIds] = useState<Set<string>>(() => new Set());
   const [exiting, setExiting] = useState<RollResult[]>([]);
   const prevIdsRef = useRef<string[]>([]);
@@ -178,7 +180,7 @@ export function LatestRunsPanel({
               spoilersHidden ? 'Show run results' : 'Hide run results'
             }
             title={spoilersHidden ? 'Show run results' : 'Hide run results'}
-            onClick={() => setSpoilersHidden((v) => !v)}
+            onClick={() => setLatestRunsSpoilersHidden(!spoilersHidden)}
             className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-(--prose-3) transition hover:bg-(--surface-raised) hover:text-(--prose)"
           >
             {spoilersHidden ? <EyeOffIcon /> : <EyeIcon />}

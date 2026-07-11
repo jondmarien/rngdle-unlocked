@@ -106,6 +106,11 @@ export type AppSettings = {
    * Default on; localStorage only.
    */
   showLatestRuns: boolean;
+  /**
+   * Blur Latest runs results (eye toggle). Default off = results visible.
+   * localStorage only.
+   */
+  latestRunsSpoilersHidden: boolean;
 };
 
 export type CollectionEntry = {

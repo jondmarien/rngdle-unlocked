@@ -53,6 +53,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   autoShareHighRarity: false,
   /** Default on; hide Latest runs rail / mobile list under Settings. */
   showLatestRuns: true,
+  /** Default off — Latest runs results visible until eye toggle hides them. */
+  latestRunsSpoilersHidden: false,
 };
 
 type SettingsMigrations = {
