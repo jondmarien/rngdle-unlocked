@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Feature request tags** — single-select categories (Bug Fix, New Feature, Change/Improvement, Badge Update) with dedicated `--feature-tag-*` colors (not status/rarity). Legacy rows stay Uncategorized (`tag` null). Run `node --env-file=.env.local scripts/add-feature-request-tag.mjs`.
+- **Feature request image attachments** — Vercel Blob upload (`POST /api/feature-requests/upload`), 2MB image cap, public `image_url` column. Blob Data Transfer is separate from Fast Data Transfer / sync. Requires `BLOB_READ_WRITE_TOKEN`. Run `node --env-file=.env.local scripts/add-feature-request-image-url.mjs`.
 
 ## [0.11.0] - 2026-07-10
 

@@ -31,6 +31,7 @@
     "@tanstack/react-table": "^8.21.3",
     "@types/node": "^24.13.2",
     "@vercel/analytics": "^2.0.1",
+    "@vercel/blob": "^2.6.1",
     "better-auth": "^1.6.23",
     "drizzle-orm": "^0.45.2",
     "html-to-image": "^1.11.13",

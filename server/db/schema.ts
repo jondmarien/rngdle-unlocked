@@ -237,6 +237,8 @@ export const featureRequests = pgTable('feature_requests', {
    * Null = Uncategorized (legacy rows).
    */
   tag: text('tag'),
+  /** Public Vercel Blob URL for an attached screenshot/mockup. */
+  imageUrl: text('image_url'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 

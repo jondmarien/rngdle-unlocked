@@ -174,6 +174,7 @@ export const featureRequestSubmitSchema = z.object({
   title: z.string().trim().min(3).max(200),
   description: z.string().trim().min(1).max(2000),
   tag: featureRequestTagSchema.nullable().optional(),
+  imageUrl: z.string().url().nullable().optional(),
 });
 
 export const featureRequestItemSchema = z.object({
@@ -182,6 +183,7 @@ export const featureRequestItemSchema = z.object({
   description: z.string(),
   status: z.string(),
   tag: z.string().nullable().optional(),
+  imageUrl: z.string().nullable().optional(),
   createdAt: isoDateSchema,
   voteCount: z.number(),
   votedByMe: z.boolean(),

@@ -52,6 +52,7 @@ export async function submitFeatureRequest(input: {
   title: string;
   description: string;
   tag?: string | null;
+  imageUrl?: string | null;
 }): Promise<FeatureRequestItem> {
   const body = featureRequestSubmitSchema.parse(input);
   log.info('submit:start');
@@ -80,6 +81,27 @@ export async function submitFeatureRequest(input: {
   const parsed = featureRequestItemSchema.safeParse(item);
   if (!parsed.success) throw new Error('Invalid submit response');
   return parsed.data;
+}
+
+export async function uploadFeatureRequestImage(
+  file: File,
+): Promise<{ url: string }> {
+  log.info('upload:start', { size: file.size, type: file.type });
+  const form = new FormData();
+  form.append('file', file);
+  const res = await withTimeout(
+    fetch('/api/feature-requests/upload', {
+      method: 'POST',
+      credentials: 'include',
+      body: form,
+    }),
+    FETCH_MS,
+    'feature request upload',
+  );
+  const data = (await res.json()) as { error?: string; url?: string };
+  if (!res.ok) throw new Error(data.error ?? 'Upload failed');
+  if (!data.url) throw new Error('Upload missing url');
+  return { url: data.url };
 }
 
 export async function upvoteFeatureRequest(
