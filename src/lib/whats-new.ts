@@ -49,6 +49,7 @@ export const WHATS_NEW: WhatsNewEntry[] = [
           '**Features tags + edit** — categorize requests, edit your own title/description/tag, and attach an optional screenshot.',
           '**Badge art lightbox** — tap badge art on Profile or Codex for a full-size view.',
           '**Latest runs eye sticks** — spoiler blur preference survives refresh; journey unlock toasts show the right badge art.',
+          '**Alerts links** — system messages use matching open labels (What’s new, profile, Features) instead of always saying Open roll.',
         ],
       },
     ],

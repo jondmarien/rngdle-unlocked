@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Latest runs eye toggle** — spoiler blur preference now persists in localStorage via `AppSettings.latestRunsSpoilersHidden` (survives refresh).
 - **Journey unlock toast art** — Home celebration for journey milestones now shows badge images the same way secret mastery unlocks do.
 - **Feature request migration scripts** — Neon serverless `sql` calls use tagged templates (`sql\`...\``) so `add-feature-request-tag.mjs`/`add-feature-request-image-url.mjs`work on`@neondatabase/serverless` 1.x.
+- **System inbox CTA labels** — Alerts no longer hardcode "Open roll"; hrefs like `/whats-new` show "Open What's new" (rolls still say "Open roll").
 
 ### Changed
 

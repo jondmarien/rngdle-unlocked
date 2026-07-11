@@ -2,6 +2,7 @@ import { formatDateTime, formatRelative } from '../../lib/format';
 import type { InboxItem } from '../../lib/notifications-api';
 import {
   displayBody,
+  inboxOpenLabel,
   parseSystemBody,
   periodLabel,
   visualAccentVar,
@@ -137,7 +138,7 @@ function RowBody({
           )}
           {href && (
             <p className="mt-1 text-xs font-medium text-(--prose-3) underline-offset-2 group-hover:underline">
-              Open roll
+              {inboxOpenLabel(href)}
             </p>
           )}
         </div>

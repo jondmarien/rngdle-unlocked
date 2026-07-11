@@ -3,6 +3,7 @@ import type { InboxItem } from './notifications-api';
 import {
   countGroupedUnread,
   groupInboxItems,
+  inboxOpenLabel,
   parseSystemBody,
   resolveVisualType,
 } from './inboxPresentation';
@@ -129,5 +130,19 @@ describe('parseSystemBody', () => {
     expect(parsed.lead).toContain('claimed');
     expect(parsed.detail).toContain('Number 42');
     expect(parsed.detail).not.toContain('Open:');
+  });
+});
+
+describe('inboxOpenLabel', () => {
+  it('labels roll shares as Open roll', () => {
+    expect(inboxOpenLabel('/s/alice/abc')).toBe('Open roll');
+    expect(inboxOpenLabel('/r/roll-id')).toBe('Open roll');
+  });
+
+  it('labels whats-new and other SPA paths', () => {
+    expect(inboxOpenLabel('/whats-new')).toBe("Open What's new");
+    expect(inboxOpenLabel('/u/alice')).toBe('Open profile');
+    expect(inboxOpenLabel('/features')).toBe('Open Features');
+    expect(inboxOpenLabel('/collection')).toBe('Open Codex');
   });
 });

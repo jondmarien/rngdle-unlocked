@@ -273,3 +273,55 @@ export function parseSystemBody(body: string): ParsedSystemBody {
 export function displayBody(body: string): string {
   return body.replace(/\s*Open:\s*\/[^\s]+/gi, '').trim();
 }
+
+/**
+ * CTA label for an inbox href. Roll shares stay "Open roll"; other SPA paths
+ * get a matching label (e.g. /whats-new → Open What's new).
+ */
+export function inboxOpenLabel(href: string): string {
+  const path = href.split(/[?#]/)[0] ?? href;
+  const parts = path.split('/').filter(Boolean);
+  const head = (parts[0] ?? '').toLowerCase();
+
+  if (head === 's' || head === 'r') return 'Open roll';
+  if (head === 'u') return 'Open profile';
+
+  switch (head) {
+    case 'whats-new':
+    case 'changelog':
+      return "Open What's new";
+    case 'collection':
+      return 'Open Codex';
+    case 'features':
+      return 'Open Features';
+    case 'arcade':
+      return 'Open Arcade';
+    case 'leaderboard':
+    case 'board':
+      return 'Open Board';
+    case 'friends':
+      return 'Open Friends';
+    case 'history':
+      return 'Open History';
+    case 'showcase':
+      return 'Open Showcase';
+    case 'stats':
+      return 'Open Stats';
+    case 'account':
+      return 'Open Account';
+    case 'about':
+      return 'Open About';
+    case 'settings':
+      return 'Open Settings';
+    case 'notifications':
+    case 'alerts':
+      return 'Open Alerts';
+    case 'admin':
+      return 'Open Admin';
+    case '':
+    case 'roll':
+      return 'Open Home';
+    default:
+      return 'Open';
+  }
+}
