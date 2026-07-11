@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Latest runs eye toggle** — spoiler blur preference now persists in localStorage via `AppSettings.latestRunsSpoilersHidden` (survives refresh).
+- **Journey unlock toast art** — Home celebration for journey milestones now shows badge images the same way secret mastery unlocks do.
 
 ### Changed
 
