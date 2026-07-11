@@ -41,3 +41,4 @@ api/_bundles/
 # Copied from @resvg/resvg-wasm during bundle:api for Vercel includeFiles
 server/assets/index_bg.wasm
 /references
+*.tsbuildinfo
