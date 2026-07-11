@@ -122,6 +122,11 @@ export type AppSettings = {
    * Full value remains available via title/tooltip.
    */
   abbreviateLargeNumbers: boolean;
+  /**
+   * Home “How to roll” help expanded (blurb + shorts + detail).
+   * Default on; when false, show label-only mode selector. localStorage only.
+   */
+  howToRollOpen: boolean;
 };
 
 export type CollectionEntry = {

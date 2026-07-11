@@ -1,4 +1,6 @@
 import type { RollMode } from '../../state/GameProvider';
+import { useGameSettings } from '../../state/GameProvider';
+import { SectionHeader } from './SectionHeader';
 
 const MODES: {
   id: RollMode;
@@ -43,17 +45,24 @@ export function RollModePicker({
   value: RollMode;
   onChange: (m: RollMode) => void;
 }) {
+  const { settings, setHowToRollOpen } = useGameSettings();
+  const open = settings.howToRollOpen;
   const active = MODES.find((m) => m.id === value) ?? MODES[0]!;
 
   return (
     <div className="w-full max-w-lg space-y-3 text-left">
-      <div>
-        <p className="text-sm font-semibold text-(--prose)">How to roll</p>
-        <p className="mt-0.5 text-sm leading-snug text-(--prose-2)">
+      <SectionHeader
+        title="How to roll"
+        open={open}
+        onToggle={() => setHowToRollOpen(!open)}
+      />
+
+      {open && (
+        <p className="text-sm leading-snug text-(--prose-2)">
           Free play for practice, Ranked for the competitive board, or optional
           Daily / Weekly challenges.
         </p>
-      </div>
+      )}
 
       <div
         role="radiogroup"
@@ -69,7 +78,9 @@ export function RollModePicker({
               role="radio"
               aria-checked={selected}
               onClick={() => onChange(m.id)}
-              className={`rounded-lg border px-2.5 py-2.5 text-left transition sm:px-3 ${
+              className={`rounded-lg border text-left transition ${
+                open ? 'px-2.5 py-2.5 sm:px-3' : 'px-2.5 py-2 sm:px-3'
+              } ${
                 selected
                   ? m.id === 'ranked'
                     ? 'border-amber-500 bg-amber-500 text-black'
@@ -80,22 +91,26 @@ export function RollModePicker({
               <span className="block text-sm font-bold leading-tight">
                 {m.label}
               </span>
-              <span
-                className={`mt-1 block text-[11px] leading-snug sm:text-xs ${
-                  selected ? 'opacity-90' : 'text-(--prose-2)'
-                }`}
-              >
-                {m.short}
-              </span>
+              {open && (
+                <span
+                  className={`mt-1 block text-[11px] leading-snug sm:text-xs ${
+                    selected ? 'opacity-90' : 'text-(--prose-2)'
+                  }`}
+                >
+                  {m.short}
+                </span>
+              )}
             </button>
           );
         })}
       </div>
 
-      <p className="rounded-lg border border-(--outline) bg-(--surface-raised) px-3 py-2.5 text-sm leading-relaxed text-(--prose-2)">
-        <span className="font-semibold text-(--prose)">{active.label}: </span>
-        {active.detail}
-      </p>
+      {open && (
+        <p className="rounded-lg border border-(--outline) bg-(--surface-raised) px-3 py-2.5 text-sm leading-relaxed text-(--prose-2)">
+          <span className="font-semibold text-(--prose)">{active.label}: </span>
+          {active.detail}
+        </p>
+      )}
     </div>
   );
 }

@@ -59,6 +59,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   shareShowUnlockedBadges: true,
   /** Default off — opt-in compact EP / roll counts. */
   abbreviateLargeNumbers: false,
+  /** Default on — full How to roll help until the user collapses it. */
+  howToRollOpen: true,
 };
 
 type SettingsMigrations = {

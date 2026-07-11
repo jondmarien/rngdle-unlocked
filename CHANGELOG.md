@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.2] - 2026-07-11
+
+### Added
+
+- **Collapsible How to roll** — Home mode picker uses Profile-style expand/collapse; open by default with full mode help. When collapsed, a label-only Free play / Ranked / Daily / Weekly selector remains; preference persists in local settings (`howToRollOpen`).
+
 ## [0.12.1] - 2026-07-11
 
 ### Added

@@ -12,10 +12,10 @@ if (!process.env.DATABASE_URL) {
 const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
-const title = 'New Update! v0.12.1 — Ranked all-time crown on Home';
+const title = 'New Update! v0.12.2 — Collapsible How to roll';
 const body = [
-  'Home now shows Ranked · All-time best beside today’s and this week’s crowns — still server Ranked only, so Free play rolls never claim community crowns.',
-  'Crown tile labels say Ranked · for clarity, and Profile Lifetime EP seals sit under Best roll more reliably.',
+  'How to roll on Home can collapse once you know the modes — expand for the full explainers, or collapse for a compact Free play / Ranked / Daily / Weekly switch.',
+  'Your open/closed preference is remembered on this device.',
   'Read the full player notes: https://rngdle-unlocked.chron0.tech/whats-new',
   'Open: /whats-new',
 ].join(' ');

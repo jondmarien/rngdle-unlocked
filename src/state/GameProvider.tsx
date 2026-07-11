@@ -125,6 +125,7 @@ type GameSettingsValue = {
   setLatestRunsSpoilersHidden: (v: boolean) => void;
   setShareShowUnlockedBadges: (v: boolean) => void;
   setAbbreviateLargeNumbers: (v: boolean) => void;
+  setHowToRollOpen: (v: boolean) => void;
 };
 
 const GameContext = createContext<GameContextValue | null>(null);
@@ -789,6 +790,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
         dispatchSettings({ type: 'setShareShowUnlockedBadges', value }),
       setAbbreviateLargeNumbers: (value) =>
         dispatchSettings({ type: 'setAbbreviateLargeNumbers', value }),
+      setHowToRollOpen: (value) =>
+        dispatchSettings({ type: 'setHowToRollOpen', value }),
     }),
     [state.settings, dispatchSettings],
   );

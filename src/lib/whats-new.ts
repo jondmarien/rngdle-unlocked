@@ -32,6 +32,26 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Collapsible How to roll',
+    date: '2026-07-11',
+    version: '0.12.2',
+    tags: ['UI', 'Home'],
+    content: [
+      {
+        body: 'The How to roll panel on Home can collapse once you know the modes — expand for the full explainers, collapse for a compact Free play / Ranked / Daily / Weekly switch.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'Less chrome when you want it, same modes either way.',
+        bullets: [
+          '**Collapse How to roll** — Profile-style ▾/▸ toggle; open by default for newcomers.',
+          '**Compact mode switch** — when collapsed, pick Free play / Ranked / Daily / Weekly with labels only (no long help text).',
+          '**Remembers your choice** — stays collapsed (or open) across refreshes on this device.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Ranked all-time crown on Home',
     date: '2026-07-11',
     version: '0.12.1',
