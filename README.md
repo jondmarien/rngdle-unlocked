@@ -8,7 +8,7 @@ Inspired by the daily number-game genre, but **unlocked**: roll as often as you 
 
 **[Live Site](https://rngdle-unlocked.chron0.tech)**
 
-[![Version](https://img.shields.io/badge/version-0.11.0-8b5cf6)](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.11.0)
+[![Version](https://img.shields.io/badge/version-0.11.1-8b5cf6)](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.11.1)
 [![React 19](https://img.shields.io/badge/UI-React_19-61dafb?logo=react&logoColor=black)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/lang-TypeScript_7-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite 6](https://img.shields.io/badge/build-Vite_Plus-646cff?logo=vite&logoColor=white)](https://vitejs.dev)
@@ -238,23 +238,23 @@ rngdle-unlocked/
 
 ## 🗺️ Routes (SPA)
 
-| Path             | Screen                                                                |
-| ---------------- | --------------------------------------------------------------------- |
-| `/`              | Roll (Free / Ranked / Daily / Weekly)                                 |
-| `/history`       | History + share                                                       |
-| `/collection`    | Badge **codex** (encyclopedia, unlock times, **New** 5‑min tab)       |
-| `/showcase`      | Best rolls & streaks                                                  |
-| `/stats`         | Rarity histogram, EP/hour, calendar                                   |
-| `/leaderboard`   | **Ranked** · **Practice** · **Arcade** · Feed · **Find** (mode-first) |
-| `/arcade`        | Arcade Digits runs (shop, cash out / bust) — sign-in + `@username`    |
-| `/features`      | Feature requests (sign-in) — submit, upvote, status                   |
-| `/notifications` | Alerts (Activity + System)                                            |
-| `/account`       | Auth, username, profile look (avatar/accent/flair/bio), push/pull     |
-| `/about`         | How to play, social, fairness                                         |
-| `/settings`      | Theme, effects, tips, export/import                                   |
-| `/u/:username`   | Public profile (+ follow)                                             |
-| `/s/:user/:code` | Vanity public roll (SPA)                                              |
-| `/r/:id`         | Legacy public roll path                                               |
+| Path             | Screen                                                                       |
+| ---------------- | ---------------------------------------------------------------------------- |
+| `/`              | Roll (Free / Ranked / Daily / Weekly)                                        |
+| `/history`       | History + share                                                              |
+| `/collection`    | Badge **codex** (encyclopedia, unlock times, **New** 5‑min tab)              |
+| `/showcase`      | Best rolls & streaks                                                         |
+| `/stats`         | Rarity histogram, EP/hour, calendar                                          |
+| `/leaderboard`   | **Ranked** · **Practice** · **Arcade** · Feed · **Find** (mode-first)        |
+| `/arcade`        | Arcade Digits runs (shop, cash out / bust) — sign-in + `@username`           |
+| `/features`      | Feature requests (sign-in) — tags, edit, optional screenshot, upvote, status |
+| `/notifications` | Alerts (Activity + System)                                                   |
+| `/account`       | Auth, username, profile look (avatar/accent/flair/bio), push/pull            |
+| `/about`         | How to play, social, fairness                                                |
+| `/settings`      | Theme, effects, tips, export/import                                          |
+| `/u/:username`   | Public profile (+ follow)                                                    |
+| `/s/:user/:code` | Vanity public roll (SPA)                                                     |
+| `/r/:id`         | Legacy public roll path                                                      |
 
 **API (serverless):**  
 `/api/auth/*`, `/api/me`, `/api/sync`, `/api/ranked-roll` (+ `/quota`), `/api/leaderboard?view=total|best&scope=ranked|practice`, `/api/arcade` (+ `/start` `/roll` `/buy` `/arm` `/cash-out` `/abandon` `/leaderboard`), `/api/feature-requests`, `/api/feature-requests/:id/vote`, `/api/admin/feature-requests`, `/api/highlights`, `/api/follow`, `/api/feed`, `/api/users/search`, `/api/notifications`, `/api/system-messages`, `/api/admin/*`, `/api/reports`, `/api/challenge`, `/api/attest`, `/api/og`, `/api/profile/:user`, `/api/u/:user`, `/api/rolls/:id`, `/api/share/:id`, `/api/health`.
@@ -424,6 +424,7 @@ The Account screen times out after a few seconds and shows the sign-in form. Che
 | Profile journey collapse + Secret badges; streak unlock art fix           | ✅ Shipped (`v0.10.1`)                                                            |
 | Friends board filter + `/friends` tab                                     | ✅ Shipped (`v0.10.2`)                                                            |
 | Delta cloud sync + OG PNG fix + sync quota stopgap                        | ✅ Shipped (`v0.11.0`)                                                            |
+| Share seals toggle + Features tags/edit/screenshots + UI polish           | ✅ Shipped (`v0.11.1`)                                                            |
 | Server Ranked free play (`/api/ranked-roll`)                              | ✅ Shipped                                                                        |
 | Profiles (vanity + avatars) + follows                                     | ✅ Shipped                                                                        |
 | Activity unlocks + Ranked crown msgs + overtake notifs                    | ✅ Shipped                                                                        |

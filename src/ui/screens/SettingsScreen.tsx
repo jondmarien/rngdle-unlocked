@@ -133,8 +133,8 @@ export function SettingsScreen() {
           Public vanity links require an account and a confirmed cloud sync.
           Logged-out share is Discord text / PNG only. Discord embeds use
           dynamic OG art for rolls and public profiles. Seal names appear in
-          Discord paste and PNG; profile OG can show a seal strip via
-          ?seals=1 (reuses existing collection data — no extra Neon read).
+          Discord paste and PNG; profile OG can show a seal strip via ?seals=1
+          (reuses existing collection data — no extra Neon read).
         </p>
       </section>
 

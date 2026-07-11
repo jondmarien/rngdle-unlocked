@@ -51,9 +51,7 @@ export function featureTagAccentVar(
   }
 }
 
-export function featureTagLabel(
-  tag: string | null | undefined,
-): string {
+export function featureTagLabel(tag: string | null | undefined): string {
   if (isFeatureRequestTag(tag)) return FEATURE_TAG_LABELS[tag];
   return 'Uncategorized';
 }

@@ -32,6 +32,28 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Share seals, Features board upgrades',
+    date: '2026-07-10',
+    version: '0.11.1',
+    tags: ['Share', 'Features', 'UI'],
+    content: [
+      {
+        body: 'Discord shares can list your unlocked seals, the Features board got categories / edit / screenshots, and a handful of polish fixes landed.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'More expressive shares and a clearer Features tab.',
+        bullets: [
+          '**Unlocked seals on share** — Settings toggle (on by default) adds journey / secret / mastery seal names to Discord paste + share PNG; profile OG supports seals too.',
+          '**Roll count on by default** — new installs show roll count on shares; existing opt-outs stay off.',
+          '**Features tags + edit** — categorize requests, edit your own title/description/tag, and attach an optional screenshot.',
+          '**Badge art lightbox** — tap badge art on Profile or Codex for a full-size view.',
+          '**Latest runs eye sticks** — spoiler blur preference survives refresh; journey unlock toasts show the right badge art.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Lighter cloud sync + Discord share cards',
     date: '2026-07-10',
     version: '0.11.0',

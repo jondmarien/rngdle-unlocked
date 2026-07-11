@@ -15,12 +15,6 @@ const sql = neon(url);
 /**
  * Additive: nullable tag on feature_requests (no backfill — null = Uncategorized).
  */
-const stmts = [
-  `ALTER TABLE feature_requests ADD COLUMN IF NOT EXISTS tag text`,
-];
-
-for (const s of stmts) {
-  console.log(s);
-  await sql(s);
-}
+console.log('ALTER TABLE feature_requests ADD COLUMN IF NOT EXISTS tag text');
+await sql`ALTER TABLE feature_requests ADD COLUMN IF NOT EXISTS tag text`;
 console.log('ok: feature_requests.tag');

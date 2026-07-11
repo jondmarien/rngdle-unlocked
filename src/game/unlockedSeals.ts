@@ -13,7 +13,8 @@ export type UnlockedSeal = {
 export function listUnlockedSeals(
   collectionIds: Iterable<string>,
 ): UnlockedSeal[] {
-  const have = collectionIds instanceof Set ? collectionIds : new Set(collectionIds);
+  const have =
+    collectionIds instanceof Set ? collectionIds : new Set(collectionIds);
   const out: UnlockedSeal[] = [];
   for (const b of JOURNEY_BADGES) {
     if (have.has(b.id)) {

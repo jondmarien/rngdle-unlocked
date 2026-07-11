@@ -88,11 +88,11 @@ Do **not** dump raw CHANGELOG bullets. About links here via `getWhatsNew()[0]`.
 
 ### 5. Core docs
 
-| File         | What to update                                                                                        |
-| ------------ | ----------------------------------------------------------------------------------------------------- |
+| File         | What to update                                                                                               |
+| ------------ | ------------------------------------------------------------------------------------------------------------ |
 | `README.md`  | **Version badge** at top (see below); roadmap / shipped table rows; feature blurbs that cite the new version |
-| `AGENTS.md`  | “Version in `package.json` (currently **X.Y.Z**)” and any cheat-sheet lines that cite the old version |
-| `HANDOFF.md` | Header **Version** + **Latest release** link; add a Done-wave checkbox for this release               |
+| `AGENTS.md`  | “Version in `package.json` (currently **X.Y.Z**)” and any cheat-sheet lines that cite the old version        |
+| `HANDOFF.md` | Header **Version** + **Latest release** link; add a Done-wave checkbox for this release                      |
 
 Latest release link shape:
 
@@ -105,6 +105,7 @@ Latest release link shape:
 ```
 
 Do not leave a stale `version-0.PREV.Z` badge after a release.
+
 ### 6. Sweep related docs / site copy
 
 Search the repo for the **previous** version string and stale release claims:

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-07-10
+
 ### Added
 
 - **Badge art lightbox** — click Lifetime / Secret / Mastery badge art on Profile or Codex to view full-resolution art (Escape, backdrop, or Close).
@@ -19,11 +21,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Latest runs eye toggle** — spoiler blur preference now persists in localStorage via `AppSettings.latestRunsSpoilersHidden` (survives refresh).
 - **Journey unlock toast art** — Home celebration for journey milestones now shows badge images the same way secret mastery unlocks do.
+- **Feature request migration scripts** — Neon serverless `sql` calls use tagged templates (`sql\`...\``) so `add-feature-request-tag.mjs`/`add-feature-request-image-url.mjs`work on`@neondatabase/serverless` 1.x.
 
 ### Changed
 
 - **Share roll count default on** — `shareShowRollCount` defaults to true for new installs. Existing saves that never set the key are presence-migrated to true; explicit `false` opt-outs are preserved.
 - **Feature request submit** — admins (`role=admin` or `ADMIN_USER_IDS`) are exempt from the hourly submit rate limit (server-side `isAdminRole` check).
+
+### Notes
+
+- Ops: `node --env-file=.env.local scripts/add-feature-request-tag.mjs` and `scripts/add-feature-request-image-url.mjs` (additive columns). Set `BLOB_READ_WRITE_TOKEN` on Vercel for FR image uploads.
 
 ## [0.11.0] - 2026-07-10
 

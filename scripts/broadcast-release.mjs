@@ -12,10 +12,10 @@ if (!process.env.DATABASE_URL) {
 const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
-const title = 'New Update! v0.11.0 — Lighter cloud sync + Discord share cards';
+const title = 'New Update! v0.11.1 — Share seals, Features board upgrades';
 const body = [
-  'Signed-in sync now sends only what changed instead of re-uploading your whole history on every roll — quieter, faster, and kinder to the database.',
-  'Discord share and profile previews should show the image card again.',
+  'Discord shares can list your unlocked seals (on by default), and the Features board now supports categories, editing your own requests, and optional screenshots.',
+  'Also: badge art lightbox on Profile/Codex, Latest runs eye preference sticks, and journey unlock toasts show the right art.',
   'Read the full player notes: https://rngdle-unlocked.chron0.tech/whats-new',
   'Open: /whats-new',
 ].join(' ');

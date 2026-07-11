@@ -12,12 +12,8 @@ if (!url) {
 
 const sql = neon(url);
 
-const stmts = [
-  `ALTER TABLE feature_requests ADD COLUMN IF NOT EXISTS image_url text`,
-];
-
-for (const s of stmts) {
-  console.log(s);
-  await sql(s);
-}
+console.log(
+  'ALTER TABLE feature_requests ADD COLUMN IF NOT EXISTS image_url text',
+);
+await sql`ALTER TABLE feature_requests ADD COLUMN IF NOT EXISTS image_url text`;
 console.log('ok: feature_requests.image_url');

@@ -8,12 +8,7 @@ import { defineHandler } from '../../server/vercel-adapter.js';
 const log = createLogger('api/feature-requests/upload');
 
 const MAX_BYTES = 2 * 1024 * 1024;
-const ALLOWED = new Set([
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/gif',
-]);
+const ALLOWED = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 
 /**
  * POST multipart — upload a feature-request image to Vercel Blob (public).
@@ -48,7 +43,10 @@ export default defineHandler(async (request) => {
   try {
     form = await request.formData();
   } catch {
-    return Response.json({ error: 'Expected multipart form data' }, { status: 400 });
+    return Response.json(
+      { error: 'Expected multipart form data' },
+      { status: 400 },
+    );
   }
 
   const file = form.get('file');

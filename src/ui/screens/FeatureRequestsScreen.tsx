@@ -100,7 +100,11 @@ function FeatureRequestCard({
   onDelete: (id: string) => void;
   onEdit: (
     id: string,
-    patch: { title: string; description: string; tag: FeatureRequestTag | null },
+    patch: {
+      title: string;
+      description: string;
+      tag: FeatureRequestTag | null;
+    },
   ) => void;
 }) {
   const status = asStatus(item.status);
@@ -376,7 +380,11 @@ function RequestList({
   onDelete: (id: string) => void;
   onEdit: (
     id: string,
-    patch: { title: string; description: string; tag: FeatureRequestTag | null },
+    patch: {
+      title: string;
+      description: string;
+      tag: FeatureRequestTag | null;
+    },
   ) => void;
 }) {
   if (items.length === 0) {

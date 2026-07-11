@@ -288,12 +288,9 @@ export async function updateFeatureRequest(
     return { ok: false, status: 403, error: 'Forbidden' };
   }
 
-  const nextTitle =
-    opts.title !== undefined ? opts.title.trim() : row.title;
+  const nextTitle = opts.title !== undefined ? opts.title.trim() : row.title;
   const nextDesc =
-    opts.description !== undefined
-      ? opts.description.trim()
-      : row.description;
+    opts.description !== undefined ? opts.description.trim() : row.description;
   if (nextTitle.length < FEATURE_TITLE_MIN) {
     return {
       ok: false,

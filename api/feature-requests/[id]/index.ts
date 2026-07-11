@@ -33,8 +33,7 @@ export default defineHandler(async (request) => {
   const url = requestUrl(request);
   const parts = url.pathname.split('/').filter(Boolean);
   const idIdx = parts.indexOf('feature-requests');
-  const id =
-    idIdx >= 0 ? decodeURIComponent(parts[idIdx + 1] ?? '') : '';
+  const id = idIdx >= 0 ? decodeURIComponent(parts[idIdx + 1] ?? '') : '';
   if (!id || id === 'vote') {
     return Response.json({ error: 'Missing id' }, { status: 400 });
   }
@@ -65,10 +64,7 @@ export default defineHandler(async (request) => {
   });
 
   if (!result.ok) {
-    return Response.json(
-      { error: result.error },
-      { status: result.status },
-    );
+    return Response.json({ error: result.error }, { status: result.status });
   }
 
   log.info('patched', { id, userId: me.id });
