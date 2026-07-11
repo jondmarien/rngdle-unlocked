@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Feature request edit rate limit** — admins are exempt from PATCH edit limits (same as submit); non-admins get a dedicated 20/hour edit budget. Client edit Save is single-flight with no mutation retries and surfaces 429 errors.
 - **Discord OG embeds** — bump `og:image` URLs with `v=2` so Discord’s image CDN re-fetches after the SVG→PNG fix; `/api/og` never returns SVG on render failure (static `server/assets/og-fallback.png` or 503).
 
+### Notes
+
+- **Features page “message channel closed” console error** — investigated; no app `chrome.runtime` / service-worker / unresolved `postMessage` listeners. Matches common browser-extension noise (ad blockers, password managers). Not an app bug; no code change.
+
 ## [0.11.1] - 2026-07-10
 
 ### Added
