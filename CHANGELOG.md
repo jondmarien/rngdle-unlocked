@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Share roll count default on** — `shareShowRollCount` defaults to true for new installs. Existing saves that never set the key are presence-migrated to true; explicit `false` opt-outs are preserved.
+- **Feature request submit** — admins (`role=admin` or `ADMIN_USER_IDS`) are exempt from the hourly submit rate limit (server-side `isAdminRole` check).
 
 ## [0.11.0] - 2026-07-10
 
