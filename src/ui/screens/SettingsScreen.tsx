@@ -124,7 +124,7 @@ export function SettingsScreen() {
         <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
-            checked={settings.shareShowUnlockedBadges === true}
+            checked={settings.shareShowUnlockedBadges !== false}
             onChange={(e) => setShareShowUnlockedBadges(e.target.checked)}
           />
           Include unlocked secret / lifetime / mastery seals on share cards

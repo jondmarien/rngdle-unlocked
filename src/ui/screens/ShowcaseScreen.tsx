@@ -19,7 +19,7 @@ export function ShowcaseScreen({
   const { settings } = useGameSettings();
   const unlockedSealNames = useMemo(
     () =>
-      settings.shareShowUnlockedBadges === true
+      settings.shareShowUnlockedBadges !== false
         ? listUnlockedSeals(collection.map((c) => c.badgeId)).map((s) => s.name)
         : [],
     [collection, settings.shareShowUnlockedBadges],
@@ -138,7 +138,7 @@ export function ShowcaseScreen({
           roll={shareRoll}
           rollCount={lifetimeRollCount}
           showRollCount={settings.shareShowRollCount}
-          showUnlockedBadges={settings.shareShowUnlockedBadges === true}
+          showUnlockedBadges={settings.shareShowUnlockedBadges !== false}
           unlockedSealNames={unlockedSealNames}
           onClose={() => setShareRoll(null)}
           onGoAccount={onGoAccount}

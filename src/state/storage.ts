@@ -52,8 +52,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   autoShareHighRarity: false,
   /** Default on; hide Latest runs rail / mobile list under Settings. */
   showLatestRuns: true,
-  /** Default off — opt in to include collection seals on Discord share. */
-  shareShowUnlockedBadges: false,
+  /** Default on; include collection seals on Discord share. */
+  shareShowUnlockedBadges: true,
 };
 
 export function defaultState(): PersistedState {
