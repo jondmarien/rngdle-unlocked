@@ -51,6 +51,7 @@ export async function fetchFeatureRequests(opts: {
 export async function submitFeatureRequest(input: {
   title: string;
   description: string;
+  tag?: string | null;
 }): Promise<FeatureRequestItem> {
   const body = featureRequestSubmitSchema.parse(input);
   log.info('submit:start');

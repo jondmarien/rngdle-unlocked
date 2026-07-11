@@ -12,6 +12,14 @@ import {
   type FeatureRequestSort,
   type FeatureRequestStatus,
 } from '../../lib/feature-requests-api';
+import {
+  FEATURE_REQUEST_TAGS,
+  FEATURE_TAG_LABELS,
+  featureTagAccentVar,
+  featureTagLabel,
+  isFeatureRequestTag,
+  type FeatureRequestTag,
+} from '../../lib/feature-request-tags';
 import { formatDateTime, formatRelative } from '../../lib/format';
 import { useIsAdmin } from '../../lib/useIsAdmin';
 import { QueryErrorBanner } from '../components/QueryErrorBanner';
@@ -88,6 +96,8 @@ function FeatureRequestCard({
 }) {
   const status = asStatus(item.status);
   const accent = `var(${statusAccentVar(status)})`;
+  const tag = isFeatureRequestTag(item.tag) ? item.tag : null;
+  const tagAccent = `var(${featureTagAccentVar(tag)})`;
   const closed = status === 'shipped' || status === 'declined';
   const relative =
     formatRelative(item.createdAt) ?? formatDateTime(item.createdAt);
@@ -118,6 +128,16 @@ function FeatureRequestCard({
             >
               {statusGlyph(status)}
               {FEATURE_STATUS_LABELS[status]}
+            </span>
+            <span
+              className="rounded-full border px-1.5 py-0.5 text-[10px] font-semibold tracking-wide"
+              style={{
+                borderColor: `color-mix(in srgb, ${tagAccent} 50%, var(--outline))`,
+                color: tagAccent,
+                backgroundColor: `color-mix(in srgb, ${tagAccent} 14%, var(--surface))`,
+              }}
+            >
+              {featureTagLabel(tag)}
             </span>
           </div>
           <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-sm text-(--prose-2)">
@@ -260,6 +280,7 @@ export function FeatureRequestsScreen({
   const [search, setSearch] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [tag, setTag] = useState<FeatureRequestTag | ''>('new_feature');
   const [formError, setFormError] = useState<string | null>(null);
   const [openShipped, setOpenShipped] = useState(false);
   const [openDeclined, setOpenDeclined] = useState(false);
@@ -275,6 +296,7 @@ export function FeatureRequestsScreen({
     onSuccess: () => {
       setTitle('');
       setDescription('');
+      setTag('new_feature');
       setFormError(null);
       void queryClient.invalidateQueries({ queryKey: ['feature-requests'] });
     },
@@ -408,7 +430,11 @@ export function FeatureRequestsScreen({
         onSubmit={(e) => {
           e.preventDefault();
           setFormError(null);
-          submitMutation.mutate({ title, description });
+          submitMutation.mutate({
+            title,
+            description,
+            tag: tag || null,
+          });
         }}
       >
         <h2 className="text-sm font-bold">Submit a request</h2>
@@ -424,6 +450,37 @@ export function FeatureRequestsScreen({
             required
           />
         </label>
+        <fieldset className="space-y-1.5">
+          <legend className="text-xs font-semibold text-(--prose-2)">
+            Category
+          </legend>
+          <div className="flex flex-wrap gap-1.5">
+            {FEATURE_REQUEST_TAGS.map((t) => {
+              const selected = tag === t;
+              const accent = `var(${featureTagAccentVar(t)})`;
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setTag(t)}
+                  className="rounded-full border px-2.5 py-1 text-[11px] font-semibold"
+                  style={{
+                    borderColor: selected
+                      ? accent
+                      : `color-mix(in srgb, ${accent} 35%, var(--outline))`,
+                    color: accent,
+                    backgroundColor: selected
+                      ? `color-mix(in srgb, ${accent} 22%, var(--surface))`
+                      : `color-mix(in srgb, ${accent} 8%, var(--surface))`,
+                  }}
+                  aria-pressed={selected}
+                >
+                  {FEATURE_TAG_LABELS[t]}
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
         <label className="block text-xs font-semibold text-(--prose-2)">
           Description
           <textarea
