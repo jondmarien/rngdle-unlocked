@@ -187,6 +187,14 @@ export const featureRequestItemSchema = z.object({
   votedByMe: z.boolean(),
   username: z.string().nullable(),
   name: z.string(),
+  userId: z.string().optional(),
+  isMine: z.boolean().optional(),
+});
+
+export const featureRequestEditSchema = z.object({
+  title: z.string().trim().min(3).max(200).optional(),
+  description: z.string().trim().min(1).max(2000).optional(),
+  tag: featureRequestTagSchema.nullable().optional(),
 });
 
 export const featureRequestListResponseSchema = z.object({

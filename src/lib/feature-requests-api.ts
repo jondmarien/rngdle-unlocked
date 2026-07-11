@@ -3,6 +3,7 @@ import {
   featureRequestItemSchema,
   featureRequestListResponseSchema,
   featureRequestSubmitSchema,
+  featureRequestEditSchema,
   featureRequestStatusSchema,
 } from './schemas';
 import type { z } from 'zod';
@@ -79,6 +80,43 @@ export async function submitFeatureRequest(input: {
       : raw;
   const parsed = featureRequestItemSchema.safeParse(item);
   if (!parsed.success) throw new Error('Invalid submit response');
+  return parsed.data;
+}
+
+export async function editFeatureRequest(
+  id: string,
+  input: {
+    title?: string;
+    description?: string;
+    tag?: string | null;
+  },
+): Promise<FeatureRequestItem> {
+  const body = featureRequestEditSchema.parse(input);
+  log.info('edit:start', { id });
+  const res = await withTimeout(
+    fetch(`/api/feature-requests/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    }),
+    FETCH_MS,
+    'feature request edit',
+  );
+  const raw: unknown = await res.json();
+  if (!res.ok) {
+    const err =
+      raw && typeof raw === 'object' && 'error' in raw
+        ? String((raw as { error?: string }).error ?? 'Edit failed')
+        : 'Edit failed';
+    throw new Error(err);
+  }
+  const item =
+    raw && typeof raw === 'object' && 'item' in raw
+      ? (raw as { item: unknown }).item
+      : raw;
+  const parsed = featureRequestItemSchema.safeParse(item);
+  if (!parsed.success) throw new Error('Invalid edit response');
   return parsed.data;
 }
 

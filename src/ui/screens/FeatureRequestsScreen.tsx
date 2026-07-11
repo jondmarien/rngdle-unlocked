@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { useSession } from '../../lib/auth-client';
 import {
   deleteFeatureRequestAdmin,
+  editFeatureRequest,
   FEATURE_STATUS_LABELS,
   fetchFeatureRequests,
   patchFeatureRequestStatus,
@@ -81,18 +82,25 @@ function FeatureRequestCard({
   votePending,
   statusPending,
   deletePending,
+  editPending,
   onVote,
   onStatus,
   onDelete,
+  onEdit,
 }: {
   item: FeatureRequestItem;
   isAdmin: boolean;
   votePending: boolean;
   statusPending: boolean;
   deletePending: boolean;
+  editPending: boolean;
   onVote: (id: string) => void;
   onStatus: (id: string, status: FeatureRequestStatus) => void;
   onDelete: (id: string) => void;
+  onEdit: (
+    id: string,
+    patch: { title: string; description: string; tag: FeatureRequestTag | null },
+  ) => void;
 }) {
   const status = asStatus(item.status);
   const accent = `var(${statusAccentVar(status)})`;
@@ -102,6 +110,11 @@ function FeatureRequestCard({
   const relative =
     formatRelative(item.createdAt) ?? formatDateTime(item.createdAt);
   const submitter = item.username ? `@${item.username}` : item.name;
+  const canEdit = Boolean(item.isMine) || isAdmin;
+  const [editing, setEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState(item.title);
+  const [editDesc, setEditDesc] = useState(item.description);
+  const [editTag, setEditTag] = useState<FeatureRequestTag | ''>(tag ?? '');
 
   return (
     <li
@@ -116,33 +129,109 @@ function FeatureRequestCard({
       />
       <div className="flex flex-wrap items-start justify-between gap-2 pl-1">
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-bold text-(--prose)">{item.title}</h3>
-            <span
-              className="rounded border px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide"
-              style={{
-                borderColor: `color-mix(in srgb, ${accent} 45%, var(--outline))`,
-                color: accent,
-                backgroundColor: `color-mix(in srgb, ${accent} 12%, var(--surface))`,
-              }}
-            >
-              {statusGlyph(status)}
-              {FEATURE_STATUS_LABELS[status]}
-            </span>
-            <span
-              className="rounded-full border px-1.5 py-0.5 text-[10px] font-semibold tracking-wide"
-              style={{
-                borderColor: `color-mix(in srgb, ${tagAccent} 50%, var(--outline))`,
-                color: tagAccent,
-                backgroundColor: `color-mix(in srgb, ${tagAccent} 14%, var(--surface))`,
-              }}
-            >
-              {featureTagLabel(tag)}
-            </span>
-          </div>
-          <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-sm text-(--prose-2)">
-            {item.description}
-          </p>
+          {editing ? (
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={editTitle}
+                maxLength={200}
+                onChange={(e) => setEditTitle(e.target.value)}
+                className="w-full rounded-md border border-(--outline) bg-(--surface) px-2 py-1.5 text-sm font-bold text-(--prose)"
+              />
+              <div className="flex flex-wrap gap-1.5">
+                {FEATURE_REQUEST_TAGS.map((t) => {
+                  const selected = editTag === t;
+                  const a = `var(${featureTagAccentVar(t)})`;
+                  return (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setEditTag(t)}
+                      className="rounded-full border px-2 py-0.5 text-[10px] font-semibold"
+                      style={{
+                        borderColor: selected
+                          ? a
+                          : `color-mix(in srgb, ${a} 35%, var(--outline))`,
+                        color: a,
+                        backgroundColor: selected
+                          ? `color-mix(in srgb, ${a} 22%, var(--surface))`
+                          : undefined,
+                      }}
+                      aria-pressed={selected}
+                    >
+                      {FEATURE_TAG_LABELS[t]}
+                    </button>
+                  );
+                })}
+              </div>
+              <textarea
+                value={editDesc}
+                maxLength={2000}
+                rows={3}
+                onChange={(e) => setEditDesc(e.target.value)}
+                className="w-full rounded-md border border-(--outline) bg-(--surface) px-2 py-1.5 text-sm text-(--prose)"
+              />
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={editPending}
+                  className="rounded-md border border-(--prose) bg-(--prose) px-2 py-1 text-xs font-semibold text-(--bg)"
+                  onClick={() => {
+                    onEdit(item.id, {
+                      title: editTitle,
+                      description: editDesc,
+                      tag: editTag || null,
+                    });
+                    setEditing(false);
+                  }}
+                >
+                  Save
+                </button>
+                <button
+                  type="button"
+                  className="rounded-md border border-(--outline) px-2 py-1 text-xs font-semibold text-(--prose-2)"
+                  onClick={() => {
+                    setEditTitle(item.title);
+                    setEditDesc(item.description);
+                    setEditTag(tag ?? '');
+                    setEditing(false);
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="font-bold text-(--prose)">{item.title}</h3>
+                <span
+                  className="rounded border px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide"
+                  style={{
+                    borderColor: `color-mix(in srgb, ${accent} 45%, var(--outline))`,
+                    color: accent,
+                    backgroundColor: `color-mix(in srgb, ${accent} 12%, var(--surface))`,
+                  }}
+                >
+                  {statusGlyph(status)}
+                  {FEATURE_STATUS_LABELS[status]}
+                </span>
+                <span
+                  className="rounded-full border px-1.5 py-0.5 text-[10px] font-semibold tracking-wide"
+                  style={{
+                    borderColor: `color-mix(in srgb, ${tagAccent} 50%, var(--outline))`,
+                    color: tagAccent,
+                    backgroundColor: `color-mix(in srgb, ${tagAccent} 14%, var(--surface))`,
+                  }}
+                >
+                  {featureTagLabel(tag)}
+                </span>
+              </div>
+              <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-sm text-(--prose-2)">
+                {item.description}
+              </p>
+            </>
+          )}
           <p className="mt-1 text-[11px] text-(--prose-3)">
             <span>{submitter}</span>
             {' · '}
@@ -153,41 +242,62 @@ function FeatureRequestCard({
               {relative}
             </time>
           </p>
-          {isAdmin && (
+          {(canEdit || isAdmin) && !editing && (
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              <label className="text-xs font-semibold text-(--prose-3)">
-                Status
-                <select
-                  className="ml-2 rounded-md border border-(--outline) bg-(--surface) px-2 py-1 text-sm text-(--prose)"
-                  value={status}
-                  disabled={statusPending}
-                  onChange={(e) =>
-                    onStatus(item.id, e.target.value as FeatureRequestStatus)
-                  }
+              {canEdit && (
+                <button
+                  type="button"
+                  className="rounded-md border border-(--outline) px-2 py-1 text-xs font-semibold text-(--prose-2) hover:text-(--prose)"
+                  onClick={() => {
+                    setEditTitle(item.title);
+                    setEditDesc(item.description);
+                    setEditTag(tag ?? '');
+                    setEditing(true);
+                  }}
                 >
-                  {STATUS_OPTIONS.map((s) => (
-                    <option key={s} value={s}>
-                      {FEATURE_STATUS_LABELS[s]}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <button
-                type="button"
-                disabled={deletePending}
-                className="rounded-md border border-red-600/40 px-2 py-1 text-xs font-semibold text-red-700 dark:text-red-400"
-                onClick={() => {
-                  if (
-                    window.confirm(
-                      `Permanently delete “${item.title.slice(0, 60)}”?`,
-                    )
-                  ) {
-                    onDelete(item.id);
-                  }
-                }}
-              >
-                Delete
-              </button>
+                  Edit
+                </button>
+              )}
+              {isAdmin && (
+                <>
+                  <label className="text-xs font-semibold text-(--prose-3)">
+                    Status
+                    <select
+                      className="ml-2 rounded-md border border-(--outline) bg-(--surface) px-2 py-1 text-sm text-(--prose)"
+                      value={status}
+                      disabled={statusPending}
+                      onChange={(e) =>
+                        onStatus(
+                          item.id,
+                          e.target.value as FeatureRequestStatus,
+                        )
+                      }
+                    >
+                      {STATUS_OPTIONS.map((s) => (
+                        <option key={s} value={s}>
+                          {FEATURE_STATUS_LABELS[s]}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <button
+                    type="button"
+                    disabled={deletePending}
+                    className="rounded-md border border-red-600/40 px-2 py-1 text-xs font-semibold text-red-700 dark:text-red-400"
+                    onClick={() => {
+                      if (
+                        window.confirm(
+                          `Permanently delete “${item.title.slice(0, 60)}”?`,
+                        )
+                      ) {
+                        onDelete(item.id);
+                      }
+                    }}
+                  >
+                    Delete
+                  </button>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -232,9 +342,11 @@ function RequestList({
   votePending,
   statusPending,
   deletePending,
+  editPending,
   onVote,
   onStatus,
   onDelete,
+  onEdit,
 }: {
   items: FeatureRequestItem[];
   emptyCopy: string;
@@ -242,9 +354,14 @@ function RequestList({
   votePending: boolean;
   statusPending: boolean;
   deletePending: boolean;
+  editPending: boolean;
   onVote: (id: string) => void;
   onStatus: (id: string, status: FeatureRequestStatus) => void;
   onDelete: (id: string) => void;
+  onEdit: (
+    id: string,
+    patch: { title: string; description: string; tag: FeatureRequestTag | null },
+  ) => void;
 }) {
   if (items.length === 0) {
     return <p className="px-1 py-3 text-sm text-(--prose-3)">{emptyCopy}</p>;
@@ -259,9 +376,11 @@ function RequestList({
           votePending={votePending}
           statusPending={statusPending}
           deletePending={deletePending}
+          editPending={editPending}
           onVote={onVote}
           onStatus={onStatus}
           onDelete={onDelete}
+          onEdit={onEdit}
         />
       ))}
     </ul>
@@ -359,6 +478,23 @@ export function FeatureRequestsScreen({
     },
   });
 
+  const editMutation = useMutation({
+    mutationFn: ({
+      id,
+      patch,
+    }: {
+      id: string;
+      patch: {
+        title: string;
+        description: string;
+        tag: FeatureRequestTag | null;
+      };
+    }) => editFeatureRequest(id, patch),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['feature-requests'] });
+    },
+  });
+
   const items = listQuery.data?.items ?? [];
   const filteredItems = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -409,10 +545,19 @@ export function FeatureRequestsScreen({
     votePending: voteMutation.isPending,
     statusPending: statusMutation.isPending,
     deletePending: deleteMutation.isPending,
+    editPending: editMutation.isPending,
     onVote: (id: string) => voteMutation.mutate(id),
     onStatus: (id: string, status: FeatureRequestStatus) =>
       statusMutation.mutate({ id, status }),
     onDelete: (id: string) => deleteMutation.mutate(id),
+    onEdit: (
+      id: string,
+      patch: {
+        title: string;
+        description: string;
+        tag: FeatureRequestTag | null;
+      },
+    ) => editMutation.mutate({ id, patch }),
   };
 
   return (
