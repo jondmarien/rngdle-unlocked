@@ -65,6 +65,7 @@ export default defineHandler(async (request) => {
       title?: string;
       description?: string;
       tag?: string | null;
+      imageUrl?: string | null;
     }>(request);
     if (!parsed.ok) return parsed.response;
 
@@ -78,6 +79,7 @@ export default defineHandler(async (request) => {
       title: validated.title,
       description: validated.description,
       tag: validated.tag,
+      imageUrl: validated.imageUrl,
     });
     log.info('created', { id: item.id, userId: me.id });
     return Response.json({ item }, { status: 201 });

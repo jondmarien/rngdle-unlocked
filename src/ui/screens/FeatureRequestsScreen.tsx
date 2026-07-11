@@ -8,6 +8,7 @@ import {
   fetchFeatureRequests,
   patchFeatureRequestStatus,
   submitFeatureRequest,
+  uploadFeatureRequestImage,
   upvoteFeatureRequest,
   type FeatureRequestItem,
   type FeatureRequestSort,
@@ -230,6 +231,21 @@ function FeatureRequestCard({
               <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-sm text-(--prose-2)">
                 {item.description}
               </p>
+              {item.imageUrl ? (
+                <a
+                  href={item.imageUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-2 block max-w-xs"
+                >
+                  <img
+                    src={item.imageUrl}
+                    alt=""
+                    loading="lazy"
+                    className="max-h-28 w-auto rounded-md border border-(--outline) object-cover"
+                  />
+                </a>
+              ) : null}
             </>
           )}
           <p className="mt-1 text-[11px] text-(--prose-3)">
@@ -400,6 +416,8 @@ export function FeatureRequestsScreen({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [tag, setTag] = useState<FeatureRequestTag | ''>('new_feature');
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [uploadBusy, setUploadBusy] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [openShipped, setOpenShipped] = useState(false);
   const [openDeclined, setOpenDeclined] = useState(false);
@@ -416,6 +434,7 @@ export function FeatureRequestsScreen({
       setTitle('');
       setDescription('');
       setTag('new_feature');
+      setImageUrl(null);
       setFormError(null);
       void queryClient.invalidateQueries({ queryKey: ['feature-requests'] });
     },
@@ -579,6 +598,7 @@ export function FeatureRequestsScreen({
             title,
             description,
             tag: tag || null,
+            imageUrl,
           });
         }}
       >
@@ -638,6 +658,46 @@ export function FeatureRequestsScreen({
             required
           />
         </label>
+        <label className="block text-xs font-semibold text-(--prose-2)">
+          Screenshot (optional, max 2MB)
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            className="mt-1 block w-full text-sm text-(--prose-2)"
+            disabled={uploadBusy || submitMutation.isPending}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = '';
+              if (!file) return;
+              setFormError(null);
+              setUploadBusy(true);
+              void uploadFeatureRequestImage(file)
+                .then(({ url }) => setImageUrl(url))
+                .catch((err) =>
+                  setFormError(
+                    err instanceof Error ? err.message : 'Upload failed',
+                  ),
+                )
+                .finally(() => setUploadBusy(false));
+            }}
+          />
+        </label>
+        {imageUrl && (
+          <div className="flex items-start gap-2">
+            <img
+              src={imageUrl}
+              alt=""
+              className="max-h-24 rounded-md border border-(--outline) object-cover"
+            />
+            <button
+              type="button"
+              className="text-xs font-semibold text-(--prose-3) underline"
+              onClick={() => setImageUrl(null)}
+            >
+              Remove
+            </button>
+          </div>
+        )}
         {formError && (
           <p className="text-sm text-red-700 dark:text-red-400">{formError}</p>
         )}

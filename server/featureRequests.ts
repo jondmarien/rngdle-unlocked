@@ -37,6 +37,7 @@ export type FeatureRequestItem = {
   description: string;
   status: string;
   tag: string | null;
+  imageUrl: string | null;
   createdAt: string;
   voteCount: number;
   votedByMe: boolean;
@@ -59,8 +60,15 @@ export function validateFeatureRequestBody(input: {
   title?: string;
   description?: string;
   tag?: string | null;
+  imageUrl?: string | null;
 }):
-  | { ok: true; title: string; description: string; tag: FeatureRequestTag | null }
+  | {
+      ok: true;
+      title: string;
+      description: string;
+      tag: FeatureRequestTag | null;
+      imageUrl: string | null;
+    }
   | { ok: false; error: string } {
   const title = input.title?.trim() ?? '';
   const description = input.description?.trim() ?? '';
@@ -84,11 +92,23 @@ export function validateFeatureRequestBody(input: {
     }
     tag = t;
   }
+  let imageUrl: string | null = null;
+  if (input.imageUrl != null && String(input.imageUrl).trim() !== '') {
+    const u = String(input.imageUrl).trim();
+    if (!/^https:\/\/.+\.blob\.vercel-storage\.com\//i.test(u)) {
+      return { ok: false, error: 'imageUrl must be a Vercel Blob URL' };
+    }
+    if (u.length > 2048) {
+      return { ok: false, error: 'imageUrl too long' };
+    }
+    imageUrl = u;
+  }
   return {
     ok: true,
     title: title.slice(0, FEATURE_TITLE_MAX),
     description: description.slice(0, FEATURE_DESC_MAX),
     tag,
+    imageUrl,
   };
 }
 
@@ -113,6 +133,7 @@ export async function listFeatureRequests(
       description: featureRequests.description,
       status: featureRequests.status,
       tag: featureRequests.tag,
+      imageUrl: featureRequests.imageUrl,
       createdAt: featureRequests.createdAt,
       voteCount,
       username: user.username,
@@ -131,6 +152,7 @@ export async function listFeatureRequests(
       featureRequests.description,
       featureRequests.status,
       featureRequests.tag,
+      featureRequests.imageUrl,
       featureRequests.createdAt,
       user.username,
       user.name,
@@ -158,6 +180,7 @@ export async function listFeatureRequests(
     description: r.description,
     status: r.status,
     tag: r.tag ?? null,
+    imageUrl: r.imageUrl ?? null,
     createdAt:
       r.createdAt instanceof Date
         ? r.createdAt.toISOString()
@@ -178,6 +201,7 @@ export async function submitFeatureRequest(
     title: string;
     description: string;
     tag?: FeatureRequestTag | null;
+    imageUrl?: string | null;
   },
 ): Promise<FeatureRequestItem> {
   const id = crypto.randomUUID();
@@ -188,6 +212,7 @@ export async function submitFeatureRequest(
     description: opts.description,
     status: 'submitted',
     tag: opts.tag ?? null,
+    imageUrl: opts.imageUrl ?? null,
   });
 
   const [row] = await db
@@ -197,6 +222,7 @@ export async function submitFeatureRequest(
       description: featureRequests.description,
       status: featureRequests.status,
       tag: featureRequests.tag,
+      imageUrl: featureRequests.imageUrl,
       createdAt: featureRequests.createdAt,
       username: user.username,
       name: user.name,
@@ -214,6 +240,7 @@ export async function submitFeatureRequest(
     description: row!.description,
     status: row!.status,
     tag: row!.tag ?? null,
+    imageUrl: row!.imageUrl ?? null,
     createdAt:
       row!.createdAt instanceof Date
         ? row!.createdAt.toISOString()
@@ -310,6 +337,7 @@ export async function updateFeatureRequest(
       description: featureRequests.description,
       status: featureRequests.status,
       tag: featureRequests.tag,
+      imageUrl: featureRequests.imageUrl,
       createdAt: featureRequests.createdAt,
       username: user.username,
       name: user.name,
@@ -339,6 +367,7 @@ export async function updateFeatureRequest(
       description: full!.description,
       status: full!.status,
       tag: full!.tag ?? null,
+      imageUrl: full!.imageUrl ?? null,
       createdAt:
         full!.createdAt instanceof Date
           ? full!.createdAt.toISOString()
