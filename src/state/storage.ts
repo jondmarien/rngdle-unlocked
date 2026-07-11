@@ -41,7 +41,8 @@ export type ExportPayload = {
 
 export const DEFAULT_SETTINGS: AppSettings = {
   theme: 'system',
-  shareShowRollCount: false,
+  /** Default on; include lifetime roll count on Discord share text. */
+  shareShowRollCount: true,
   soundEnabled: false,
   confettiEnabled: true,
   /** Default on; cracked-screen + heavy shake on trash settles. */
@@ -53,6 +54,49 @@ export const DEFAULT_SETTINGS: AppSettings = {
   /** Default on; hide Latest runs rail / mobile list under Settings. */
   showLatestRuns: true,
 };
+
+type SettingsMigrations = {
+  /** Presence-check backfill for shareShowRollCount default-on. */
+  shareShowRollCountPresence?: boolean;
+};
+
+/**
+ * One-time: if raw settings JSON never had `shareShowRollCount`, turn it on.
+ * Explicit `false` (user opted out) is preserved. Presence-check, not value-check.
+ */
+export function migrateShareShowRollCountPresence(
+  rawSettingsJson: string | null,
+): Partial<AppSettings> | null {
+  if (typeof localStorage === 'undefined') return null;
+  const migRaw = localStorage.getItem(STORAGE_KEYS.migrations);
+  let mig: SettingsMigrations = {};
+  if (migRaw != null) {
+    try {
+      mig = JSON.parse(migRaw) as SettingsMigrations;
+    } catch {
+      mig = {};
+    }
+  }
+  if (mig.shareShowRollCountPresence) return null;
+
+  let patch: Partial<AppSettings> | null = null;
+  if (rawSettingsJson != null) {
+    try {
+      const raw = JSON.parse(rawSettingsJson) as Record<string, unknown>;
+      if (raw && typeof raw === 'object' && !('shareShowRollCount' in raw)) {
+        patch = { shareShowRollCount: true };
+      }
+    } catch {
+      /* corrupt settings — leave alone; DEFAULT_SETTINGS applies on merge */
+    }
+  }
+  // No settings key at all → DEFAULT_SETTINGS already true; still mark done.
+  writeJSON(STORAGE_KEYS.migrations, {
+    ...mig,
+    shareShowRollCountPresence: true,
+  });
+  return patch;
+}
 
 export function defaultState(): PersistedState {
   return {
@@ -99,9 +143,15 @@ export function loadState(): PersistedState {
   const collectionRaw = readJSON<CollectionEntry[]>(KEYS.collection, []);
   const collectionIn = Array.isArray(collectionRaw) ? collectionRaw : [];
   const collection = backfillCollectionTimestamps(collectionIn, history);
+  const rawSettingsJson =
+    typeof localStorage !== 'undefined'
+      ? localStorage.getItem(KEYS.settings)
+      : null;
+  const shareRollPatch = migrateShareShowRollCountPresence(rawSettingsJson);
   const settings = {
     ...DEFAULT_SETTINGS,
     ...readJSON<Partial<AppSettings>>(KEYS.settings, {}),
+    ...shareRollPatch,
   };
   const stats = finalizeStatsFromHistory(
     {
@@ -121,8 +171,8 @@ export function loadState(): PersistedState {
     settings,
     stats,
   };
-  // Persist retroactive timestamps so Codex keeps them offline
-  if (collectionNeedsPersist(collectionIn, collection)) {
+  // Persist retroactive timestamps / share-roll migration so prefs stick offline
+  if (collectionNeedsPersist(collectionIn, collection) || shareRollPatch) {
     saveState(state);
   }
   return state;
@@ -229,6 +279,7 @@ export function clearState(): void {
     localStorage.removeItem(key);
   }
   localStorage.removeItem(STORAGE_KEYS.syncMeta);
+  localStorage.removeItem(STORAGE_KEYS.migrations);
 }
 
 export function mergeCollection(

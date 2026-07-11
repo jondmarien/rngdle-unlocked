@@ -6,11 +6,14 @@ import {
   defaultState,
   loadState,
   mergeCollection,
+  migrateShareShowRollCountPresence,
   parseImportPayload,
   prependHistory,
   saveState,
+  DEFAULT_SETTINGS,
 } from './storage';
 import type { RollResult } from '../game/types';
+import { STORAGE_KEYS } from '../lib/storage-keys';
 
 function installMemoryLocalStorage(): void {
   const map = new Map<string, string>();
@@ -180,5 +183,33 @@ describe('storage', () => {
     const restored = parseImportPayload(payload);
     expect(restored.lifetimeRollCount).toBe(42);
     expect(restored.settings.soundEnabled).toBe(true);
+  });
+
+  it('defaults shareShowRollCount to true for new installs', () => {
+    expect(DEFAULT_SETTINGS.shareShowRollCount).toBe(true);
+    expect(loadState().settings.shareShowRollCount).toBe(true);
+  });
+
+  it('presence-migrates shareShowRollCount when key absent from raw JSON', () => {
+    localStorage.setItem(
+      STORAGE_KEYS.settings,
+      JSON.stringify({ theme: 'dark', soundEnabled: true }),
+    );
+    const loaded = loadState();
+    expect(loaded.settings.shareShowRollCount).toBe(true);
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEYS.settings)!);
+    expect(raw.shareShowRollCount).toBe(true);
+    const mig = JSON.parse(localStorage.getItem(STORAGE_KEYS.migrations)!);
+    expect(mig.shareShowRollCountPresence).toBe(true);
+  });
+
+  it('preserves explicit shareShowRollCount false opt-out', () => {
+    localStorage.setItem(
+      STORAGE_KEYS.settings,
+      JSON.stringify({ theme: 'dark', shareShowRollCount: false }),
+    );
+    const loaded = loadState();
+    expect(loaded.settings.shareShowRollCount).toBe(false);
+    expect(migrateShareShowRollCountPresence(null)).toBe(null);
   });
 });

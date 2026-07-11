@@ -19,4 +19,9 @@ export const STORAGE_KEYS = {
   onboarding: `${STORAGE_PREFIX}onboarding`,
   /** Last sync ack cursor + acked roll/badge ids for delta pushes. */
   syncMeta: `${STORAGE_PREFIX}syncMeta`,
+  /**
+   * One-shot client migrations (e.g. shareShowRollCount presence backfill).
+   * Separate from settings so migration flags are not confused with prefs.
+   */
+  migrations: `${STORAGE_PREFIX}migrations`,
 } as const;
