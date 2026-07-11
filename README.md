@@ -8,7 +8,7 @@ Inspired by the daily number-game genre, but **unlocked**: roll as often as you 
 
 **[Live Site](https://rngdle-unlocked.chron0.tech)**
 
-[![Version](https://img.shields.io/badge/version-0.11.1-8b5cf6)](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.11.1)
+[![Version](https://img.shields.io/badge/version-0.12.0-8b5cf6)](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.12.0)
 [![React 19](https://img.shields.io/badge/UI-React_19-61dafb?logo=react&logoColor=black)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/lang-TypeScript_7-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite 6](https://img.shields.io/badge/build-Vite_Plus-646cff?logo=vite&logoColor=white)](https://vitejs.dev)
@@ -27,7 +27,7 @@ Inspired by the daily number-game genre, but **unlocked**: roll as often as you 
 
 ## 💡 What is this?
 
-**RNGdle Unlocked** is a browser game: roll an integer from **0–1,000,000**, earn **entropy points (EP)** and **badges** from number properties, climb a **journey** of lifetime milestones, and share rolls to Discord.
+**RNGdle Unlocked** is a browser game: roll an integer from **0–1,000,000**, earn **entropy points (EP)** and **badges** from number properties, climb **Journey** (roll-count) and **Lifetime EP** milestone seals, and share rolls to Discord.
 
 Unlike a classic daily lock, you can roll **unlimited** times. Progress defaults to **localStorage** on your device. Optional **cloud social** (accounts, username, auto-sync, dual leaderboards, follows/feed, challenges, attestation seals, vanity share URLs + OG images) runs on **Vercel serverless + Neon Postgres + Better Auth**.
 
@@ -425,6 +425,7 @@ The Account screen times out after a few seconds and shows the sign-in form. Che
 | Friends board filter + `/friends` tab                                     | ✅ Shipped (`v0.10.2`)                                                            |
 | Delta cloud sync + OG PNG fix + sync quota stopgap                        | ✅ Shipped (`v0.11.0`)                                                            |
 | Share seals toggle + Features tags/edit/screenshots + UI polish           | ✅ Shipped (`v0.11.1`)                                                            |
+| Lifetime EP badges + abbreviate large numbers setting                     | ✅ Shipped (`v0.12.0`)                                                            |
 | Server Ranked free play (`/api/ranked-roll`)                              | ✅ Shipped                                                                        |
 | Profiles (vanity + avatars) + follows                                     | ✅ Shipped                                                                        |
 | Activity unlocks + Ranked crown msgs + overtake notifs                    | ✅ Shipped                                                                        |

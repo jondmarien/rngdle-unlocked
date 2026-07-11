@@ -12,10 +12,10 @@ if (!process.env.DATABASE_URL) {
 const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
-const title = 'New Update! v0.11.1 — Share seals, Features board upgrades';
+const title = 'New Update! v0.12.0 — Lifetime EP seals + compact numbers';
 const body = [
-  'Discord shares can list your unlocked seals (on by default), and the Features board now supports categories, editing your own requests, and optional screenshots.',
-  'Also: badge art lightbox on Profile/Codex, Latest runs eye preference sticks, and journey unlock toasts show the right art.',
+  'Lifetime EP badges are live — 22 seals for the entropy you have earned over time, with a new Entropy Treasury mastery when you collect them all.',
+  'Optional Settings toggle abbreviates big EP and roll counts (hover for the exact number). Features edits are smoother for admins, and Discord share previews should refresh more reliably.',
   'Read the full player notes: https://rngdle-unlocked.chron0.tech/whats-new',
   'Open: /whats-new',
 ].join(' ');

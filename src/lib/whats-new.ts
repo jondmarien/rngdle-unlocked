@@ -32,6 +32,28 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Lifetime EP seals + compact numbers',
+    date: '2026-07-10',
+    version: '0.12.0',
+    tags: ['Badges', 'Settings', 'Codex'],
+    content: [
+      {
+        body: 'A new Lifetime EP badge track rewards how much entropy you have earned over time — alongside Journey’s roll-count path — plus an optional compact number display.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'More seals to chase, cleaner big numbers when you want them.',
+        bullets: [
+          '**Lifetime EP badges** — 22 milestone seals for cumulative EP (Codex + Profile + unlock toast). Past tiers unlock cosmetically on first load; new crossings still grant lifetime EP.',
+          '**Entropy Treasury** — finish every Lifetime EP seal for a new section mastery; Codex Absolute now needs these too.',
+          '**Abbreviate large numbers** — Settings toggle (off by default) shows 4.8M-style EP/roll counts; hover for the exact figure.',
+          '**Features edits** — tagging and saving requests should stop hitting rate limits for admins; clearer errors if you are limited.',
+          '**Discord previews** — share/profile embeds should refresh the image card more reliably.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Share seals, Features board upgrades',
     date: '2026-07-10',
     version: '0.11.1',
