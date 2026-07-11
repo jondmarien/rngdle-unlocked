@@ -57,6 +57,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   latestRunsSpoilersHidden: false,
   /** Default on; include collection seals on Discord share. */
   shareShowUnlockedBadges: true,
+  /** Default off — opt-in compact EP / roll counts. */
+  abbreviateLargeNumbers: false,
 };
 
 type SettingsMigrations = {

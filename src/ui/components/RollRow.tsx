@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { RarityTier } from '../../game';
 import { formatDateTime, formatRelative } from '../../lib/format';
+import { FormattedCount } from './FormattedCount';
 import { RarityBadge } from './RarityBadge';
 
 export type RollLaneKind = 'free' | 'ranked' | 'challenge';
@@ -77,7 +78,7 @@ export function RollMetaLine({
       {lane && <RollLaneChip lane={lane} />}
       <RarityBadge rarity={rarity} />
       <span className="font-semibold text-amber-700 dark:text-amber-400">
-        {totalEP.toLocaleString()} EP
+        <FormattedCount value={totalEP} /> EP
       </span>
       {rolledAt ? <RelativeTime iso={rolledAt} /> : null}
       {attested ? (

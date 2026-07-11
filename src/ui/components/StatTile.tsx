@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 /** Shared stat tile — replaces the per-screen Stat / Tile / StatCard copies. */
 export function StatTile({
   label,
@@ -7,7 +9,7 @@ export function StatTile({
   labelClassName = 'text-sm font-semibold text-(--prose-2)',
 }: {
   label: string;
-  value: string;
+  value: ReactNode;
   sub?: string;
   /** Border/background classes (accent-themed on Profile). */
   className?: string;

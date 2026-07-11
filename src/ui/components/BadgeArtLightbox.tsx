@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { FormattedCount } from './FormattedCount';
 
 export type BadgeArtLightboxItem = {
   image: string;
@@ -66,7 +67,7 @@ export function BadgeArtLightbox({
           )}
           {item.ep != null && item.ep > 0 && (
             <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
-              +{item.ep.toLocaleString()} life EP
+              +<FormattedCount value={item.ep} /> life EP
             </p>
           )}
         </div>

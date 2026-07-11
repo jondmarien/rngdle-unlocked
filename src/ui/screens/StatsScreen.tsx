@@ -3,6 +3,7 @@ import type { RarityTier } from '../../game';
 import { RARITY_LABELS, RARITY_ORDER, localDateKey } from '../../game';
 import { RARITY_BAR } from '../../lib/badge-theme';
 import { useGame } from '../../state/GameProvider';
+import { FormattedCount } from '../components/FormattedCount';
 import { StatTile } from '../components/StatTile';
 
 /** Feature 8 — rarity histogram, EP/hour, streak calendar. */
@@ -72,12 +73,18 @@ export function StatsScreen() {
       </div>
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <StatTile label="Lifetime EP" value={lifetimeEP.toLocaleString()} />
+        <StatTile
+          label="Lifetime EP"
+          value={<FormattedCount value={lifetimeEP} />}
+        />
         <StatTile
           label="Lifetime rolls"
-          value={lifetimeRollCount.toLocaleString()}
+          value={<FormattedCount value={lifetimeRollCount} />}
         />
-        <StatTile label="Journey EP" value={journeyEP.toLocaleString()} />
+        <StatTile
+          label="Journey EP"
+          value={<FormattedCount value={journeyEP} />}
+        />
         <StatTile
           label="EP / hour"
           value={

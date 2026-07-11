@@ -16,6 +16,7 @@ import {
   BadgeArtLightbox,
   type BadgeArtLightboxItem,
 } from '../components/BadgeArtLightbox';
+import { FormattedCount } from '../components/FormattedCount';
 
 type FilterId = BadgeFamily | 'all' | 'secret' | 'new';
 
@@ -514,7 +515,13 @@ export function CollectionScreen() {
                       </p>
                       <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 text-sm text-(--prose-2)">
                         <span>
-                          {has ? `+${b.ep.toLocaleString()} EP` : 'Locked'}
+                          {has ? (
+                            <>
+                              +<FormattedCount value={b.ep} /> EP
+                            </>
+                          ) : (
+                            'Locked'
+                          )}
                         </span>
                         {(age || when) && (
                           <time
@@ -626,9 +633,13 @@ export function CollectionScreen() {
                       </p>
                       <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 text-sm text-(--prose-2)">
                         <span>
-                          {has
-                            ? `+${b.ep.toLocaleString()} life EP`
-                            : 'Locked milestone'}
+                          {has ? (
+                            <>
+                              +<FormattedCount value={b.ep} /> life EP
+                            </>
+                          ) : (
+                            'Locked milestone'
+                          )}
                         </span>
                         {(age || when) && (
                           <time
@@ -741,9 +752,13 @@ export function CollectionScreen() {
                       </p>
                       <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 text-sm text-(--prose-2)">
                         <span>
-                          {has
-                            ? `+${b.ep.toLocaleString()} life EP`
-                            : 'Locked milestone'}
+                          {has ? (
+                            <>
+                              +<FormattedCount value={b.ep} /> life EP
+                            </>
+                          ) : (
+                            'Locked milestone'
+                          )}
                         </span>
                         {(age || when) && (
                           <time
@@ -903,9 +918,13 @@ function SecretCard({
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
               <span className="font-semibold text-amber-800 dark:text-amber-300">
-                {has
-                  ? `+${secret.ep.toLocaleString()} life EP`
-                  : `${progress.have}/${progress.total} section secrets`}
+                {has ? (
+                  <>
+                    +<FormattedCount value={secret.ep} /> life EP
+                  </>
+                ) : (
+                  `${progress.have}/${progress.total} section secrets`
+                )}
               </span>
               {(ageLabel || when) && (
                 <time
@@ -976,11 +995,15 @@ function SecretCard({
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
           <span className="font-semibold text-(--prose)">
-            {has
-              ? `+${secret.ep.toLocaleString()} life EP`
-              : isStreak
-                ? 'Locked'
-                : `${progress.have} / ${progress.total} badges`}
+            {has ? (
+              <>
+                +<FormattedCount value={secret.ep} /> life EP
+              </>
+            ) : isStreak ? (
+              'Locked'
+            ) : (
+              `${progress.have} / ${progress.total} badges`
+            )}
           </span>
           {(ageLabel || when) && (
             <time

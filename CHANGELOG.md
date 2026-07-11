@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Lifetime EP badges** — 22 EP-scaled milestone seals (`family: lifetime`, art under `public/lifetime-ep/`) mirroring Journey unlock/toast/Codex/Profile/lightbox patterns. Future crossings grant lifetime EP; one-shot cosmetic backfill for already-reached tiers (toast shown, no EP). Section mastery Entropy Treasury + Codex Absolute now also requires all Lifetime EP seals.
+- **Abbreviate large numbers** — opt-in Settings toggle (`abbreviateLargeNumbers`, default off). Compact EP/roll counts (e.g. 4.8M) with full value on hover via `title`.
 
 ### Fixed
 

@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { formatCount } from '../../lib/format';
+import { useGameSettings } from '../../state/GameProvider';
 
 function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined') return false;
@@ -25,6 +27,8 @@ export function CountUpEP({
   durationMs?: number;
   className?: string;
 }) {
+  const { settings } = useGameSettings();
+  const compact = settings.abbreviateLargeNumbers === true;
   const [shown, setShown] = useState(0);
   const rafRef = useRef(0);
   const lastRunRef = useRef<{ key: number; value: number } | null>(null);
@@ -89,11 +93,15 @@ export function CountUpEP({
     );
   }
 
+  const full = formatCount(shown);
+  const display = formatCount(shown, { compact });
+
   return (
     <span
       className={`mono-number inline-flex rounded-full border border-(--outline) bg-(--surface) px-3 py-1 text-base font-bold text-amber-700 dark:text-amber-300 ${className}`}
+      title={compact && display !== full ? full : undefined}
     >
-      {shown.toLocaleString()} EP
+      {display} EP
     </span>
   );
 }

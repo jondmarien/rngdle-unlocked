@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { APP_VERSION } from '../../lib/app-version';
 import { useGame, useGameSettings } from '../../state/GameProvider';
+import { FormattedCount } from '../components/FormattedCount';
 import { ThemeToggle } from '../layout/ThemeToggle';
 
 export function SettingsScreen() {
@@ -24,6 +25,7 @@ export function SettingsScreen() {
     setAutoShareHighRarity,
     setShowLatestRuns,
     setShareShowUnlockedBadges,
+    setAbbreviateLargeNumbers,
   } = useGameSettings();
   const [confirm, setConfirm] = useState(false);
   const [importMsg, setImportMsg] = useState<string | null>(null);
@@ -111,6 +113,24 @@ export function SettingsScreen() {
 
       <section className="space-y-2">
         <h2 className="text-xs font-bold uppercase tracking-wider text-(--prose-3)">
+          Display
+        </h2>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={settings.abbreviateLargeNumbers === true}
+            onChange={(e) => setAbbreviateLargeNumbers(e.target.checked)}
+          />
+          Abbreviate large numbers
+        </label>
+        <p className="text-xs text-(--prose-3)">
+          When on, big EP and roll counts show as 4.8M-style shorthand. Hover or
+          long-press the value for the exact figure. Default off.
+        </p>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-(--prose-3)">
           Share
         </h2>
         <label className="flex items-center gap-2 text-sm">
@@ -167,9 +187,15 @@ export function SettingsScreen() {
         <h2 className="text-xs font-bold uppercase tracking-wider text-(--prose-3)">
           Stats
         </h2>
-        <p>Lifetime rolls: {lifetimeRollCount.toLocaleString()}</p>
-        <p>Lifetime EP: {lifetimeEP.toLocaleString()}</p>
-        <p>Journey EP: {journeyEP.toLocaleString()}</p>
+        <p>
+          Lifetime rolls: <FormattedCount value={lifetimeRollCount} />
+        </p>
+        <p>
+          Lifetime EP: <FormattedCount value={lifetimeEP} />
+        </p>
+        <p>
+          Journey EP: <FormattedCount value={journeyEP} />
+        </p>
         <p>
           Day streak: {stats.dayStreak} (best {stats.bestDayStreak})
         </p>

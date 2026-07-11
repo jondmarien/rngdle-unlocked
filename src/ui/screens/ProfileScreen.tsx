@@ -31,6 +31,7 @@ import {
   BadgeArtLightbox,
   type BadgeArtLightboxItem,
 } from '../components/BadgeArtLightbox';
+import { FormattedCount } from '../components/FormattedCount';
 import { RarityBadge } from '../components/RarityBadge';
 import { SectionHeader } from '../components/SectionHeader';
 import { StatTile } from '../components/StatTile';
@@ -456,12 +457,12 @@ export function ProfileScreen({
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <StatTile
           label="Lifetime EP"
-          value={profile.lifetimeEP.toLocaleString()}
+          value={<FormattedCount value={profile.lifetimeEP} />}
           className={theme.soft}
         />
         <StatTile
           label="Rolls"
-          value={profile.lifetimeRollCount.toLocaleString()}
+          value={<FormattedCount value={profile.lifetimeRollCount} />}
           className={theme.soft}
         />
         <StatTile
@@ -471,7 +472,7 @@ export function ProfileScreen({
         />
         <StatTile
           label="Journey EP"
-          value={profile.journeyEP.toLocaleString()}
+          value={<FormattedCount value={profile.journeyEP} />}
           className={theme.soft}
         />
       </div>
@@ -496,19 +497,19 @@ export function ProfileScreen({
                 <tr className="border-t border-(--outline)">
                   <td className="py-1.5 pr-2 text-(--prose-2)">Lifetime EP</td>
                   <td className="mono-number py-1.5 pr-2 font-semibold">
-                    {profile.lifetimeEP.toLocaleString()}
+                    <FormattedCount value={profile.lifetimeEP} />
                   </td>
                   <td className="mono-number py-1.5 font-semibold">
-                    {myProfile.lifetimeEP.toLocaleString()}
+                    <FormattedCount value={myProfile.lifetimeEP} />
                   </td>
                 </tr>
                 <tr className="border-t border-(--outline)">
                   <td className="py-1.5 pr-2 text-(--prose-2)">Rolls</td>
                   <td className="mono-number py-1.5 pr-2 font-semibold">
-                    {profile.lifetimeRollCount.toLocaleString()}
+                    <FormattedCount value={profile.lifetimeRollCount} />
                   </td>
                   <td className="mono-number py-1.5 font-semibold">
-                    {myProfile.lifetimeRollCount.toLocaleString()}
+                    <FormattedCount value={myProfile.lifetimeRollCount} />
                   </td>
                 </tr>
                 <tr className="border-t border-(--outline)">
@@ -518,7 +519,7 @@ export function ProfileScreen({
                       <span className="mono-number font-semibold">
                         {best.number.toLocaleString()}
                         <span className="ml-1 text-[11px] font-normal text-(--prose-3)">
-                          ({best.totalEP.toLocaleString()} EP)
+                          (<FormattedCount value={best.totalEP} /> EP)
                         </span>
                       </span>
                     ) : (
@@ -530,7 +531,10 @@ export function ProfileScreen({
                       <span className="mono-number font-semibold">
                         {myProfile.stats.bestRoll.number.toLocaleString()}
                         <span className="ml-1 text-[11px] font-normal text-(--prose-3)">
-                          ({myProfile.stats.bestRoll.totalEP.toLocaleString()}{' '}
+                          (
+                          <FormattedCount
+                            value={myProfile.stats.bestRoll.totalEP}
+                          />{' '}
                           EP)
                         </span>
                       </span>
@@ -1104,7 +1108,7 @@ export function ProfileScreen({
                             <div className="mt-2 flex flex-wrap items-center gap-2">
                               <RarityBadge rarity={coerceRarity(r.rarity)} />
                               <span className="text-sm font-semibold text-amber-700 dark:text-amber-400">
-                                {r.totalEP.toLocaleString()} EP
+                                <FormattedCount value={r.totalEP} /> EP
                               </span>
                               <span className="text-sm text-(--prose-2)">
                                 Top {topPercentFromEP(r.totalEP)}%

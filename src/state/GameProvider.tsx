@@ -124,6 +124,7 @@ type GameSettingsValue = {
   setShowLatestRuns: (v: boolean) => void;
   setLatestRunsSpoilersHidden: (v: boolean) => void;
   setShareShowUnlockedBadges: (v: boolean) => void;
+  setAbbreviateLargeNumbers: (v: boolean) => void;
 };
 
 const GameContext = createContext<GameContextValue | null>(null);
@@ -786,6 +787,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
         dispatchSettings({ type: 'setLatestRunsSpoilersHidden', value }),
       setShareShowUnlockedBadges: (value) =>
         dispatchSettings({ type: 'setShareShowUnlockedBadges', value }),
+      setAbbreviateLargeNumbers: (value) =>
+        dispatchSettings({ type: 'setAbbreviateLargeNumbers', value }),
     }),
     [state.settings, dispatchSettings],
   );

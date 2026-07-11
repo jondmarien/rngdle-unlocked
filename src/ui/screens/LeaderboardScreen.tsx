@@ -19,6 +19,7 @@ import {
   unfollowUser,
 } from '../../lib/notifications-api';
 import { FindPlayers } from '../components/FindPlayers';
+import { FormattedCount } from '../components/FormattedCount';
 import { QueryErrorBanner } from '../components/QueryErrorBanner';
 import { RarityBadge } from '../components/RarityBadge';
 import {
@@ -407,8 +408,8 @@ export function LeaderboardScreen({
                   </span>
                 </span>
                 <span className="text-sm text-(--prose-2)">
-                  {arcadeMe.bestRunScore.toLocaleString()} Digits ·{' '}
-                  {arcadeMe.totalRunsCompleted.toLocaleString()} runs
+                  <FormattedCount value={arcadeMe.bestRunScore} /> Digits ·{' '}
+                  <FormattedCount value={arcadeMe.totalRunsCompleted} /> runs
                 </span>
               </div>
             </div>
@@ -479,10 +480,10 @@ export function LeaderboardScreen({
                   <div className="flex flex-wrap items-center gap-2">
                     <div className="text-sm text-(--prose-2)">
                       <span className="font-semibold text-amber-700 dark:text-amber-400">
-                        {e.bestRunScore.toLocaleString()} Digits
+                        <FormattedCount value={e.bestRunScore} /> Digits
                       </span>
                       {' · '}
-                      {e.totalRunsCompleted.toLocaleString()} runs
+                      <FormattedCount value={e.totalRunsCompleted} /> runs
                     </div>
                     {session?.user && e.username && !isMe && (
                       <button
@@ -588,8 +589,8 @@ export function LeaderboardScreen({
                   </span>
                 </span>
                 <span className="text-sm text-(--prose-2)">
-                  {me.lifetimeEP.toLocaleString()} EP ·{' '}
-                  {me.lifetimeRollCount.toLocaleString()} rolls
+                  <FormattedCount value={me.lifetimeEP} /> EP ·{' '}
+                  <FormattedCount value={me.lifetimeRollCount} /> rolls
                 </span>
               </div>
             </div>
@@ -616,7 +617,7 @@ export function LeaderboardScreen({
                 </span>
                 <span className="text-sm text-(--prose-2)">
                   {bestMe.number.toLocaleString()} ·{' '}
-                  {bestMe.totalEP.toLocaleString()} EP
+                  <FormattedCount value={bestMe.totalEP} /> EP
                 </span>
               </div>
             </div>
@@ -712,10 +713,10 @@ export function LeaderboardScreen({
                     <div className="flex flex-wrap items-center gap-2">
                       <div className="text-sm text-(--prose-2)">
                         <span className="font-semibold text-amber-700 dark:text-amber-400">
-                          {e.lifetimeEP.toLocaleString()} EP
+                          <FormattedCount value={e.lifetimeEP} /> EP
                         </span>
                         {' · '}
-                        {e.lifetimeRollCount.toLocaleString()} rolls
+                        <FormattedCount value={e.lifetimeRollCount} /> rolls
                       </div>
                       {session?.user && e.username && !isMe && (
                         <button
@@ -798,7 +799,7 @@ export function LeaderboardScreen({
                       <div className="text-right text-sm text-(--prose-2)">
                         <RarityBadge rarity={coerceRarity(e.rarity)} />
                         <div className="font-semibold text-amber-700 dark:text-amber-400">
-                          {e.totalEP.toLocaleString()} EP
+                          <FormattedCount value={e.totalEP} /> EP
                         </div>
                       </div>
                       {session?.user && e.username && !isMe && (

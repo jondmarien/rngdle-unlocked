@@ -60,3 +60,18 @@ export function formatRelative(
   if (day < 7) return `${day}d ago`;
   return formatDateTimeCompact(iso);
 }
+
+const compactFormatter = new Intl.NumberFormat(undefined, {
+  notation: 'compact',
+  maximumFractionDigits: 1,
+});
+
+/**
+ * Format a count / EP total. When `compact` is true, uses locale compact
+ * notation (e.g. 4.8M); otherwise full grouping (e.g. 4,827,699).
+ */
+export function formatCount(n: number, opts?: { compact?: boolean }): string {
+  if (!Number.isFinite(n)) return String(n);
+  if (opts?.compact) return compactFormatter.format(n);
+  return n.toLocaleString();
+}

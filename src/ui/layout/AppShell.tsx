@@ -11,6 +11,7 @@ import {
 import { tabPath, type TabId } from '../../lib/routes';
 import { useIsAdmin } from '../../lib/useIsAdmin';
 import { useGame, useGameSettings } from '../../state/GameProvider';
+import { FormattedCount } from '../components/FormattedCount';
 import { ThemeToggle } from './ThemeToggle';
 
 export type { TabId };
@@ -134,8 +135,8 @@ export function AppShell({
               RNGdle Unlocked
             </a>
             <span className="text-sm text-(--prose-2)">
-              {lifetimeRollCount.toLocaleString()} rolls ·{' '}
-              {lifetimeEP.toLocaleString()} EP
+              <FormattedCount value={lifetimeRollCount} /> rolls ·{' '}
+              <FormattedCount value={lifetimeEP} /> EP
               {stats.dayStreak > 0 ? ` · ${stats.dayStreak}d streak` : ''}
               {stats.qualityStreak > 0
                 ? ` · ${stats.qualityStreak} quality`

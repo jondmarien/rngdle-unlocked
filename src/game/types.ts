@@ -117,6 +117,11 @@ export type AppSettings = {
    * Default on; localStorage only. Profile OG uses ?seals=1 when sharing with this on.
    */
   shareShowUnlockedBadges: boolean;
+  /**
+   * Abbreviate large EP / roll counts (e.g. 4.8M). Default off; localStorage only.
+   * Full value remains available via title/tooltip.
+   */
+  abbreviateLargeNumbers: boolean;
 };
 
 export type CollectionEntry = {

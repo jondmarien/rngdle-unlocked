@@ -11,6 +11,7 @@ import {
 import { profileAvatarSrc } from '../../lib/profile-avatars';
 import { accentStyles, normalizeAccent } from '../../lib/profile-theme';
 import type { TabId } from '../../lib/routes';
+import { FormattedCount } from '../components/FormattedCount';
 import { QueryErrorBanner } from '../components/QueryErrorBanner';
 
 export function FriendsScreen({
@@ -168,7 +169,7 @@ export function FriendsScreen({
                     </p>
                   ) : null}
                   <p className="mt-0.5 text-xs text-(--prose-3)">
-                    {ep.toLocaleString()} EP
+                    <FormattedCount value={ep} /> EP
                   </p>
                 </div>
               </div>
