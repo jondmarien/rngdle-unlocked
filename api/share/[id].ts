@@ -95,7 +95,7 @@ export default defineHandler(async (request) => {
     const code = row.shortCode || row.id;
     const handle = row.username || userHint || 'player';
     const spaUrl = `${origin}/s/${encodeURIComponent(handle)}/${encodeURIComponent(code)}`;
-    const ogImage = `${origin}/api/og?code=${encodeURIComponent(code)}&user=${encodeURIComponent(handle)}&n=${encodeURIComponent(String(row.number))}&r=${encodeURIComponent(String(row.rarity))}&ep=${encodeURIComponent(String(row.totalEp))}&u=${encodeURIComponent(handle)}`;
+    const ogImage = `${origin}/api/og?code=${encodeURIComponent(code)}&user=${encodeURIComponent(handle)}&n=${encodeURIComponent(String(row.number))}&r=${encodeURIComponent(String(row.rarity))}&ep=${encodeURIComponent(String(row.totalEp))}&u=${encodeURIComponent(handle)}&v=2`;
 
     return ogHtmlPage({
       title,

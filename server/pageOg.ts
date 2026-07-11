@@ -175,6 +175,8 @@ export function pageOgImageUrl(origin: string, slug: PageOgSlug): string {
     page: slug,
     headline: meta.cardHeadline,
     label: meta.cardLabel,
+    // Discord caches og:image by exact URL; bump when PNG pipeline changes.
+    v: '2',
   });
   return `${origin}/api/og?${q.toString()}`;
 }

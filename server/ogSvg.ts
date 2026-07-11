@@ -297,6 +297,22 @@ async function svgToPng(svg: string): Promise<Uint8Array> {
   return resvg.render().asPng();
 }
 
+async function resolveFallbackPngBytes(): Promise<Uint8Array | null> {
+  const candidates = [
+    join(process.cwd(), 'server', 'assets', 'og-fallback.png'),
+    join(here, 'assets', 'og-fallback.png'),
+    join(here, '..', '..', 'server', 'assets', 'og-fallback.png'),
+  ];
+  for (const path of candidates) {
+    try {
+      return new Uint8Array(await readFile(path));
+    } catch {
+      /* try next */
+    }
+  }
+  return null;
+}
+
 async function pngResponse(svg: string, maxAge: number): Promise<Response> {
   try {
     const png = await svgToPng(svg);
@@ -308,15 +324,25 @@ async function pngResponse(svg: string, maxAge: number): Promise<Response> {
       },
     });
   } catch (err) {
-    // Last-resort SVG so the endpoint still returns *something* if WASM fails.
-    log.error('png render fail; falling back to svg', {
+    // Never return SVG — Discord/Slack ignore it and cache a blank embed.
+    log.error('png render fail; serving static fallback', {
       err: err instanceof Error ? err.message : String(err),
     });
-    return new Response(svg, {
-      status: 200,
+    const fallback = await resolveFallbackPngBytes();
+    if (fallback) {
+      return new Response(Buffer.from(fallback), {
+        status: 200,
+        headers: {
+          'Content-Type': 'image/png',
+          'Cache-Control': `public, max-age=${maxAge}, s-maxage=${maxAge * 2}`,
+        },
+      });
+    }
+    return new Response('OG image unavailable', {
+      status: 503,
       headers: {
-        'Content-Type': 'image/svg+xml; charset=utf-8',
-        'Cache-Control': `public, max-age=${maxAge}, s-maxage=${maxAge * 2}`,
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'no-store',
       },
     });
   }

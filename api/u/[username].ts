@@ -127,7 +127,7 @@ export default defineHandler(async (request) => {
       .join(' · ');
 
     const sealsParam = url.searchParams.get('seals') === '1' ? '&seals=1' : '';
-    const ogImage = `${origin}/api/og?type=profile&u=${encodeURIComponent(handle)}&ep=${encodeURIComponent(String(row.lifetimeEp))}&badges=${encodeURIComponent(String(row.badgeCount))}&rolls=${encodeURIComponent(String(row.lifetimeRollCount))}&flair=${encodeURIComponent(row.profileFlair || '')}&name=${encodeURIComponent(row.name || '')}&accent=${encodeURIComponent(row.profileAccent || 'teal')}${sealsParam}`;
+    const ogImage = `${origin}/api/og?type=profile&u=${encodeURIComponent(handle)}&ep=${encodeURIComponent(String(row.lifetimeEp))}&badges=${encodeURIComponent(String(row.badgeCount))}&rolls=${encodeURIComponent(String(row.lifetimeRollCount))}&flair=${encodeURIComponent(row.profileFlair || '')}&name=${encodeURIComponent(row.name || '')}&accent=${encodeURIComponent(row.profileAccent || 'teal')}${sealsParam}&v=2`;
 
     return ogHtmlPage({
       title,

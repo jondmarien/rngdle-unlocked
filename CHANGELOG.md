@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Discord OG embeds** — bump `og:image` URLs with `v=2` so Discord’s image CDN re-fetches after the SVG→PNG fix; `/api/og` never returns SVG on render failure (static `server/assets/og-fallback.png` or 503).
+
 ## [0.11.1] - 2026-07-10
 
 ### Added
