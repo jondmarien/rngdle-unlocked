@@ -1,5 +1,10 @@
 import { useMemo, useState } from 'react';
-import { rarityRank, topPercentFromEP, type RollResult } from '../../game';
+import {
+  listUnlockedSeals,
+  rarityRank,
+  topPercentFromEP,
+  type RollResult,
+} from '../../game';
 import { useGame, useGameSettings } from '../../state/GameProvider';
 import { BadgePill } from '../components/BadgePill';
 import { BestRollCard } from '../components/BestRollCard';
@@ -125,8 +130,15 @@ export function HistoryScreen({
 }: {
   onGoAccount?: () => void;
 } = {}) {
-  const { history, lifetimeRollCount, stats } = useGame();
+  const { history, lifetimeRollCount, stats, collection } = useGame();
   const { settings } = useGameSettings();
+  const unlockedSealNames = useMemo(
+    () =>
+      settings.shareShowUnlockedBadges !== false
+        ? listUnlockedSeals(collection.map((c) => c.badgeId)).map((s) => s.name)
+        : [],
+    [collection, settings.shareShowUnlockedBadges],
+  );
   const [shareRoll, setShareRoll] = useState<RollResult | null>(null);
   const [replayRoll, setReplayRoll] = useState<RollResult | null>(null);
   const [sort, setSort] = useState<HistorySort>('newest');
@@ -358,6 +370,8 @@ export function HistoryScreen({
           roll={shareRoll}
           rollCount={lifetimeRollCount}
           showRollCount={settings.shareShowRollCount}
+          showUnlockedBadges={settings.shareShowUnlockedBadges !== false}
+          unlockedSealNames={unlockedSealNames}
           onClose={() => setShareRoll(null)}
           onGoAccount={onGoAccount}
         />

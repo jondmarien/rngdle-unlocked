@@ -3,6 +3,7 @@ import {
   contributeKeyEntropy,
   contributePointerEntropy,
   findChallengeRollForPeriod,
+  listUnlockedSeals,
   topPercentFromEP,
   type RollResult,
 } from '../../game';
@@ -55,6 +56,7 @@ export function HomeScreen({
     lifetimeRollCount,
     stats,
     history,
+    collection,
     fireCelebration,
     clearCelebration,
     rollMode,
@@ -63,6 +65,13 @@ export function HomeScreen({
     attestRoll,
   } = useGame();
   const { settings } = useGameSettings();
+  const unlockedSealNames = useMemo(
+    () =>
+      settings.shareShowUnlockedBadges !== false
+        ? listUnlockedSeals(collection.map((c) => c.badgeId)).map((s) => s.name)
+        : [],
+    [collection, settings.shareShowUnlockedBadges],
+  );
   const [shareRoll, setShareRoll] = useState<RollResult | null>(null);
   const [replayRoll, setReplayRoll] = useState<RollResult | null>(null);
   const [attestMsg, setAttestMsg] = useState<string | null>(null);
@@ -550,6 +559,8 @@ export function HomeScreen({
           roll={shareRoll}
           rollCount={lifetimeRollCount}
           showRollCount={settings.shareShowRollCount}
+          showUnlockedBadges={settings.shareShowUnlockedBadges !== false}
+          unlockedSealNames={unlockedSealNames}
           onClose={() => setShareRoll(null)}
           onGoAccount={onGoAccount}
         />

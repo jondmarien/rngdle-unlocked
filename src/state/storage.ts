@@ -55,6 +55,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   showLatestRuns: true,
   /** Default off — Latest runs results visible until eye toggle hides them. */
   latestRunsSpoilersHidden: false,
+  /** Default on; include collection seals on Discord share. */
+  shareShowUnlockedBadges: true,
 };
 
 type SettingsMigrations = {

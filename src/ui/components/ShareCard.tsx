@@ -18,12 +18,16 @@ export function SharePanel({
   roll,
   rollCount,
   showRollCount,
+  showUnlockedBadges = false,
+  unlockedSealNames = [],
   onClose,
   onGoAccount,
 }: {
   roll: RollResult;
   rollCount: number;
   showRollCount: boolean;
+  showUnlockedBadges?: boolean;
+  unlockedSealNames?: string[];
   onClose: () => void;
   onGoAccount?: () => void;
 }) {
@@ -47,6 +51,8 @@ export function SharePanel({
     rollCount,
     username,
     includePublicLink,
+    showUnlockedBadges,
+    unlockedSealNames,
   });
 
   useEffect(() => {
@@ -284,6 +290,18 @@ export function SharePanel({
                 </span>
               ))}
           </div>
+          {showUnlockedBadges && unlockedSealNames.length > 0 && (
+            <div className="flex flex-wrap justify-center gap-1 pt-1">
+              {unlockedSealNames.slice(0, 8).map((name) => (
+                <span
+                  key={name}
+                  className="rounded border border-amber-400/40 bg-amber-500/10 px-2 py-0.5 text-[10px] uppercase text-amber-900 dark:text-amber-200"
+                >
+                  {name}
+                </span>
+              ))}
+            </div>
+          )}
           {roll.badges.length > 0 && (
             <p className="pt-1 text-[10px] text-(--prose-3)">
               {roll.badges.length} badge

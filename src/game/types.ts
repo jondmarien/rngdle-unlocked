@@ -111,6 +111,11 @@ export type AppSettings = {
    * localStorage only.
    */
   latestRunsSpoilersHidden: boolean;
+  /**
+   * Include unlocked journey / secret / mastery seals on Discord share text + PNG.
+   * Default on; localStorage only. Profile OG uses ?seals=1 when sharing with this on.
+   */
+  shareShowUnlockedBadges: boolean;
 };
 
 export type CollectionEntry = {

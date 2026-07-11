@@ -104,3 +104,7 @@ export {
   streakSecretHits,
   sumStreakSecretEP,
 } from './streakSecrets.js';
+export {
+  listUnlockedSeals,
+  type UnlockedSeal,
+} from './unlockedSeals.js';

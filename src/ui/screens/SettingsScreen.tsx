@@ -23,6 +23,7 @@ export function SettingsScreen() {
     setAutoScrollBadges,
     setAutoShareHighRarity,
     setShowLatestRuns,
+    setShareShowUnlockedBadges,
   } = useGameSettings();
   const [confirm, setConfirm] = useState(false);
   const [importMsg, setImportMsg] = useState<string | null>(null);
@@ -120,10 +121,20 @@ export function SettingsScreen() {
           />
           Include lifetime roll count on share cards
         </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={settings.shareShowUnlockedBadges !== false}
+            onChange={(e) => setShareShowUnlockedBadges(e.target.checked)}
+          />
+          Include unlocked secret / lifetime / mastery seals on share cards
+        </label>
         <p className="text-xs text-(--prose-3)">
           Public vanity links require an account and a confirmed cloud sync.
           Logged-out share is Discord text / PNG only. Discord embeds use
-          dynamic OG art for rolls and public profiles.
+          dynamic OG art for rolls and public profiles. Seal names appear in
+          Discord paste and PNG; profile OG can show a seal strip via
+          ?seals=1 (reuses existing collection data — no extra Neon read).
         </p>
       </section>
 

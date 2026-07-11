@@ -9,12 +9,16 @@ export function LazySharePanel({
   roll,
   rollCount,
   showRollCount,
+  showUnlockedBadges = false,
+  unlockedSealNames = [],
   onClose,
   onGoAccount,
 }: {
   roll: RollResult;
   rollCount: number;
   showRollCount: boolean;
+  showUnlockedBadges?: boolean;
+  unlockedSealNames?: string[];
   onClose: () => void;
   onGoAccount?: () => void;
 }) {
@@ -32,6 +36,8 @@ export function LazySharePanel({
         roll={roll}
         rollCount={rollCount}
         showRollCount={showRollCount}
+        showUnlockedBadges={showUnlockedBadges}
+        unlockedSealNames={unlockedSealNames}
         onClose={onClose}
         onGoAccount={onGoAccount}
       />

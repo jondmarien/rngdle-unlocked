@@ -9,7 +9,8 @@ export type SettingsAction =
   | { type: 'setAutoScrollBadges'; value: boolean }
   | { type: 'setAutoShareHighRarity'; value: boolean }
   | { type: 'setShowLatestRuns'; value: boolean }
-  | { type: 'setLatestRunsSpoilersHidden'; value: boolean };
+  | { type: 'setLatestRunsSpoilersHidden'; value: boolean }
+  | { type: 'setShareShowUnlockedBadges'; value: boolean };
 
 /** Pure reducer behind the near-identical settings setters. */
 export function settingsReducer(
@@ -35,6 +36,8 @@ export function settingsReducer(
       return { ...settings, showLatestRuns: action.value };
     case 'setLatestRunsSpoilersHidden':
       return { ...settings, latestRunsSpoilersHidden: action.value };
+    case 'setShareShowUnlockedBadges':
+      return { ...settings, shareShowUnlockedBadges: action.value };
     default: {
       const exhaustive: never = action;
       return exhaustive;

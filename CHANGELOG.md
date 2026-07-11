@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Badge art lightbox** — click Lifetime / Secret / Mastery badge art on Profile or Codex to view full-resolution art (Escape, backdrop, or Close).
+- **Share unlocked seals toggle** — Settings default-on to include journey / secret / mastery seal names on Discord paste + share PNG. Profile OG supports `?seals=1` and reuses the existing `collectionJson` read (no extra Neon query).
 
 ### Fixed
 
