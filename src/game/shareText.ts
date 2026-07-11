@@ -58,7 +58,13 @@ export type ShareTextOptions = {
   rollCount?: number;
   /** When false, omit public URL (logged-out or not yet cloud-published). */
   includePublicLink?: boolean;
+  /** Opt-in: unlocked journey / secret / mastery seal names. */
+  showUnlockedBadges?: boolean;
+  unlockedSealNames?: string[];
 };
+
+/** Cap seal lines on Discord paste. */
+const MAX_SEAL_LINES = 6;
 
 /** Vanity share URL: https://host/s/username/shortCode (no /api, no UUID). */
 export function buildRollShareUrl(
@@ -142,6 +148,19 @@ export function buildShareText(
 
   if (opts.showRollCount && opts.rollCount != null) {
     lines.push(`${opts.rollCount.toLocaleString('en-US')} lifetime rolls`);
+  }
+
+  if (opts.showUnlockedBadges && opts.unlockedSealNames?.length) {
+    const seals = opts.unlockedSealNames.slice(0, MAX_SEAL_LINES);
+    const moreSeals = opts.unlockedSealNames.length - seals.length;
+    lines.push('');
+    lines.push('Seals:');
+    for (const name of seals) {
+      lines.push(`· ${name}`);
+    }
+    if (moreSeals > 0) {
+      lines.push(`+${moreSeals} more`);
+    }
   }
 
   if (link) {

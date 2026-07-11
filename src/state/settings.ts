@@ -8,7 +8,8 @@ export type SettingsAction =
   | { type: 'setTrashCrackEnabled'; value: boolean }
   | { type: 'setAutoScrollBadges'; value: boolean }
   | { type: 'setAutoShareHighRarity'; value: boolean }
-  | { type: 'setShowLatestRuns'; value: boolean };
+  | { type: 'setShowLatestRuns'; value: boolean }
+  | { type: 'setShareShowUnlockedBadges'; value: boolean };
 
 /** Pure reducer behind the near-identical settings setters. */
 export function settingsReducer(
@@ -32,6 +33,8 @@ export function settingsReducer(
       return { ...settings, autoShareHighRarity: action.value };
     case 'setShowLatestRuns':
       return { ...settings, showLatestRuns: action.value };
+    case 'setShareShowUnlockedBadges':
+      return { ...settings, shareShowUnlockedBadges: action.value };
     default: {
       const exhaustive: never = action;
       return exhaustive;

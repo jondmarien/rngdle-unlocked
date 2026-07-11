@@ -4,6 +4,7 @@ import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { eq } from 'drizzle-orm';
 import { initWasm, Resvg } from '@resvg/resvg-wasm';
+import { listUnlockedSeals } from '../src/game/unlockedSeals.js';
 import type { Db } from './db/index.js';
 import { user, userProgress } from './db/schema.js';
 import { createLogger } from './logger.js';
@@ -151,6 +152,8 @@ export async function profileOgResponse(url: URL, db: Db): Promise<Response> {
   let flair = url.searchParams.get('flair') ?? '';
   let name = url.searchParams.get('name') ?? '';
   let accent = (url.searchParams.get('accent') || 'teal').toLowerCase();
+  const wantSeals = url.searchParams.get('seals') === '1';
+  let sealLine = '';
 
   // Prefer live DB when handle known (stale query params still ok as fallback)
   if (handle && handle.length >= 3) {
@@ -185,9 +188,17 @@ export async function profileOgResponse(url: URL, db: Db): Promise<Response> {
           rolls = String(progress.lifetimeRollCount);
           try {
             const parsed = JSON.parse(progress.collectionJson || '[]');
-            badges = String(
-              parseCollectionIds(Array.isArray(parsed) ? parsed : []).size,
-            );
+            const ids = parseCollectionIds(Array.isArray(parsed) ? parsed : []);
+            badges = String(ids.size);
+            // Reuse already-fetched collectionJson — no extra Neon read (PR #7 discipline).
+            if (wantSeals) {
+              const seals = listUnlockedSeals(ids)
+                .map((s) => s.name)
+                .slice(0, 6);
+              if (seals.length > 0) {
+                sealLine = seals.join(' · ');
+              }
+            }
           } catch {
             /* keep query badges */
           }
@@ -216,9 +227,14 @@ export async function profileOgResponse(url: URL, db: Db): Promise<Response> {
     badges: escapeXml(badgesFmt),
     rolls: escapeXml(rollsFmt),
     stroke: escapeXml(stroke),
+    seals: sealLine ? escapeXml(truncate(sealLine, 72)) : '',
   });
 
-  log.info('og profile', { handle: displayHandle, ep: epFmt });
+  log.info('og profile', {
+    handle: displayHandle,
+    ep: epFmt,
+    seals: wantSeals,
+  });
   return pngResponse(svg, 120);
 }
 
@@ -359,13 +375,17 @@ function buildProfileOgSvg(opts: {
   badges: string;
   rolls: string;
   stroke: string;
+  seals?: string;
 }): string {
-  const { handle, name, flair, ep, badges, rolls, stroke } = opts;
+  const { handle, name, flair, ep, badges, rolls, stroke, seals = '' } = opts;
   const flairLine = flair
     ? `<text x="80" y="300" fill="${stroke}" font-family="Inter, system-ui, sans-serif" font-size="32" font-weight="600">${flair}</text>`
     : '';
   const nameLine = name
     ? `<text x="80" y="250" fill="#cbd5e1" font-family="Inter, system-ui, sans-serif" font-size="28">${name}</text>`
+    : '';
+  const sealsLine = seals
+    ? `<text x="80" y="520" fill="#c4b5fd" font-family="Inter, system-ui, sans-serif" font-size="22" font-weight="600">${seals}</text>`
     : '';
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
@@ -384,6 +404,7 @@ function buildProfileOgSvg(opts: {
   ${flairLine}
   <text x="80" y="400" fill="#fbbf24" font-family="Inter, ui-monospace, monospace" font-size="40" font-weight="700">${ep} EP</text>
   <text x="80" y="470" fill="#a7f3d0" font-family="Inter, system-ui, sans-serif" font-size="32" font-weight="600">${badges} badges  ·  ${rolls} rolls</text>
+  ${sealsLine}
   <text x="1120" y="540" fill="#64748b" font-family="Inter, system-ui, sans-serif" font-size="22" text-anchor="end">public profile · roll · collect · climb</text>
 </svg>`;
 }

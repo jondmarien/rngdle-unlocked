@@ -113,6 +113,7 @@ type GameSettingsValue = {
   setAutoScrollBadges: (v: boolean) => void;
   setAutoShareHighRarity: (v: boolean) => void;
   setShowLatestRuns: (v: boolean) => void;
+  setShareShowUnlockedBadges: (v: boolean) => void;
 };
 
 const GameContext = createContext<GameContextValue | null>(null);
@@ -632,6 +633,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
         dispatchSettings({ type: 'setAutoShareHighRarity', value }),
       setShowLatestRuns: (value) =>
         dispatchSettings({ type: 'setShowLatestRuns', value }),
+      setShareShowUnlockedBadges: (value) =>
+        dispatchSettings({ type: 'setShareShowUnlockedBadges', value }),
     }),
     [state.settings, dispatchSettings],
   );

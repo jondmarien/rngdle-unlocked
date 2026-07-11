@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Share unlocked seals toggle** — Settings opt-in to include journey / secret / mastery seal names on Discord paste + share PNG. Profile OG supports `?seals=1` and reuses the existing `collectionJson` read (no extra Neon query).
+
 ## [0.11.0] - 2026-07-10
 
 ### Fixed

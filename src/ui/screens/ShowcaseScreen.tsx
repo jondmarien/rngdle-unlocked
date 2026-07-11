@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import type { RollResult } from '../../game';
+import { listUnlockedSeals, type RollResult } from '../../game';
 import { formatDateTime } from '../../lib/format';
 import { useGame, useGameSettings } from '../../state/GameProvider';
 import { BestRollCard } from '../components/BestRollCard';
@@ -14,8 +14,16 @@ export function ShowcaseScreen({
 }: {
   onGoAccount?: () => void;
 } = {}) {
-  const { stats, lifetimeRollCount, lifetimeEP, history } = useGame();
+  const { stats, lifetimeRollCount, lifetimeEP, history, collection } =
+    useGame();
   const { settings } = useGameSettings();
+  const unlockedSealNames = useMemo(
+    () =>
+      settings.shareShowUnlockedBadges === true
+        ? listUnlockedSeals(collection.map((c) => c.badgeId)).map((s) => s.name)
+        : [],
+    [collection, settings.shareShowUnlockedBadges],
+  );
   const best = stats.bestRoll;
   const [shareRoll, setShareRoll] = useState<RollResult | null>(null);
   const [replayRoll, setReplayRoll] = useState<RollResult | null>(null);
@@ -130,6 +138,8 @@ export function ShowcaseScreen({
           roll={shareRoll}
           rollCount={lifetimeRollCount}
           showRollCount={settings.shareShowRollCount}
+          showUnlockedBadges={settings.shareShowUnlockedBadges === true}
+          unlockedSealNames={unlockedSealNames}
           onClose={() => setShareRoll(null)}
           onGoAccount={onGoAccount}
         />
