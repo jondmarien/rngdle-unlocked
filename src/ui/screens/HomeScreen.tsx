@@ -87,6 +87,26 @@ export function HomeScreen({
   /** Roll that is currently revealing (not a later race-y lastRoll). */
   const revealRollRef = useRef<RollResult | null>(null);
   const shareTimerRef = useRef<number | null>(null);
+  const proveBtnRef = useRef<HTMLButtonElement>(null);
+  const proveTipRef = useRef<HTMLDivElement>(null);
+
+  /** Popover top-layer defaults to the viewport corner — pin above the button. */
+  const showProveTip = () => {
+    const tip = proveTipRef.current;
+    const btn = proveBtnRef.current;
+    if (!tip?.showPopover || !btn) return;
+    const r = btn.getBoundingClientRect();
+    tip.style.position = 'fixed';
+    tip.style.left = `${Math.round(r.left + r.width / 2)}px`;
+    tip.style.top = `${Math.round(r.top - 8)}px`;
+    tip.style.transform = 'translate(-50%, -100%)';
+    tip.style.margin = '0';
+    tip.showPopover();
+  };
+
+  const hideProveTip = () => {
+    proveTipRef.current?.hidePopover?.();
+  };
 
   const clearShareTimer = () => {
     if (shareTimerRef.current != null) {
@@ -505,26 +525,16 @@ export function HomeScreen({
               {!lastRoll.attestationSeal ? (
                 <>
                   <button
+                    ref={proveBtnRef}
                     type="button"
                     className="rounded-md border border-(--outline) bg-(--surface) px-3 py-2 text-sm font-semibold text-(--prose) hover:border-(--prose-2)"
                     aria-describedby="prove-roll-tip"
-                    onMouseEnter={() => {
-                      const tip = document.getElementById('prove-roll-tip');
-                      tip?.showPopover?.();
-                    }}
-                    onMouseLeave={() => {
-                      const tip = document.getElementById('prove-roll-tip');
-                      tip?.hidePopover?.();
-                    }}
-                    onFocus={() => {
-                      const tip = document.getElementById('prove-roll-tip');
-                      tip?.showPopover?.();
-                    }}
-                    onBlur={() => {
-                      const tip = document.getElementById('prove-roll-tip');
-                      tip?.hidePopover?.();
-                    }}
+                    onMouseEnter={showProveTip}
+                    onMouseLeave={hideProveTip}
+                    onFocus={showProveTip}
+                    onBlur={hideProveTip}
                     onClick={() => {
+                      hideProveTip();
                       setAttestMsg(null);
                       void attestRoll(lastRoll).then((r) => {
                         setAttestMsg(
@@ -538,6 +548,7 @@ export function HomeScreen({
                     Prove roll
                   </button>
                   <div
+                    ref={proveTipRef}
                     id="prove-roll-tip"
                     popover="auto"
                     className="m-0 max-w-xs rounded-lg border border-(--outline) bg-(--surface-raised) p-3 text-left text-sm text-(--prose) shadow-lg"
