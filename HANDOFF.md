@@ -7,8 +7,8 @@
 | **Repo**                   | `jondmarien/rngdle-unlocked`                                                  |
 | **Live**                   | https://rngdle-unlocked.chron0.tech                                           |
 | **Branch**                 | `main` (auto-deploys Vercel)                                                  |
-| **Version**                | `0.14.0` (`package.json`; Settings uses `VITE_APP_VERSION`)                   |
-| **Latest release**         | [v0.14.0](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.14.0) |
+| **Version**                | `0.14.1` (`package.json`; Settings uses `VITE_APP_VERSION`)                   |
+| **Latest release**         | [v0.14.1](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.14.1) |
 | **Handoff commit context** | Opus audit refactor (`aa8e91e`…`fc4fa65` on `main`) + prior P0/P1 wave        |
 
 ---
@@ -248,6 +248,7 @@ node scripts/add-roll-source.mjs   # if source column missing
 - [x] **v0.12.1** — Ranked · All-time best Home tile + Ranked-prefixed crown labels; Profile Lifetime EP under Best roll
 - [x] **v0.12.2** — Collapsible How to roll (compact label-only mode switch; preference persisted)
 - [x] **v0.14.0** — Atomic Registry (118 elements) + Atomic Seal; Firefox dark chrome border fix
+- [x] **v0.14.1** — Site-wide accent coverage across tabs; Prove roll popover above button; Oganesson mythic EP align
 - [x] **v0.13.0** — Years family + 90210; Prove roll popover; Profile seal subtitles; site-wide accent; auto-pull; lifetime histogram; View Site As; Bases radix eqs; Arcade Roll ×N
 
 ### Still open for you / ops

@@ -7,10 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.1] - 2026-07-14
+
 ### Changed
 
 - **Site-wide accent coverage** — when Apply profile accent site-wide is on, active nav, SegmentedToggle (non-Ranked), Generate, Free/Daily/Weekly mode chips, ThemeToggle, Latest Runs tabs, Codex family chips, primary CTAs across History/Friends/Features/Settings/Account/Arcade/Admin, About/Legal links, and StatTiles follow `--accent`. Ranked amber and Features `--feature-*` / tag tokens unchanged.
 - **Oganesson (Atomic Registry)** — EP `25_000` → `8_000` (mythic, same as other synthetic transactinides). Grail framing stays in flavor / Z=118.
+
+### Fixed
+
+- **Prove roll popover placement** — tip pins above the button (native popover top-layer no longer dumps in the viewport corner).
 
 ## [0.14.0] - 2026-07-14
 

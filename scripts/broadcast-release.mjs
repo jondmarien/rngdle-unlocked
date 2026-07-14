@@ -12,10 +12,10 @@ if (!process.env.DATABASE_URL) {
 const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
-const title = 'New Update! v0.14.0 — Atomic Registry';
+const title = 'New Update! v0.14.1 — Accent everywhere';
 const body = [
-  'Atomic Registry is live: collect all 118 elements from the last three digits of your rolls, capped by the Atomic Seal.',
-  'The existing Element digit badges and Periodic Crown stay exactly as they were — this is a brand-new family beside them.',
+  'Site-wide profile accent now paints nav, Generate, mode chips, toggles, and primary buttons across the app.',
+  'Ranked amber and Features tags stay their own colors. Prove roll tip sits above the button again.',
   'Read the full player notes: https://rngdle-unlocked.chron0.tech/whats-new',
   'Open: /whats-new',
 ].join(' ');

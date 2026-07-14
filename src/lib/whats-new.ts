@@ -32,6 +32,27 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Accent everywhere + Prove roll tip',
+    date: '2026-07-14',
+    version: '0.14.1',
+    tags: ['UI', 'Themes'],
+    content: [
+      {
+        body: 'Site-wide profile accent now paints nav, Generate, mode chips, toggles, and primary buttons across the app — and the Prove roll tip sits above the button where it belongs.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'Turn on Apply profile accent site-wide in Settings to see your color on every tab.',
+        bullets: [
+          '**Accent coverage** — active nav, Generate, Free/Daily/Weekly chips, Codex filters, and primary CTAs follow your accent.',
+          '**Ranked stays amber** — competitive Ranked chrome and Features tags keep their own colors.',
+          '**Prove roll tip** — hover help appears above the button, not in the corner.',
+          '**Oganesson** — Atomic Registry Z=118 now matches other synthetic mythic EP.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Atomic Registry — the full table',
     date: '2026-07-14',
     version: '0.14.0',
