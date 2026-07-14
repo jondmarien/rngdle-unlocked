@@ -357,7 +357,9 @@ export function CollectionScreen() {
               key={f.id}
               type="button"
               onClick={() => setFilter(f.id)}
-              className={`relative box-border inline-flex h-9 min-w-[7.25rem] shrink-0 items-center justify-center gap-1.5 rounded-md border px-2.5 text-sm font-semibold ${
+              className={`relative box-border inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-md border px-2.5 text-sm font-semibold ${
+                isNewTab || f.id === 'all' ? '' : 'min-w-[7.25rem] '
+              }${
                 selected
                   ? isNewTab
                     ? 'border-amber-400 text-black'
@@ -415,18 +417,15 @@ export function CollectionScreen() {
                     {f.label}
                   </>
                 )}
-                {isNewTab && (
+                {isNewTab && recentIds.size > 0 && (
                   <span
                     className={`ml-0.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-bold ${
-                      recentIds.size > 0
-                        ? selected
-                          ? 'bg-black/20 text-black'
-                          : 'bg-amber-400/25 text-amber-800 dark:text-amber-200'
-                        : 'invisible'
+                      selected
+                        ? 'bg-black/20 text-black'
+                        : 'bg-amber-400/25 text-amber-800 dark:text-amber-200'
                     }`}
-                    aria-hidden={recentIds.size === 0}
                   >
-                    {recentIds.size > 0 ? recentIds.size : 0}
+                    {recentIds.size}
                   </span>
                 )}
               </span>
