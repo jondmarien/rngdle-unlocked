@@ -34,7 +34,13 @@ Existing global CSS also kills animations under `@media (prefers-reduced-motion:
 
 ## Shared primitives
 
-Prefer reusable wrappers under [`src/ui/motion/`](../ui/motion/) (`FadeIn`, `MotionCard`) over one-off `motion.div` prop soup. Screens may still use `motion`/`layoutId` directly for shared-element transitions (e.g. badge → lightbox).
+Prefer reusable wrappers under [`src/ui/motion/`](../ui/motion/) (`FadeIn`, `MotionCard`, `RouteEnter`) over one-off `motion.div` prop soup. Screens may still use `motion`/`layoutId` directly for shared-element transitions (e.g. badge → lightbox).
+
+| Primitive    | Role                                                                                         |
+| ------------ | -------------------------------------------------------------------------------------------- |
+| `FadeIn`     | Enter-only opacity (+ optional `y`) for leaf chrome (e.g. Suspense fallbacks)                |
+| `MotionCard` | Hover/press card chrome                                                                      |
+| `RouteEnter` | Route-level enter/exit for `AnimatePresence` in `AppRoutes` (opacity + small `y`; exit ~70%) |
 
 ## Imports
 

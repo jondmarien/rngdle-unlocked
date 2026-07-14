@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Route entrance animation** — `AnimatePresence` + `RouteEnter` wraps all `AppRoutes` screens (opacity + 10px y enter, opacity-only exit ~140ms; `useReducedMotion` instant). Home stays eager inside shared Suspense for uniform tab transitions.
+
 ## [0.16.2] - 2026-07-14
 
 ### Added
