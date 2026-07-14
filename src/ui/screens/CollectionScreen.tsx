@@ -357,9 +357,11 @@ export function CollectionScreen() {
               key={f.id}
               type="button"
               onClick={() => setFilter(f.id)}
-              className={`relative box-border inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-md border px-2.5 text-sm font-semibold ${
-                isNewTab || f.id === 'all' ? '' : 'min-w-[7.25rem] '
-              }${
+              className={`relative box-border inline-flex h-9 items-center justify-center gap-1.5 rounded-md border px-2.5 text-sm font-semibold ${
+                isNewTab || f.id === 'all'
+                  ? 'shrink-0'
+                  : 'min-w-[7.25rem] flex-1 basis-[7.25rem]'
+              } ${
                 selected
                   ? isNewTab
                     ? 'border-amber-400 text-black'

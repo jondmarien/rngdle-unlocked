@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **Codex New/All chips** — size to content (no `min-w-[7.25rem]`); other family pills keep the uniform min-width.
+- **Codex filter chip row** — New/All stay content-sized; other family chips `flex-1` so wrapped rows share a flush right edge.
 
 ## [0.16.3] - 2026-07-14
 
