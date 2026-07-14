@@ -46,7 +46,7 @@ export const WHATS_NEW: WhatsNewEntry[] = [
         bullets: [
           '**Atomic Registry** — one badge per element (H through Og); last three digits 001–118 hit that Z.',
           '**Atomic Seal** — section mastery for collecting all 118.',
-          '**Oganesson** — the divine grail pull of the set.',
+          '**Oganesson** — Z=118, the last element; same mythic weight as the other synthetics.',
           '**Codex Absolute** — forward-only: new earners also need Atomic Registry + Atomic Seal.',
         ],
       },

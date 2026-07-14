@@ -36,7 +36,7 @@ describe('ATOMIC_REGISTRY_BADGES', () => {
     expect(epByZ[78]).toBe(2500);
     expect(epByZ[57]).toBe(4000);
     expect(epByZ[43]).toBe(8000);
-    expect(epByZ[118]).toBe(25_000);
+    expect(epByZ[118]).toBe(8000);
   });
 
   it('matches exactly one atomic badge for a hit roll', () => {

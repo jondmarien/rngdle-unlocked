@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Oganesson (Atomic Registry)** — EP `25_000` → `8_000` (mythic, same as other synthetic transactinides). Grail framing stays in flavor / Z=118.
+
 ## [0.14.0] - 2026-07-14
 
 ### Added
