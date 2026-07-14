@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Route entrance animation** — `AnimatePresence` + `RouteEnter` wraps all `AppRoutes` screens (opacity + 10px y enter, opacity-only exit ~140ms; `useReducedMotion` instant). Home stays eager inside shared Suspense for uniform tab transitions.
 
+### Fixed
+
+- **Codex filter chips** — remove per-chip `layout` (keep `layoutId` selected fill only); uniform `h-9` / `min-w-[7.25rem]` pills; always-mounted Show-locked slot with `invisible` + `aria-hidden` + `tabIndex={-1}` on New; reserved New count badge width.
+
 ## [0.16.2] - 2026-07-14
 
 ### Added

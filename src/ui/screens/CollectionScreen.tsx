@@ -356,9 +356,8 @@ export function CollectionScreen() {
             <motion.button
               key={f.id}
               type="button"
-              layout
               onClick={() => setFilter(f.id)}
-              className={`relative inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-sm font-semibold ${
+              className={`relative box-border inline-flex h-9 min-w-[7.25rem] shrink-0 items-center justify-center gap-1.5 rounded-md border px-2.5 text-sm font-semibold ${
                 selected
                   ? isNewTab
                     ? 'border-amber-400 text-black'
@@ -395,7 +394,7 @@ export function CollectionScreen() {
                   }
                 />
               )}
-              <span className="relative z-1 inline-flex items-center gap-1.5">
+              <span className="relative z-1 inline-flex items-center justify-center gap-1.5">
                 {isNewTab ? (
                   <span
                     className={`rounded px-1 py-0.5 text-[10px] font-black uppercase tracking-wider ${
@@ -416,30 +415,35 @@ export function CollectionScreen() {
                     {f.label}
                   </>
                 )}
-                {isNewTab && recentIds.size > 0 && (
+                {isNewTab && (
                   <span
                     className={`ml-0.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-bold ${
-                      selected
-                        ? 'bg-black/20 text-black'
-                        : 'bg-amber-400/25 text-amber-800 dark:text-amber-200'
+                      recentIds.size > 0
+                        ? selected
+                          ? 'bg-black/20 text-black'
+                          : 'bg-amber-400/25 text-amber-800 dark:text-amber-200'
+                        : 'invisible'
                     }`}
+                    aria-hidden={recentIds.size === 0}
                   >
-                    {recentIds.size}
+                    {recentIds.size > 0 ? recentIds.size : 0}
                   </span>
                 )}
               </span>
             </motion.button>
           );
         })}
-        {filter !== 'new' && (
-          <button
-            type="button"
-            onClick={() => setShowLocked((v) => !v)}
-            className="rounded-md border border-(--outline) px-2.5 py-1.5 text-sm font-semibold text-(--prose-2)"
-          >
-            {showLocked ? 'Hide locked' : 'Show locked'}
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => setShowLocked((v) => !v)}
+          className={`box-border h-9 shrink-0 rounded-md border border-(--outline) px-2.5 text-sm font-semibold text-(--prose-2) ${
+            filter === 'new' ? 'invisible pointer-events-none' : ''
+          }`}
+          aria-hidden={filter === 'new'}
+          tabIndex={filter === 'new' ? -1 : undefined}
+        >
+          {showLocked ? 'Hide locked' : 'Show locked'}
+        </button>
       </div>
 
       {filter === 'new' && (
