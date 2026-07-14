@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **LottieFiles motion-design skill** — project skill at `.agents/skills/motion-design` (+ `skills-lock.json`) for animation timing/easing/choreography guidance; AGENTS.md points agents here for Motion work.
+- **Motion conventions + primitives** — `src/lib/motion-conventions.md` (Motion vs CSS, Corporate-quick 150/200/300ms, `useReducedMotion`); reusable `FadeIn` / `MotionCard` under `src/ui/motion/`; `ScreenFallback` fade PoC.
 
 ### Changed
 
