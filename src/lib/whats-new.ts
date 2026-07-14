@@ -47,7 +47,7 @@ export const WHATS_NEW: WhatsNewEntry[] = [
           '**Accent coverage** — active nav, Generate, Free/Daily/Weekly chips, Codex filters, and primary CTAs follow your accent.',
           '**Ranked stays amber** — competitive Ranked chrome and Features tags keep their own colors.',
           '**Prove roll tip** — hover help appears above the button, not in the corner.',
-          '**Oganesson** — Atomic Registry Z=118 now matches other synthetic mythic EP.',
+          '**Oganesson** — Atomic Registry Z=118 stays the table’s divine grail.',
         ],
       },
     ],
@@ -67,7 +67,7 @@ export const WHATS_NEW: WhatsNewEntry[] = [
         bullets: [
           '**Atomic Registry** — one badge per element (H through Og); last three digits 001–118 hit that Z.',
           '**Atomic Seal** — section mastery for collecting all 118.',
-          '**Oganesson** — Z=118, the last element; same mythic weight as the other synthetics.',
+          '**Oganesson** — Z=118, the table’s divine grail.',
           '**Codex Absolute** — forward-only: new earners also need Atomic Registry + Atomic Seal.',
         ],
       },

@@ -854,9 +854,9 @@ export const ATOMIC_REGISTRY_META: readonly AtomicMeta[] = [
     z: 118,
     symbol: 'Og',
     name: 'Oganesson',
-    ep: 8000,
+    ep: 25_000,
     description:
-      'Named for Yuri Oganessian; heaviest confirmed element — Z=118, the end of the table.',
+      'Named for Yuri Oganessian; heaviest confirmed element — Z=118 grail of the table.',
   },
 ];
 
