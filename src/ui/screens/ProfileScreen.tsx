@@ -337,7 +337,7 @@ export function ProfileScreen({
       {onBack && (
         <button
           type="button"
-          className="text-sm font-semibold text-(--prose-2) underline-offset-2 hover:underline"
+          className="text-sm font-semibold text-(--accent) underline-offset-2 hover:underline"
           onClick={onBack}
         >
           ← Back
@@ -426,7 +426,7 @@ export function ProfileScreen({
                 className={`border-2 px-4 py-2 text-sm font-semibold ${
                   following
                     ? 'border-(--outline) bg-(--surface) text-(--prose-2)'
-                    : 'border-(--prose) bg-(--prose) text-(--bg)'
+                    : 'border-(--accent) bg-(--accent) text-(--bg)'
                 }`}
               >
                 {following ? 'Following' : 'Follow'}
@@ -997,7 +997,7 @@ export function ProfileScreen({
                           }}
                           className={`rounded-md border px-2.5 py-1 text-xs font-semibold sm:text-sm ${
                             selected
-                              ? 'border-(--prose) bg-(--prose) text-(--bg)'
+                              ? 'border-(--accent) bg-(--accent) text-(--bg)'
                               : 'border-(--outline) text-(--prose-2) hover:bg-(--surface-raised)'
                           }`}
                         >

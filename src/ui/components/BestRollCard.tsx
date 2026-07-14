@@ -59,7 +59,7 @@ export function BestRollCard({
               <button
                 type="button"
                 onClick={onShare}
-                className="border border-(--prose) px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide"
+                className="border border-(--accent) bg-(--accent) px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-(--bg)"
               >
                 Share
               </button>

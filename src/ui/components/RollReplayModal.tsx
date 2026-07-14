@@ -65,7 +65,7 @@ export function RollReplayModal({
           {onShare && (
             <button
               type="button"
-              className="border-2 border-(--prose) bg-(--prose) px-3 py-2 text-xs font-bold uppercase text-(--bg)"
+              className="border-2 border-(--accent) bg-(--accent) px-3 py-2 text-xs font-bold uppercase text-(--bg)"
               onClick={onShare}
             >
               Share this roll

@@ -181,7 +181,7 @@ export function SharePanel({
             {onGoAccount && (
               <button
                 type="button"
-                className="border-2 border-(--prose) bg-(--prose) px-3 py-1.5 text-xs font-bold uppercase text-(--bg)"
+                className="border-2 border-(--accent) bg-(--accent) px-3 py-1.5 text-xs font-bold uppercase text-(--bg)"
                 onClick={() => {
                   onClose();
                   onGoAccount();
@@ -232,7 +232,7 @@ export function SharePanel({
         <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <button
             type="button"
-            className="min-h-11 border-2 border-(--prose) bg-(--prose) px-2 py-2 text-xs font-bold uppercase leading-tight text-(--bg) sm:text-sm"
+            className="min-h-11 border-2 border-(--accent) bg-(--accent) px-2 py-2 text-xs font-bold uppercase leading-tight text-(--bg) sm:text-sm"
             onClick={() => void copyText()}
           >
             Copy for Discord

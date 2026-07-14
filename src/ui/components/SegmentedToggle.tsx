@@ -7,7 +7,7 @@ export type SegmentedOption<T extends string> = {
   accent?: 'amber';
 };
 
-const ACTIVE_DEFAULT = 'border-(--prose) bg-(--prose) text-(--bg)';
+const ACTIVE_DEFAULT = 'border-(--accent) bg-(--accent) text-(--bg)';
 const ACTIVE_AMBER = 'border-amber-500 bg-amber-500 text-black';
 
 /**

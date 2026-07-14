@@ -131,7 +131,7 @@ export function NotificationsScreen({
         {onGoAccount && (
           <button
             type="button"
-            className="rounded-md border-2 border-(--prose) bg-(--prose) px-3 py-2 text-sm font-semibold text-(--bg)"
+            className="rounded-md border-2 border-(--accent) bg-(--accent) px-3 py-2 text-sm font-semibold text-(--bg)"
             onClick={onGoAccount}
           >
             Account

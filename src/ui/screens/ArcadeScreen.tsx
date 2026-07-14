@@ -225,7 +225,7 @@ export function ArcadeScreen({
         </p>
         <button
           type="button"
-          className="rounded-md border border-(--prose) bg-(--prose) px-3 py-2 text-sm font-semibold text-(--bg)"
+          className="rounded-md border border-(--accent) bg-(--accent) px-3 py-2 text-sm font-semibold text-(--bg)"
           onClick={onGoAccount}
         >
           Go to Account
@@ -244,7 +244,11 @@ export function ArcadeScreen({
           Roguelite runs with <strong className="text-(--prose)">Digits</strong>{' '}
           — buy upgrades between rolls, cash out or bust on Double or Nothing.
           Digits never convert to EP.{' '}
-          <button type="button" className="underline" onClick={onGoLeaderboard}>
+          <button
+            type="button"
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            onClick={onGoLeaderboard}
+          >
             Arcade board
           </button>
         </p>
@@ -263,7 +267,11 @@ export function ArcadeScreen({
         <p className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm">
           Claim a public @username on Account before starting Arcade (required
           for the board).{' '}
-          <button type="button" className="underline" onClick={onGoAccount}>
+          <button
+            type="button"
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            onClick={onGoAccount}
+          >
             Account
           </button>
         </p>
@@ -339,7 +347,7 @@ export function ArcadeScreen({
               <button
                 type="button"
                 disabled={busy || usernameRequired}
-                className="rounded-md border border-(--prose) bg-(--prose) px-4 py-2 text-sm font-bold text-(--bg) disabled:opacity-40"
+                className="rounded-md border border-(--accent) bg-(--accent) px-4 py-2 text-sm font-bold text-(--bg) disabled:opacity-40"
                 onClick={() => startMut.mutate()}
               >
                 Start run
@@ -384,7 +392,7 @@ export function ArcadeScreen({
                       <button
                         type="button"
                         disabled={busy}
-                        className="rounded-md border border-(--prose) bg-(--prose) px-3 py-2 text-sm font-bold text-(--bg) disabled:opacity-40"
+                        className="rounded-md border border-(--accent) bg-(--accent) px-3 py-2 text-sm font-bold text-(--bg) disabled:opacity-40"
                         onClick={() => rollMut.mutate({ count: rollCount })}
                       >
                         {rollCount === 1 ? 'Roll' : `Roll ×${rollCount}`}

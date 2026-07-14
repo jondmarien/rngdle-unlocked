@@ -359,7 +359,7 @@ export function CollectionScreen() {
                     ? 'border-amber-400 bg-amber-400 text-black'
                     : f.id === 'secret'
                       ? 'border-amber-400 bg-amber-400 text-black'
-                      : 'border-(--prose) bg-(--prose) text-(--bg)'
+                      : 'border-(--accent) bg-(--accent) text-(--bg)'
                   : isNewTab
                     ? 'border-amber-500/50 text-amber-700 dark:text-amber-300'
                     : f.id === 'secret'

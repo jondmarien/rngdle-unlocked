@@ -5,7 +5,7 @@ export function StatTile({
   label,
   value,
   sub,
-  className = 'border-(--outline) bg-(--surface)',
+  className = 'border-(--accent)/25 bg-[color-mix(in_srgb,var(--accent)_6%,var(--surface))]',
   labelClassName = 'text-sm font-semibold text-(--prose-2)',
 }: {
   label: string;

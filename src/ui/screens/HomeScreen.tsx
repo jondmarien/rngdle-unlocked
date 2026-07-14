@@ -517,7 +517,7 @@ export function HomeScreen({
             <div className="flex flex-wrap items-center justify-center gap-2">
               <button
                 type="button"
-                className="rounded-md border border-(--outline) bg-(--surface) px-3 py-2 text-sm font-semibold text-(--prose) hover:border-(--prose-2)"
+                className="rounded-md border border-(--accent)/45 bg-(--surface) px-3 py-2 text-sm font-semibold text-(--accent) hover:border-(--accent) hover:bg-[color-mix(in_srgb,var(--accent)_10%,transparent)]"
                 onClick={() => setShareRoll(lastRoll)}
               >
                 Share
@@ -527,7 +527,7 @@ export function HomeScreen({
                   <button
                     ref={proveBtnRef}
                     type="button"
-                    className="rounded-md border border-(--outline) bg-(--surface) px-3 py-2 text-sm font-semibold text-(--prose) hover:border-(--prose-2)"
+                    className="rounded-md border border-(--accent)/45 bg-(--surface) px-3 py-2 text-sm font-semibold text-(--accent) hover:border-(--accent) hover:bg-[color-mix(in_srgb,var(--accent)_10%,transparent)]"
                     aria-describedby="prove-roll-tip"
                     onMouseEnter={showProveTip}
                     onMouseLeave={hideProveTip}

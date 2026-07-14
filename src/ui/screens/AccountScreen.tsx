@@ -548,7 +548,7 @@ export function AccountScreen({
                   <button
                     type="submit"
                     disabled={busy}
-                    className="border-2 border-(--prose) bg-(--prose) px-4 py-2 text-xs font-bold uppercase text-(--bg) disabled:opacity-50"
+                    className="border-2 border-(--accent) bg-(--accent) px-4 py-2 text-xs font-bold uppercase text-(--bg) disabled:opacity-50"
                   >
                     {busy ? (status ?? 'Working…') : 'Email me a sign-in link'}
                   </button>
@@ -595,7 +595,7 @@ export function AccountScreen({
                   <button
                     type="submit"
                     disabled={busy}
-                    className="border-2 border-(--prose) bg-(--prose) px-4 py-2 text-xs font-bold uppercase text-(--bg) disabled:opacity-50"
+                    className="border-2 border-(--accent) bg-(--accent) px-4 py-2 text-xs font-bold uppercase text-(--bg) disabled:opacity-50"
                   >
                     {busy
                       ? (status ?? 'Working…')
@@ -870,7 +870,7 @@ export function AccountScreen({
               type="button"
               disabled={busy}
               onClick={() => void saveProfileVanity()}
-              className="border-2 border-(--prose) bg-(--prose) px-3 py-2 text-sm font-semibold text-(--bg) disabled:opacity-50"
+              className="border-2 border-(--accent) bg-(--accent) px-3 py-2 text-sm font-semibold text-(--bg) disabled:opacity-50"
             >
               Save profile look
             </button>
@@ -897,7 +897,7 @@ export function AccountScreen({
               <button
                 type="button"
                 disabled={syncing}
-                className="border-2 border-(--prose) bg-(--prose) px-3 py-2 text-xs font-bold uppercase text-(--bg)"
+                className="border-2 border-(--accent) bg-(--accent) px-3 py-2 text-xs font-bold uppercase text-(--bg)"
                 onClick={() => {
                   log.info('push clicked');
                   void syncToCloud();

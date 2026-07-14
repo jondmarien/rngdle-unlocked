@@ -28,21 +28,36 @@ function LegalShell({
       <footer className="space-y-2 border-t border-(--outline) pt-4 text-xs text-(--prose-3)">
         <p>
           Questions:{' '}
-          <a className="underline" href={`mailto:${CONTACT}`}>
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href={`mailto:${CONTACT}`}
+          >
             {CONTACT}
           </a>
         </p>
         <p className="flex flex-wrap gap-3">
-          <a className="underline" href="/terms">
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href="/terms"
+          >
             Terms of Service
           </a>
-          <a className="underline" href="/privacy">
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href="/privacy"
+          >
             Privacy Policy
           </a>
-          <a className="underline" href="/about">
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href="/about"
+          >
             About
           </a>
-          <a className="underline" href={SITE}>
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href={SITE}
+          >
             Home
           </a>
         </p>
@@ -60,7 +75,10 @@ function TermsBody() {
         </h2>
         <p>
           <strong className="text-(--prose)">RNGdle Unlocked</strong> (
-          <a className="underline" href={SITE}>
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href={SITE}
+          >
             {SITE}
           </a>
           ) is a free, fan-made random-number game (roll 0–1,000,000, badges,
@@ -265,14 +283,20 @@ function PrivacyBody() {
         <p>
           We keep account and progress data while your account exists. You can
           permanently delete your cloud account from{' '}
-          <a className="underline" href="/account">
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href="/account"
+          >
             Account
           </a>{' '}
           (email confirmation required). That removes your auth identity, synced
           progress, rolls, and related social data we store for the account.
           Local browser data is separate: clear site data / localStorage
           anytime. If self-serve delete fails, email{' '}
-          <a className="underline" href={`mailto:${CONTACT}`}>
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href={`mailto:${CONTACT}`}
+          >
             {CONTACT}
           </a>
           .

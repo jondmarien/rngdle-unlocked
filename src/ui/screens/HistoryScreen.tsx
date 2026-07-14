@@ -353,7 +353,7 @@ export function HistoryScreen({
                   </button>
                   <button
                     type="button"
-                    className="border border-(--prose) px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide"
+                    className="border border-(--accent) bg-(--accent) px-2.5 py-1.5 text-xs font-bold uppercase tracking-wide text-(--bg)"
                     onClick={() => setShareRoll(r)}
                   >
                     Share

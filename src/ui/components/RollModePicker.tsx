@@ -84,8 +84,8 @@ export function RollModePicker({
                 selected
                   ? m.id === 'ranked'
                     ? 'border-amber-500 bg-amber-500 text-black'
-                    : 'border-(--prose) bg-(--prose) text-(--bg)'
-                  : 'border-(--outline) bg-(--surface) text-(--prose) hover:border-(--prose-2)'
+                    : 'border-(--accent) bg-(--accent) text-(--bg)'
+                  : 'border-(--outline) bg-(--surface) text-(--prose) hover:border-(--accent)/45'
               }`}
             >
               <span className="block text-sm font-bold leading-tight">

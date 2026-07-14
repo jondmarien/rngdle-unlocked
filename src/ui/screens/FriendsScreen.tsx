@@ -75,7 +75,7 @@ export function FriendsScreen({
         </p>
         <button
           type="button"
-          className="rounded-md border border-(--prose) bg-(--prose) px-3 py-2 text-sm font-bold text-(--bg)"
+          className="rounded-md border border-(--accent) bg-(--accent) px-3 py-2 text-sm font-bold text-(--bg)"
           onClick={() => onGoTab('account')}
         >
           Go to Account
@@ -115,7 +115,7 @@ export function FriendsScreen({
           </p>
           <button
             type="button"
-            className="mt-3 rounded-md border border-(--prose) bg-(--prose) px-3 py-2 text-sm font-bold text-(--bg)"
+            className="mt-3 rounded-md border border-(--accent) bg-(--accent) px-3 py-2 text-sm font-bold text-(--bg)"
             onClick={() => onGoTab('leaderboard')}
           >
             Open Board → Find
@@ -155,7 +155,7 @@ export function FriendsScreen({
                 <div className="min-w-0">
                   <button
                     type="button"
-                    className="truncate text-left font-bold hover:underline"
+                    className="truncate text-left font-bold text-(--accent) hover:underline"
                     onClick={() => f.username && onOpenProfile(f.username)}
                     disabled={!f.username}
                   >

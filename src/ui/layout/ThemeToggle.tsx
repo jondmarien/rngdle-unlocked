@@ -29,7 +29,7 @@ export function ThemeToggle({
             onClick={() => onChange(m.id)}
             className={`min-w-[4.25rem] rounded-md px-3 py-1.5 text-center text-xs font-semibold tracking-wide transition-colors sm:min-w-[5rem] sm:text-sm ${
               selected
-                ? 'bg-(--prose) text-(--bg) shadow-sm'
+                ? 'bg-(--accent) text-(--bg) shadow-sm'
                 : 'text-(--prose-2) hover:bg-(--surface-raised) hover:text-(--prose)'
             }`}
           >

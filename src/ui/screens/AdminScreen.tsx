@@ -199,7 +199,7 @@ export function AdminScreen({
           <button
             type="submit"
             disabled={busy}
-            className="rounded-lg bg-(--prose) px-4 py-2 text-sm font-bold text-(--bg) disabled:opacity-50"
+            className="rounded-lg bg-(--accent) px-4 py-2 text-sm font-bold text-(--bg) disabled:opacity-50"
           >
             Send system message
           </button>

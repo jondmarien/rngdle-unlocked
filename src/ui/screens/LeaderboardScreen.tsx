@@ -499,7 +499,7 @@ export function LeaderboardScreen({
                         className={`flex h-11 w-11 items-center justify-center rounded-md border text-lg font-bold leading-none ${
                           isFollowing
                             ? 'border-(--outline) text-(--prose-2)'
-                            : 'border-(--prose) bg-(--prose) text-(--bg)'
+                            : 'border-(--accent) bg-(--accent) text-(--bg)'
                         }`}
                       >
                         {isFollowing ? '✓' : '+'}
@@ -732,7 +732,7 @@ export function LeaderboardScreen({
                           className={`flex h-11 w-11 items-center justify-center rounded-md border text-lg font-bold leading-none ${
                             isFollowing
                               ? 'border-(--outline) text-(--prose-2)'
-                              : 'border-(--prose) bg-(--prose) text-(--bg)'
+                              : 'border-(--accent) bg-(--accent) text-(--bg)'
                           }`}
                         >
                           {isFollowing ? '✓' : '+'}
@@ -816,7 +816,7 @@ export function LeaderboardScreen({
                           className={`flex h-11 w-11 items-center justify-center rounded-md border text-lg font-bold leading-none ${
                             isFollowing
                               ? 'border-(--outline) text-(--prose-2)'
-                              : 'border-(--prose) bg-(--prose) text-(--bg)'
+                              : 'border-(--accent) bg-(--accent) text-(--bg)'
                           }`}
                         >
                           {isFollowing ? '✓' : '+'}

@@ -206,7 +206,7 @@ export function LatestRunsPanel({
                 selected
                   ? t.id === 'ranked'
                     ? 'bg-amber-500 text-black'
-                    : 'bg-(--prose) text-(--bg)'
+                    : 'bg-(--accent) text-(--bg)'
                   : 'text-(--prose-2) hover:bg-(--surface-raised)'
               }`}
             >

@@ -32,7 +32,7 @@ export function SectionHeader({
       aria-expanded={open}
     >
       <h2 className="text-base font-bold text-(--prose)">
-        <span className="mr-1.5 inline-block w-4 text-center text-sm text-(--prose-3)">
+        <span className="mr-1.5 inline-block w-4 text-center text-sm text-(--accent)">
           {open ? '▾' : '▸'}
         </span>
         {title}

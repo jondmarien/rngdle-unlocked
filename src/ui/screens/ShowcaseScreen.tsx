@@ -99,7 +99,7 @@ export function ShowcaseScreen({
           stats.bestConsecutive.map((c) => (
             <div
               key={c.windowSize}
-              className="rounded-xl border border-(--outline) bg-(--surface) p-3"
+              className="rounded-xl border border-(--accent)/30 bg-[color-mix(in_srgb,var(--accent)_6%,var(--surface))] p-3"
             >
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h3 className="text-sm font-bold uppercase tracking-wide">

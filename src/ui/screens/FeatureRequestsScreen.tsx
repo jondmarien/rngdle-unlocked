@@ -180,7 +180,7 @@ function FeatureRequestCard({
                 <button
                   type="button"
                   disabled={editPending}
-                  className="rounded-md border border-(--prose) bg-(--prose) px-2 py-1 text-xs font-semibold text-(--bg)"
+                  className="rounded-md border border-(--accent) bg-(--accent) px-2 py-1 text-xs font-semibold text-(--bg)"
                   onClick={() => {
                     void Promise.resolve(
                       onEdit(item.id, {
@@ -338,7 +338,7 @@ function FeatureRequestCard({
             className={`flex min-h-11 min-w-14 flex-col items-center justify-center rounded-md border px-2 py-1.5 text-sm font-bold ${
               item.votedByMe
                 ? 'border-amber-500 bg-amber-500/15 text-amber-700 dark:text-amber-300'
-                : 'border-(--outline) text-(--prose) hover:border-(--prose)'
+                : 'border-(--outline) text-(--prose) hover:border-(--accent) hover:text-(--accent)'
             }`}
             title={item.votedByMe ? 'Already voted' : 'Upvote'}
             aria-label={
@@ -567,7 +567,7 @@ export function FeatureRequestsScreen({
         <button
           type="button"
           onClick={onGoAccount}
-          className="rounded-md border border-(--prose) bg-(--prose) px-3 py-2 text-sm font-semibold text-(--bg)"
+          className="rounded-md border border-(--accent) bg-(--accent) px-3 py-2 text-sm font-semibold text-(--bg)"
         >
           Sign in
         </button>
@@ -731,7 +731,7 @@ export function FeatureRequestsScreen({
         <button
           type="submit"
           disabled={submitMutation.isPending}
-          className="rounded-md border border-(--prose) bg-(--prose) px-3 py-1.5 text-sm font-semibold text-(--bg) disabled:opacity-60"
+          className="rounded-md border border-(--accent) bg-(--accent) px-3 py-1.5 text-sm font-semibold text-(--bg) disabled:opacity-60"
         >
           {submitMutation.isPending ? 'Submitting…' : 'Submit'}
         </button>

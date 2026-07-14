@@ -158,7 +158,7 @@ export function AppShell({
           <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
             <a
               href={tabPath('home')}
-              className="font-display text-base font-bold tracking-wide sm:text-lg"
+              className="font-display text-base font-bold tracking-wide hover:text-(--accent) sm:text-lg"
               onClick={(e) => {
                 e.preventDefault();
                 onTab('home');
@@ -188,7 +188,7 @@ export function AppShell({
                 onClick={() => onTab('notifications')}
                 className={`relative rounded-md border px-2.5 py-1.5 text-sm font-semibold ${
                   tab === 'notifications'
-                    ? 'border-(--prose) bg-(--surface-raised)'
+                    ? 'border-(--accent) bg-[color-mix(in_srgb,var(--accent)_16%,transparent)] text-(--accent)'
                     : 'border-(--outline)'
                 }`}
               >
@@ -223,7 +223,7 @@ export function AppShell({
                   }}
                   className={`whitespace-nowrap rounded-md px-3 py-2 text-sm font-semibold tracking-wide ${
                     profileActive
-                      ? 'bg-(--surface-raised) text-(--prose)'
+                      ? 'bg-(--accent) text-(--bg)'
                       : 'text-(--prose-2) hover:bg-(--surface) hover:text-(--prose)'
                   }`}
                 >
@@ -243,7 +243,7 @@ export function AppShell({
                 }}
                 className={`whitespace-nowrap rounded-md px-3 py-2 text-sm font-semibold tracking-wide ${
                   active
-                    ? 'bg-(--surface-raised) text-(--prose)'
+                    ? 'bg-(--accent) text-(--bg)'
                     : 'text-(--prose-2) hover:bg-(--surface) hover:text-(--prose)'
                 }`}
               >

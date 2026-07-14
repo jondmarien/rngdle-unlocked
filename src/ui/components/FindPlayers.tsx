@@ -96,7 +96,7 @@ export function FindPlayers({
         <button
           type="submit"
           disabled={busy || q.trim().length < 2}
-          className="rounded-md border-2 border-(--prose) bg-(--prose) px-3 py-2 text-sm font-semibold text-(--bg) disabled:opacity-40"
+          className="rounded-md border-2 border-(--accent) bg-(--accent) px-3 py-2 text-sm font-semibold text-(--bg) disabled:opacity-40"
         >
           Search
         </button>
@@ -127,7 +127,7 @@ export function FindPlayers({
                 className={`rounded-md border px-2.5 py-1.5 text-sm font-semibold ${
                   isFollowing
                     ? 'border-(--outline) text-(--prose-2)'
-                    : 'border-(--prose) bg-(--prose) text-(--bg)'
+                    : 'border-(--accent) bg-(--accent) text-(--bg)'
                 }`}
               >
                 {isFollowing ? 'Following' : '+ Follow'}

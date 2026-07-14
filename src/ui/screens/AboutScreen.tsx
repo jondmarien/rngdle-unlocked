@@ -149,7 +149,10 @@ export function AboutScreen() {
             awards EP. First-time unlocks show a yellow{' '}
             <strong className="text-(--prose)">NEW</strong> pill on the
             breakdown. Browse the{' '}
-            <a className="underline" href="/collection">
+            <a
+              className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+              href="/collection"
+            >
               Codex
             </a>{' '}
             for locked vs unlocked entries, unlock timestamps, and a{' '}
@@ -174,7 +177,10 @@ export function AboutScreen() {
           </li>
           <li>
             <strong className="text-(--prose)">Stats &amp; showcase</strong> —{' '}
-            <a className="underline" href="/stats">
+            <a
+              className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+              href="/stats"
+            >
               Stats
             </a>{' '}
             shows rarity histograms, EP/hour, and a streak calendar; Showcase
@@ -224,7 +230,7 @@ export function AboutScreen() {
         <p className="text-xs text-(--prose-3)">
           Compared with{' '}
           <a
-            className="underline"
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
             href="https://www.rngdle.com/about"
             target="_blank"
             rel="noreferrer"
@@ -332,7 +338,10 @@ export function AboutScreen() {
           <li>
             Set a public <strong className="text-(--prose)">@username</strong>{' '}
             for the{' '}
-            <a className="underline" href="/leaderboard">
+            <a
+              className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+              href="/leaderboard"
+            >
               leaderboard
             </a>{' '}
             (Ranked, Practice, Arcade; Total EP and Best Roll on EP boards),
@@ -537,7 +546,7 @@ export function AboutScreen() {
         <p className="text-xs text-(--prose-3)">
           Source:{' '}
           <a
-            className="underline"
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
             href="https://github.com/jondmarien/rngdle-unlocked"
             target="_blank"
             rel="noreferrer"
@@ -547,7 +556,7 @@ export function AboutScreen() {
           {' · '}
           Live:{' '}
           <a
-            className="underline"
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
             href="https://rngdle-unlocked.chron0.tech"
             target="_blank"
             rel="noreferrer"
@@ -557,7 +566,7 @@ export function AboutScreen() {
           {' · '}
           Architecture:{' '}
           <a
-            className="underline"
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
             href="https://github.com/jondmarien/rngdle-unlocked/blob/main/docs/ARCHITECTURE.md"
             target="_blank"
             rel="noreferrer"
@@ -601,7 +610,10 @@ export function AboutScreen() {
           </li>
           <li>
             <strong className="text-(--prose)">Delete your account</strong> from{' '}
-            <a className="underline" href="/account">
+            <a
+              className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+              href="/account"
+            >
               Account
             </a>{' '}
             (confirm via email). Cloud identity, synced progress, and related
@@ -613,7 +625,10 @@ export function AboutScreen() {
           We do <em>not</em> hash emails for storage (login and mail need the
           address), and we do not claim session IP / user-agent hashing. Full
           wording lives in the{' '}
-          <a className="underline" href="/privacy">
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href="/privacy"
+          >
             Privacy Policy
           </a>
           .
@@ -627,7 +642,7 @@ export function AboutScreen() {
         <p>
           Not affiliated with{' '}
           <a
-            className="underline"
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
             href="https://www.rngdle.com/"
             target="_blank"
             rel="noreferrer"
@@ -639,10 +654,16 @@ export function AboutScreen() {
           security product.
         </p>
         <p className="flex flex-wrap gap-3 text-xs">
-          <a className="underline" href="/terms">
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href="/terms"
+          >
             Terms of Service
           </a>
-          <a className="underline" href="/privacy">
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href="/privacy"
+          >
             Privacy Policy
           </a>
         </p>

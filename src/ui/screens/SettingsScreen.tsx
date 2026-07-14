@@ -229,14 +229,14 @@ export function SettingsScreen() {
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            className="border border-(--prose) px-3 py-2 text-xs font-bold uppercase"
+            className="border border-(--accent) bg-(--accent) px-3 py-2 text-xs font-bold uppercase text-(--bg)"
             onClick={exportSave}
           >
             Export JSON
           </button>
           <button
             type="button"
-            className="border border-(--prose) px-3 py-2 text-xs font-bold uppercase"
+            className="border border-(--accent) bg-(--accent) px-3 py-2 text-xs font-bold uppercase text-(--bg)"
             onClick={() => fileRef.current?.click()}
           >
             Import JSON
