@@ -17,6 +17,7 @@ import {
   type BadgeArtLightboxItem,
 } from '../components/BadgeArtLightbox';
 import { FormattedCount } from '../components/FormattedCount';
+import { MotionCard } from '../motion';
 
 type FilterId = BadgeFamily | 'all' | 'secret' | 'new';
 
@@ -578,8 +579,10 @@ export function CollectionScreen() {
                 >
                   <div className="flex gap-3">
                     {b.image && (
-                      <button
-                        type="button"
+                      <MotionCard
+                        as="button"
+                        hover={has}
+                        press={has}
                         disabled={!has}
                         className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border sm:h-20 sm:w-20 ${
                           has
@@ -610,7 +613,7 @@ export function CollectionScreen() {
                             🔒
                           </div>
                         )}
-                      </button>
+                      </MotionCard>
                     )}
                     <div className="min-w-0 flex-1">
                       <div className="font-bold tracking-tight">
@@ -697,8 +700,10 @@ export function CollectionScreen() {
                 >
                   <div className="flex gap-3">
                     {b.image && (
-                      <button
-                        type="button"
+                      <MotionCard
+                        as="button"
+                        hover={has}
+                        press={has}
                         disabled={!has}
                         className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border sm:h-20 sm:w-20 ${
                           has
@@ -729,7 +734,7 @@ export function CollectionScreen() {
                             🔒
                           </div>
                         )}
-                      </button>
+                      </MotionCard>
                     )}
                     <div className="min-w-0 flex-1">
                       <div className="font-bold tracking-tight">
@@ -883,8 +888,10 @@ function SecretCard({
         }`}
       >
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-          <button
-            type="button"
+          <MotionCard
+            as="button"
+            hover={Boolean(onOpenArt)}
+            press={Boolean(onOpenArt)}
             disabled={!onOpenArt}
             onClick={onOpenArt}
             aria-label={has ? `View ${secret.name} full size` : undefined}
@@ -904,7 +911,7 @@ function SecretCard({
                 🔒
               </div>
             )}
-          </button>
+          </MotionCard>
           <div className="min-w-0 flex-1">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">
               Final seal
@@ -956,8 +963,10 @@ function SecretCard({
             : 'border-(--outline) bg-(--surface) opacity-75'
       }`}
     >
-      <button
-        type="button"
+      <MotionCard
+        as="button"
+        hover={Boolean(onOpenArt)}
+        press={Boolean(onOpenArt)}
         disabled={!onOpenArt}
         onClick={onOpenArt}
         aria-label={has ? `View ${secret.name} full size` : undefined}
@@ -977,7 +986,7 @@ function SecretCard({
             🔒
           </div>
         )}
-      </button>
+      </MotionCard>
       <div className="min-w-0 flex-1">
         <p className="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">
           {isStreak ? 'Streak secret' : `Section mastery · ${secret.section}`}

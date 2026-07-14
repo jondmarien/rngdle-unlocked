@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { motion, useReducedMotion } from 'motion/react';
 import { useState } from 'react';
 import { ARCADE_UPGRADES, type ArcadeUpgradeId } from '../../game/arcade';
+import { MOTION_EASE, MOTION_MS } from '../motion/tokens';
 import {
   celebrateIntensity,
   playAbandonSound,
@@ -69,6 +71,7 @@ export function ArcadeScreen({
   const [rollCount, setRollCount] = useState<ArcadeRollCount>(1);
   const [endBanner, setEndBanner] = useState<string | null>(null);
   const [panel, setPanel] = useState<'run' | 'meta'>('run');
+  const reduceMotion = useReducedMotion();
 
   const stateQuery = useQuery({
     queryKey: ['arcade-state'],
@@ -604,15 +607,31 @@ export function ArcadeScreen({
                         def.type === 'active'
                           ? ARCADE_SHOP_TEXTURE.active
                           : ARCADE_SHOP_TEXTURE.passive;
-                      const flash =
-                        justBoughtId === id ? 'arcade-shop-card-buy' : '';
+                      const justBought = justBoughtId === id;
                       return (
-                        <li
+                        <motion.li
                           key={id}
-                          className={`arcade-shop-card arcade-owned-card flex flex-wrap items-center justify-between gap-2 rounded-md border border-(--outline) px-3 py-2 text-sm ${flash}`}
+                          className="arcade-shop-card arcade-owned-card flex flex-wrap items-center justify-between gap-2 rounded-md border border-(--outline) px-3 py-2 text-sm"
                           style={{
                             ['--arcade-shop-bg' as string]: `url(${texture})`,
                           }}
+                          animate={
+                            reduceMotion
+                              ? { scale: 1 }
+                              : justBought
+                                ? { scale: [1, 1.04, 1] }
+                                : { scale: 1 }
+                          }
+                          transition={
+                            reduceMotion
+                              ? { duration: 0 }
+                              : justBought
+                                ? { duration: 0.35, ease: MOTION_EASE }
+                                : {
+                                    duration: MOTION_MS.quick / 1000,
+                                    ease: MOTION_EASE,
+                                  }
+                          }
                         >
                           <div>
                             <span className="font-semibold">{def.name}</span>
@@ -666,7 +685,7 @@ export function ArcadeScreen({
                               )}
                             </div>
                           )}
-                        </li>
+                        </motion.li>
                       );
                     })}
                   </ul>

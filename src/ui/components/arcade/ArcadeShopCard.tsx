@@ -1,11 +1,14 @@
+import { motion, useReducedMotion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import type { ArcadeUpgradeId } from '../../../game/arcade';
 import { ARCADE_UPGRADES } from '../../../game/arcade';
 import { ARCADE_SHOP_TEXTURE } from '../../../lib/arcade-icons';
+import { MOTION_EASE, MOTION_MS } from '../../motion/tokens';
 
 /**
- * Shop offer card — category texture, hover lift, buy flash, unaffordable shake.
+ * Shop offer card — category texture, Motion hover/press, buy flash, unaffordable shake.
  * Does not call buy when unaffordable (presentation-only deny feedback).
+ * CSS buy/deny keyframes left in global.css but unused here (avoid double-animation).
  */
 export function ArcadeShopCard({
   upgradeId,
@@ -25,11 +28,9 @@ export function ArcadeShopCard({
     def.type === 'active'
       ? ARCADE_SHOP_TEXTURE.active
       : ARCADE_SHOP_TEXTURE.passive;
+  const reduceMotion = useReducedMotion();
   const [denyTick, setDenyTick] = useState(0);
   const [buyTick, setBuyTick] = useState(0);
-
-  const denyClass = denyTick > 0 ? 'arcade-shop-card-deny' : '';
-  const buyClass = buyTick > 0 ? 'arcade-shop-card-buy' : '';
 
   useEffect(() => {
     if (denyTick === 0) return;
@@ -43,12 +44,55 @@ export function ArcadeShopCard({
     return () => window.clearTimeout(t);
   }, [buyTick]);
 
+  const interactive = canBuy && !busy;
+  const buying = buyTick > 0;
+  const denying = denyTick > 0;
+
   return (
-    <li
-      className={`arcade-shop-card flex flex-col rounded-md border border-(--outline) px-3 py-2 text-sm ${
-        canBuy && !busy ? 'arcade-shop-card-affordable' : ''
-      } ${denyClass} ${buyClass}`}
+    <motion.li
+      className="arcade-shop-card flex flex-col rounded-md border border-(--outline) px-3 py-2 text-sm"
       style={{ ['--arcade-shop-bg' as string]: `url(${texture})` }}
+      whileHover={
+        reduceMotion || !interactive
+          ? undefined
+          : {
+              y: -2,
+              scale: 1.02,
+              transition: {
+                duration: MOTION_MS.hover / 1000,
+                ease: MOTION_EASE,
+              },
+            }
+      }
+      whileTap={
+        reduceMotion || !interactive
+          ? undefined
+          : {
+              scale: 0.98,
+              transition: {
+                duration: MOTION_MS.press / 1000,
+                ease: MOTION_EASE,
+              },
+            }
+      }
+      animate={
+        reduceMotion
+          ? { scale: 1, x: 0, opacity: 1 }
+          : buying
+            ? { scale: [1, 1.04, 1], x: 0, opacity: 1 }
+            : denying
+              ? { x: [0, -3, 3, -2, 0], scale: 1, opacity: 0.72 }
+              : { scale: 1, x: 0, opacity: 1 }
+      }
+      transition={
+        reduceMotion
+          ? { duration: 0 }
+          : buying
+            ? { duration: 0.35, ease: MOTION_EASE }
+            : denying
+              ? { duration: 0.35, ease: MOTION_EASE }
+              : { duration: MOTION_MS.quick / 1000, ease: MOTION_EASE }
+      }
     >
       <span className="font-semibold">{def.name}</span>
       <span className="text-xs text-(--prose-3)">{def.type}</span>
@@ -72,6 +116,6 @@ export function ArcadeShopCard({
       >
         Buy · {price} Digits
       </button>
-    </li>
+    </motion.li>
   );
 }
