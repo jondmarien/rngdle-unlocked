@@ -109,6 +109,11 @@ export const META_UNLOCK_RULES: readonly MetaUnlockRule[] = [
   { upgradeId: 'epic_surge', kind: 'bestScore', minScore: 500 },
 ] as const;
 
+/** Idle Digits (meta): modest passive accrual. */
+export const IDLE_DIGITS_PER_HOUR = 2;
+export const IDLE_MAX_OFFLINE_HOURS = 12;
+export const IDLE_BANK_CAP = 100;
+
 /** Deadline (opt-in): target = max(FLOOR, ceil(digits * MULT)); N rolls or bust. */
 export const DEADLINE_MULT = 1.75;
 export const DEADLINE_FLOOR_TARGET = 20;

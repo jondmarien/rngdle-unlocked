@@ -12,6 +12,10 @@ import {
   tickDeadline,
 } from '../src/game/arcade/deadline.js';
 import {
+  computeIdleAccrual,
+  previewIdlePending,
+} from '../src/game/arcade/idle.js';
+import {
   ACTIVE_COOLDOWNS,
   CURRENCY_SURGE_ROLLS,
   DON_SUCCESS_MIN,
@@ -78,6 +82,9 @@ export type ArcadeMetaPublic = {
   bestRunScore: number;
   lifetimeDigitsCashed: number;
   newlyUnlocked?: ArcadeUpgradeId[];
+  idleDigitsBank: number;
+  pendingIdleDigits: number;
+  lastIdleClaimAt: string;
 };
 
 export type ArcadeRollPublic = {
@@ -228,13 +235,16 @@ async function ensureMeta(db: Db, userId: string) {
     };
   }
   const unlocked = defaultUnlockedUpgrades();
+  const now = new Date();
   await db.insert(arcadeMeta).values({
     userId,
     unlockedUpgradeIds: JSON.stringify(unlocked),
     totalRunsCompleted: 0,
     bestRunScore: 0,
     lifetimeDigitsCashed: 0,
-    updatedAt: new Date(),
+    idleDigitsBank: 0,
+    lastIdleClaimAt: now,
+    updatedAt: now,
   });
   const [row] = await db
     .select()
@@ -248,13 +258,24 @@ function metaToPublic(
   row: typeof arcadeMeta.$inferSelect,
   unlocked: ArcadeUpgradeId[],
   newlyUnlocked?: ArcadeUpgradeId[],
+  now: Date = new Date(),
 ): ArcadeMetaPublic {
+  const lastClaim = row.lastIdleClaimAt ?? row.updatedAt ?? now;
+  const bank = row.idleDigitsBank ?? 0;
+  const pending = previewIdlePending({
+    lastClaimAt: lastClaim,
+    now,
+    currentBank: bank,
+  });
   return {
     unlockedUpgrades: unlocked,
     totalRunsCompleted: row.totalRunsCompleted,
     bestRunScore: row.bestRunScore,
     lifetimeDigitsCashed: row.lifetimeDigitsCashed,
     newlyUnlocked,
+    idleDigitsBank: bank,
+    pendingIdleDigits: pending,
+    lastIdleClaimAt: lastClaim.toISOString(),
   };
 }
 
@@ -272,6 +293,47 @@ export async function getArcadeState(
   return {
     meta: metaToPublic(metaRow, metaRow.unlocked),
     activeRun: active ? runToPublic(active) : null,
+  };
+}
+
+export async function claimIdleDigits(
+  db: Db,
+  userId: string,
+): Promise<{ ok: true; meta: ArcadeMetaPublic; claimed: number }> {
+  const metaRow = await ensureMeta(db, userId);
+  const now = new Date();
+  const lastClaim = metaRow.lastIdleClaimAt ?? metaRow.updatedAt ?? now;
+  const bank = metaRow.idleDigitsBank ?? 0;
+  const accrual = computeIdleAccrual({
+    lastClaimAt: lastClaim,
+    now,
+    currentBank: bank,
+  });
+
+  await db
+    .update(arcadeMeta)
+    .set({
+      idleDigitsBank: accrual.nextBank,
+      lastIdleClaimAt: now,
+      updatedAt: now,
+    })
+    .where(eq(arcadeMeta.userId, userId));
+
+  const [fresh] = await db
+    .select()
+    .from(arcadeMeta)
+    .where(eq(arcadeMeta.userId, userId))
+    .limit(1);
+
+  return {
+    ok: true,
+    meta: metaToPublic(
+      fresh!,
+      parseUnlocked(fresh!.unlockedUpgradeIds),
+      undefined,
+      now,
+    ),
+    claimed: accrual.digitsEarned,
   };
 }
 
@@ -306,12 +368,19 @@ export async function startArcadeRun(
   const shop = buildShopOffers(metaRow.unlocked, [], 0, secureRandom);
   const id = newRollId();
   const now = new Date();
+  const seedDigits = Math.max(0, metaRow.idleDigitsBank ?? 0);
+  if (seedDigits > 0) {
+    await db
+      .update(arcadeMeta)
+      .set({ idleDigitsBank: 0, updatedAt: now })
+      .where(eq(arcadeMeta.userId, userId));
+  }
   await db.insert(arcadeRuns).values({
     id,
     userId,
     status: 'active',
-    digits: 0,
-    peakDigits: 0,
+    digits: seedDigits,
+    peakDigits: seedDigits,
     rollCount: 0,
     comboStreak: 0,
     ownedUpgradesJson: '[]',
@@ -320,6 +389,8 @@ export async function startArcadeRun(
     pendingActiveJson: '{}',
     shopOfferJson: JSON.stringify(shop),
     runScore: null,
+    deadlineTargetDigits: 0,
+    deadlineRollsRemaining: 0,
     startedAt: now,
     endedAt: null,
   });
@@ -328,11 +399,19 @@ export async function startArcadeRun(
     .from(arcadeRuns)
     .where(eq(arcadeRuns.id, id))
     .limit(1);
-  log.info('run:start', { userId, runId: id });
+  const [freshMeta] = await db
+    .select()
+    .from(arcadeMeta)
+    .where(eq(arcadeMeta.userId, userId))
+    .limit(1);
+  log.info('run:start', { userId, runId: id, seedDigits });
   return {
     ok: true,
     run: runToPublic(row!),
-    meta: metaToPublic(metaRow, metaRow.unlocked),
+    meta: metaToPublic(
+      freshMeta!,
+      parseUnlocked(freshMeta!.unlockedUpgradeIds),
+    ),
   };
 }
 

@@ -268,6 +268,9 @@ export const arcadeMetaSchema = z.object({
   bestRunScore: z.number(),
   lifetimeDigitsCashed: z.number(),
   newlyUnlocked: z.array(arcadeUpgradeIdSchema).optional(),
+  idleDigitsBank: z.number().optional().default(0),
+  pendingIdleDigits: z.number().optional().default(0),
+  lastIdleClaimAt: isoDateSchema.optional(),
 });
 
 export const arcadeRollSchema = z.object({

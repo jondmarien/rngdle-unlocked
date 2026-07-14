@@ -17,6 +17,7 @@ import {
   armArcadeActive,
   buyArcadeUpgrade,
   cashOutArcadeRun,
+  claimArcadeIdle,
   fetchArcadeState,
   startArcadeRun,
   type ArcadeMeta,
@@ -225,6 +226,34 @@ export function ArcadeScreen({
     },
   });
 
+  const claimIdleMut = useMutation({
+    mutationFn: claimArcadeIdle,
+    onSuccess: (data) => {
+      if (data.claimed > 0) {
+        playDigitsGainSound(soundOn);
+        setEndBanner(
+          `Claimed ${data.claimed.toLocaleString()} idle Digits into your bank.`,
+        );
+      } else {
+        setEndBanner('No idle Digits ready yet — check back later.');
+      }
+      qc.setQueryData(['arcade-state'], (prev: unknown) => {
+        const p = prev as
+          | {
+              meta: ArcadeMeta;
+              activeRun: ArcadeRun | null;
+              usernameRequired: boolean;
+            }
+          | undefined;
+        return {
+          meta: data.meta,
+          activeRun: p?.activeRun ?? null,
+          usernameRequired: false,
+        };
+      });
+    },
+  });
+
   const abandonMut = useMutation({
     mutationFn: abandonArcadeRun,
     onSuccess: (data) => {
@@ -247,6 +276,7 @@ export function ArcadeScreen({
     buyMut.isPending ||
     armMut.isPending ||
     cashMut.isPending ||
+    claimIdleMut.isPending ||
     abandonMut.isPending;
 
   const mutErr =
@@ -255,6 +285,7 @@ export function ArcadeScreen({
     buyMut.error?.message ||
     armMut.error?.message ||
     cashMut.error?.message ||
+    claimIdleMut.error?.message ||
     abandonMut.error?.message ||
     null;
   const stateErr =
@@ -360,6 +391,32 @@ export function ArcadeScreen({
             Runs completed: {meta.totalRunsCompleted.toLocaleString()} ·
             Lifetime cashed: {meta.lifetimeDigitsCashed.toLocaleString()}
           </p>
+          <div className="rounded-md border border-(--outline) px-3 py-2">
+            <p className="mb-1 font-semibold">Idle Digits</p>
+            <p className="text-xs text-(--prose-2)">
+              +2 Digits/hour while away (caps after 12h). Bank seeds your next
+              run start. Server-computed — claim when ready.
+            </p>
+            <p className="mt-2 text-sm">
+              Bank:{' '}
+              <strong className="text-amber-500">
+                {(meta.idleDigitsBank ?? 0).toLocaleString()}
+              </strong>
+              {' · '}
+              Pending:{' '}
+              <strong className="text-amber-500">
+                {(meta.pendingIdleDigits ?? 0).toLocaleString()}
+              </strong>
+            </p>
+            <button
+              type="button"
+              disabled={busy || (meta.pendingIdleDigits ?? 0) <= 0}
+              className="mt-2 rounded-md border border-(--accent) bg-(--accent) px-3 py-1.5 text-xs font-bold text-(--bg) disabled:opacity-40"
+              onClick={() => claimIdleMut.mutate()}
+            >
+              Claim idle Digits
+            </button>
+          </div>
           <div>
             <p className="mb-1 font-semibold">Unlocked shop pool</p>
             <ul className="space-y-1 text-(--prose-2)">
@@ -373,8 +430,7 @@ export function ArcadeScreen({
             </ul>
           </div>
           <p className="text-xs text-(--prose-3)">
-            Coming later (not in v1): debt/deadline pressure, idle Digits, trash
-            streak soft-fail.
+            Coming later (not in v1): trash streak soft-fail.
           </p>
         </div>
       )}

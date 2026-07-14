@@ -223,6 +223,27 @@ export async function abandonArcadeRun(): Promise<{
   };
 }
 
+export async function claimArcadeIdle(): Promise<{
+  meta: ArcadeMeta;
+  claimed: number;
+}> {
+  const res = await withTimeout(
+    fetch('/api/arcade/claim-idle', {
+      method: 'POST',
+      credentials: 'include',
+    }),
+    FETCH_MS,
+    'arcade claim-idle',
+  );
+  const raw = await parseJson(res);
+  if (!res.ok) throw new Error(errorMessage(raw, 'Claim idle Digits failed'));
+  const data = raw as { meta: unknown; claimed?: number };
+  return {
+    meta: arcadeMetaSchema.parse(data.meta),
+    claimed: typeof data.claimed === 'number' ? data.claimed : 0,
+  };
+}
+
 export async function fetchArcadeLeaderboard(opts?: {
   limit?: number;
   signal?: AbortSignal;

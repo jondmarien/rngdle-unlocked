@@ -270,6 +270,10 @@ export const arcadeMeta = pgTable('arcade_meta', {
   totalRunsCompleted: integer('total_runs_completed').notNull().default(0),
   bestRunScore: integer('best_run_score').notNull().default(0),
   lifetimeDigitsCashed: integer('lifetime_digits_cashed').notNull().default(0),
+  /** Claimed idle Digits waiting to seed the next run. */
+  idleDigitsBank: integer('idle_digits_bank').notNull().default(0),
+  /** Server accrual anchor — never accept from client. */
+  lastIdleClaimAt: timestamp('last_idle_claim_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
