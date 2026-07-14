@@ -32,6 +32,26 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Custom dialogs, unlock art on Roll, History Highlights',
+    date: '2026-07-14',
+    version: '0.16.1',
+    tags: ['UI', 'History', 'Codex'],
+    content: [
+      {
+        body: 'Native browser popups are gone — confirms and prompts use in-app dialogs, and toasts can stack quietly. Unlock chips on Roll open full badge art, and Showcase now lives inside History as Highlights.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'Same rolls and boards — this is clarity and navigation polish.',
+        bullets: [
+          '**Dialogs & toasts** — abandon, delete, ban, and report flows use styled confirms/prompts instead of browser alerts.',
+          '**Roll unlock art** — tap Journey, Lifetime EP, or Secret mastery chips after a roll for the same lightbox as Codex.',
+          '**History → Highlights** — streaks, best roll, and consecutive runs moved here; the Showcase tab is gone (`/showcase` still works).',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Arcade Deadline, Idle Digits, and cold streaks',
     date: '2026-07-14',
     version: '0.16.0',

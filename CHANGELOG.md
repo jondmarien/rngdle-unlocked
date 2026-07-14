@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.1] - 2026-07-14
+
 ### Added
 
 - **Base UI dialogs + toasts** — replace native `window.confirm` / `window.prompt` with `@base-ui/react` AlertDialog/Dialog/Toast, themed to app tokens and animated with Motion (`AnimatePresence` + opacity for exit detection). Shared `confirmAsync` / `promptAsync` / `useToast` via `FeedbackProvider`.
@@ -17,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Motion** — add `motion` as shared UI animation infra (dialogs, toasts, lightbox, History view toggle).
 - **Nav** — remove Showcase tab; History SegmentedToggle switches Highlights | All rolls (Motion `layout` fade).
+
+### Notes
+
+- Profile avatar Grok Image regen (FR Request 5) deferred — no `XAI_API_KEY` in overnight agent. Tailwind FR (Request 1) remains deferred. See `overnight-fr-batch-summary.md`.
 
 ## [0.16.0] - 2026-07-14
 

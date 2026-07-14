@@ -6,13 +6,13 @@ Request 1 (Tailwind) was **deferred** before implementation. Request 5 (avatars)
 
 ## What shipped
 
-| Request | Commit subject | Status |
-| ------- | -------------- | ------ |
-| 2 | Replace native confirm/prompt with Base UI dialogs and toasts | **Shipped** |
-| 3 | Open badge art lightbox from Home unlock chips | **Shipped** |
-| 4 | Merge Showcase into History with Highlights toggle | **Shipped** |
-| 5 | Regenerate profile avatars via Grok Image | **Stopped** — no `XAI_API_KEY` / Grok Image in this environment; avatars unchanged; **did not** fall back to Cursor GenerateImage |
-| 1 | Tailwind migration | **Deferred** to a future plan (no commits) |
+| Request | Commit subject                                                | Status                                                                                                                            |
+| ------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| 2       | Replace native confirm/prompt with Base UI dialogs and toasts | **Shipped**                                                                                                                       |
+| 3       | Open badge art lightbox from Home unlock chips                | **Shipped**                                                                                                                       |
+| 4       | Merge Showcase into History with Highlights toggle            | **Shipped**                                                                                                                       |
+| 5       | Regenerate profile avatars via Grok Image                     | **Stopped** — no `XAI_API_KEY` / Grok Image in this environment; avatars unchanged; **did not** fall back to Cursor GenerateImage |
+| 1       | Tailwind migration                                            | **Deferred** to a future plan (no commits)                                                                                        |
 
 ## Request 2 — Base UI dialogs + toasts
 
@@ -30,11 +30,11 @@ Request 1 (Tailwind) was **deferred** before implementation. Request 5 (avatars)
 
 Production `pnpm build` client main chunk `dist/assets/index-*.js`:
 
-| Check | Result |
-| ----- | ------ |
-| Main index size | **184 123** bytes (~**55 KB** gzip) |
-| `base-ui` string hits in main index | 15 (expected — we use Dialog/AlertDialog/Toast) |
-| Unused primitives in main index (`Combobox`, `Checkbox`, `Slider`, `Accordion`, `Menubar`, `Progress`, `Toolbar`, `Fieldset`, `NumberField`, `ScrollArea`, `PreviewCard`, `ContextMenu`) | **0 each** |
+| Check                                                                                                                                                                                    | Result                                          |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| Main index size                                                                                                                                                                          | **184 123** bytes (~**55 KB** gzip)             |
+| `base-ui` string hits in main index                                                                                                                                                      | 15 (expected — we use Dialog/AlertDialog/Toast) |
+| Unused primitives in main index (`Combobox`, `Checkbox`, `Slider`, `Accordion`, `Menubar`, `Progress`, `Toolbar`, `Fieldset`, `NumberField`, `ScrollArea`, `PreviewCard`, `ContextMenu`) | **0 each**                                      |
 
 **Verdict:** Tree-shaking appears to work as claimed for this import graph — unused Base UI primitives are not present in the client bundle. Only the dialog/toast surface we import shows up.
 
@@ -67,9 +67,9 @@ No work. Prior finding still stands: Tailwind v4 is already primary; remaining w
 
 ## Neon feature-request status
 
-| Attempt | Result |
-| ------- | ------ |
-| Neon MCP project `bitter-grass-47308091` | Schema sparse — **no `feature_requests` table** |
+| Attempt                                                             | Result                                                                 |
+| ------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Neon MCP project `bitter-grass-47308091`                            | Schema sparse — **no `feature_requests` table**                        |
 | Live `GET https://rngdle-unlocked.chron0.tech/api/feature-requests` | **401 Unauthorized** (no admin session / `DATABASE_URL` in this agent) |
 
 **No Neon rows were marked `shipped`.** Manual follow-up: admin `/features` → set Requests 2–4 to Shipped; leave 1 planned/deferred; leave 5 planned (or note blocked on Grok key).

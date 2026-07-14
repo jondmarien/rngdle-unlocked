@@ -12,11 +12,10 @@ if (!process.env.DATABASE_URL) {
 const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
-const title =
-  'New Update! v0.16.0 — Arcade Deadline, Idle Digits & cold streaks';
+const title = 'New Update! v0.16.1 — Dialogs, unlock art & History Highlights';
 const body = [
-  'Arcade grows three new layers: opt-in Deadline shop pressure, Idle Digits you claim from Meta between runs, and a recoverable cold streak when Trash keeps landing.',
-  'Digits still never convert to EP. Existing upgrades are unchanged.',
+  'Confirms and prompts now use in-app dialogs instead of browser popups, and unlock chips on Roll open full badge art.',
+  'Showcase moved into History → Highlights (streaks, best roll, consecutive runs). The Showcase tab is gone; /showcase still redirects.',
   'Read the full player notes: https://rngdle-unlocked.chron0.tech/whats-new',
   'Open: /whats-new',
 ].join(' ');
