@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-07-14
+
 ### Added
 
 - **Atomic Registry family** — 118 element badges (Z=1–118 via last-three-digits exact match) + **Atomic Seal** section mastery (`secret-master-atomic-registry`). Coexists with the existing Element digit-pun family (unchanged). Family icon + seal art under `public/icons/family/atomic-registry.jpg` and `public/secrets/atomic-registry.jpg`. Forward-only Omega expansion (no grandfathering needed; 0 Omega holders at ship).

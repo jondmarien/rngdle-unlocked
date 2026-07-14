@@ -8,7 +8,7 @@ Inspired by the daily number-game genre, but **unlocked**: roll as often as you 
 
 **[Live Site](https://rngdle-unlocked.chron0.tech)**
 
-[![Version](https://img.shields.io/badge/version-0.13.0-8b5cf6)](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.13.0)
+[![Version](https://img.shields.io/badge/version-0.14.0-8b5cf6)](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.14.0)
 [![React 19](https://img.shields.io/badge/UI-React_19-61dafb?logo=react&logoColor=black)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/lang-TypeScript_7-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite 6](https://img.shields.io/badge/build-Vite_Plus-646cff?logo=vite&logoColor=white)](https://vitejs.dev)
@@ -429,6 +429,7 @@ The Account screen times out after a few seconds and shows the sign-in form. Che
 | Ranked all-time Home crown tile + Ranked · crown labels                   | ✅ Shipped (`v0.12.1`)                                                            |
 | Collapsible How to roll (compact mode switch when collapsed)              | ✅ Shipped (`v0.12.2`)                                                            |
 | Years family + site accent + Arcade ×N + sync/View As backlog             | ✅ Shipped (`v0.13.0`)                                                            |
+| Atomic Registry (118 elements) + Atomic Seal                              | ✅ Shipped (`v0.14.0`)                                                            |
 | Server Ranked free play (`/api/ranked-roll`)                              | ✅ Shipped                                                                        |
 | Profiles (vanity + avatars) + follows                                     | ✅ Shipped                                                                        |
 | Activity unlocks + Ranked crown msgs + overtake notifs                    | ✅ Shipped                                                                        |

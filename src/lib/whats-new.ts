@@ -32,6 +32,27 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Atomic Registry — the full table',
+    date: '2026-07-14',
+    version: '0.14.0',
+    tags: ['Badges', 'Codex'],
+    content: [
+      {
+        body: 'A brand-new 118-element collection sits beside the existing Element digit badges. Match atomic numbers from the last three digits of your roll, chase Oganesson, and seal the set with Atomic Seal.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'More chemistry collectibles — Element and Periodic Crown stay exactly as they were.',
+        bullets: [
+          '**Atomic Registry** — one badge per element (H through Og); last three digits 001–118 hit that Z.',
+          '**Atomic Seal** — section mastery for collecting all 118.',
+          '**Oganesson** — the divine grail pull of the set.',
+          '**Codex Absolute** — forward-only: new earners also need Atomic Registry + Atomic Seal.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Years, accents, Arcade ×N, and sync polish',
     date: '2026-07-14',
     version: '0.13.0',

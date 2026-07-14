@@ -12,10 +12,10 @@ if (!process.env.DATABASE_URL) {
 const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
-const title = 'New Update! v0.13.0 — Years, accents, Arcade ×N';
+const title = 'New Update! v0.14.0 — Atomic Registry';
 const body = [
-  'New Years era badges (1700s–2020s) and Beverly Hills 90210, plus clearer Prove roll help and Profile seal subtitles.',
-  'Optional site-wide accent, auto cloud pull on sign-in, lifetime rarity histogram, Arcade Roll ×N, and Bases hex/binary proofs.',
+  'Atomic Registry is live: collect all 118 elements from the last three digits of your rolls, capped by the Atomic Seal.',
+  'The existing Element digit badges and Periodic Crown stay exactly as they were — this is a brand-new family beside them.',
   'Read the full player notes: https://rngdle-unlocked.chron0.tech/whats-new',
   'Open: /whats-new',
 ].join(' ');
