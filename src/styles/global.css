@@ -86,6 +86,32 @@
   --feature-tag-uncat: #8a857c;
 }
 
+/*
+ * Firefox + Tailwind v4 border/shadow fix:
+ * Tailwind gates `--tw-border-style` / shadow var fallbacks behind
+ * `@supports (-moz-orient:inline) and (not (color:rgb(from red r g b)))`.
+ * Modern Firefox supports relative colors, so those fallbacks never apply,
+ * and if `@property` initial values do not stick, `border-style` becomes
+ * invalid → `none`. Page looks “extra black” with missing chrome borders.
+ * Force the same defaults Gecko needs; harmless when `@property` works.
+ */
+@supports (-moz-orient: inline) {
+  *,
+  ::before,
+  ::after,
+  ::backdrop {
+    --tw-border-style: solid;
+    --tw-outline-style: solid;
+    --tw-shadow: 0 0 #0000;
+    --tw-inset-shadow: 0 0 #0000;
+    --tw-ring-shadow: 0 0 #0000;
+    --tw-inset-ring-shadow: 0 0 #0000;
+    --tw-ring-offset-shadow: 0 0 #0000;
+    --tw-ring-offset-width: 0px;
+    --tw-ring-offset-color: #fff;
+  }
+}
+
 * {
   box-sizing: border-box;
 }

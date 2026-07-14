@@ -133,7 +133,7 @@ export function AppShell({
   return (
     <div className="flex min-h-dvh flex-col bg-(--bg) text-(--prose)">
       {/* Sticky chrome: brand bar + nav stay visible while content scrolls */}
-      <div className="sticky top-0 z-40 border-b border-(--outline) bg-(--bg)/95 shadow-sm backdrop-blur-md supports-backdrop-filter:bg-(--bg)/85">
+      <div className="sticky top-0 z-40 border-b border-(--outline) bg-(--bg) shadow-sm backdrop-blur-md">
         {isAdmin && viewAsUsername && (
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-500/40 bg-amber-500/15 px-4 py-2 text-sm">
             <p className="font-semibold text-amber-900 dark:text-amber-200">
