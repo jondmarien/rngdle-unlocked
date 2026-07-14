@@ -385,341 +385,353 @@ export function ArcadeScreen({
         </div>
       )}
 
-      {panel === 'meta' && meta && (
-        <div className="space-y-3 rounded-lg border border-(--outline) bg-(--surface) px-3 py-3 text-sm">
-          <p>
-            Best run:{' '}
-            <strong className="text-amber-500">
-              {meta.bestRunScore.toLocaleString()} Digits
-            </strong>
-          </p>
-          <p>
-            Runs completed: {meta.totalRunsCompleted.toLocaleString()} ·
-            Lifetime cashed: {meta.lifetimeDigitsCashed.toLocaleString()}
-          </p>
-          <div className="rounded-md border border-(--outline) px-3 py-2">
-            <p className="mb-1 font-semibold">Idle Digits</p>
-            <p className="text-xs text-(--prose-2)">
-              +2 Digits/hour while away (caps after 12h). Bank seeds your next
-              run start. Server-computed — claim when ready.
-            </p>
-            <p className="mt-2 text-sm">
-              Bank:{' '}
+      <motion.div
+        layout
+        key={panel}
+        initial={reduceMotion ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={
+          reduceMotion
+            ? { duration: 0 }
+            : { duration: MOTION_MS.standard / 1000, ease: MOTION_EASE }
+        }
+      >
+        {panel === 'meta' && meta && (
+          <div className="space-y-3 rounded-lg border border-(--outline) bg-(--surface) px-3 py-3 text-sm">
+            <p>
+              Best run:{' '}
               <strong className="text-amber-500">
-                {(meta.idleDigitsBank ?? 0).toLocaleString()}
-              </strong>
-              {' · '}
-              Pending:{' '}
-              <strong className="text-amber-500">
-                {(meta.pendingIdleDigits ?? 0).toLocaleString()}
+                {meta.bestRunScore.toLocaleString()} Digits
               </strong>
             </p>
-            <button
-              type="button"
-              disabled={busy || (meta.pendingIdleDigits ?? 0) <= 0}
-              className="mt-2 rounded-md border border-(--accent) bg-(--accent) px-3 py-1.5 text-xs font-bold text-(--bg) disabled:opacity-40"
-              onClick={() => claimIdleMut.mutate()}
-            >
-              Claim idle Digits
-            </button>
-          </div>
-          <div>
-            <p className="mb-1 font-semibold">Unlocked shop pool</p>
-            <ul className="space-y-1 text-(--prose-2)">
-              {meta.unlockedUpgrades.map((id) => (
-                <li key={id}>
-                  <span className="text-(--prose)">{upgradeLabel(id)}</span>
-                  {' — '}
-                  {ARCADE_UPGRADES[id].description}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      )}
-
-      {panel === 'run' && (
-        <>
-          {stateQuery.isPending && (
-            <p className="text-sm text-(--prose-2)">Loading…</p>
-          )}
-
-          {!run && !stateQuery.isPending && (
-            <div className="space-y-3 rounded-lg border border-(--outline) px-3 py-4">
-              <p className="text-sm text-(--prose-2)">
-                No active run. Start one to earn Digits, buy upgrades, and chase
-                a high score.
+            <p>
+              Runs completed: {meta.totalRunsCompleted.toLocaleString()} ·
+              Lifetime cashed: {meta.lifetimeDigitsCashed.toLocaleString()}
+            </p>
+            <div className="rounded-md border border-(--outline) px-3 py-2">
+              <p className="mb-1 font-semibold">Idle Digits</p>
+              <p className="text-xs text-(--prose-2)">
+                +2 Digits/hour while away (caps after 12h). Bank seeds your next
+                run start. Server-computed — claim when ready.
+              </p>
+              <p className="mt-2 text-sm">
+                Bank:{' '}
+                <strong className="text-amber-500">
+                  {(meta.idleDigitsBank ?? 0).toLocaleString()}
+                </strong>
+                {' · '}
+                Pending:{' '}
+                <strong className="text-amber-500">
+                  {(meta.pendingIdleDigits ?? 0).toLocaleString()}
+                </strong>
               </p>
               <button
                 type="button"
-                disabled={busy || usernameRequired}
-                className="rounded-md border border-(--accent) bg-(--accent) px-4 py-2 text-sm font-bold text-(--bg) disabled:opacity-40"
-                onClick={() => startMut.mutate()}
+                disabled={busy || (meta.pendingIdleDigits ?? 0) <= 0}
+                className="mt-2 rounded-md border border-(--accent) bg-(--accent) px-3 py-1.5 text-xs font-bold text-(--bg) disabled:opacity-40"
+                onClick={() => claimIdleMut.mutate()}
               >
-                Start run
+                Claim idle Digits
               </button>
             </div>
-          )}
+            <div>
+              <p className="mb-1 font-semibold">Unlocked shop pool</p>
+              <ul className="space-y-1 text-(--prose-2)">
+                {meta.unlockedUpgrades.map((id) => (
+                  <li key={id}>
+                    <span className="text-(--prose)">{upgradeLabel(id)}</span>
+                    {' — '}
+                    {ARCADE_UPGRADES[id].description}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
 
-          {run && run.status === 'active' && (
-            <div className="space-y-4">
-              <div className="rounded-lg border-2 border-(--accent) bg-(--surface-raised) px-3 py-3">
-                <div className="flex flex-wrap items-end justify-between gap-2">
-                  <div>
-                    <ArcadeDigitsDisplay
-                      value={run.digits}
-                      pulseStakes={run.digits > 0}
-                    />
-                    <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-(--prose-3)">
-                      <span>
-                        Peak {run.peakDigits.toLocaleString()} · Roll #
-                        {run.rollCount}
-                      </span>
-                      <ArcadeComboChip streak={run.comboStreak} />
-                      <ArcadeColdChip streak={run.trashStreak ?? 0} />
-                      <ArcadeDeadlineChip
-                        digits={run.digits}
-                        target={run.deadlineTargetDigits ?? 0}
-                        rollsRemaining={run.deadlineRollsRemaining ?? 0}
+        {panel === 'run' && (
+          <>
+            {stateQuery.isPending && (
+              <p className="text-sm text-(--prose-2)">Loading…</p>
+            )}
+
+            {!run && !stateQuery.isPending && (
+              <div className="space-y-3 rounded-lg border border-(--outline) px-3 py-4">
+                <p className="text-sm text-(--prose-2)">
+                  No active run. Start one to earn Digits, buy upgrades, and
+                  chase a high score.
+                </p>
+                <button
+                  type="button"
+                  disabled={busy || usernameRequired}
+                  className="rounded-md border border-(--accent) bg-(--accent) px-4 py-2 text-sm font-bold text-(--bg) disabled:opacity-40"
+                  onClick={() => startMut.mutate()}
+                >
+                  Start run
+                </button>
+              </div>
+            )}
+
+            {run && run.status === 'active' && (
+              <div className="space-y-4">
+                <div className="rounded-lg border-2 border-(--accent) bg-(--surface-raised) px-3 py-3">
+                  <div className="flex flex-wrap items-end justify-between gap-2">
+                    <div>
+                      <ArcadeDigitsDisplay
+                        value={run.digits}
+                        pulseStakes={run.digits > 0}
                       />
-                      {run.surgeRollsRemaining > 0 ? (
-                        <span>· Surge ×{run.surgeRollsRemaining}</span>
-                      ) : null}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <SegmentedToggle
-                      aria-label="Arcade roll multiplier"
-                      value={String(rollCount)}
-                      onChange={(id) =>
-                        setRollCount(Number(id) as ArcadeRollCount)
-                      }
-                      options={ARCADE_ROLL_COUNTS.map((n) => ({
-                        id: String(n),
-                        label: `×${n}`,
-                      }))}
-                      chipClassName="rounded-md border px-2 py-1 text-xs font-semibold"
-                    />
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        disabled={busy}
-                        className="rounded-md border border-(--accent) bg-(--accent) px-3 py-2 text-sm font-bold text-(--bg) disabled:opacity-40"
-                        onClick={() => rollMut.mutate({ count: rollCount })}
-                      >
-                        {rollCount === 1 ? 'Roll' : `Roll ×${rollCount}`}
-                      </button>
-                      <button
-                        type="button"
-                        disabled={busy || run.digits <= 0}
-                        className={`inline-flex items-center gap-2 rounded-md border px-3 py-2.5 text-sm font-semibold disabled:opacity-40 ${
-                          run.digits > 0 && !busy ? 'arcade-btn-cash-out' : ''
-                        }`}
-                        onClick={() => cashMut.mutate()}
-                      >
-                        <img
-                          src={ARCADE_RISK_ICON.cashOut}
-                          alt=""
-                          width={32}
-                          height={32}
-                          className="size-8 shrink-0 object-contain"
-                          aria-hidden
+                      <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-(--prose-3)">
+                        <span>
+                          Peak {run.peakDigits.toLocaleString()} · Roll #
+                          {run.rollCount}
+                        </span>
+                        <ArcadeComboChip streak={run.comboStreak} />
+                        <ArcadeColdChip streak={run.trashStreak ?? 0} />
+                        <ArcadeDeadlineChip
+                          digits={run.digits}
+                          target={run.deadlineTargetDigits ?? 0}
+                          rollsRemaining={run.deadlineRollsRemaining ?? 0}
                         />
-                        Cash out
-                      </button>
-                      <button
-                        type="button"
-                        disabled={busy}
-                        className={`inline-flex items-center gap-2 rounded-md border border-red-500/50 px-3 py-2.5 text-sm font-semibold text-red-400 disabled:opacity-40 ${
-                          !busy ? 'arcade-btn-abandon' : ''
-                        }`}
-                        onClick={async () => {
-                          const ok = await confirmAsync({
-                            title: 'Abandon run?',
-                            body: 'Abandon this run? This ends the run at your peak Digits score. This cannot be undone.',
-                            confirmLabel: 'Continue',
-                            danger: true,
-                          });
-                          if (!ok) return;
-                          const ok2 = await confirmAsync({
-                            title: 'Really abandon?',
-                            body: 'Really abandon? Confirm again to end the run.',
-                            confirmLabel: 'Abandon',
-                            danger: true,
-                          });
-                          if (ok2) abandonMut.mutate();
-                        }}
-                      >
-                        <img
-                          src={ARCADE_RISK_ICON.abandon}
-                          alt=""
-                          width={32}
-                          height={32}
-                          className="size-8 shrink-0 object-contain"
-                          aria-hidden
-                        />
-                        Abandon
-                      </button>
+                        {run.surgeRollsRemaining > 0 ? (
+                          <span>· Surge ×{run.surgeRollsRemaining}</span>
+                        ) : null}
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <SegmentedToggle
+                        aria-label="Arcade roll multiplier"
+                        value={String(rollCount)}
+                        onChange={(id) =>
+                          setRollCount(Number(id) as ArcadeRollCount)
+                        }
+                        options={ARCADE_ROLL_COUNTS.map((n) => ({
+                          id: String(n),
+                          label: `×${n}`,
+                        }))}
+                        chipClassName="rounded-md border px-2 py-1 text-xs font-semibold"
+                      />
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          disabled={busy}
+                          className="rounded-md border border-(--accent) bg-(--accent) px-3 py-2 text-sm font-bold text-(--bg) disabled:opacity-40"
+                          onClick={() => rollMut.mutate({ count: rollCount })}
+                        >
+                          {rollCount === 1 ? 'Roll' : `Roll ×${rollCount}`}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={busy || run.digits <= 0}
+                          className={`inline-flex items-center gap-2 rounded-md border px-3 py-2.5 text-sm font-semibold disabled:opacity-40 ${
+                            run.digits > 0 && !busy ? 'arcade-btn-cash-out' : ''
+                          }`}
+                          onClick={() => cashMut.mutate()}
+                        >
+                          <img
+                            src={ARCADE_RISK_ICON.cashOut}
+                            alt=""
+                            width={32}
+                            height={32}
+                            className="size-8 shrink-0 object-contain"
+                            aria-hidden
+                          />
+                          Cash out
+                        </button>
+                        <button
+                          type="button"
+                          disabled={busy}
+                          className={`inline-flex items-center gap-2 rounded-md border border-red-500/50 px-3 py-2.5 text-sm font-semibold text-red-400 disabled:opacity-40 ${
+                            !busy ? 'arcade-btn-abandon' : ''
+                          }`}
+                          onClick={async () => {
+                            const ok = await confirmAsync({
+                              title: 'Abandon run?',
+                              body: 'Abandon this run? This ends the run at your peak Digits score. This cannot be undone.',
+                              confirmLabel: 'Continue',
+                              danger: true,
+                            });
+                            if (!ok) return;
+                            const ok2 = await confirmAsync({
+                              title: 'Really abandon?',
+                              body: 'Really abandon? Confirm again to end the run.',
+                              confirmLabel: 'Abandon',
+                              danger: true,
+                            });
+                            if (ok2) abandonMut.mutate();
+                          }}
+                        >
+                          <img
+                            src={ARCADE_RISK_ICON.abandon}
+                            alt=""
+                            width={32}
+                            height={32}
+                            className="size-8 shrink-0 object-contain"
+                            aria-hidden
+                          />
+                          Abandon
+                        </button>
+                      </div>
                     </div>
                   </div>
+                  {(run.pending.donArmed || run.pending.rarityLockArmed) && (
+                    <p className="mt-2 text-xs font-semibold text-amber-400">
+                      {run.pending.donArmed &&
+                        'Double or Nothing armed for next roll. '}
+                      {run.pending.rarityLockArmed &&
+                        'Rarity Lock armed for next roll.'}
+                    </p>
+                  )}
+                  {(run.softFailRollsRemaining ?? 0) > 0 && (
+                    <p className="mt-2 text-xs font-semibold text-amber-400">
+                      Recovery — Digits gains halved (
+                      {run.softFailRollsRemaining} roll
+                      {run.softFailRollsRemaining === 1 ? '' : 's'})
+                    </p>
+                  )}
                 </div>
-                {(run.pending.donArmed || run.pending.rarityLockArmed) && (
-                  <p className="mt-2 text-xs font-semibold text-amber-400">
-                    {run.pending.donArmed &&
-                      'Double or Nothing armed for next roll. '}
-                    {run.pending.rarityLockArmed &&
-                      'Rarity Lock armed for next roll.'}
-                  </p>
-                )}
-                {(run.softFailRollsRemaining ?? 0) > 0 && (
-                  <p className="mt-2 text-xs font-semibold text-amber-400">
-                    Recovery — Digits gains halved ({run.softFailRollsRemaining}{' '}
-                    roll
-                    {run.softFailRollsRemaining === 1 ? '' : 's'})
-                  </p>
-                )}
-              </div>
 
-              {lastRoll && (
-                <ArcadeRollReveal
-                  number={lastRoll.number}
-                  digitsAwarded={lastRoll.digitsAwarded}
-                  totalEP={lastRoll.totalEP}
-                  rarity={lastRoll.rarity}
-                  batchSize={lastBatchSize}
-                  revealKey={revealKey}
-                />
-              )}
+                {lastRoll && (
+                  <ArcadeRollReveal
+                    number={lastRoll.number}
+                    digitsAwarded={lastRoll.digitsAwarded}
+                    totalEP={lastRoll.totalEP}
+                    rarity={lastRoll.rarity}
+                    batchSize={lastBatchSize}
+                    revealKey={revealKey}
+                  />
+                )}
 
-              <div className="space-y-2">
-                <h2 className="text-sm font-bold">Owned upgrades</h2>
-                {run.ownedUpgrades.length === 0 ? (
-                  <p className="text-sm text-(--prose-3)">
-                    None yet — buy from the shop below.
-                  </p>
-                ) : (
-                  <ul className="space-y-2">
-                    {run.ownedUpgrades.map((id) => {
-                      const def = ARCADE_UPGRADES[id];
-                      const cd = run.cooldowns[id] ?? 0;
-                      const ready = cd <= 0;
-                      const texture =
-                        def.type === 'active'
-                          ? ARCADE_SHOP_TEXTURE.active
-                          : ARCADE_SHOP_TEXTURE.passive;
-                      const justBought = justBoughtId === id;
-                      return (
-                        <motion.li
-                          key={id}
-                          className="arcade-shop-card arcade-owned-card flex flex-wrap items-center justify-between gap-2 rounded-md border border-(--outline) px-3 py-2 text-sm"
-                          style={{
-                            ['--arcade-shop-bg' as string]: `url(${texture})`,
-                          }}
-                          animate={
-                            reduceMotion
-                              ? { scale: 1 }
-                              : justBought
-                                ? { scale: [1, 1.04, 1] }
-                                : { scale: 1 }
-                          }
-                          transition={
-                            reduceMotion
-                              ? { duration: 0 }
-                              : justBought
-                                ? { duration: 0.35, ease: MOTION_EASE }
-                                : {
-                                    duration: MOTION_MS.quick / 1000,
-                                    ease: MOTION_EASE,
-                                  }
-                          }
-                        >
-                          <div>
-                            <span className="font-semibold">{def.name}</span>
-                            <span className="ml-2 text-xs uppercase text-(--prose-3)">
-                              {def.type}
-                            </span>
-                            <p className="text-xs text-(--prose-2)">
-                              {def.description}
-                            </p>
-                          </div>
-                          {def.type === 'active' && (
-                            <div className="flex items-center gap-2">
-                              <span
-                                className={`text-xs font-semibold ${
-                                  ready
-                                    ? 'text-emerald-400'
-                                    : 'text-(--prose-3)'
-                                }`}
-                              >
-                                {cooldownLabel(run, id)}
-                              </span>
-                              {id === 'reroll' ? (
-                                <button
-                                  type="button"
-                                  disabled={busy || !ready}
-                                  className="rounded border border-(--outline) px-2 py-1 text-xs font-semibold disabled:opacity-40"
-                                  onClick={() =>
-                                    rollMut.mutate({ useReroll: true })
-                                  }
-                                >
-                                  Reroll now
-                                </button>
-                              ) : (
-                                <button
-                                  type="button"
-                                  disabled={busy || !ready}
-                                  className="rounded border border-(--outline) px-2 py-1 text-xs font-semibold disabled:opacity-40"
-                                  onClick={() => {
-                                    if (id === 'bonus_spin') {
-                                      void (async () => {
-                                        await armMut.mutateAsync(id);
-                                        await rollMut.mutateAsync({});
-                                      })();
-                                      return;
+                <div className="space-y-2">
+                  <h2 className="text-sm font-bold">Owned upgrades</h2>
+                  {run.ownedUpgrades.length === 0 ? (
+                    <p className="text-sm text-(--prose-3)">
+                      None yet — buy from the shop below.
+                    </p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {run.ownedUpgrades.map((id) => {
+                        const def = ARCADE_UPGRADES[id];
+                        const cd = run.cooldowns[id] ?? 0;
+                        const ready = cd <= 0;
+                        const texture =
+                          def.type === 'active'
+                            ? ARCADE_SHOP_TEXTURE.active
+                            : ARCADE_SHOP_TEXTURE.passive;
+                        const justBought = justBoughtId === id;
+                        return (
+                          <motion.li
+                            key={id}
+                            className="arcade-shop-card arcade-owned-card flex flex-wrap items-center justify-between gap-2 rounded-md border border-(--outline) px-3 py-2 text-sm"
+                            style={{
+                              ['--arcade-shop-bg' as string]: `url(${texture})`,
+                            }}
+                            animate={
+                              reduceMotion
+                                ? { scale: 1 }
+                                : justBought
+                                  ? { scale: [1, 1.04, 1] }
+                                  : { scale: 1 }
+                            }
+                            transition={
+                              reduceMotion
+                                ? { duration: 0 }
+                                : justBought
+                                  ? { duration: 0.35, ease: MOTION_EASE }
+                                  : {
+                                      duration: MOTION_MS.quick / 1000,
+                                      ease: MOTION_EASE,
                                     }
-                                    armMut.mutate(id);
-                                  }}
-                                >
-                                  {id === 'bonus_spin' ? 'Bonus spin' : 'Arm'}
-                                </button>
-                              )}
+                            }
+                          >
+                            <div>
+                              <span className="font-semibold">{def.name}</span>
+                              <span className="ml-2 text-xs uppercase text-(--prose-3)">
+                                {def.type}
+                              </span>
+                              <p className="text-xs text-(--prose-2)">
+                                {def.description}
+                              </p>
                             </div>
-                          )}
-                        </motion.li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </div>
+                            {def.type === 'active' && (
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className={`text-xs font-semibold ${
+                                    ready
+                                      ? 'text-emerald-400'
+                                      : 'text-(--prose-3)'
+                                  }`}
+                                >
+                                  {cooldownLabel(run, id)}
+                                </span>
+                                {id === 'reroll' ? (
+                                  <button
+                                    type="button"
+                                    disabled={busy || !ready}
+                                    className="rounded border border-(--outline) px-2 py-1 text-xs font-semibold disabled:opacity-40"
+                                    onClick={() =>
+                                      rollMut.mutate({ useReroll: true })
+                                    }
+                                  >
+                                    Reroll now
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    disabled={busy || !ready}
+                                    className="rounded border border-(--outline) px-2 py-1 text-xs font-semibold disabled:opacity-40"
+                                    onClick={() => {
+                                      if (id === 'bonus_spin') {
+                                        void (async () => {
+                                          await armMut.mutateAsync(id);
+                                          await rollMut.mutateAsync({});
+                                        })();
+                                        return;
+                                      }
+                                      armMut.mutate(id);
+                                    }}
+                                  >
+                                    {id === 'bonus_spin' ? 'Bonus spin' : 'Arm'}
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </motion.li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
 
-              <div className="space-y-2">
-                <h2 className="text-sm font-bold">Shop</h2>
-                {run.shopOffers.length === 0 ? (
-                  <p className="text-sm text-(--prose-3)">
-                    No offers (pool exhausted or sold out). Keep rolling.
-                  </p>
-                ) : (
-                  <ul className="grid gap-2 sm:grid-cols-3">
-                    {run.shopOffers.map((offer) => {
-                      const canBuy = run.digits >= offer.price;
-                      return (
-                        <ArcadeShopCard
-                          key={offer.upgradeId}
-                          upgradeId={offer.upgradeId}
-                          price={offer.price}
-                          canBuy={canBuy}
-                          busy={busy}
-                          onBuy={() => buyMut.mutate(offer.upgradeId)}
-                        />
-                      );
-                    })}
-                  </ul>
-                )}
+                <div className="space-y-2">
+                  <h2 className="text-sm font-bold">Shop</h2>
+                  {run.shopOffers.length === 0 ? (
+                    <p className="text-sm text-(--prose-3)">
+                      No offers (pool exhausted or sold out). Keep rolling.
+                    </p>
+                  ) : (
+                    <ul className="grid gap-2 sm:grid-cols-3">
+                      {run.shopOffers.map((offer) => {
+                        const canBuy = run.digits >= offer.price;
+                        return (
+                          <ArcadeShopCard
+                            key={offer.upgradeId}
+                            upgradeId={offer.upgradeId}
+                            price={offer.price}
+                            canBuy={canBuy}
+                            busy={busy}
+                            onBuy={() => buyMut.mutate(offer.upgradeId)}
+                          />
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-        </>
-      )}
+            )}
+          </>
+        )}
+      </motion.div>
     </div>
   );
 }

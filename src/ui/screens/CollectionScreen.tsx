@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { motion, useReducedMotion } from 'motion/react';
 import {
   JOURNEY_BADGES,
   LIFETIME_EP_BADGES,
@@ -18,6 +19,7 @@ import {
 } from '../components/BadgeArtLightbox';
 import { FormattedCount } from '../components/FormattedCount';
 import { MotionCard } from '../motion';
+import { MOTION_EASE, MOTION_MS } from '../motion/tokens';
 
 type FilterId = BadgeFamily | 'all' | 'secret' | 'new';
 
@@ -146,6 +148,7 @@ export function CollectionScreen() {
     return map;
   }, [collection]);
   const [filter, setFilter] = useState<FilterId>('all');
+  const reduceMotion = useReducedMotion();
   const [showLocked, setShowLocked] = useState(true);
   const [query, setQuery] = useState('');
   const [lightbox, setLightbox] = useState<BadgeArtLightboxItem | null>(null);
@@ -350,56 +353,82 @@ export function CollectionScreen() {
           const isNewTab = f.id === 'new';
           const selected = filter === f.id;
           return (
-            <button
+            <motion.button
               key={f.id}
               type="button"
+              layout
               onClick={() => setFilter(f.id)}
-              className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-sm font-semibold ${
+              className={`relative inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-sm font-semibold ${
                 selected
                   ? isNewTab
-                    ? 'border-amber-400 bg-amber-400 text-black'
+                    ? 'border-amber-400 text-black'
                     : f.id === 'secret'
-                      ? 'border-amber-400 bg-amber-400 text-black'
-                      : 'border-(--accent) bg-(--accent) text-(--bg)'
+                      ? 'border-amber-400 text-black'
+                      : 'border-(--accent) text-(--bg)'
                   : isNewTab
                     ? 'border-amber-500/50 text-amber-700 dark:text-amber-300'
                     : f.id === 'secret'
                       ? 'border-amber-500/40 text-amber-700 dark:text-amber-300'
                       : 'border-(--outline) text-(--prose-2)'
               }`}
+              transition={
+                reduceMotion
+                  ? { duration: 0 }
+                  : { duration: MOTION_MS.quick / 1000, ease: MOTION_EASE }
+              }
             >
-              {isNewTab ? (
-                <span
-                  className={`rounded px-1 py-0.5 text-[10px] font-black uppercase tracking-wider ${
-                    selected
-                      ? 'bg-black/15 text-black'
-                      : 'bg-amber-400 text-black'
+              {selected && (
+                <motion.span
+                  layoutId={reduceMotion ? undefined : 'collection-filter-pill'}
+                  className={`absolute inset-0 rounded-md ${
+                    isNewTab || f.id === 'secret'
+                      ? 'bg-amber-400'
+                      : 'bg-(--accent)'
                   }`}
-                >
-                  New
-                </span>
-              ) : (
-                <>
-                  {icon && (
-                    <span className="icon-chip h-5 w-5 ring-1 ring-black/15 dark:ring-white/10">
-                      <img src={icon} alt="" aria-hidden />
-                    </span>
-                  )}
-                  {f.label}
-                </>
+                  transition={
+                    reduceMotion
+                      ? { duration: 0 }
+                      : {
+                          duration: MOTION_MS.standard / 1000,
+                          ease: MOTION_EASE,
+                        }
+                  }
+                />
               )}
-              {isNewTab && recentIds.size > 0 && (
-                <span
-                  className={`ml-0.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-bold ${
-                    selected
-                      ? 'bg-black/20 text-black'
-                      : 'bg-amber-400/25 text-amber-800 dark:text-amber-200'
-                  }`}
-                >
-                  {recentIds.size}
-                </span>
-              )}
-            </button>
+              <span className="relative z-1 inline-flex items-center gap-1.5">
+                {isNewTab ? (
+                  <span
+                    className={`rounded px-1 py-0.5 text-[10px] font-black uppercase tracking-wider ${
+                      selected
+                        ? 'bg-black/15 text-black'
+                        : 'bg-amber-400 text-black'
+                    }`}
+                  >
+                    New
+                  </span>
+                ) : (
+                  <>
+                    {icon && (
+                      <span className="icon-chip h-5 w-5 ring-1 ring-black/15 dark:ring-white/10">
+                        <img src={icon} alt="" aria-hidden />
+                      </span>
+                    )}
+                    {f.label}
+                  </>
+                )}
+                {isNewTab && recentIds.size > 0 && (
+                  <span
+                    className={`ml-0.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-bold ${
+                      selected
+                        ? 'bg-black/20 text-black'
+                        : 'bg-amber-400/25 text-amber-800 dark:text-amber-200'
+                    }`}
+                  >
+                    {recentIds.size}
+                  </span>
+                )}
+              </span>
+            </motion.button>
           );
         })}
         {filter !== 'new' && (
@@ -597,13 +626,19 @@ export function CollectionScreen() {
                             description: b.description,
                             ep: b.ep,
                             kind: 'Journey',
+                            layoutId: `collection-badge-${b.id}`,
                           });
                         }}
                         aria-label={
                           has ? `View ${b.name} full size` : undefined
                         }
                       >
-                        <img
+                        <motion.img
+                          layoutId={
+                            reduceMotion || !has
+                              ? undefined
+                              : `collection-badge-${b.id}`
+                          }
                           src={b.image}
                           alt={has ? '' : 'Locked journey milestone'}
                           className={`h-full w-full object-cover ${has ? '' : 'opacity-40 blur-[1px]'}`}
@@ -718,13 +753,19 @@ export function CollectionScreen() {
                             description: b.description,
                             ep: b.ep,
                             kind: 'Lifetime EP',
+                            layoutId: `collection-badge-${b.id}`,
                           });
                         }}
                         aria-label={
                           has ? `View ${b.name} full size` : undefined
                         }
                       >
-                        <img
+                        <motion.img
+                          layoutId={
+                            reduceMotion || !has
+                              ? undefined
+                              : `collection-badge-${b.id}`
+                          }
                           src={b.image}
                           alt={has ? '' : 'Locked lifetime EP milestone'}
                           className={`h-full w-full object-cover ${has ? '' : 'opacity-40 blur-[1px]'}`}
@@ -820,7 +861,13 @@ export function CollectionScreen() {
                               : s.tier === 'streak'
                                 ? 'Streak secret'
                                 : 'Secret mastery',
+                          layoutId: `collection-badge-${s.id}`,
                         })
+                    : undefined
+                }
+                artLayoutId={
+                  unlocked.has(s.id) && s.image && !reduceMotion
+                    ? `collection-badge-${s.id}`
                     : undefined
                 }
               />
@@ -856,6 +903,7 @@ function SecretCard({
   isFresh = false,
   ageLabel = null,
   onOpenArt,
+  artLayoutId,
 }: {
   secret: SecretBadgeDef;
   unlocked: Set<string>;
@@ -863,6 +911,7 @@ function SecretCard({
   isFresh?: boolean;
   ageLabel?: string | null;
   onOpenArt?: () => void;
+  artLayoutId?: string;
 }) {
   const has = unlocked.has(secret.id);
   const isOmega = secret.tier === 'omega';
@@ -901,7 +950,8 @@ function SecretCard({
                 : 'cursor-default border-(--outline) grayscale'
             }`}
           >
-            <img
+            <motion.img
+              layoutId={artLayoutId}
               src={secret.image}
               alt={has ? '' : 'Locked final seal'}
               className={`h-full w-full object-cover ${has ? '' : 'opacity-40 blur-[1px]'}`}
@@ -976,7 +1026,8 @@ function SecretCard({
             : 'cursor-default border-(--outline) grayscale'
         }`}
       >
-        <img
+        <motion.img
+          layoutId={artLayoutId}
           src={secret.image}
           alt={has ? '' : 'Locked section mastery'}
           className={`h-full w-full object-cover ${has ? '' : 'opacity-35 blur-[1px]'}`}

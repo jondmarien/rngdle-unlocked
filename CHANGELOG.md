@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Profile avatars** — regenerate all 12 public emblems in embossed badge-seal style (gold/purple/teal relief) matching secret/journey art; same ids/paths.
 - **Motion toasts/dialogs** — verified AnimatePresence exit + `useReducedMotion` intact; aligned enter/exit to Corporate-quick tokens (exit ~70% of enter, ease-in exits). Roll replay modal gains matching fade/scale enter.
 - **Arcade shop + Codex art Motion** — shop cards use `whileHover`/`whileTap` + buy/deny `animate` (CSS buy/deny classes unused to avoid double-fire; keyframes left in global.css). Owned upgrade flash via Motion scale. Collection Journey/Lifetime/Secret art thumbs use `MotionCard` hover/press.
+- **Motion layout chrome** — Arcade Run/Meta panel fade; Collection filter `layoutId` pill; Codex art → lightbox shared-element `layoutId` (same pattern as Home unlocks).
 
 ## [0.16.1] - 2026-07-14
 
