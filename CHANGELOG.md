@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Prove roll Free play race** — gate the button on confirmed cloud publish (`waitForCloudPublish`) so immediate clicks no longer hit `/api/attest` 404 before the 12s auto-sync debounce. Ranked stays ready immediately (server-inserted). Residual seal errors use accurate copy (sign-in vs still syncing vs generic failure).
+
 ## [0.14.1] - 2026-07-14
 
 ### Changed

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   contributeKeyEntropy,
   contributePointerEntropy,
+  ensureShortCode,
   findChallengeRollForPeriod,
   listUnlockedSeals,
   topPercentFromEP,
@@ -12,8 +13,13 @@ import {
   shouldCelebrate,
   shouldTrashCrack,
 } from '../../game/fx';
+import { useSession } from '../../lib/auth-client';
 import { createLogger } from '../../lib/logger';
-import { useGame, useGameSettings } from '../../state/GameProvider';
+import {
+  useCloudSync,
+  useGame,
+  useGameSettings,
+} from '../../state/GameProvider';
 import { BadgeBreakdown } from '../components/BadgeCard';
 import { BestRollCard } from '../components/BestRollCard';
 import { CommunityHighlights } from '../components/CommunityHighlights';
@@ -32,6 +38,25 @@ import { RollReplayModal } from '../components/RollReplayModal';
 import { LazySharePanel } from '../components/LazySharePanel';
 
 const log = createLogger('home');
+
+type ProvePublishState = 'idle' | 'checking' | 'ready' | 'error' | 'logged-out';
+
+function attestFailureMessage(
+  reason: 'logged-out' | 'not-synced' | 'failed',
+): string {
+  switch (reason) {
+    case 'logged-out':
+      return 'Seal failed. Sign in first.';
+    case 'not-synced':
+      return 'Still syncing this roll — try again in a moment.';
+    case 'failed':
+      return 'Seal failed. Try again in a moment.';
+    default: {
+      const _exhaustive: never = reason;
+      return _exhaustive;
+    }
+  }
+}
 
 export function HomeScreen({
   onGoAccount,
@@ -66,6 +91,9 @@ export function HomeScreen({
     attestRoll,
   } = useGame();
   const { settings } = useGameSettings();
+  const { data: session } = useSession();
+  const { waitForCloudPublish } = useCloudSync();
+  const loggedIn = Boolean(session?.user);
   const unlockedSealNames = useMemo(
     () =>
       settings.shareShowUnlockedBadges !== false
@@ -76,6 +104,8 @@ export function HomeScreen({
   const [shareRoll, setShareRoll] = useState<RollResult | null>(null);
   const [replayRoll, setReplayRoll] = useState<RollResult | null>(null);
   const [attestMsg, setAttestMsg] = useState<string | null>(null);
+  const [provePublish, setProvePublish] = useState<ProvePublishState>('idle');
+  const [attestBusy, setAttestBusy] = useState(false);
   // Fresh home each load: empty reel until this session’s first Generate.
   const [slotValue, setSlotValue] = useState<number | null>(null);
   const [revealKey, setRevealKey] = useState(0);
@@ -139,6 +169,49 @@ export function HomeScreen({
   }, [lastRoll?.id]);
 
   /**
+   * Gate Prove roll on cloud publish for this roll (Free/challenge need sync;
+   * Ranked is already in Neon). Mirrors SharePanel's waitForCloudPublish.
+   */
+  useEffect(() => {
+    if (!lastRoll || lastRoll.attestationSeal || !revealDone) {
+      setProvePublish('idle');
+      return;
+    }
+    if (!loggedIn) {
+      setProvePublish('logged-out');
+      return;
+    }
+    if (lastRoll.source === 'ranked') {
+      setProvePublish('ready');
+      return;
+    }
+
+    let cancelled = false;
+    setProvePublish('checking');
+    const rollWithCode = ensureShortCode(lastRoll);
+    log.info('prove:publish:wait', { rollId: lastRoll.id });
+    void waitForCloudPublish(rollWithCode).then((result) => {
+      if (cancelled) return;
+      if (result === 'ok') setProvePublish('ready');
+      else if (result === 'logged-out') setProvePublish('logged-out');
+      else setProvePublish('error');
+      log.info('prove:publish:result', { result, rollId: lastRoll.id });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    lastRoll,
+    lastRoll?.id,
+    lastRoll?.attestationSeal,
+    lastRoll?.source,
+    lastRoll?.shortCode,
+    loggedIn,
+    revealDone,
+    waitForCloudPublish,
+  ]);
+
+  /**
    * Mode switch must wipe the whole roll board (reel, meta, share, cascade).
    * Use a remount key so NumberDisplay internal lastRevealKey cannot collide
    * with a reused revealKey after reset (that stuck the reel on ?????).
@@ -152,6 +225,8 @@ export function HomeScreen({
     setShareRoll(null);
     setReplayRoll(null);
     setAttestMsg(null);
+    setProvePublish('idle');
+    setAttestBusy(false);
     setSlotValue(null);
     setRevealKey(0);
     setRevealDone(false);
@@ -527,25 +602,36 @@ export function HomeScreen({
                   <button
                     ref={proveBtnRef}
                     type="button"
-                    className="rounded-md border border-(--accent)/45 bg-(--surface) px-3 py-2 text-sm font-semibold text-(--accent) hover:border-(--accent) hover:bg-[color-mix(in_srgb,var(--accent)_10%,transparent)]"
+                    disabled={provePublish !== 'ready' || attestBusy}
+                    className="rounded-md border border-(--accent)/45 bg-(--surface) px-3 py-2 text-sm font-semibold text-(--accent) hover:border-(--accent) hover:bg-[color-mix(in_srgb,var(--accent)_10%,transparent)] disabled:cursor-not-allowed disabled:opacity-50"
                     aria-describedby="prove-roll-tip"
                     onMouseEnter={showProveTip}
                     onMouseLeave={hideProveTip}
                     onFocus={showProveTip}
                     onBlur={hideProveTip}
                     onClick={() => {
+                      if (provePublish !== 'ready' || attestBusy) return;
                       hideProveTip();
                       setAttestMsg(null);
-                      void attestRoll(lastRoll).then((r) => {
-                        setAttestMsg(
-                          r
-                            ? 'Server seal attached. This stamps the claim; free-play RNG is still client-side.'
-                            : 'Seal failed. Sign in and sync first.',
-                        );
-                      });
+                      setAttestBusy(true);
+                      void attestRoll(lastRoll)
+                        .then((r) => {
+                          if (r.ok) {
+                            setAttestMsg(
+                              'Server seal attached. This stamps the claim; free-play RNG is still client-side.',
+                            );
+                          } else {
+                            setAttestMsg(attestFailureMessage(r.reason));
+                          }
+                        })
+                        .finally(() => setAttestBusy(false));
                     }}
                   >
-                    Prove roll
+                    {provePublish === 'checking'
+                      ? 'Syncing…'
+                      : attestBusy
+                        ? 'Sealing…'
+                        : 'Prove roll'}
                   </button>
                   <div
                     ref={proveTipRef}
@@ -571,6 +657,20 @@ export function HomeScreen({
                 </span>
               )}
             </div>
+            {provePublish === 'logged-out' &&
+              !lastRoll.attestationSeal &&
+              revealDone && (
+                <p className="max-w-sm text-sm leading-snug text-(--prose-2)">
+                  Sign in and sync to seal this roll.
+                </p>
+              )}
+            {provePublish === 'error' &&
+              !lastRoll.attestationSeal &&
+              revealDone && (
+                <p className="max-w-sm text-sm leading-snug text-(--prose-2)">
+                  Cloud sync failed — try Account → Push, then Prove roll again.
+                </p>
+              )}
             {lastRoll.source === 'ranked' && (
               <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
                 Ranked · server roll · places on Leaderboard → Ranked

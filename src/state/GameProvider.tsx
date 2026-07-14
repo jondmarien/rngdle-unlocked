@@ -69,6 +69,16 @@ import { toCloudPayload, useSync, type SyncControls } from './useSync';
 /** free = local CSPRNG · ranked = server free play · daily/weekly = challenges */
 export type RollMode = 'free' | 'ranked' | ChallengeKind;
 
+/** Result of optional HMAC seal via POST /api/attest. */
+export type AttestRollResult =
+  | { ok: true; seal: string }
+  | {
+      ok: false;
+      reason: 'logged-out' | 'not-synced' | 'failed';
+      status?: number;
+      error?: string;
+    };
+
 const log = createLogger('game');
 
 export type RollOutcome = {
@@ -107,7 +117,7 @@ type GameContextValue = {
   setRollMode: (m: RollMode) => void;
   roll: () => Promise<RollOutcome | null>;
   /** Optional server seal for competitive bragging (feature 4). */
-  attestRoll: (roll: RollResult) => Promise<{ seal: string } | null>;
+  attestRoll: (roll: RollResult) => Promise<AttestRollResult>;
   clearAll: () => void;
   selectRoll: (roll: RollResult | null) => void;
   exportSave: () => void;
@@ -636,8 +646,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, [enqueueAutoSync, persist, queryClient, rolling, rollMode, session?.user]);
 
   const attestRoll = useCallback(
-    async (rollResult: RollResult): Promise<{ seal: string } | null> => {
-      if (!loggedInRef.current) return null;
+    async (rollResult: RollResult): Promise<AttestRollResult> => {
+      if (!loggedInRef.current) {
+        return { ok: false, reason: 'logged-out' };
+      }
       try {
         const attested = await requestAttestation({
           id: rollResult.id,
@@ -651,7 +663,23 @@ export function GameProvider({ children }: { children: ReactNode }) {
             error: attested.error,
             status: attested.status,
           });
-          return null;
+          if (attested.status === 401) {
+            return { ok: false, reason: 'logged-out', status: 401 };
+          }
+          if (attested.status === 404) {
+            return {
+              ok: false,
+              reason: 'not-synced',
+              status: 404,
+              error: attested.error,
+            };
+          }
+          return {
+            ok: false,
+            reason: 'failed',
+            status: attested.status,
+            error: attested.error,
+          };
         }
         const sealed = { ...rollResult, attestationSeal: attested.seal };
         setLastRoll((prev) => (prev?.id === rollResult.id ? sealed : prev));
@@ -664,12 +692,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
           return next;
         });
         log.info('attest:ok', { id: rollResult.id });
-        return { seal: attested.seal };
+        return { ok: true, seal: attested.seal };
       } catch (e) {
         log.error('attest:error', {
           err: e instanceof Error ? e.message : String(e),
         });
-        return null;
+        return { ok: false, reason: 'failed' };
       }
     },
     [persist],
