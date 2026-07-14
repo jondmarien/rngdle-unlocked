@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **LottieFiles motion-design skill** — project skill at `.agents/skills/motion-design` (+ `skills-lock.json`) for animation timing/easing/choreography guidance; AGENTS.md points agents here for Motion work.
+
 ### Changed
 
 - **Profile avatars** — regenerate all 12 public emblems in embossed badge-seal style (gold/purple/teal relief) matching secret/journey art; same ids/paths.

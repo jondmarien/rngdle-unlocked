@@ -279,6 +279,7 @@ SPA routes: History API in `src/lib/routes.ts`; Vercel rewrites non-`/api` to `i
 - **Logging:** `createLogger('area')` → `[rngdle:area]` in browser/Vercel logs. Optional `window.__rngdleLog`.
 - **Share:** no public vanity URL until `waitForCloudPublish` confirms the roll row exists.
 - **Copy:** keep Free vs Ranked board placement language consistent (About, RollModePicker, Leaderboard, README).
+- **Motion / animation design:** for timing, easing, choreography, reduced-motion alternatives, or new Motion (`motion/react`) work, load the project **LottieFiles `motion-design` skill** (`.agents/skills/motion-design`) before inventing values. House UI chrome style is **Corporate-quick**: 150–300ms, ease-out / `[0.2, 0, 0, 1]`, minimal overshoot; always gate with `useReducedMotion`. See also [`src/lib/motion-conventions.md`](./src/lib/motion-conventions.md) (added with Motion infra). Leave Celebration / NumberDisplay / Arcade FX keyframes in `global.css` alone unless explicitly migrating them.
 
 When changing product behavior, update:
 
