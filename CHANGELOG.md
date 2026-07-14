@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.2] - 2026-07-14
+
 ### Added
 
 - **LottieFiles motion-design skill** — project skill at `.agents/skills/motion-design` (+ `skills-lock.json`) for animation timing/easing/choreography guidance; AGENTS.md points agents here for Motion work.
@@ -18,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Motion toasts/dialogs** — verified AnimatePresence exit + `useReducedMotion` intact; aligned enter/exit to Corporate-quick tokens (exit ~70% of enter, ease-in exits). Roll replay modal gains matching fade/scale enter.
 - **Arcade shop + Codex art Motion** — shop cards use `whileHover`/`whileTap` + buy/deny `animate` (CSS buy/deny classes unused to avoid double-fire; keyframes left in global.css). Owned upgrade flash via Motion scale. Collection Journey/Lifetime/Secret art thumbs use `MotionCard` hover/press.
 - **Motion layout chrome** — Arcade Run/Meta panel fade; Collection filter `layoutId` pill; Codex art → lightbox shared-element `layoutId` (same pattern as Home unlocks).
+
+### Notes
+
+- See `motion-integration-summary.md` for phase commits, bundle delta, and LottieFiles skill decisions. Celebration / NumberDisplay / Arcade FX keyframes in `global.css` were not migrated.
 
 ## [0.16.1] - 2026-07-14
 

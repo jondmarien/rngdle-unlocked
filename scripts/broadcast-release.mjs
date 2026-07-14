@@ -12,10 +12,10 @@ if (!process.env.DATABASE_URL) {
 const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
-const title = 'New Update! v0.16.1 — Dialogs, unlock art & History Highlights';
+const title = 'New Update! v0.16.2 — Smoother motion & fresh avatars';
 const body = [
-  'Confirms and prompts now use in-app dialogs instead of browser popups, and unlock chips on Roll open full badge art.',
-  'Showcase moved into History → Highlights (streaks, best roll, consecutive runs). The Showcase tab is gone; /showcase still redirects.',
+  'Arcade shop cards, Codex art, and dialogs get smoother Motion feedback — Run/Meta fades, filter pills slide, and badge art morphs into the lightbox.',
+  'All 12 profile avatars were redrawn as embossed seals matching journey/secret art.',
   'Read the full player notes: https://rngdle-unlocked.chron0.tech/whats-new',
   'Open: /whats-new',
 ].join(' ');

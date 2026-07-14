@@ -1,7 +1,7 @@
 {
   "name": "rngdle-unlocked",
   "private": true,
-  "version": "0.16.1",
+  "version": "0.16.2",
   "type": "module",
   "packageManager": "pnpm@10.34.4",
   "scripts": {

@@ -32,6 +32,27 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Smoother motion across Arcade, Codex, and dialogs',
+    date: '2026-07-14',
+    version: '0.16.2',
+    tags: ['UI', 'Arcade', 'Codex'],
+    content: [
+      {
+        body: 'UI chrome gets consistent Motion polish — shop cards respond to press, Codex art morphs into the lightbox, and Arcade Run/Meta fades instead of hard-cutting. Profile avatars also get a fresh embossed seal look.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'Gameplay FX (reel spins, celebrations, Arcade rarity punch) stay as they were — this pass is chrome and feedback.',
+        bullets: [
+          '**Arcade shop** — hover and tap feedback on offers; buy and deny animate without jank.',
+          '**Codex** — filter chips slide the selection pill; unlocked Journey/Lifetime/Secret art opens with a shared-element transition.',
+          '**Dialogs & replay** — enter/exit timing feels tighter; roll replay fades in like other modals.',
+          '**Avatars** — all 12 Account presets redrawn as embossed seals matching badge art.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Custom dialogs, unlock art on Roll, History Highlights',
     date: '2026-07-14',
     version: '0.16.1',
