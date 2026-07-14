@@ -310,6 +310,12 @@ export const arcadeRuns = pgTable('arcade_runs', {
   deadlineRollsRemaining: integer('deadline_rolls_remaining')
     .notNull()
     .default(0),
+  /** Consecutive trash rolls (soft-fail counter; not comboStreak). */
+  trashStreak: integer('trash_streak').notNull().default(0),
+  /** Digits gains halved for this many rolls after soft-fail. */
+  softFailRollsRemaining: integer('soft_fail_rolls_remaining')
+    .notNull()
+    .default(0),
   startedAt: timestamp('started_at').notNull().defaultNow(),
   endedAt: timestamp('ended_at'),
 });

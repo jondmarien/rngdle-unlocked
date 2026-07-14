@@ -260,6 +260,8 @@ export const arcadeRunSchema = z.object({
   endedAt: isoDateSchema.nullable(),
   deadlineTargetDigits: z.number().optional().default(0),
   deadlineRollsRemaining: z.number().optional().default(0),
+  trashStreak: z.number().optional().default(0),
+  softFailRollsRemaining: z.number().optional().default(0),
 });
 
 export const arcadeMetaSchema = z.object({

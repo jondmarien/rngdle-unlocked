@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Arcade Deadline** — opt-in spicy shop upgrade (unlock after 2 completed runs). On buy: target = `max(20, ceil(digits × 1.75))`, 6 rolls to hit it for `ceil(target × 0.25)` Digits bonus; miss → hard bust (peak score). Additive columns `deadline_target_digits` / `deadline_rolls_remaining`. Existing upgrades unchanged.
 - **Arcade Idle Digits** — Meta panel claim: server accrues 2 Digits/hour (12h offline cap → max 24/claim), bank cap 100. `POST /api/arcade/claim-idle`; Start run drains bank into starting Digits. Columns `idle_digits_bank` / `last_idle_claim_at`.
+- **Arcade trash soft-fail** — 3 consecutive Trash rolls: lose `max(2, floor(digits×0.15))` Digits and halve Digits gains for the next 3 rolls (recoverable; not a bust). Separate `trash_streak` / `soft_fail_rolls_remaining` from Combo.
 
 ### Changed
 

@@ -16,6 +16,10 @@ import {
   previewIdlePending,
 } from '../src/game/arcade/idle.js';
 import {
+  applySoftFailHalf,
+  tickTrashStreak,
+} from '../src/game/arcade/pressure.js';
+import {
   ACTIVE_COOLDOWNS,
   CURRENCY_SURGE_ROLLS,
   DON_SUCCESS_MIN,
@@ -74,6 +78,8 @@ export type ArcadeRunPublic = {
   endedAt: string | null;
   deadlineTargetDigits: number;
   deadlineRollsRemaining: number;
+  trashStreak: number;
+  softFailRollsRemaining: number;
 };
 
 export type ArcadeMetaPublic = {
@@ -164,6 +170,8 @@ function runToPublic(row: RunRow): ArcadeRunPublic {
     endedAt: row.endedAt ? row.endedAt.toISOString() : null,
     deadlineTargetDigits: row.deadlineTargetDigits ?? 0,
     deadlineRollsRemaining: row.deadlineRollsRemaining ?? 0,
+    trashStreak: row.trashStreak ?? 0,
+    softFailRollsRemaining: row.softFailRollsRemaining ?? 0,
   };
 }
 
@@ -391,6 +399,8 @@ export async function startArcadeRun(
     runScore: null,
     deadlineTargetDigits: 0,
     deadlineRollsRemaining: 0,
+    trashStreak: 0,
+    softFailRollsRemaining: 0,
     startedAt: now,
     endedAt: null,
   });
@@ -796,7 +806,7 @@ async function processArcadeRollOnce(
     cds = setCooldown(cds, 'reroll');
   }
 
-  const award = awardDigits({
+  const awardRaw = awardDigits({
     rarity: evaluated.rarity,
     totalEP: evaluated.totalEP,
     badgeCount: evaluated.badges.length,
@@ -805,7 +815,22 @@ async function processArcadeRollOnce(
     surgeActive,
   });
 
-  let digits = row.digits + award.finalDigits;
+  const pressure = tickTrashStreak({
+    rarity: evaluated.rarity,
+    trashStreakBefore: row.trashStreak ?? 0,
+    softFailRollsRemainingBefore: row.softFailRollsRemaining ?? 0,
+    digitsBeforePenalty: row.digits,
+  });
+
+  let awarded = awardRaw.finalDigits;
+  if (pressure.halfGain) {
+    awarded = applySoftFailHalf(awarded);
+  }
+
+  let digits = row.digits + awarded;
+  if (pressure.penaltyDigits > 0) {
+    digits = Math.max(0, digits - pressure.penaltyDigits);
+  }
   let peak = Math.max(row.peakDigits, digits);
   let donResult: 'win' | 'lose' | undefined;
   let busted = false;
@@ -875,7 +900,7 @@ async function processArcadeRollOnce(
     totalEp: evaluated.totalEP,
     rarity: evaluated.rarity,
     badgesJson: JSON.stringify(evaluated.badges),
-    digitsAwarded: busted ? 0 : award.finalDigits,
+    digitsAwarded: busted ? 0 : awarded,
     rolledAt: new Date(evaluated.rolledAt),
   });
 
@@ -885,7 +910,7 @@ async function processArcadeRollOnce(
     totalEP: evaluated.totalEP,
     rarity: evaluated.rarity,
     badges: evaluated.badges,
-    digitsAwarded: busted ? 0 : award.finalDigits,
+    digitsAwarded: busted ? 0 : awarded,
     percentile: evaluated.percentile,
     rolledAt: evaluated.rolledAt,
   };
@@ -897,13 +922,15 @@ async function processArcadeRollOnce(
         digits: 0,
         peakDigits: peak,
         rollCount,
-        comboStreak: award.comboStreakAfter,
+        comboStreak: awardRaw.comboStreakAfter,
         cooldownsJson: JSON.stringify(cds),
         surgeRollsRemaining: 0,
         pendingActiveJson: '{}',
         shopOfferJson: '[]',
         deadlineTargetDigits: 0,
         deadlineRollsRemaining: 0,
+        trashStreak: 0,
+        softFailRollsRemaining: 0,
       })
       .where(eq(arcadeRuns.id, row.id));
 
@@ -934,13 +961,15 @@ async function processArcadeRollOnce(
       digits,
       peakDigits: peak,
       rollCount,
-      comboStreak: award.comboStreakAfter,
+      comboStreak: awardRaw.comboStreakAfter,
       cooldownsJson: JSON.stringify(cds),
       surgeRollsRemaining: surgeRemaining,
       pendingActiveJson: JSON.stringify(pending),
       shopOfferJson: JSON.stringify(shop),
       deadlineTargetDigits: deadlineTarget,
       deadlineRollsRemaining: deadlineRolls,
+      trashStreak: pressure.trashStreakAfter,
+      softFailRollsRemaining: pressure.softFailRollsRemainingAfter,
     })
     .where(eq(arcadeRuns.id, row.id));
 
@@ -955,7 +984,7 @@ async function processArcadeRollOnce(
     runId: row.id,
     number: evaluated.number,
     rarity: evaluated.rarity,
-    digitsAwarded: award.finalDigits,
+    digitsAwarded: awarded,
     digits,
   });
 

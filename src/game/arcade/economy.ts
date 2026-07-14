@@ -114,6 +114,12 @@ export const IDLE_DIGITS_PER_HOUR = 2;
 export const IDLE_MAX_OFFLINE_HOURS = 12;
 export const IDLE_BANK_CAP = 100;
 
+/** Trash streak soft-fail (not a hard bust). */
+export const TRASH_STREAK_THRESHOLD = 3;
+export const TRASH_SOFT_FAIL_PENALTY_FRAC = 0.15;
+export const TRASH_SOFT_FAIL_PENALTY_MIN = 2;
+export const TRASH_SOFT_FAIL_ROLLS = 3;
+
 /** Deadline (opt-in): target = max(FLOOR, ceil(digits * MULT)); N rolls or bust. */
 export const DEADLINE_MULT = 1.75;
 export const DEADLINE_FLOOR_TARGET = 20;

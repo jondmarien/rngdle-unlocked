@@ -27,6 +27,7 @@ import {
 } from '../../lib/arcade-api';
 import { ARCADE_RISK_ICON, ARCADE_SHOP_TEXTURE } from '../../lib/arcade-icons';
 import { useGame, useGameSettings } from '../../state/GameProvider';
+import { ArcadeColdChip } from '../components/arcade/ArcadeColdChip';
 import { ArcadeComboChip } from '../components/arcade/ArcadeComboChip';
 import { ArcadeDeadlineChip } from '../components/arcade/ArcadeDeadlineChip';
 import { ArcadeDigitsDisplay } from '../components/arcade/ArcadeDigitsDisplay';
@@ -429,9 +430,6 @@ export function ArcadeScreen({
               ))}
             </ul>
           </div>
-          <p className="text-xs text-(--prose-3)">
-            Coming later (not in v1): trash streak soft-fail.
-          </p>
         </div>
       )}
 
@@ -473,6 +471,7 @@ export function ArcadeScreen({
                         {run.rollCount}
                       </span>
                       <ArcadeComboChip streak={run.comboStreak} />
+                      <ArcadeColdChip streak={run.trashStreak ?? 0} />
                       <ArcadeDeadlineChip
                         digits={run.digits}
                         target={run.deadlineTargetDigits ?? 0}
@@ -559,6 +558,13 @@ export function ArcadeScreen({
                       'Double or Nothing armed for next roll. '}
                     {run.pending.rarityLockArmed &&
                       'Rarity Lock armed for next roll.'}
+                  </p>
+                )}
+                {(run.softFailRollsRemaining ?? 0) > 0 && (
+                  <p className="mt-2 text-xs font-semibold text-amber-400">
+                    Recovery — Digits gains halved ({run.softFailRollsRemaining}{' '}
+                    roll
+                    {run.softFailRollsRemaining === 1 ? '' : 's'})
                   </p>
                 )}
               </div>
