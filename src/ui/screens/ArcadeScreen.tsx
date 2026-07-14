@@ -1,6 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { ARCADE_UPGRADES, type ArcadeUpgradeId } from '../../game/arcade';
+import {
+  playAbandonSound,
+  playArcadeRollSound,
+  playCashOutSound,
+  playDigitsGainSound,
+  playPurchaseSound,
+} from '../../game';
 import { useSession } from '../../lib/auth-client';
 import {
   abandonArcadeRun,
@@ -16,6 +23,7 @@ import {
   type ArcadeRollCount,
   type ArcadeRun,
 } from '../../lib/arcade-api';
+import { useGameSettings } from '../../state/GameProvider';
 import { ArcadeComboChip } from '../components/arcade/ArcadeComboChip';
 import { ArcadeDigitsDisplay } from '../components/arcade/ArcadeDigitsDisplay';
 import { ArcadeRollReveal } from '../components/arcade/ArcadeRollReveal';
@@ -40,6 +48,8 @@ export function ArcadeScreen({
   onGoLeaderboard: () => void;
 }) {
   const { data: session } = useSession();
+  const { settings } = useGameSettings();
+  const soundOn = settings.soundEnabled;
   const qc = useQueryClient();
   const [lastRoll, setLastRoll] = useState<ArcadeRoll | null>(null);
   const [lastBatchSize, setLastBatchSize] = useState(1);
@@ -101,6 +111,13 @@ export function ArcadeScreen({
       setLastRoll(data.roll);
       setLastBatchSize(data.rolls.length);
       setRevealKey((k) => k + 1);
+      playArcadeRollSound(data.roll.rarity, soundOn);
+      if (!data.busted && data.roll.digitsAwarded > 0) {
+        playDigitsGainSound(soundOn);
+      }
+      if (data.busted) {
+        playAbandonSound(soundOn);
+      }
       qc.setQueryData(['arcade-state'], {
         meta: data.meta,
         activeRun: data.busted ? null : data.run,
@@ -131,6 +148,7 @@ export function ArcadeScreen({
   const buyMut = useMutation({
     mutationFn: buyArcadeUpgrade,
     onSuccess: (data) => {
+      playPurchaseSound(soundOn);
       qc.setQueryData(['arcade-state'], (prev: unknown) => {
         const p = prev as
           | {
@@ -171,6 +189,7 @@ export function ArcadeScreen({
   const cashMut = useMutation({
     mutationFn: cashOutArcadeRun,
     onSuccess: (data) => {
+      playCashOutSound(soundOn);
       setEndBanner(
         `Cashed out for ${data.run.runScore?.toLocaleString() ?? 0} Digits.`,
       );
@@ -186,6 +205,7 @@ export function ArcadeScreen({
   const abandonMut = useMutation({
     mutationFn: abandonArcadeRun,
     onSuccess: (data) => {
+      playAbandonSound(soundOn);
       setEndBanner(
         `Abandoned. Run score: ${data.run.runScore?.toLocaleString() ?? 0} Digits (peak).`,
       );

@@ -79,7 +79,7 @@ export function SettingsScreen() {
             checked={settings.soundEnabled}
             onChange={(e) => setSoundEnabled(e.target.checked)}
           />
-          Soft sound on roll settle
+          Soft sound (Home + Arcade)
         </label>
         <label className="flex items-center gap-2 text-sm">
           <input

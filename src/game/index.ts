@@ -74,6 +74,11 @@ export {
 } from './stats.js';
 export {
   playRollSound,
+  playArcadeRollSound,
+  playDigitsGainSound,
+  playPurchaseSound,
+  playCashOutSound,
+  playAbandonSound,
   shouldCelebrate,
   shouldTrashCrack,
   celebrateIntensity,
