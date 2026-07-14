@@ -1,5 +1,6 @@
 import { Toast } from '@base-ui/react/toast';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { MOTION_EASE, MOTION_MS } from '../motion/tokens';
 import { appToastManager } from './toastManager';
 
 export function ToastViewport() {
@@ -14,6 +15,8 @@ export function ToastViewport() {
 
 function ToastList({ reduceMotion }: { reduceMotion: boolean }) {
   const { toasts } = Toast.useToastManager();
+  const enter = MOTION_MS.standard / 1000;
+  const exit = (MOTION_MS.standard * 0.7) / 1000;
 
   return (
     <Toast.Portal>
@@ -36,9 +39,21 @@ function ToastList({ reduceMotion }: { reduceMotion: boolean }) {
                     exit={
                       reduceMotion
                         ? undefined
-                        : { opacity: 0, y: 8, scale: 0.98 }
+                        : {
+                            opacity: 0,
+                            y: 8,
+                            scale: 0.98,
+                            transition: {
+                              duration: exit,
+                              ease: 'easeIn',
+                            },
+                          }
                     }
-                    transition={{ duration: reduceMotion ? 0 : 0.2 }}
+                    transition={
+                      reduceMotion
+                        ? { duration: 0 }
+                        : { duration: enter, ease: MOTION_EASE }
+                    }
                   />
                 }
               >

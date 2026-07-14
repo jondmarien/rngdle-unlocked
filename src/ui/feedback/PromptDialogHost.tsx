@@ -1,6 +1,7 @@
 import { Dialog } from '@base-ui/react/dialog';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useEffect, useId, useRef, useState } from 'react';
+import { MOTION_EASE, MOTION_MS } from '../motion/tokens';
 import type { PromptRequest } from './dialogTypes';
 
 export function PromptDialogHost({
@@ -14,6 +15,9 @@ export function PromptDialogHost({
   const [value, setValue] = useState('');
   const [error, setError] = useState<string | null>(null);
   const settled = useRef(false);
+  const backdropDur = MOTION_MS.quick / 1000;
+  const popupEnter = MOTION_MS.standard / 1000;
+  const popupExit = (MOTION_MS.standard * 0.7) / 1000;
 
   useEffect(() => {
     settled.current = false;
@@ -56,8 +60,22 @@ export function PromptDialogHost({
                 <motion.div
                   initial={reduceMotion ? false : { opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  exit={reduceMotion ? undefined : { opacity: 0 }}
-                  transition={{ duration: reduceMotion ? 0 : 0.15 }}
+                  exit={
+                    reduceMotion
+                      ? undefined
+                      : {
+                          opacity: 0,
+                          transition: {
+                            duration: backdropDur * 0.7,
+                            ease: 'easeIn',
+                          },
+                        }
+                  }
+                  transition={
+                    reduceMotion
+                      ? { duration: 0 }
+                      : { duration: backdropDur, ease: MOTION_EASE }
+                  }
                 />
               }
             />
@@ -69,9 +87,22 @@ export function PromptDialogHost({
                     initial={reduceMotion ? false : { opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={
-                      reduceMotion ? undefined : { opacity: 0, scale: 0.95 }
+                      reduceMotion
+                        ? undefined
+                        : {
+                            opacity: 0,
+                            scale: 0.95,
+                            transition: {
+                              duration: popupExit,
+                              ease: 'easeIn',
+                            },
+                          }
                     }
-                    transition={{ duration: reduceMotion ? 0 : 0.18 }}
+                    transition={
+                      reduceMotion
+                        ? { duration: 0 }
+                        : { duration: popupEnter, ease: MOTION_EASE }
+                    }
                   />
                 }
               >

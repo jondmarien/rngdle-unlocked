@@ -1,5 +1,7 @@
+import { motion, useReducedMotion } from 'motion/react';
 import { topPercentFromEP, type RollResult } from '../../game';
 import { formatDateTime } from '../../lib/format';
+import { MOTION_EASE, MOTION_MS } from '../motion/tokens';
 import { BadgeBreakdown } from './BadgeCard';
 import { EPPill } from './EPPill';
 import { RarityBadge } from './RarityBadge';
@@ -14,9 +16,36 @@ export function RollReplayModal({
   onClose: () => void;
   onShare?: () => void;
 }) {
+  const reduceMotion = useReducedMotion();
+  const backdropDur = MOTION_MS.quick / 1000;
+  const popupEnter = MOTION_MS.standard / 1000;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center">
-      <div className="flex max-h-[90dvh] w-full max-w-lg flex-col overflow-hidden rounded-lg border-2 border-(--outline) bg-(--surface) shadow-xl">
+    <motion.div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Roll replay"
+      initial={reduceMotion ? false : { opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={
+        reduceMotion
+          ? { duration: 0 }
+          : { duration: backdropDur, ease: MOTION_EASE }
+      }
+      onClick={onClose}
+    >
+      <motion.div
+        className="flex max-h-[90dvh] w-full max-w-lg flex-col overflow-hidden rounded-lg border-2 border-(--outline) bg-(--surface) shadow-xl"
+        initial={reduceMotion ? false : { opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={
+          reduceMotion
+            ? { duration: 0 }
+            : { duration: popupEnter, ease: MOTION_EASE }
+        }
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between border-b border-(--outline) px-4 py-3">
           <h2 className="text-lg font-bold uppercase tracking-wider">
             Roll replay
@@ -79,7 +108,7 @@ export function RollReplayModal({
             Close
           </button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

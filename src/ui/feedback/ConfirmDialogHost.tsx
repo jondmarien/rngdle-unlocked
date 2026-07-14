@@ -1,6 +1,7 @@
 import { AlertDialog } from '@base-ui/react/alert-dialog';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useEffect, useRef } from 'react';
+import { MOTION_EASE, MOTION_MS } from '../motion/tokens';
 import type { ConfirmRequest } from './dialogTypes';
 
 export function ConfirmDialogHost({
@@ -11,6 +12,9 @@ export function ConfirmDialogHost({
   const reduceMotion = useReducedMotion();
   const open = request != null;
   const settled = useRef(false);
+  const backdropDur = MOTION_MS.quick / 1000;
+  const popupEnter = MOTION_MS.standard / 1000;
+  const popupExit = (MOTION_MS.standard * 0.7) / 1000;
 
   useEffect(() => {
     settled.current = false;
@@ -38,8 +42,22 @@ export function ConfirmDialogHost({
                 <motion.div
                   initial={reduceMotion ? false : { opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  exit={reduceMotion ? undefined : { opacity: 0 }}
-                  transition={{ duration: reduceMotion ? 0 : 0.15 }}
+                  exit={
+                    reduceMotion
+                      ? undefined
+                      : {
+                          opacity: 0,
+                          transition: {
+                            duration: backdropDur * 0.7,
+                            ease: 'easeIn',
+                          },
+                        }
+                  }
+                  transition={
+                    reduceMotion
+                      ? { duration: 0 }
+                      : { duration: backdropDur, ease: MOTION_EASE }
+                  }
                 />
               }
             />
@@ -51,9 +69,22 @@ export function ConfirmDialogHost({
                     initial={reduceMotion ? false : { opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={
-                      reduceMotion ? undefined : { opacity: 0, scale: 0.95 }
+                      reduceMotion
+                        ? undefined
+                        : {
+                            opacity: 0,
+                            scale: 0.95,
+                            transition: {
+                              duration: popupExit,
+                              ease: 'easeIn',
+                            },
+                          }
                     }
-                    transition={{ duration: reduceMotion ? 0 : 0.18 }}
+                    transition={
+                      reduceMotion
+                        ? { duration: 0 }
+                        : { duration: popupEnter, ease: MOTION_EASE }
+                    }
                   />
                 }
               >
