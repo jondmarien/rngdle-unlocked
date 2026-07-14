@@ -300,6 +300,12 @@ export const arcadeRuns = pgTable('arcade_runs', {
   shopOfferJson: text('shop_offer_json').notNull().default('[]'),
   /** Set on end: peak (bust/abandon) or digits (cash-out) */
   runScore: integer('run_score'),
+  /** Deadline upgrade: target Digits (0 = inactive). */
+  deadlineTargetDigits: integer('deadline_target_digits').notNull().default(0),
+  /** Deadline upgrade: rolls left to hit target (0 = inactive). */
+  deadlineRollsRemaining: integer('deadline_rolls_remaining')
+    .notNull()
+    .default(0),
   startedAt: timestamp('started_at').notNull().defaultNow(),
   endedAt: timestamp('ended_at'),
 });

@@ -14,6 +14,7 @@ export const ARCADE_UPGRADE_IDS = [
   'rarity_lock',
   'currency_surge',
   'bonus_spin',
+  'deadline',
 ] as const;
 
 export type ArcadeUpgradeId = (typeof ARCADE_UPGRADE_IDS)[number];
@@ -104,6 +105,14 @@ export const ARCADE_UPGRADES: Record<ArcadeUpgradeId, ArcadeUpgradeDef> = {
     description:
       'Take an extra roll now without opening the shop (still advances cooldowns).',
     priceTier: 'mid',
+  },
+  deadline: {
+    id: 'deadline',
+    type: 'passive',
+    name: 'Deadline',
+    description:
+      'Opt-in pressure: hit 1.75× your Digits (min 20) within 6 rolls for a +25% target bonus — miss and you bust.',
+    priceTier: 'spicy',
   },
 };
 

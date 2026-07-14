@@ -27,6 +27,7 @@ import {
 import { ARCADE_RISK_ICON, ARCADE_SHOP_TEXTURE } from '../../lib/arcade-icons';
 import { useGame, useGameSettings } from '../../state/GameProvider';
 import { ArcadeComboChip } from '../components/arcade/ArcadeComboChip';
+import { ArcadeDeadlineChip } from '../components/arcade/ArcadeDeadlineChip';
 import { ArcadeDigitsDisplay } from '../components/arcade/ArcadeDigitsDisplay';
 import { ArcadeRollReveal } from '../components/arcade/ArcadeRollReveal';
 import { ArcadeShopCard } from '../components/arcade/ArcadeShopCard';
@@ -416,6 +417,11 @@ export function ArcadeScreen({
                         {run.rollCount}
                       </span>
                       <ArcadeComboChip streak={run.comboStreak} />
+                      <ArcadeDeadlineChip
+                        digits={run.digits}
+                        target={run.deadlineTargetDigits ?? 0}
+                        rollsRemaining={run.deadlineRollsRemaining ?? 0}
+                      />
                       {run.surgeRollsRemaining > 0 ? (
                         <span>· Surge ×{run.surgeRollsRemaining}</span>
                       ) : null}

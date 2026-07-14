@@ -100,6 +100,7 @@ export type MetaUnlockRule =
 
 /** Permanent unlock milestones (checked after each completed run). */
 export const META_UNLOCK_RULES: readonly MetaUnlockRule[] = [
+  { upgradeId: 'deadline', kind: 'runs', minRuns: 2 },
   { upgradeId: 'combo_chain', kind: 'runs', minRuns: 3 },
   { upgradeId: 'badge_magnet', kind: 'runs', minRuns: 5 },
   { upgradeId: 'bonus_spin', kind: 'runs', minRuns: 10 },
@@ -107,6 +108,12 @@ export const META_UNLOCK_RULES: readonly MetaUnlockRule[] = [
   { upgradeId: 'currency_surge', kind: 'bestScore', minScore: 250 },
   { upgradeId: 'epic_surge', kind: 'bestScore', minScore: 500 },
 ] as const;
+
+/** Deadline (opt-in): target = max(FLOOR, ceil(digits * MULT)); N rolls or bust. */
+export const DEADLINE_MULT = 1.75;
+export const DEADLINE_FLOOR_TARGET = 20;
+export const DEADLINE_ROLLS = 6;
+export const DEADLINE_SUCCESS_BONUS_FRAC = 0.25;
 
 /** Rate-limit suggestions mirrored in server/rateLimit.ts LIMITS. */
 export const ARCADE_RATE_HINTS = {

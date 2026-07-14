@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
+### Added
 
-- **Arcade Epic+ settle FX** — Epic through Divine Arcade rolls fire the same screen shake + CelebrationLayer confetti/edge blooms as Home (in addition to rarity glow art). Gated by confetti Settings toggle; Rare stays art-only punch.
+- **Arcade Deadline** — opt-in spicy shop upgrade (unlock after 2 completed runs). On buy: target = `max(20, ceil(digits × 1.75))`, 6 rolls to hit it for `ceil(target × 0.25)` Digits bonus; miss → hard bust (peak score). Additive columns `deadline_target_digits` / `deadline_rolls_remaining`. Existing upgrades unchanged.
 
 ## [0.15.0] - 2026-07-14
 

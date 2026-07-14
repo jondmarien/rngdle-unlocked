@@ -7,6 +7,11 @@ import { randomInt } from 'node:crypto';
 import { and, desc, eq } from 'drizzle-orm';
 import { awardDigits } from '../src/game/arcade/digits.js';
 import {
+  deadlineInitialRolls,
+  deadlineTargetFromDigits,
+  tickDeadline,
+} from '../src/game/arcade/deadline.js';
+import {
   ACTIVE_COOLDOWNS,
   CURRENCY_SURGE_ROLLS,
   DON_SUCCESS_MIN,
@@ -63,6 +68,8 @@ export type ArcadeRunPublic = {
   runScore: number | null;
   startedAt: string;
   endedAt: string | null;
+  deadlineTargetDigits: number;
+  deadlineRollsRemaining: number;
 };
 
 export type ArcadeMetaPublic = {
@@ -148,6 +155,8 @@ function runToPublic(row: RunRow): ArcadeRunPublic {
     runScore: row.runScore,
     startedAt: row.startedAt.toISOString(),
     endedAt: row.endedAt ? row.endedAt.toISOString() : null,
+    deadlineTargetDigits: row.deadlineTargetDigits ?? 0,
+    deadlineRollsRemaining: row.deadlineRollsRemaining ?? 0,
   };
 }
 
@@ -511,12 +520,21 @@ export async function buyArcadeUpgrade(
   const nextOffers = offers.filter((o) => o.upgradeId !== upgradeId);
   const nextDigits = row.digits - offer.price;
 
+  let deadlineTargetDigits = row.deadlineTargetDigits ?? 0;
+  let deadlineRollsRemaining = row.deadlineRollsRemaining ?? 0;
+  if (upgradeId === 'deadline') {
+    deadlineTargetDigits = deadlineTargetFromDigits(nextDigits);
+    deadlineRollsRemaining = deadlineInitialRolls();
+  }
+
   await db
     .update(arcadeRuns)
     .set({
       digits: nextDigits,
       ownedUpgradesJson: JSON.stringify(nextOwned),
       shopOfferJson: JSON.stringify(nextOffers),
+      deadlineTargetDigits,
+      deadlineRollsRemaining,
     })
     .where(eq(arcadeRuns.id, row.id));
 
@@ -712,6 +730,8 @@ async function processArcadeRollOnce(
   let peak = Math.max(row.peakDigits, digits);
   let donResult: 'win' | 'lose' | undefined;
   let busted = false;
+  let deadlineTarget = row.deadlineTargetDigits ?? 0;
+  let deadlineRolls = row.deadlineRollsRemaining ?? 0;
 
   if (donArmed) {
     const success = rarityRank(evaluated.rarity) >= rarityRank(DON_SUCCESS_MIN);
@@ -723,6 +743,28 @@ async function processArcadeRollOnce(
       donResult = 'lose';
       busted = true;
       peak = Math.max(row.peakDigits, row.digits, digits);
+    }
+  }
+
+  // Deadline pressure (opt-in; after Digits award / DoN resolve)
+  if (!busted) {
+    const tick = tickDeadline({
+      digitsAfterAward: digits,
+      target: deadlineTarget,
+      rollsRemainingBefore: deadlineRolls,
+    });
+    if (tick.kind === 'success') {
+      digits += tick.bonusDigits;
+      peak = Math.max(peak, digits);
+      deadlineTarget = 0;
+      deadlineRolls = 0;
+    } else if (tick.kind === 'progress') {
+      deadlineRolls = tick.rollsRemaining;
+    } else if (tick.kind === 'bust') {
+      busted = true;
+      peak = Math.max(row.peakDigits, row.digits, digits);
+      deadlineTarget = 0;
+      deadlineRolls = 0;
     }
   }
 
@@ -781,6 +823,8 @@ async function processArcadeRollOnce(
         surgeRollsRemaining: 0,
         pendingActiveJson: '{}',
         shopOfferJson: '[]',
+        deadlineTargetDigits: 0,
+        deadlineRollsRemaining: 0,
       })
       .where(eq(arcadeRuns.id, row.id));
 
@@ -816,6 +860,8 @@ async function processArcadeRollOnce(
       surgeRollsRemaining: surgeRemaining,
       pendingActiveJson: JSON.stringify(pending),
       shopOfferJson: JSON.stringify(shop),
+      deadlineTargetDigits: deadlineTarget,
+      deadlineRollsRemaining: deadlineRolls,
     })
     .where(eq(arcadeRuns.id, row.id));
 

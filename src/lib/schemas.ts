@@ -231,6 +231,7 @@ export const arcadeUpgradeIdSchema = z.enum([
   'rarity_lock',
   'currency_surge',
   'bonus_spin',
+  'deadline',
 ]);
 
 export const arcadeShopOfferSchema = z.object({
@@ -257,6 +258,8 @@ export const arcadeRunSchema = z.object({
   runScore: z.number().nullable(),
   startedAt: isoDateSchema,
   endedAt: isoDateSchema.nullable(),
+  deadlineTargetDigits: z.number().optional().default(0),
+  deadlineRollsRemaining: z.number().optional().default(0),
 });
 
 export const arcadeMetaSchema = z.object({
