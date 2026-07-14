@@ -12,10 +12,10 @@ if (!process.env.DATABASE_URL) {
 const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
-const title = 'New Update! v0.14.1 — Accent everywhere';
+const title = 'New Update! v0.15.0 — Arcade Mode gets juice';
 const body = [
-  'Site-wide profile accent now paints nav, Generate, mode chips, toggles, and primary buttons across the app.',
-  'Ranked amber and Features tags stay their own colors. Prove roll tip sits above the button again.',
+  'Arcade Digits runs feel punchier: Digits count up, rare rolls flash, the shop reacts when you buy (or can’t), and Cash Out vs Abandon read clearly.',
+  'Enable Soft sound in Settings for Arcade cues too. Digits math and upgrades are unchanged — this is feedback polish.',
   'Read the full player notes: https://rngdle-unlocked.chron0.tech/whats-new',
   'Open: /whats-new',
 ].join(' ');

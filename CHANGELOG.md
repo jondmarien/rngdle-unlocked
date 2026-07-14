@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-07-14
+
 ### Added
 
 - **Arcade juice Phase 0** — reusable chrome under `public/icons/arcade/` (rarity glow/burst overlays, Digits coin glyph, passive/active shop textures, Cash Out / Abandon icons) + `src/lib/arcade-icons.ts` path registry. Presentation assets only; no mechanics change.

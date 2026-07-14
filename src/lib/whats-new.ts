@@ -32,6 +32,31 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Arcade Mode gets juice',
+    date: '2026-07-14',
+    version: '0.15.0',
+    tags: ['Arcade', 'UI', 'Sound'],
+    content: [
+      {
+        body: 'Arcade Digits runs now feel punchier — Digits count up, rare rolls flash, the shop reacts when you buy (or can’t), and Cash Out vs Abandon read clearly at a glance. Soft sounds cover Arcade too when you enable them in Settings.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'Same Digits math and upgrades — this is feedback polish only.',
+        bullets: [
+          '**Digits counter** — values tween instead of snapping; coin glyph on the HUD.',
+          '**Roll reveal punch** — Rare and above flash and scale; Common stays quiet so highs still feel special.',
+          '**Combo chip** — warmer pulse as your streak climbs past 5 / 10 / 20.',
+          '**Shop juice** — textured cards, hover lift, buy flash, and a shake when you tap something you can’t afford.',
+          '**Cash Out / Abandon** — distinct icons plus safe vs danger glow; Digits pulse while the run is live.',
+          '**Sound** — enable Soft sound in Settings for Arcade roll, Digits, purchase, cash-out, and abandon cues.',
+          '**Oganesson** — Atomic Registry Z=118 is back to divine grail EP.',
+          '**Prove roll** — Free play waits for cloud publish before sealing so early clicks no longer 404.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Accent everywhere + Prove roll tip',
     date: '2026-07-14',
     version: '0.14.1',
