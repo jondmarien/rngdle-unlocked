@@ -1,6 +1,13 @@
 import { Analytics } from '@vercel/analytics/react';
 import { AnimatePresence } from 'motion/react';
-import { Suspense, lazy, useCallback, useEffect, useState } from 'react';
+import {
+  Suspense,
+  lazy,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { useSession } from './lib/auth-client';
 import { createLogger } from './lib/logger';
 import {
@@ -14,7 +21,7 @@ import { GameProvider } from './state/GameProvider';
 import { FeedbackProvider } from './ui/feedback';
 import { ScreenFallback } from './ui/components/ScreenFallback';
 import { AppShell } from './ui/layout/AppShell';
-import { RouteEnter } from './ui/motion';
+import { RouteEnter, SuspenseReveal } from './ui/motion';
 import { HomeScreen } from './ui/screens/HomeScreen';
 import { lazyScreen } from './ui/lazyScreen';
 
@@ -234,6 +241,9 @@ function AppRoutes() {
       myUsername && route.username.toLowerCase() === myUsername.toLowerCase(),
     );
 
+  const currentRouteKey = routeKey(route);
+  const routeStartedAt = useMemo(() => performance.now(), [currentRouteKey]);
+
   return (
     <AppShell
       tab={tab}
@@ -243,77 +253,81 @@ function AppRoutes() {
     >
       <AnimatePresence mode="wait">
         <RouteEnter
-          key={routeKey(route)}
+          key={currentRouteKey}
           className="flex min-h-0 flex-1 flex-col"
         >
           <Suspense fallback={<ScreenFallback />}>
-            {route.kind === 'legal' && <LegalScreen kind={route.page} />}
-            {route.kind === 'profile' && (
-              <ProfileScreen
-                username={route.username}
-                onOpenRoll={goRoll}
-                onBack={() => goTab('leaderboard')}
-              />
-            )}
-            {route.kind === 'roll' && (
-              <PublicRollScreen
-                rollId={route.rollId}
-                username={route.username}
-                onOpenProfile={goProfile}
-                onBack={() => goTab('home')}
-              />
-            )}
-            {route.kind === 'tab' && tab === 'home' && (
-              <HomeScreen
-                onGoAccount={() => goTab('account')}
-                onGoTab={goTab}
-                onOpenProfile={goProfile}
-                onOpenRoll={goRoll}
-              />
-            )}
-            {route.kind === 'tab' && tab === 'history' && (
-              <HistoryScreen
-                onGoAccount={() => goTab('account')}
-                initialView={route.historyView ?? 'rolls'}
-              />
-            )}
-            {route.kind === 'tab' && tab === 'collection' && (
-              <CollectionScreen />
-            )}
-            {route.kind === 'tab' && tab === 'stats' && <StatsScreen />}
-            {route.kind === 'tab' && tab === 'leaderboard' && (
-              <LeaderboardScreen onOpenProfile={goProfile} />
-            )}
-            {route.kind === 'tab' && tab === 'friends' && (
-              <FriendsScreen onOpenProfile={goProfile} onGoTab={goTab} />
-            )}
-            {route.kind === 'tab' && tab === 'arcade' && (
-              <ArcadeScreen
-                onGoAccount={() => goTab('account')}
-                onGoLeaderboard={() => goTab('leaderboard')}
-              />
-            )}
-            {route.kind === 'tab' && tab === 'features' && (
-              <FeatureRequestsScreen onGoAccount={() => goTab('account')} />
-            )}
-            {route.kind === 'tab' && tab === 'notifications' && (
-              <NotificationsScreen
-                onOpenHref={goPath}
-                onGoAccount={() => goTab('account')}
-              />
-            )}
-            {route.kind === 'tab' && tab === 'account' && (
-              <AccountScreen onOpenAdmin={() => goTab('admin')} />
-            )}
-            {route.kind === 'tab' && tab === 'whats-new' && <WhatsNewScreen />}
-            {route.kind === 'tab' && tab === 'about' && <AboutScreen />}
-            {route.kind === 'tab' && tab === 'admin' && (
-              <AdminScreen
-                onBack={() => goTab('account')}
-                onOpenProfile={goProfile}
-              />
-            )}
-            {route.kind === 'tab' && tab === 'settings' && <SettingsScreen />}
+            <SuspenseReveal startedAt={routeStartedAt}>
+              {route.kind === 'legal' && <LegalScreen kind={route.page} />}
+              {route.kind === 'profile' && (
+                <ProfileScreen
+                  username={route.username}
+                  onOpenRoll={goRoll}
+                  onBack={() => goTab('leaderboard')}
+                />
+              )}
+              {route.kind === 'roll' && (
+                <PublicRollScreen
+                  rollId={route.rollId}
+                  username={route.username}
+                  onOpenProfile={goProfile}
+                  onBack={() => goTab('home')}
+                />
+              )}
+              {route.kind === 'tab' && tab === 'home' && (
+                <HomeScreen
+                  onGoAccount={() => goTab('account')}
+                  onGoTab={goTab}
+                  onOpenProfile={goProfile}
+                  onOpenRoll={goRoll}
+                />
+              )}
+              {route.kind === 'tab' && tab === 'history' && (
+                <HistoryScreen
+                  onGoAccount={() => goTab('account')}
+                  initialView={route.historyView ?? 'rolls'}
+                />
+              )}
+              {route.kind === 'tab' && tab === 'collection' && (
+                <CollectionScreen />
+              )}
+              {route.kind === 'tab' && tab === 'stats' && <StatsScreen />}
+              {route.kind === 'tab' && tab === 'leaderboard' && (
+                <LeaderboardScreen onOpenProfile={goProfile} />
+              )}
+              {route.kind === 'tab' && tab === 'friends' && (
+                <FriendsScreen onOpenProfile={goProfile} onGoTab={goTab} />
+              )}
+              {route.kind === 'tab' && tab === 'arcade' && (
+                <ArcadeScreen
+                  onGoAccount={() => goTab('account')}
+                  onGoLeaderboard={() => goTab('leaderboard')}
+                />
+              )}
+              {route.kind === 'tab' && tab === 'features' && (
+                <FeatureRequestsScreen onGoAccount={() => goTab('account')} />
+              )}
+              {route.kind === 'tab' && tab === 'notifications' && (
+                <NotificationsScreen
+                  onOpenHref={goPath}
+                  onGoAccount={() => goTab('account')}
+                />
+              )}
+              {route.kind === 'tab' && tab === 'account' && (
+                <AccountScreen onOpenAdmin={() => goTab('admin')} />
+              )}
+              {route.kind === 'tab' && tab === 'whats-new' && (
+                <WhatsNewScreen />
+              )}
+              {route.kind === 'tab' && tab === 'about' && <AboutScreen />}
+              {route.kind === 'tab' && tab === 'admin' && (
+                <AdminScreen
+                  onBack={() => goTab('account')}
+                  onOpenProfile={goProfile}
+                />
+              )}
+              {route.kind === 'tab' && tab === 'settings' && <SettingsScreen />}
+            </SuspenseReveal>
           </Suspense>
         </RouteEnter>
       </AnimatePresence>

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Codex filter chip row** — New/All stay content-sized; other family chips `flex-1` so wrapped rows share a flush right edge.
+- **Cold lazy route pop-in** — `SuspenseReveal` fades resolved screen content after Suspense (skips when chunk resolves warm / reduced motion) so first visit no longer hard-cuts after Loading….
 
 ## [0.16.3] - 2026-07-14
 
