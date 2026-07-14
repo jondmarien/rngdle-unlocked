@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Arcade Epic+ settle FX** — Epic through Divine Arcade rolls fire the same screen shake + CelebrationLayer confetti/edge blooms as Home (in addition to rarity glow art). Gated by confetti Settings toggle; Rare stays art-only punch.
+
 ## [0.15.0] - 2026-07-14
 
 ### Added

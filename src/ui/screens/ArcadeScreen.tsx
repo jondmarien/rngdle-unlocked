@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { ARCADE_UPGRADES, type ArcadeUpgradeId } from '../../game/arcade';
 import {
+  celebrateIntensity,
   playAbandonSound,
   playArcadeRollSound,
   playCashOutSound,
@@ -24,7 +25,7 @@ import {
   type ArcadeRun,
 } from '../../lib/arcade-api';
 import { ARCADE_RISK_ICON, ARCADE_SHOP_TEXTURE } from '../../lib/arcade-icons';
-import { useGameSettings } from '../../state/GameProvider';
+import { useGame, useGameSettings } from '../../state/GameProvider';
 import { ArcadeComboChip } from '../components/arcade/ArcadeComboChip';
 import { ArcadeDigitsDisplay } from '../components/arcade/ArcadeDigitsDisplay';
 import { ArcadeRollReveal } from '../components/arcade/ArcadeRollReveal';
@@ -51,6 +52,7 @@ export function ArcadeScreen({
 }) {
   const { data: session } = useSession();
   const { settings } = useGameSettings();
+  const { fireCelebration, clearCelebration } = useGame();
   const soundOn = settings.soundEnabled;
   const qc = useQueryClient();
   const [lastRoll, setLastRoll] = useState<ArcadeRoll | null>(null);
@@ -112,6 +114,9 @@ export function ArcadeScreen({
   const rollMut = useMutation({
     mutationFn: (opts?: { useReroll?: boolean; count?: ArcadeRollCount }) =>
       arcadeRoll(opts),
+    onMutate: () => {
+      clearCelebration();
+    },
     onSuccess: (data) => {
       setLastRoll(data.roll);
       setLastBatchSize(data.rolls.length);
@@ -122,6 +127,16 @@ export function ArcadeScreen({
       }
       if (data.busted) {
         playAbandonSound(soundOn);
+      }
+      // Epic→Divine: same CelebrationLayer shake (+ confetti/edge) as Home.
+      // Rare keeps art-only punch; Common stays quiet.
+      const intensity = celebrateIntensity(data.roll.rarity);
+      if (
+        settings.confettiEnabled &&
+        typeof intensity === 'number' &&
+        intensity >= 2
+      ) {
+        fireCelebration(data.roll.rarity);
       }
       qc.setQueryData(['arcade-state'], {
         meta: data.meta,
