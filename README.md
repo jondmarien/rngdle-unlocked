@@ -153,7 +153,7 @@ Or `pnpm dev` for the SPA only and point APIs at a deployed preview.
 - **Reel animation** — all digits scramble, then lock with rarity glow; `??? EP` while spinning; badges cascade in; EP counts up
 - **Fresh reel on refresh** — home does not restore the last roll; History/Codex keep progress
 - **Roll mode picker** — Free play · Ranked · Daily · Weekly with plain-language board placement copy
-- **207 number badges** + journey + secret masteries (section seals including Bases / Radix Crown, streak secrets, + Codex Absolute)
+- **325 number badges** + journey + secret masteries (section seals including Bases / Radix Crown / Atomic Seal, streak secrets, + Codex Absolute)
 - **Badge codex** — spoiler-safe locked entries, **unlock timestamps**, **New** tab (first unlocks in the last 5 minutes)
 - **NEW ribbons** on first-time unlocks in the roll breakdown
 - **Family-colored badge pills** + custom rarity/family icon art

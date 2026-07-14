@@ -28,6 +28,7 @@ import {
   pronicEquation,
   squareEquation,
 } from './equation.js';
+import { ATOMIC_REGISTRY_BADGES } from './atomicRegistry.js';
 import {
   allEvenDigits,
   allOddDigits,
@@ -1550,6 +1551,9 @@ export const NUMBER_BADGES: BadgeDef[] = [
     emoji: '🗓️',
     matches: (n) => n >= 2020 && n <= 2029,
   },
+
+  // Atomic Registry (118 badges: Z = last three digits when 1..118)
+  ...ATOMIC_REGISTRY_BADGES,
 ];
 
 export function badgeById(id: string): BadgeDef | undefined {

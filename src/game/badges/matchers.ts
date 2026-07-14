@@ -439,3 +439,14 @@ export function hexSpeakWord(n: number): string | undefined {
 export function hasHexSpeak(n: number): boolean {
   return hexSpeakWord(n) !== undefined;
 }
+
+/**
+ * Last three digits of the roll as an integer (n % 1000).
+ * Returns Z in 1..118 for Atomic Registry matches; otherwise null.
+ */
+export function atomicNumberFromRoll(n: number): number | null {
+  if (!Number.isInteger(n) || n < 0) return null;
+  const z = n % 1000;
+  if (z >= 1 && z <= 118) return z;
+  return null;
+}

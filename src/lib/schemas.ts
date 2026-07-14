@@ -34,7 +34,9 @@ export const badgeFamilySchema = z.enum([
   'sequence',
   'poker',
   'element',
+  'atomic-registry',
   'bases',
+  'years',
   'journey',
   'secret',
 ]);

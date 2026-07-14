@@ -88,6 +88,14 @@ const SECTION_SEALS: {
     ep: 2_500,
   },
   {
+    section: 'atomic-registry',
+    id: 'secret-master-atomic-registry',
+    name: 'Atomic Seal',
+    emoji: '⚛️',
+    image: '/secrets/atomic-registry.jpg',
+    ep: 2_500,
+  },
+  {
     section: 'bases',
     id: 'secret-master-bases',
     name: 'Radix Crown',

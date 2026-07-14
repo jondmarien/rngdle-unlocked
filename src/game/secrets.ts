@@ -15,6 +15,7 @@ export const SECTION_FAMILIES = [
   'sequence',
   'poker',
   'element',
+  'atomic-registry',
   'bases',
   'years',
 ] as const satisfies readonly Exclude<
@@ -116,6 +117,14 @@ const SECTION_META: Record<
     ep: 2_500,
     blurb: 'The full table of element badges is complete.',
     image: '/secrets/element.jpg',
+  },
+  'atomic-registry': {
+    id: 'secret-master-atomic-registry',
+    name: 'Atomic Seal',
+    emoji: '⚛️',
+    ep: 2_500,
+    blurb: 'All 118 Atomic Registry badges collected.',
+    image: '/secrets/atomic-registry.jpg',
   },
   bases: {
     id: 'secret-master-bases',

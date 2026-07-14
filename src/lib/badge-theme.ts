@@ -35,6 +35,10 @@ export const FAMILY_PILL: Record<BadgeFamily, { chip: string; label: string }> =
       chip: 'border-teal-500/40 bg-teal-500/15 text-teal-900 dark:text-teal-200',
       label: 'Element',
     },
+    'atomic-registry': {
+      chip: 'border-slate-500/40 bg-indigo-500/15 text-indigo-900 dark:text-indigo-200',
+      label: 'Atomic Registry',
+    },
     bases: {
       chip: 'border-cyan-500/40 bg-cyan-500/15 text-cyan-900 dark:text-cyan-200',
       label: 'Bases',

@@ -24,6 +24,7 @@ export const FAMILY_ICON: Partial<
   sequence: '/icons/family/sequence.jpg',
   poker: '/icons/family/poker.jpg',
   element: '/icons/family/element.jpg',
+  'atomic-registry': '/icons/family/atomic-registry.jpg',
   bases: '/icons/family/bases.jpg',
   years: '/icons/family/years.jpg',
   journey: '/icons/family/journey.jpg',

@@ -21,6 +21,7 @@ export type BadgeFamily =
   | 'sequence'
   | 'poker'
   | 'element'
+  | 'atomic-registry'
   | 'bases'
   | 'years'
   | 'journey'

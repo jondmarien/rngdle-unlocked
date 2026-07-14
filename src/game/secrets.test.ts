@@ -122,6 +122,31 @@ describe('secrets', () => {
     const nu = newlyUnlockedSecrets(ids);
     expect(nu.some((s) => s.id === 'secret-master-years')).toBe(true);
   });
+
+  it('atomic seal unlocks when atomic-registry complete', () => {
+    const atomic = NUMBER_BADGES.filter((b) => b.family === 'atomic-registry');
+    expect(atomic.length).toBe(118);
+    const ids = new Set(atomic.map((b) => b.id));
+    const nu = newlyUnlockedSecrets(ids);
+    expect(nu.some((s) => s.id === 'secret-master-atomic-registry')).toBe(true);
+  });
+
+  it('omega blocked when missing one atomic-registry badge', () => {
+    const atomic = NUMBER_BADGES.filter((b) => b.family === 'atomic-registry');
+    const ids = new Set([
+      ...NUMBER_BADGES.filter((b) => b.family !== 'atomic-registry').map(
+        (b) => b.id,
+      ),
+      ...atomic.slice(0, -1).map((b) => b.id),
+      ...JOURNEY_BADGES.map((b) => b.id),
+      ...LIFETIME_EP_BADGES.map((b) => b.id),
+      ...SECTION_SECRETS.map((s) => s.id),
+    ]);
+    expect(
+      newlyUnlockedSecrets(ids).some((s) => s.id === OMEGA_SECRET.id),
+    ).toBe(false);
+    expect(isSectionComplete('atomic-registry', ids)).toBe(false);
+  });
 });
 
 describe('streak secrets', () => {

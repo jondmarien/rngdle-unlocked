@@ -12,6 +12,7 @@ const sections = [
   'sequence',
   'poker',
   'element',
+  'atomic-registry',
   'bases',
   'years',
 ] as const;
