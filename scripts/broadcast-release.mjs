@@ -13,10 +13,10 @@ const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
 const title =
-  'New Update! v0.16.3 — Softer screen changes & steadier Codex filters';
+  'New Update! v0.16.4 — Smoother tab loads & a steadier Latest Runs rail';
 const body = [
-  'Every tab now eases in when you switch screens instead of hard-cutting.',
-  'Codex family filter chips keep a consistent size so the badge grid no longer jumps when you pick a filter.',
+  'First visits to a tab ease in after Loading instead of hard-cutting.',
+  'Codex filter rows stay flush, and Latest Runs stays docked on the right when you return to Roll.',
   'Read the full player notes: https://rngdle-unlocked.chron0.tech/whats-new',
   'Open: /whats-new',
 ].join(' ');

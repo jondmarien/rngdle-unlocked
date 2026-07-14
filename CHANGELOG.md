@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.4] - 2026-07-14
+
 ### Fixed
 
 - **Codex filter chip row** — equal-column `auto-fill` grid (`minmax(7.25rem, 1fr)`) so wrapped rows share a flush right edge; labels stay centered in each cell.

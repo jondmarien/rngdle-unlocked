@@ -32,6 +32,26 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Smoother tab loads and a steadier Latest Runs rail',
+    date: '2026-07-14',
+    version: '0.16.4',
+    tags: ['UI', 'Codex'],
+    content: [
+      {
+        body: 'First visits to a tab no longer hard-cut after Loading, Codex filter rows stay flush, and Latest Runs stays docked on the right when you return to Roll.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'Same rolls and badges — layout and transition polish.',
+        bullets: [
+          '**Tab loads** — after Loading…, screens ease in instead of snapping.',
+          '**Codex filters** — wrapped chip rows share a clean right edge.',
+          '**Latest Runs** — no more brief centered flash before docking on desktop.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Softer screen changes and steadier Codex filters',
     date: '2026-07-14',
     version: '0.16.3',
