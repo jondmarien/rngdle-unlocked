@@ -376,3 +376,15 @@ These four checks require a **manual browser smoke** — automated `pnpm test` /
 ---
 
 _When instructions conflict: user request > this file > README > older design docs. Prefer the current dual-board Ranked/Practice model over any pre-Ranked “all synced rolls are competitive” wording in historical specs._
+
+---
+
+## Cursor Cloud specific instructions
+
+Durable, non-obvious notes for cloud agents. Standard commands live in §3 / README — not repeated here.
+
+- **Primary dev service is the Vite SPA (`pnpm dev`, port 5173).** The whole solo game (rolls, badges, EP, history, codex) runs fully client-side with **no env vars and no database** — this is the default way to develop and smoke-test. `pnpm dev` alone does **not** serve `api/*`.
+- **Cloud/social features are optional and gated on secrets that are absent from the base cloud VM.** Auth, sync, leaderboards, arcade, feed, profiles need `DATABASE_URL` (Neon) + `BETTER_AUTH_SECRET`/`BETTER_AUTH_URL` and are served via `npx vercel dev` (not `pnpm dev`). Without those secrets you cannot exercise the backend end-to-end; add them as Cursor secrets first, then `pnpm db:push` / the additive `scripts/migrate-*.mjs` before `vercel dev`.
+- **Node 22 + pnpm 10 are already present; `pnpm install` runs a `postinstall` that patches the TypeScript API** (`scripts/patch-typescript-api.cjs`) — this is expected, not an error.
+- **Pre-existing test failures:** `pnpm test` currently reports 2 failures in `src/game/secrets.test.ts` (OMEGA_SECRET unlock logic) on a clean `main`; 159/161 pass. These are deterministic and unrelated to environment setup — don't assume your change caused them.
+- **Manual roll smoke (per §9) requires the browser** — automated `pnpm test`/`pnpm typecheck` do not cover reel settle or mode switching. Free play works without sign-in; Ranked needs the cloud secrets above.
