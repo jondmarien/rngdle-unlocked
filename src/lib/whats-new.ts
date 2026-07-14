@@ -32,6 +32,27 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Arcade Deadline, Idle Digits, and cold streaks',
+    date: '2026-07-14',
+    version: '0.16.0',
+    tags: ['Arcade', 'Meta'],
+    content: [
+      {
+        body: 'Arcade Mode grows three new pressure layers: an opt-in Deadline shop challenge, Idle Digits you claim from Meta between runs, and a recoverable cold streak when Trash keeps landing. Digits still never become EP.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'Existing upgrades and juice from 0.15 are unchanged — these are additive.',
+        bullets: [
+          '**Deadline** — unlock after 2 runs; hit 1.75× your Digits (min 20) within 6 rolls for a bonus, or bust.',
+          '**Idle Digits** — Meta claim at 2/hour (12h cap); bank seeds your next Start run.',
+          '**Cold streak** — three Trash in a row soft-fails: Digits dip and gains halve for a few rolls — recover without ending the run.',
+          '**Epic+ FX** — Arcade Epic through Divine still shakes and blooms like Home.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Arcade Mode gets juice',
     date: '2026-07-14',
     version: '0.15.0',
