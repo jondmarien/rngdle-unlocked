@@ -36,6 +36,11 @@ import { RankedQuotaPill } from '../components/RankedQuotaPill';
 import { RollModePicker } from '../components/RollModePicker';
 import { RollReplayModal } from '../components/RollReplayModal';
 import { LazySharePanel } from '../components/LazySharePanel';
+import {
+  BadgeArtLightbox,
+  type BadgeArtLightboxItem,
+} from '../components/BadgeArtLightbox';
+import { motion } from 'motion/react';
 
 const log = createLogger('home');
 
@@ -103,6 +108,7 @@ export function HomeScreen({
   );
   const [shareRoll, setShareRoll] = useState<RollResult | null>(null);
   const [replayRoll, setReplayRoll] = useState<RollResult | null>(null);
+  const [lightbox, setLightbox] = useState<BadgeArtLightboxItem | null>(null);
   const [attestMsg, setAttestMsg] = useState<string | null>(null);
   const [provePublish, setProvePublish] = useState<ProvePublishState>('idle');
   const [attestBusy, setAttestBusy] = useState(false);
@@ -457,28 +463,59 @@ export function HomeScreen({
               Journey unlocked
             </p>
             <div className="mt-2 flex flex-wrap gap-2">
-              {lastJourneyUnlocks.map((j) => (
-                <div
-                  key={j.id}
-                  className="flex items-center gap-2 rounded-lg border border-(--accent)/30 bg-black/10 p-1.5 pr-2 dark:bg-black/20"
-                >
-                  {j.image ? (
-                    <img
-                      src={j.image}
-                      alt=""
-                      className="h-10 w-10 rounded-md object-cover"
-                    />
-                  ) : (
-                    <span
-                      className="flex h-10 w-10 items-center justify-center text-xl"
-                      aria-hidden
-                    >
-                      {j.emoji}
+              {lastJourneyUnlocks.map((j) => {
+                const chip = (
+                  <>
+                    {j.image ? (
+                      <motion.img
+                        layoutId={`home-badge-${j.id}`}
+                        src={j.image}
+                        alt=""
+                        className="h-10 w-10 rounded-md object-cover"
+                      />
+                    ) : (
+                      <span
+                        className="flex h-10 w-10 items-center justify-center text-xl"
+                        aria-hidden
+                      >
+                        {j.emoji}
+                      </span>
+                    )}
+                    <span className="font-semibold text-(--prose)">
+                      {j.name}
                     </span>
-                  )}
-                  <span className="font-semibold text-(--prose)">{j.name}</span>
-                </div>
-              ))}
+                  </>
+                );
+                if (!j.image) {
+                  return (
+                    <div
+                      key={j.id}
+                      className="flex items-center gap-2 rounded-lg border border-(--accent)/30 bg-black/10 p-1.5 pr-2 dark:bg-black/20"
+                    >
+                      {chip}
+                    </div>
+                  );
+                }
+                return (
+                  <button
+                    key={j.id}
+                    type="button"
+                    className="flex items-center gap-2 rounded-lg border border-(--accent)/30 bg-black/10 p-1.5 pr-2 text-left dark:bg-black/20"
+                    onClick={() =>
+                      setLightbox({
+                        image: j.image!,
+                        name: j.name,
+                        description: j.description,
+                        ep: j.ep,
+                        kind: 'Journey',
+                        layoutId: `home-badge-${j.id}`,
+                      })
+                    }
+                  >
+                    {chip}
+                  </button>
+                );
+              })}
             </div>
             <p className="mt-2 text-(--prose-2)">
               +
@@ -496,28 +533,59 @@ export function HomeScreen({
               Lifetime EP unlocked
             </p>
             <div className="mt-2 flex flex-wrap gap-2">
-              {lastLifetimeEpUnlocks.map((j) => (
-                <div
-                  key={j.id}
-                  className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-black/10 p-1.5 pr-2 dark:bg-black/20"
-                >
-                  {j.image ? (
-                    <img
-                      src={j.image}
-                      alt=""
-                      className="h-10 w-10 rounded-md object-cover"
-                    />
-                  ) : (
-                    <span
-                      className="flex h-10 w-10 items-center justify-center text-xl"
-                      aria-hidden
-                    >
-                      {j.emoji}
+              {lastLifetimeEpUnlocks.map((j) => {
+                const chip = (
+                  <>
+                    {j.image ? (
+                      <motion.img
+                        layoutId={`home-badge-${j.id}`}
+                        src={j.image}
+                        alt=""
+                        className="h-10 w-10 rounded-md object-cover"
+                      />
+                    ) : (
+                      <span
+                        className="flex h-10 w-10 items-center justify-center text-xl"
+                        aria-hidden
+                      >
+                        {j.emoji}
+                      </span>
+                    )}
+                    <span className="font-semibold text-(--prose)">
+                      {j.name}
                     </span>
-                  )}
-                  <span className="font-semibold text-(--prose)">{j.name}</span>
-                </div>
-              ))}
+                  </>
+                );
+                if (!j.image) {
+                  return (
+                    <div
+                      key={j.id}
+                      className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-black/10 p-1.5 pr-2 dark:bg-black/20"
+                    >
+                      {chip}
+                    </div>
+                  );
+                }
+                return (
+                  <button
+                    key={j.id}
+                    type="button"
+                    className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-black/10 p-1.5 pr-2 text-left dark:bg-black/20"
+                    onClick={() =>
+                      setLightbox({
+                        image: j.image!,
+                        name: j.name,
+                        description: j.description,
+                        ep: j.ep,
+                        kind: 'Lifetime EP',
+                        layoutId: `home-badge-${j.id}`,
+                      })
+                    }
+                  >
+                    {chip}
+                  </button>
+                );
+              })}
             </div>
             {lastLifetimeEpUnlocks.reduce((a, b) => a + b.ep, 0) > 0 ? (
               <p className="mt-2 text-(--prose-2)">
@@ -548,11 +616,23 @@ export function HomeScreen({
                     ? '/secrets/omega.jpg'
                     : `/secrets/${s.id.replace('secret-master-', '')}.jpg`);
                 return (
-                  <div
+                  <button
                     key={s.id}
-                    className="flex items-center gap-2 rounded-lg border border-amber-400/30 bg-black/20 p-1.5 pr-2"
+                    type="button"
+                    className="flex items-center gap-2 rounded-lg border border-amber-400/30 bg-black/20 p-1.5 pr-2 text-left"
+                    onClick={() =>
+                      setLightbox({
+                        image: img,
+                        name: s.name,
+                        description: s.description,
+                        ep: s.ep,
+                        kind: 'Secret mastery',
+                        layoutId: `home-badge-${s.id}`,
+                      })
+                    }
                   >
-                    <img
+                    <motion.img
+                      layoutId={`home-badge-${s.id}`}
                       src={img}
                       alt=""
                       className="h-10 w-10 rounded-md object-cover"
@@ -560,7 +640,7 @@ export function HomeScreen({
                     <span className="font-semibold text-(--prose)">
                       {s.name}
                     </span>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -570,6 +650,10 @@ export function HomeScreen({
               lifetime EP · open Codex → Secret
             </p>
           </div>
+        )}
+
+        {lightbox && (
+          <BadgeArtLightbox item={lightbox} onClose={() => setLightbox(null)} />
         )}
 
         <GenerateButton
