@@ -347,7 +347,7 @@ export function CollectionScreen() {
         )}
       </div>
 
-      <div className="flex flex-wrap gap-1.5">
+      <div className="grid gap-1.5 [grid-template-columns:repeat(auto-fill,minmax(7.25rem,1fr))]">
         {FAMILIES.map((f) => {
           const icon = f.id === 'new' ? null : FAMILY_ICON[f.id];
           const isNewTab = f.id === 'new';
@@ -357,11 +357,7 @@ export function CollectionScreen() {
               key={f.id}
               type="button"
               onClick={() => setFilter(f.id)}
-              className={`relative box-border inline-flex h-9 items-center justify-center gap-1.5 rounded-md border px-2.5 text-sm font-semibold ${
-                isNewTab || f.id === 'all'
-                  ? 'shrink-0'
-                  : 'min-w-[7.25rem] flex-1 basis-[7.25rem]'
-              } ${
+              className={`relative box-border inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-md border px-2.5 text-sm font-semibold ${
                 selected
                   ? isNewTab
                     ? 'border-amber-400 text-black'
@@ -437,7 +433,7 @@ export function CollectionScreen() {
         <button
           type="button"
           onClick={() => setShowLocked((v) => !v)}
-          className={`box-border h-9 shrink-0 rounded-md border border-(--outline) px-2.5 text-sm font-semibold text-(--prose-2) ${
+          className={`box-border h-9 w-full rounded-md border border-(--outline) px-2.5 text-sm font-semibold text-(--prose-2) ${
             filter === 'new' ? 'invisible pointer-events-none' : ''
           }`}
           aria-hidden={filter === 'new'}
