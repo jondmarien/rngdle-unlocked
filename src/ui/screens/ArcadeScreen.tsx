@@ -16,8 +16,10 @@ import {
   type ArcadeRollCount,
   type ArcadeRun,
 } from '../../lib/arcade-api';
+import { ArcadeComboChip } from '../components/arcade/ArcadeComboChip';
+import { ArcadeDigitsDisplay } from '../components/arcade/ArcadeDigitsDisplay';
+import { ArcadeRollReveal } from '../components/arcade/ArcadeRollReveal';
 import { QueryErrorBanner } from '../components/QueryErrorBanner';
-import { RarityBadge } from '../components/RarityBadge';
 import { SegmentedToggle } from '../components/SegmentedToggle';
 
 function upgradeLabel(id: ArcadeUpgradeId): string {
@@ -41,6 +43,7 @@ export function ArcadeScreen({
   const qc = useQueryClient();
   const [lastRoll, setLastRoll] = useState<ArcadeRoll | null>(null);
   const [lastBatchSize, setLastBatchSize] = useState(1);
+  const [revealKey, setRevealKey] = useState(0);
   const [rollCount, setRollCount] = useState<ArcadeRollCount>(1);
   const [endBanner, setEndBanner] = useState<string | null>(null);
   const [panel, setPanel] = useState<'run' | 'meta'>('run');
@@ -97,6 +100,7 @@ export function ArcadeScreen({
     onSuccess: (data) => {
       setLastRoll(data.roll);
       setLastBatchSize(data.rolls.length);
+      setRevealKey((k) => k + 1);
       qc.setQueryData(['arcade-state'], {
         meta: data.meta,
         activeRun: data.busted ? null : data.run,
@@ -360,19 +364,16 @@ export function ArcadeScreen({
               <div className="rounded-lg border-2 border-(--accent) bg-(--surface-raised) px-3 py-3">
                 <div className="flex flex-wrap items-end justify-between gap-2">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-(--prose-3)">
-                      Digits
-                    </p>
-                    <p className="mono-number text-3xl font-bold text-amber-500">
-                      {run.digits.toLocaleString()}
-                    </p>
-                    <p className="text-xs text-(--prose-3)">
-                      Peak {run.peakDigits.toLocaleString()} · Roll #
-                      {run.rollCount}
-                      {run.comboStreak > 0 ? ` · Combo ${run.comboStreak}` : ''}
-                      {run.surgeRollsRemaining > 0
-                        ? ` · Surge ×${run.surgeRollsRemaining}`
-                        : ''}
+                    <ArcadeDigitsDisplay value={run.digits} />
+                    <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-(--prose-3)">
+                      <span>
+                        Peak {run.peakDigits.toLocaleString()} · Roll #
+                        {run.rollCount}
+                      </span>
+                      <ArcadeComboChip streak={run.comboStreak} />
+                      {run.surgeRollsRemaining > 0 ? (
+                        <span>· Surge ×{run.surgeRollsRemaining}</span>
+                      ) : null}
                     </p>
                   </div>
                   <div className="flex flex-col items-end gap-2">
@@ -436,23 +437,14 @@ export function ArcadeScreen({
               </div>
 
               {lastRoll && (
-                <div className="rounded-lg border border-(--outline) px-3 py-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <p className="mono-number text-2xl font-bold">
-                        {lastRoll.number.toLocaleString()}
-                      </p>
-                      <p className="text-sm text-(--prose-2)">
-                        +{lastRoll.digitsAwarded.toLocaleString()} Digits ·{' '}
-                        {lastRoll.totalEP.toLocaleString()} EP (Arcade only)
-                        {lastBatchSize > 1
-                          ? ` · last of ×${lastBatchSize}`
-                          : ''}
-                      </p>
-                    </div>
-                    <RarityBadge rarity={lastRoll.rarity} />
-                  </div>
-                </div>
+                <ArcadeRollReveal
+                  number={lastRoll.number}
+                  digitsAwarded={lastRoll.digitsAwarded}
+                  totalEP={lastRoll.totalEP}
+                  rarity={lastRoll.rarity}
+                  batchSize={lastBatchSize}
+                  revealKey={revealKey}
+                />
               )}
 
               <div className="space-y-2">

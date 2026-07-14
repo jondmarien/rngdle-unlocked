@@ -972,3 +972,290 @@ html.celebrate-shake-mythic {
     transition: none;
   }
 }
+
+/* ── Arcade Mode juice (presentation only) ───────────────────────── */
+
+@keyframes arcade-punch-mid {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.07);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes arcade-punch-high {
+  0% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.12);
+  }
+  55% {
+    transform: scale(0.98);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes arcade-flash-rare {
+  0%,
+  100% {
+    box-shadow: 0 0 0 transparent;
+  }
+  40% {
+    box-shadow: 0 0 28px rgba(59, 91, 219, 0.55);
+  }
+}
+
+@keyframes arcade-flash-epic {
+  0%,
+  100% {
+    box-shadow: 0 0 0 transparent;
+  }
+  40% {
+    box-shadow: 0 0 32px rgba(124, 58, 237, 0.55);
+  }
+}
+
+@keyframes arcade-flash-anomaly {
+  0%,
+  100% {
+    box-shadow: 0 0 0 transparent;
+  }
+  30% {
+    box-shadow: 0 0 40px rgba(234, 88, 12, 0.65);
+  }
+}
+
+@keyframes arcade-flash-mythic {
+  0%,
+  100% {
+    box-shadow: 0 0 0 transparent;
+  }
+  25% {
+    box-shadow: 0 0 48px rgba(219, 39, 119, 0.7);
+  }
+}
+
+@keyframes arcade-combo-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  50% {
+    opacity: 0.88;
+    filter: brightness(1.25);
+  }
+}
+
+@keyframes arcade-digits-stakes {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.18);
+  }
+}
+
+@keyframes arcade-shop-buy-flash {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 transparent;
+  }
+  40% {
+    transform: scale(1.04);
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.45);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 transparent;
+  }
+}
+
+@keyframes arcade-shop-deny-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-3px);
+  }
+  40% {
+    transform: translateX(3px);
+  }
+  60% {
+    transform: translateX(-2px);
+  }
+  80% {
+    transform: translateX(2px);
+  }
+}
+
+@keyframes arcade-risk-safe-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+  50% {
+    box-shadow: 0 0 14px 1px rgba(16, 185, 129, 0.35);
+  }
+}
+
+@keyframes arcade-risk-danger-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+  50% {
+    box-shadow: 0 0 14px 1px rgba(239, 68, 68, 0.4);
+  }
+}
+
+.arcade-reveal-punch-mid {
+  animation: arcade-punch-mid 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.arcade-reveal-punch-high {
+  animation: arcade-punch-high 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.arcade-reveal-flash-rare {
+  animation:
+    arcade-punch-mid 0.38s cubic-bezier(0.22, 1, 0.36, 1) both,
+    arcade-flash-rare 0.45s ease-out both;
+}
+
+.arcade-reveal-flash-epic {
+  animation:
+    arcade-punch-mid 0.4s cubic-bezier(0.22, 1, 0.36, 1) both,
+    arcade-flash-epic 0.5s ease-out both;
+}
+
+.arcade-reveal-flash-anomaly {
+  animation:
+    arcade-punch-high 0.55s cubic-bezier(0.22, 1, 0.36, 1) both,
+    arcade-flash-anomaly 0.65s ease-out both;
+}
+
+.arcade-reveal-flash-mythic {
+  animation:
+    arcade-punch-high 0.6s cubic-bezier(0.22, 1, 0.36, 1) both,
+    arcade-flash-mythic 0.75s ease-out both;
+}
+
+.arcade-reveal-value,
+.arcade-reveal-badge {
+  transform-origin: center;
+}
+
+.arcade-reveal-edge {
+  outline: 1px solid transparent;
+}
+
+.arcade-reveal-edge-anomaly {
+  outline-color: color-mix(in oklab, var(--anomaly) 45%, transparent);
+}
+
+.arcade-reveal-edge-mythic {
+  outline-color: color-mix(in oklab, var(--mythic) 50%, transparent);
+}
+
+.arcade-combo-low {
+  color: var(--prose-2);
+  background: color-mix(in oklab, var(--outline) 40%, transparent);
+}
+
+.arcade-combo-mid {
+  color: #f59e0b;
+  background: color-mix(in oklab, #f59e0b 14%, transparent);
+  animation: arcade-combo-pulse 1.8s ease-in-out infinite;
+}
+
+.arcade-combo-high {
+  color: #fb923c;
+  background: color-mix(in oklab, #fb923c 18%, transparent);
+  animation: arcade-combo-pulse 1.2s ease-in-out infinite;
+}
+
+.arcade-combo-hot {
+  color: #f43f5e;
+  background: color-mix(in oklab, #f43f5e 22%, transparent);
+  animation: arcade-combo-pulse 0.85s ease-in-out infinite;
+}
+
+.arcade-digits-stakes-pulse {
+  animation: arcade-digits-stakes 2.2s ease-in-out infinite;
+}
+
+.arcade-shop-card {
+  position: relative;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.arcade-shop-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--arcade-shop-bg);
+  background-size: cover;
+  background-position: center;
+  opacity: 0.22;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.arcade-shop-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.arcade-shop-card-affordable:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in oklab, var(--accent) 55%, var(--outline));
+  box-shadow: 0 4px 14px color-mix(in oklab, var(--accent) 18%, transparent);
+}
+
+.arcade-shop-card-buy {
+  animation: arcade-shop-buy-flash 0.45s ease-out both;
+}
+
+.arcade-shop-card-deny {
+  animation: arcade-shop-deny-shake 0.35s ease-out both;
+  opacity: 0.72;
+}
+
+.arcade-owned-card {
+  position: relative;
+  overflow: hidden;
+  border-color: color-mix(in oklab, #10b981 35%, var(--outline));
+  background: color-mix(in oklab, #10b981 6%, var(--surface));
+}
+
+.arcade-btn-cash-out {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-color: color-mix(in oklab, #10b981 45%, var(--outline));
+  color: #34d399;
+  animation: arcade-risk-safe-glow 2.4s ease-in-out infinite;
+}
+
+.arcade-btn-abandon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  animation: arcade-risk-danger-glow 2s ease-in-out infinite;
+}
