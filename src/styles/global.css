@@ -132,6 +132,11 @@ body,
   min-height: 100%;
 }
 
+/* Base UI portals stack above page z-index (quick-start). */
+#root {
+  isolation: isolate;
+}
+
 body {
   margin: 0;
   background: var(--bg);

@@ -14,6 +14,7 @@ import {
 } from '../../lib/profile-theme';
 import { useIsAdmin } from '../../lib/useIsAdmin';
 import { useCloudSync } from '../../state/GameProvider';
+import { useFeedback } from '../feedback';
 
 const log = createLogger('account');
 
@@ -30,6 +31,7 @@ export function AccountScreen({
   const { data: session, isPending, error, refetch } = useSession();
   const { syncToCloud, pullFromCloud, lastSyncAt, syncError, syncing } =
     useCloudSync();
+  const { confirmAsync } = useFeedback();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [emailAuthTab, setEmailAuthTab] = useState<'magic' | 'password'>(
     'magic',
@@ -299,9 +301,12 @@ export function AccountScreen({
   const onUnlinkSocial = async (provider: 'discord' | 'github') => {
     const linked = linkedAccounts.find((a) => a.providerId === provider);
     if (!linked) return;
-    const ok = window.confirm(
-      `Unlink ${provider === 'discord' ? 'Discord' : 'GitHub'} (${linked.label})? You can link again later.`,
-    );
+    const ok = await confirmAsync({
+      title: 'Unlink account?',
+      body: `Unlink ${provider === 'discord' ? 'Discord' : 'GitHub'} (${linked.label})? You can link again later.`,
+      confirmLabel: 'Unlink',
+      danger: true,
+    });
     if (!ok) return;
     setBusy(true);
     setMsg(null);
@@ -347,9 +352,12 @@ export function AccountScreen({
       setMsg('Type DELETE to confirm account deletion.');
       return;
     }
-    const ok = window.confirm(
-      'Permanently delete your cloud account? You will get a confirmation email. Local browser saves stay until you clear site data.',
-    );
+    const ok = await confirmAsync({
+      title: 'Delete cloud account?',
+      body: 'Permanently delete your cloud account? You will get a confirmation email. Local browser saves stay until you clear site data.',
+      confirmLabel: 'Delete',
+      danger: true,
+    });
     if (!ok) return;
     setBusy(true);
     setMsg(null);

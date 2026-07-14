@@ -15,6 +15,7 @@ import {
   type AdminUserRow,
 } from '../../lib/admin-api';
 import { startViewAs } from '../../lib/view-as';
+import { useFeedback } from '../feedback';
 
 const columnHelper = createColumnHelper<AdminUserRow>();
 
@@ -29,6 +30,7 @@ export function AdminUsersTable({
   setMsg: (v: string | null) => void;
   onOpenProfile: (username: string) => void;
 }) {
+  const { confirmAsync, promptAsync } = useFeedback();
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [pagination, setPagination] = useState<PaginationState>({
@@ -69,9 +71,12 @@ export function AdminUsersTable({
 
   const onWipe = useCallback(
     async (u: AdminUserRow) => {
-      const ok = window.confirm(
-        `Wipe cloud progress + rolls for @${u.username ?? u.email}? Auth account stays.`,
-      );
+      const ok = await confirmAsync({
+        title: 'Wipe cloud progress?',
+        body: `Wipe cloud progress + rolls for @${u.username ?? u.email}? Auth account stays.`,
+        confirmLabel: 'Wipe',
+        danger: true,
+      });
       if (!ok) return;
       setBusy(true);
       const res = await wipeUser(u.id);
@@ -79,16 +84,24 @@ export function AdminUsersTable({
       setMsg(res.ok ? `Wiped ${u.username ?? u.email}` : res.error);
       if (res.ok) void listQuery.refetch();
     },
-    [listQuery, setBusy, setMsg],
+    [confirmAsync, listQuery, setBusy, setMsg],
   );
 
   const onBan = useCallback(
     async (u: AdminUserRow, banned: boolean) => {
       const reason = banned
-        ? (window.prompt('Ban reason (optional):') ?? undefined)
+        ? ((await promptAsync({
+            title: 'Ban reason',
+            body: 'Ban reason (optional):',
+            defaultValue: '',
+          })) ?? undefined)
         : undefined;
+      if (banned && reason === undefined) {
+        // prompt cancelled → null; treat as cancel of ban
+        return;
+      }
       setBusy(true);
-      const res = await banUser(u.id, banned, reason);
+      const res = await banUser(u.id, banned, reason ?? undefined);
       setBusy(false);
       setMsg(
         res.ok
@@ -97,7 +110,7 @@ export function AdminUsersTable({
       );
       if (res.ok) void listQuery.refetch();
     },
-    [listQuery, setBusy, setMsg],
+    [listQuery, promptAsync, setBusy, setMsg],
   );
 
   const onEditUsername = useCallback(
@@ -110,10 +123,11 @@ export function AdminUsersTable({
           .replace(/[^a-z0-9_]+/g, '_')
           .replace(/^_+|_+$/g, '')
           .slice(0, 24);
-      const raw = window.prompt(
-        `Public @username for ${u.email}\n(3–24 chars: a-z, 0-9, _)`,
-        suggested || '',
-      );
+      const raw = await promptAsync({
+        title: 'Set username',
+        body: `Public @username for ${u.email}\n(3–24 chars: a-z, 0-9, _)`,
+        defaultValue: suggested || '',
+      });
       if (raw === null) return;
       const username = raw.trim().toLowerCase().replace(/^@+/, '');
       if (!username) {
@@ -134,7 +148,7 @@ export function AdminUsersTable({
       );
       void listQuery.refetch();
     },
-    [listQuery, setBusy, setMsg],
+    [listQuery, promptAsync, setBusy, setMsg],
   );
 
   const columns = useMemo(

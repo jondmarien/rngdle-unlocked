@@ -21,6 +21,7 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@base-ui/react": "^1.6.0",
     "@better-auth/drizzle-adapter": "1.6.23",
     "@fontsource-variable/outfit": "^5.2.8",
     "@fontsource-variable/syne": "^5.2.7",
@@ -35,6 +36,7 @@
     "better-auth": "^1.6.23",
     "drizzle-orm": "^0.45.2",
     "html-to-image": "^1.11.13",
+    "motion": "^12.42.2",
     "react": "^19.2.7",
     "react-confetti": "^6.4.0",
     "react-dom": "^19.2.7",

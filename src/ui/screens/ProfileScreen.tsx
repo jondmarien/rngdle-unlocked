@@ -37,6 +37,7 @@ import { FormattedCount } from '../components/FormattedCount';
 import { RarityBadge } from '../components/RarityBadge';
 import { SectionHeader } from '../components/SectionHeader';
 import { StatTile } from '../components/StatTile';
+import { useFeedback } from '../feedback';
 
 const BADGE_CATALOG = (() => {
   const m = new Map<
@@ -115,6 +116,7 @@ export function ProfileScreen({
 }) {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
+  const { promptAsync } = useFeedback();
   const myUsername = session?.user.username ?? null;
   const [codexFilter, setCodexFilter] = useState<BadgeFamily | 'all'>('all');
   const [openJourney, setOpenJourney] = useState(true);
@@ -435,10 +437,15 @@ export function ProfileScreen({
                 <button
                   type="button"
                   className="text-xs font-semibold text-(--prose-3) underline"
-                  onClick={() => {
-                    const reason = window.prompt(
-                      'Why are you reporting this username / profile? (min 8 chars)',
-                    );
+                  onClick={async () => {
+                    const reason = await promptAsync({
+                      title: 'Report username',
+                      body: 'Why are you reporting this username / profile? (min 8 chars)',
+                      validate: (v) =>
+                        v.trim().length < 8
+                          ? 'Please enter at least 8 characters.'
+                          : null,
+                    });
                     if (!reason || reason.trim().length < 8) return;
                     void fileReport({
                       targetUsername: profile.username,

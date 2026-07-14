@@ -27,6 +27,7 @@ import { useIsAdmin } from '../../lib/useIsAdmin';
 import { QueryErrorBanner } from '../components/QueryErrorBanner';
 import { SectionHeader } from '../components/SectionHeader';
 import { SegmentedToggle } from '../components/SegmentedToggle';
+import { useFeedback } from '../feedback';
 
 const STATUS_OPTIONS = Object.keys(
   FEATURE_STATUS_LABELS,
@@ -107,6 +108,7 @@ function FeatureRequestCard({
     },
   ) => void | Promise<unknown>;
 }) {
+  const { confirmAsync } = useFeedback();
   const status = asStatus(item.status);
   const accent = `var(${statusAccentVar(status)})`;
   const tag = isFeatureRequestTag(item.tag) ? item.tag : null;
@@ -305,12 +307,14 @@ function FeatureRequestCard({
                     type="button"
                     disabled={deletePending}
                     className="rounded-md border border-red-600/40 px-2 py-1 text-xs font-semibold text-red-700 dark:text-red-400"
-                    onClick={() => {
-                      if (
-                        window.confirm(
-                          `Permanently delete “${item.title.slice(0, 60)}”?`,
-                        )
-                      ) {
+                    onClick={async () => {
+                      const ok = await confirmAsync({
+                        title: 'Delete feature request?',
+                        body: `Permanently delete “${item.title.slice(0, 60)}”?`,
+                        confirmLabel: 'Delete',
+                        danger: true,
+                      });
+                      if (ok) {
                         onDelete(item.id);
                       }
                     }}

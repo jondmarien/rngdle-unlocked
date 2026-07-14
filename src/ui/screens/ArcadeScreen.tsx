@@ -35,6 +35,7 @@ import { ArcadeRollReveal } from '../components/arcade/ArcadeRollReveal';
 import { ArcadeShopCard } from '../components/arcade/ArcadeShopCard';
 import { QueryErrorBanner } from '../components/QueryErrorBanner';
 import { SegmentedToggle } from '../components/SegmentedToggle';
+import { useFeedback } from '../feedback';
 
 function upgradeLabel(id: ArcadeUpgradeId): string {
   return ARCADE_UPGRADES[id]?.name ?? id;
@@ -56,6 +57,7 @@ export function ArcadeScreen({
   const { data: session } = useSession();
   const { settings } = useGameSettings();
   const { fireCelebration, clearCelebration } = useGame();
+  const { confirmAsync } = useFeedback();
   const soundOn = settings.soundEnabled;
   const qc = useQueryClient();
   const [lastRoll, setLastRoll] = useState<ArcadeRoll | null>(null);
@@ -528,14 +530,20 @@ export function ArcadeScreen({
                         className={`inline-flex items-center gap-2 rounded-md border border-red-500/50 px-3 py-2.5 text-sm font-semibold text-red-400 disabled:opacity-40 ${
                           !busy ? 'arcade-btn-abandon' : ''
                         }`}
-                        onClick={() => {
-                          const ok = window.confirm(
-                            'Abandon this run? This ends the run at your peak Digits score. This cannot be undone.',
-                          );
+                        onClick={async () => {
+                          const ok = await confirmAsync({
+                            title: 'Abandon run?',
+                            body: 'Abandon this run? This ends the run at your peak Digits score. This cannot be undone.',
+                            confirmLabel: 'Continue',
+                            danger: true,
+                          });
                           if (!ok) return;
-                          const ok2 = window.confirm(
-                            'Really abandon? Confirm again to end the run.',
-                          );
+                          const ok2 = await confirmAsync({
+                            title: 'Really abandon?',
+                            body: 'Really abandon? Confirm again to end the run.',
+                            confirmLabel: 'Abandon',
+                            danger: true,
+                          });
                           if (ok2) abandonMut.mutate();
                         }}
                       >

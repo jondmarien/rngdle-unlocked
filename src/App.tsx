@@ -10,6 +10,7 @@ import {
 } from './lib/pageMeta';
 import { parsePath, tabPath, type AppRoute, type TabId } from './lib/routes';
 import { GameProvider } from './state/GameProvider';
+import { FeedbackProvider } from './ui/feedback';
 import { ScreenFallback } from './ui/components/ScreenFallback';
 import { AppShell } from './ui/layout/AppShell';
 import { HomeScreen } from './ui/screens/HomeScreen';
@@ -294,11 +295,13 @@ function AppRoutes() {
 export default function App() {
   return (
     <GameProvider>
-      <AppRoutes />
-      <Suspense fallback={null}>
-        <CelebrationLayer />
-      </Suspense>
-      <Analytics />
+      <FeedbackProvider>
+        <AppRoutes />
+        <Suspense fallback={null}>
+          <CelebrationLayer />
+        </Suspense>
+        <Analytics />
+      </FeedbackProvider>
     </GameProvider>
   );
 }

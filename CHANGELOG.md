@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Base UI dialogs + toasts** — replace native `window.confirm` / `window.prompt` with `@base-ui/react` AlertDialog/Dialog/Toast, themed to app tokens and animated with Motion (`AnimatePresence` + opacity for exit detection). Shared `confirmAsync` / `promptAsync` / `useToast` via `FeedbackProvider`.
+
+### Changed
+
+- **Motion** — add `motion` as shared UI animation infra (dialogs, toasts; later lightbox/History toggle).
+
 ## [0.16.0] - 2026-07-14
 
 ### Added

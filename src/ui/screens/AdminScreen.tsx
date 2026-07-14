@@ -14,6 +14,7 @@ import { useIsAdmin } from '../../lib/useIsAdmin';
 import { AdminUsersTable } from '../components/AdminUsersTable';
 import { RelativeTime } from '../components/RollRow';
 import { SegmentedToggle } from '../components/SegmentedToggle';
+import { useFeedback } from '../feedback';
 
 const log = createLogger('admin-ui');
 
@@ -26,6 +27,7 @@ export function AdminScreen({
 }) {
   const { data: session, isPending } = useSession();
   const { isAdmin, checking } = useIsAdmin(session?.user?.id);
+  const { confirmAsync } = useFeedback();
   const allowed: boolean | null = checking ? null : isAdmin;
   const [tab, setTab] = useState<'broadcast' | 'users' | 'reports'>(
     'broadcast',
@@ -282,11 +284,13 @@ export function AdminScreen({
                         disabled={busy}
                         className="min-h-11 rounded-md border border-red-600/40 px-3 py-1.5 text-xs font-semibold text-red-700 dark:text-red-400"
                         onClick={async () => {
-                          if (
-                            !window.confirm(
-                              `Ban @${r.target.username ?? r.target.id} and resolve this report?`,
-                            )
-                          ) {
+                          const ok = await confirmAsync({
+                            title: 'Ban user?',
+                            body: `Ban @${r.target.username ?? r.target.id} and resolve this report?`,
+                            confirmLabel: 'Ban',
+                            danger: true,
+                          });
+                          if (!ok) {
                             return;
                           }
                           setBusy(true);
