@@ -32,6 +32,25 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Softer screen changes and steadier Codex filters',
+    date: '2026-07-14',
+    version: '0.16.3',
+    tags: ['UI', 'Codex'],
+    content: [
+      {
+        body: 'Every tab now eases in when you switch screens, and Codex filter chips keep a steady size so the badge grid no longer jumps when you pick a family.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'Same rolls and badges — this is navigation and Codex polish.',
+        bullets: [
+          '**Screen transitions** — History, Codex, Board, Arcade, and the rest fade in instead of hard-cutting.',
+          '**Codex filters** — family pills share a consistent size; selecting one no longer shoves the grid.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Smoother motion across Arcade, Codex, and dialogs',
     date: '2026-07-14',
     version: '0.16.2',

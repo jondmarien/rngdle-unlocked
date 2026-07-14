@@ -7,8 +7,8 @@
 | **Repo**                   | `jondmarien/rngdle-unlocked`                                                  |
 | **Live**                   | https://rngdle-unlocked.chron0.tech                                           |
 | **Branch**                 | `main` (auto-deploys Vercel)                                                  |
-| **Version**                | `0.16.2` (`package.json`; Settings uses `VITE_APP_VERSION`)                   |
-| **Latest release**         | [v0.16.2](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.16.2) |
+| **Version**                | `0.16.3` (`package.json`; Settings uses `VITE_APP_VERSION`)                   |
+| **Latest release**         | [v0.16.3](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.16.3) |
 | **Handoff commit context** | Opus audit refactor (`aa8e91e`…`fc4fa65` on `main`) + prior P0/P1 wave        |
 
 ---
@@ -252,6 +252,7 @@ node scripts/add-roll-source.mjs   # if source column missing
 - [x] **v0.15.0** — Arcade juice (Digits tween, rarity punch, shop/SFX, Cash Out/Abandon weight); Oganesson divine EP restore; Prove roll cloud-publish gate
 - [x] **v0.16.0** — Arcade Deadline, Idle Digits, trash soft-fail; Epic+ settle FX on Arcade
 - [x] **v0.16.2** — Motion polish (shop/Codex/layout), conventions + skill, embossed profile avatars
+- [x] **v0.16.3** — Route-level screen entrance; Codex filter chip layout shift + uniform pill sizing
 - [x] **v0.16.1** — Base UI dialogs/toasts; Home unlock lightbox; History Highlights (Showcase merge)
 - [x] **v0.13.0** — Years family + 90210; Prove roll popover; Profile seal subtitles; site-wide accent; auto-pull; lifetime histogram; View Site As; Bases radix eqs; Arcade Roll ×N
 
