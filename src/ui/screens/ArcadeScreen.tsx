@@ -23,7 +23,7 @@ import {
   type ArcadeRollCount,
   type ArcadeRun,
 } from '../../lib/arcade-api';
-import { ARCADE_SHOP_TEXTURE } from '../../lib/arcade-icons';
+import { ARCADE_RISK_ICON, ARCADE_SHOP_TEXTURE } from '../../lib/arcade-icons';
 import { useGameSettings } from '../../state/GameProvider';
 import { ArcadeComboChip } from '../components/arcade/ArcadeComboChip';
 import { ArcadeDigitsDisplay } from '../components/arcade/ArcadeDigitsDisplay';
@@ -391,7 +391,10 @@ export function ArcadeScreen({
               <div className="rounded-lg border-2 border-(--accent) bg-(--surface-raised) px-3 py-3">
                 <div className="flex flex-wrap items-end justify-between gap-2">
                   <div>
-                    <ArcadeDigitsDisplay value={run.digits} />
+                    <ArcadeDigitsDisplay
+                      value={run.digits}
+                      pulseStakes={run.digits > 0}
+                    />
                     <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-(--prose-3)">
                       <span>
                         Peak {run.peakDigits.toLocaleString()} · Roll #
@@ -428,15 +431,27 @@ export function ArcadeScreen({
                       <button
                         type="button"
                         disabled={busy || run.digits <= 0}
-                        className="rounded-md border border-(--outline) px-3 py-2 text-sm font-semibold disabled:opacity-40"
+                        className={`rounded-md border px-3 py-2 text-sm font-semibold disabled:opacity-40 ${
+                          run.digits > 0 && !busy ? 'arcade-btn-cash-out' : ''
+                        }`}
                         onClick={() => cashMut.mutate()}
                       >
+                        <img
+                          src={ARCADE_RISK_ICON.cashOut}
+                          alt=""
+                          width={18}
+                          height={18}
+                          className="size-[18px] shrink-0 object-contain"
+                          aria-hidden
+                        />
                         Cash out
                       </button>
                       <button
                         type="button"
                         disabled={busy}
-                        className="rounded-md border border-red-500/50 px-3 py-2 text-sm font-semibold text-red-400 disabled:opacity-40"
+                        className={`rounded-md border border-red-500/50 px-3 py-2 text-sm font-semibold text-red-400 disabled:opacity-40 ${
+                          !busy ? 'arcade-btn-abandon' : ''
+                        }`}
                         onClick={() => {
                           const ok = window.confirm(
                             'Abandon this run? This ends the run at your peak Digits score. This cannot be undone.',
@@ -448,6 +463,14 @@ export function ArcadeScreen({
                           if (ok2) abandonMut.mutate();
                         }}
                       >
+                        <img
+                          src={ARCADE_RISK_ICON.abandon}
+                          alt=""
+                          width={18}
+                          height={18}
+                          className="size-[18px] shrink-0 object-contain"
+                          aria-hidden
+                        />
                         Abandon
                       </button>
                     </div>
