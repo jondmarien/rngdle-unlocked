@@ -23,10 +23,12 @@ import {
   type ArcadeRollCount,
   type ArcadeRun,
 } from '../../lib/arcade-api';
+import { ARCADE_SHOP_TEXTURE } from '../../lib/arcade-icons';
 import { useGameSettings } from '../../state/GameProvider';
 import { ArcadeComboChip } from '../components/arcade/ArcadeComboChip';
 import { ArcadeDigitsDisplay } from '../components/arcade/ArcadeDigitsDisplay';
 import { ArcadeRollReveal } from '../components/arcade/ArcadeRollReveal';
+import { ArcadeShopCard } from '../components/arcade/ArcadeShopCard';
 import { QueryErrorBanner } from '../components/QueryErrorBanner';
 import { SegmentedToggle } from '../components/SegmentedToggle';
 
@@ -54,6 +56,9 @@ export function ArcadeScreen({
   const [lastRoll, setLastRoll] = useState<ArcadeRoll | null>(null);
   const [lastBatchSize, setLastBatchSize] = useState(1);
   const [revealKey, setRevealKey] = useState(0);
+  const [justBoughtId, setJustBoughtId] = useState<ArcadeUpgradeId | null>(
+    null,
+  );
   const [rollCount, setRollCount] = useState<ArcadeRollCount>(1);
   const [endBanner, setEndBanner] = useState<string | null>(null);
   const [panel, setPanel] = useState<'run' | 'meta'>('run');
@@ -147,8 +152,10 @@ export function ArcadeScreen({
 
   const buyMut = useMutation({
     mutationFn: buyArcadeUpgrade,
-    onSuccess: (data) => {
+    onSuccess: (data, upgradeId) => {
       playPurchaseSound(soundOn);
+      setJustBoughtId(upgradeId as ArcadeUpgradeId);
+      window.setTimeout(() => setJustBoughtId(null), 600);
       qc.setQueryData(['arcade-state'], (prev: unknown) => {
         const p = prev as
           | {
@@ -479,10 +486,19 @@ export function ArcadeScreen({
                       const def = ARCADE_UPGRADES[id];
                       const cd = run.cooldowns[id] ?? 0;
                       const ready = cd <= 0;
+                      const texture =
+                        def.type === 'active'
+                          ? ARCADE_SHOP_TEXTURE.active
+                          : ARCADE_SHOP_TEXTURE.passive;
+                      const flash =
+                        justBoughtId === id ? 'arcade-shop-card-buy' : '';
                       return (
                         <li
                           key={id}
-                          className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-(--outline) px-3 py-2 text-sm"
+                          className={`arcade-shop-card arcade-owned-card flex flex-wrap items-center justify-between gap-2 rounded-md border border-(--outline) px-3 py-2 text-sm ${flash}`}
+                          style={{
+                            ['--arcade-shop-bg' as string]: `url(${texture})`,
+                          }}
                         >
                           <div>
                             <span className="font-semibold">{def.name}</span>
@@ -552,29 +568,16 @@ export function ArcadeScreen({
                 ) : (
                   <ul className="grid gap-2 sm:grid-cols-3">
                     {run.shopOffers.map((offer) => {
-                      const def = ARCADE_UPGRADES[offer.upgradeId];
                       const canBuy = run.digits >= offer.price;
                       return (
-                        <li
+                        <ArcadeShopCard
                           key={offer.upgradeId}
-                          className="flex flex-col rounded-md border border-(--outline) px-3 py-2 text-sm"
-                        >
-                          <span className="font-semibold">{def.name}</span>
-                          <span className="text-xs text-(--prose-3)">
-                            {def.type}
-                          </span>
-                          <p className="mt-1 flex-1 text-xs text-(--prose-2)">
-                            {def.description}
-                          </p>
-                          <button
-                            type="button"
-                            disabled={busy || !canBuy}
-                            className="mt-2 rounded-md border border-(--prose) px-2 py-1.5 text-xs font-bold disabled:opacity-40"
-                            onClick={() => buyMut.mutate(offer.upgradeId)}
-                          >
-                            Buy · {offer.price} Digits
-                          </button>
-                        </li>
+                          upgradeId={offer.upgradeId}
+                          price={offer.price}
+                          canBuy={canBuy}
+                          busy={busy}
+                          onBuy={() => buyMut.mutate(offer.upgradeId)}
+                        />
                       );
                     })}
                   </ul>

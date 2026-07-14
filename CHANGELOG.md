@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Arcade juice Phase 0** — reusable chrome under `public/icons/arcade/` (rarity glow/burst overlays, Digits coin glyph, passive/active shop textures, Cash Out / Abandon icons) + `src/lib/arcade-icons.ts` path registry. Presentation assets only; no mechanics change.
 - **Arcade juice Phase 1** — Digits HUD count-up/down tween + coin glyph; rarity-scaled last-roll reveal punch (quiet Common/Uncommon; glow/burst + scale flash for Rare+); combo streak chip with 5+/10+/20+ escalation. Batch rolls still punch once on the final settle.
 - **Arcade juice Phase 2** — procedural Arcade SFX in `fx.ts` (roll rarity ladder, Digits gain, purchase, cash-out, abandon/bust), gated by existing `soundEnabled`. Settings label clarifies Home + Arcade.
+- **Arcade juice Phase 3** — shop cards use passive/active textures; hover lift on affordable offers; buy flash into owned styling; unaffordable click shake/dim without calling buy.
 
 ### Changed
 
