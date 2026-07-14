@@ -2,7 +2,6 @@ export type TabId =
   | 'home'
   | 'history'
   | 'collection'
-  | 'showcase'
   | 'stats'
   | 'leaderboard'
   | 'friends'
@@ -15,12 +14,14 @@ export type TabId =
   | 'admin'
   | 'settings';
 
+/** Sub-view for the merged History tab (Highlights = former Showcase). */
+export type HistoryView = 'highlights' | 'rolls';
+
 /** Canonical path for each main tab (SPA, History API). */
 export const TAB_PATH: Record<TabId, string> = {
   home: '/',
   history: '/history',
   collection: '/collection',
-  showcase: '/showcase',
   stats: '/stats',
   leaderboard: '/leaderboard',
   friends: '/friends',
@@ -39,7 +40,6 @@ const PATH_TO_TAB: Record<string, TabId> = {
   roll: 'home',
   history: 'history',
   collection: 'collection',
-  showcase: 'showcase',
   stats: 'stats',
   leaderboard: 'leaderboard',
   board: 'leaderboard',
@@ -57,12 +57,18 @@ const PATH_TO_TAB: Record<string, TabId> = {
 };
 
 export type AppRoute =
-  | { kind: 'tab'; tab: TabId }
+  | { kind: 'tab'; tab: TabId; historyView?: HistoryView }
   | { kind: 'profile'; username: string }
   | { kind: 'roll'; rollId: string; username?: string }
   | { kind: 'legal'; page: 'terms' | 'privacy' };
 
-export function parsePath(pathname: string): AppRoute {
+function historyViewFromSearch(search: string): HistoryView {
+  const q = search.startsWith('?') ? search.slice(1) : search;
+  const view = new URLSearchParams(q).get('view');
+  return view === 'highlights' ? 'highlights' : 'rolls';
+}
+
+export function parsePath(pathname: string, search = ''): AppRoute {
   const parts = pathname.split('/').filter(Boolean);
   if (parts[0] === 'u' && parts[1]) {
     return {
@@ -91,6 +97,17 @@ export function parsePath(pathname: string): AppRoute {
   if (parts.length === 0) {
     return { kind: 'tab', tab: 'home' };
   }
+  // Legacy Showcase → History Highlights
+  if (parts.length === 1 && parts[0] === 'showcase') {
+    return { kind: 'tab', tab: 'history', historyView: 'highlights' };
+  }
+  if (parts.length === 1 && parts[0] === 'history') {
+    return {
+      kind: 'tab',
+      tab: 'history',
+      historyView: historyViewFromSearch(search),
+    };
+  }
   if (parts.length === 1 && PATH_TO_TAB[parts[0]]) {
     return { kind: 'tab', tab: PATH_TO_TAB[parts[0]] };
   }
@@ -99,6 +116,10 @@ export function parsePath(pathname: string): AppRoute {
 
 export function tabPath(tab: TabId): string {
   return TAB_PATH[tab];
+}
+
+export function historyPath(view: HistoryView = 'rolls'): string {
+  return view === 'highlights' ? '/history?view=highlights' : '/history';
 }
 
 /** Human + Discord-facing vanity path (no /api). */

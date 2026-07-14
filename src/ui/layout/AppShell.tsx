@@ -30,7 +30,6 @@ const NAV_BASE: NavItem[] = [
   { kind: 'tab', id: 'home', label: 'Roll' },
   { kind: 'tab', id: 'history', label: 'History' },
   { kind: 'tab', id: 'collection', label: 'Codex' },
-  { kind: 'tab', id: 'showcase', label: 'Showcase' },
   { kind: 'tab', id: 'stats', label: 'Stats' },
   { kind: 'tab', id: 'leaderboard', label: 'Board' },
   { kind: 'tab', id: 'friends', label: 'Friends' },

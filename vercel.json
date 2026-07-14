@@ -153,6 +153,17 @@
       "destination": "/api/page/collection"
     },
     {
+      "source": "/history",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(bot|crawl|slurp|discord|twitter|facebook|slack|linkedin|telegram|whatsapp|preview|embed).*"
+        }
+      ],
+      "destination": "/api/page/history"
+    },
+    {
       "source": "/showcase",
       "has": [
         {

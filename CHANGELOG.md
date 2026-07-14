@@ -11,10 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Base UI dialogs + toasts** — replace native `window.confirm` / `window.prompt` with `@base-ui/react` AlertDialog/Dialog/Toast, themed to app tokens and animated with Motion (`AnimatePresence` + opacity for exit detection). Shared `confirmAsync` / `promptAsync` / `useToast` via `FeedbackProvider`.
 - **Home unlock badge lightbox** — Journey / Lifetime EP / Secret mastery chips on Roll open the same `BadgeArtLightbox` as Codex/Profile (Motion `layoutId` shared-element when art is present).
+- **History Highlights** — former Showcase (streaks, best roll, consecutive windows) lives under History → Highlights; `/showcase` redirects to `/history?view=highlights`.
 
 ### Changed
 
-- **Motion** — add `motion` as shared UI animation infra (dialogs, toasts; later lightbox/History toggle).
+- **Motion** — add `motion` as shared UI animation infra (dialogs, toasts, lightbox, History view toggle).
+- **Nav** — remove Showcase tab; History SegmentedToggle switches Highlights | All rolls (Motion `layout` fade).
 
 ## [0.16.0] - 2026-07-14
 

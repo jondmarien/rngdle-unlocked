@@ -176,15 +176,21 @@ export function AboutScreen() {
             lifetime-only.
           </li>
           <li>
-            <strong className="text-(--prose)">Stats &amp; showcase</strong> —{' '}
+            <strong className="text-(--prose)">Stats &amp; History</strong> —{' '}
             <a
               className="font-semibold text-(--accent) underline-offset-2 hover:underline"
               href="/stats"
             >
               Stats
             </a>{' '}
-            shows rarity histograms, EP/hour, and a streak calendar; Showcase
-            highlights best runs.
+            shows rarity histograms, EP/hour, and a streak calendar;{' '}
+            <a
+              className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+              href="/history?view=highlights"
+            >
+              History → Highlights
+            </a>{' '}
+            covers best runs and streaks.
           </li>
           <li>
             <strong className="text-(--prose)">Share</strong> — Discord-style
@@ -493,16 +499,12 @@ export function AboutScreen() {
             weekly generate, reel animation, community bests when idle
           </li>
           <li>
-            <strong className="text-(--prose)">History</strong> — last rolls +
-            share
+            <strong className="text-(--prose)">History</strong> — roll log plus
+            Highlights (best runs &amp; streaks)
           </li>
           <li>
             <strong className="text-(--prose)">Codex</strong> — badge
             encyclopedia, unlock times, New (5 min) tab
-          </li>
-          <li>
-            <strong className="text-(--prose)">Showcase</strong> — best runs
-            &amp; streaks
           </li>
           <li>
             <strong className="text-(--prose)">Stats</strong> — histogram &amp;

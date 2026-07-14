@@ -42,10 +42,10 @@ const CollectionScreen = lazyScreen(
   () => import('./ui/screens/CollectionScreen'),
   'CollectionScreen',
 );
-const HistoryScreen = lazyScreen<{ onGoAccount?: () => void }>(
-  () => import('./ui/screens/HistoryScreen'),
-  'HistoryScreen',
-);
+const HistoryScreen = lazyScreen<{
+  onGoAccount?: () => void;
+  initialView?: 'highlights' | 'rolls';
+}>(() => import('./ui/screens/HistoryScreen'), 'HistoryScreen');
 const FeatureRequestsScreen = lazyScreen<{ onGoAccount: () => void }>(
   () => import('./ui/screens/FeatureRequestsScreen'),
   'FeatureRequestsScreen',
@@ -76,10 +76,6 @@ const SettingsScreen = lazyScreen(
   () => import('./ui/screens/SettingsScreen'),
   'SettingsScreen',
 );
-const ShowcaseScreen = lazyScreen<{ onGoAccount?: () => void }>(
-  () => import('./ui/screens/ShowcaseScreen'),
-  'ShowcaseScreen',
-);
 const StatsScreen = lazyScreen(
   () => import('./ui/screens/StatsScreen'),
   'StatsScreen',
@@ -101,14 +97,18 @@ function AppRoutes() {
 
   const [route, setRoute] = useState<AppRoute>(() =>
     typeof window !== 'undefined'
-      ? parsePath(window.location.pathname)
+      ? parsePath(window.location.pathname, window.location.search)
       : { kind: 'tab', tab: 'home' },
   );
 
   useEffect(() => {
     log.info('initial route', { route, path: window.location.pathname });
+    // Canonicalize legacy /showcase → /history?view=highlights
+    if (window.location.pathname === '/showcase') {
+      window.history.replaceState({}, '', '/history?view=highlights');
+    }
     const onPop = () => {
-      const next = parsePath(window.location.pathname);
+      const next = parsePath(window.location.pathname, window.location.search);
       log.debug('popstate', { path: window.location.pathname, next });
       setRoute(next);
     };
@@ -156,8 +156,9 @@ function AppRoutes() {
 
   const goPath = useCallback(
     (path: string) => {
-      const next = parsePath(path);
-      navigate(path, next);
+      const url = new URL(path, window.location.origin);
+      const next = parsePath(url.pathname, url.search);
+      navigate(`${url.pathname}${url.search}`, next);
     },
     [navigate],
   );
@@ -239,12 +240,12 @@ function AppRoutes() {
           />
         )}
         {route.kind === 'tab' && tab === 'history' && (
-          <HistoryScreen onGoAccount={() => goTab('account')} />
+          <HistoryScreen
+            onGoAccount={() => goTab('account')}
+            initialView={route.historyView ?? 'rolls'}
+          />
         )}
         {route.kind === 'tab' && tab === 'collection' && <CollectionScreen />}
-        {route.kind === 'tab' && tab === 'showcase' && (
-          <ShowcaseScreen onGoAccount={() => goTab('account')} />
-        )}
         {route.kind === 'tab' && tab === 'stats' && <StatsScreen />}
         {route.kind === 'tab' && tab === 'leaderboard' && (
           <LeaderboardScreen onOpenProfile={goProfile} />

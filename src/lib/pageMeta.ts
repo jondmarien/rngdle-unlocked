@@ -6,7 +6,6 @@ const TAB_DOCUMENT_TITLE: Record<TabId, string> = {
   home: 'Roll · RNGdle Unlocked',
   history: 'History · RNGdle Unlocked',
   collection: 'Codex · RNGdle Unlocked',
-  showcase: 'Showcase · RNGdle Unlocked',
   stats: 'Stats · RNGdle Unlocked',
   leaderboard: 'Leaderboard · RNGdle Unlocked',
   friends: 'Friends · RNGdle Unlocked',

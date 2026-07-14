@@ -13,6 +13,7 @@ export type PageOgSlug =
   | 'about'
   | 'collection'
   | 'showcase'
+  | 'history'
   | 'stats'
   | 'terms'
   | 'privacy';
@@ -104,12 +105,21 @@ export const PAGE_OG: Record<PageOgSlug, PageOgMeta> = {
   },
   showcase: {
     slug: 'showcase',
-    path: '/showcase',
-    title: 'Showcase · RNGdle Unlocked',
+    path: '/history?view=highlights',
+    title: 'History · Highlights · RNGdle Unlocked',
     description:
-      'Personal bests, streaks, and standout rolls from your unlimited run history.',
-    cardHeadline: 'Showcase',
-    cardLabel: 'Bests · streaks · highlight rolls',
+      'Personal bests, streaks, and standout consecutive runs — now under History → Highlights.',
+    cardHeadline: 'History Highlights',
+    cardLabel: 'Bests · streaks · consecutive runs',
+  },
+  history: {
+    slug: 'history',
+    path: '/history',
+    title: 'History · RNGdle Unlocked',
+    description:
+      'Searchable roll log plus Highlights (streaks, best roll, consecutive runs).',
+    cardHeadline: 'History',
+    cardLabel: 'Rolls · highlights · replay',
   },
   stats: {
     slug: 'stats',
@@ -155,6 +165,7 @@ const PATH_TO_SLUG: Record<string, PageOgSlug> = {
   about: 'about',
   collection: 'collection',
   showcase: 'showcase',
+  history: 'history',
   stats: 'stats',
   terms: 'terms',
   privacy: 'privacy',

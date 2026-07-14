@@ -304,7 +304,7 @@ export function inboxOpenLabel(href: string): string {
     case 'history':
       return 'Open History';
     case 'showcase':
-      return 'Open Showcase';
+      return 'Open History';
     case 'stats':
       return 'Open Stats';
     case 'account':

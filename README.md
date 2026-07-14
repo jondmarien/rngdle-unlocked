@@ -35,7 +35,7 @@ Unlike a classic daily lock, you can roll **unlimited** times. Progress defaults
 
 | Mode                | What you get                                                                                                                                                                                                                                                      |
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Solo (default)**  | Fortified browser CSPRNG Free play, reel animation, badges, EP, history, codex, showcase, stats, export/import — offline-capable                                                                                                                                  |
+| **Solo (default)**  | Fortified browser CSPRNG Free play, reel animation, badges, EP, history (incl. Highlights), codex, stats, export/import — offline-capable                                                                                                                         |
 | **Social (opt-in)** | Email sign-up, `@username`, auto cloud sync, **Leaderboard → Practice** (synced free play) + **Leaderboard → Ranked** (server free play) + **Arcade** Digits board, community crowns (Ranked only), follows/feed, profiles, alerts, share + OG, challenges, seals |
 
 ## 📋 Table of contents
@@ -160,7 +160,7 @@ Or `pnpm dev` for the SPA only and point APIs at a deployed preview.
 - **Typography** — Outfit (UI), Syne (display), JetBrains Mono (numbers)
 - **EP + rarity ladder** (trash → divine) and percentile framing
 - **Journey milestones** (lifetime EP)
-- **History, showcase, stats** — rarity histogram, EP/hour, 28-day streak calendar
+- **History, stats** — searchable roll log + Highlights (streaks/best consecutive); rarity histogram, EP/hour, 28-day streak calendar on Stats
 - **Streaks**, optional confetti / SFX
 - **Export / import** save files; theme light / dark / system
 - **Discord-style share text** + PNG card
@@ -238,23 +238,23 @@ rngdle-unlocked/
 
 ## 🗺️ Routes (SPA)
 
-| Path             | Screen                                                                       |
-| ---------------- | ---------------------------------------------------------------------------- |
-| `/`              | Roll (Free / Ranked / Daily / Weekly)                                        |
-| `/history`       | History + share                                                              |
-| `/collection`    | Badge **codex** (encyclopedia, unlock times, **New** 5‑min tab)              |
-| `/showcase`      | Best rolls & streaks                                                         |
-| `/stats`         | Rarity histogram, EP/hour, calendar                                          |
-| `/leaderboard`   | **Ranked** · **Practice** · **Arcade** · Feed · **Find** (mode-first)        |
-| `/arcade`        | Arcade Digits runs (shop, cash out / bust) — sign-in + `@username`           |
-| `/features`      | Feature requests (sign-in) — tags, edit, optional screenshot, upvote, status |
-| `/notifications` | Alerts (Activity + System)                                                   |
-| `/account`       | Auth, username, profile look (avatar/accent/flair/bio), push/pull            |
-| `/about`         | How to play, social, fairness                                                |
-| `/settings`      | Theme, effects, tips, export/import                                          |
-| `/u/:username`   | Public profile (+ follow)                                                    |
-| `/s/:user/:code` | Vanity public roll (SPA)                                                     |
-| `/r/:id`         | Legacy public roll path                                                      |
+| Path                       | Screen                                                                       |
+| -------------------------- | ---------------------------------------------------------------------------- |
+| `/`                        | Roll (Free / Ranked / Daily / Weekly)                                        |
+| `/history`                 | Roll log + Highlights (former Showcase: bests & streaks)                     |
+| `/history?view=highlights` | Deep link to History → Highlights                                            |
+| `/collection`              | Badge **codex** (encyclopedia, unlock times, **New** 5‑min tab)              |
+| `/stats`                   | Rarity histogram, EP/hour, calendar                                          |
+| `/leaderboard`             | **Ranked** · **Practice** · **Arcade** · Feed · **Find** (mode-first)        |
+| `/arcade`                  | Arcade Digits runs (shop, cash out / bust) — sign-in + `@username`           |
+| `/features`                | Feature requests (sign-in) — tags, edit, optional screenshot, upvote, status |
+| `/notifications`           | Alerts (Activity + System)                                                   |
+| `/account`                 | Auth, username, profile look (avatar/accent/flair/bio), push/pull            |
+| `/about`                   | How to play, social, fairness                                                |
+| `/settings`                | Theme, effects, tips, export/import                                          |
+| `/u/:username`             | Public profile (+ follow)                                                    |
+| `/s/:user/:code`           | Vanity public roll (SPA)                                                     |
+| `/r/:id`                   | Legacy public roll path                                                      |
 
 **API (serverless):**  
 `/api/auth/*`, `/api/me`, `/api/sync`, `/api/ranked-roll` (+ `/quota`), `/api/leaderboard?view=total|best&scope=ranked|practice`, `/api/arcade` (+ `/start` `/roll` `/buy` `/arm` `/cash-out` `/abandon` `/leaderboard`), `/api/feature-requests`, `/api/feature-requests/:id/vote`, `/api/admin/feature-requests`, `/api/highlights`, `/api/follow`, `/api/feed`, `/api/users/search`, `/api/notifications`, `/api/system-messages`, `/api/admin/*`, `/api/reports`, `/api/challenge`, `/api/attest`, `/api/og`, `/api/profile/:user`, `/api/u/:user`, `/api/rolls/:id`, `/api/share/:id`, `/api/health`.
