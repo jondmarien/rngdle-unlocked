@@ -4,11 +4,11 @@ Shipped 2026-07-14 on `main` as three feature commits + this summary, then cut a
 
 ## What shipped
 
-| Phase | Commit subject | Feature |
-|-------|----------------|---------|
-| A | Deadline shop upgrade | Opt-in `deadline` spicy upgrade — bust-or-bonus |
-| B | Meta Idle Digits | Server-side accrual + claim + start-run bank drain |
-| C | Trash streak soft-fail | Cold streak → Digits penalty + half-gain recovery |
+| Phase | Commit subject         | Feature                                            |
+| ----- | ---------------------- | -------------------------------------------------- |
+| A     | Deadline shop upgrade  | Opt-in `deadline` spicy upgrade — bust-or-bonus    |
+| B     | Meta Idle Digits       | Server-side accrual + claim + start-run bank drain |
+| C     | Trash streak soft-fail | Cold streak → Digits penalty + half-gain recovery  |
 
 Existing shop upgrades (Floor Raise … Bonus Spin) were **not** retuned.
 
