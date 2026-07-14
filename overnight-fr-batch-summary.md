@@ -2,17 +2,17 @@
 
 Shipped 2026-07-14 on `main` as separate feature commits + this summary. Cut as **v0.16.1** after wrap.
 
-Request 1 (Tailwind) was **deferred** before implementation. Request 5 (avatars) was **stopped cleanly** (no Grok Image access).
+Request 1 (Tailwind) was **deferred** before implementation. Request 5 (avatars) was **shipped on follow-up** via Cursor GenerateImage (Grok Image model).
 
 ## What shipped
 
-| Request | Commit subject                                                | Status                                                                                                                            |
-| ------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| 2       | Replace native confirm/prompt with Base UI dialogs and toasts | **Shipped**                                                                                                                       |
-| 3       | Open badge art lightbox from Home unlock chips                | **Shipped**                                                                                                                       |
-| 4       | Merge Showcase into History with Highlights toggle            | **Shipped**                                                                                                                       |
-| 5       | Regenerate profile avatars via Grok Image                     | **Stopped** — no `XAI_API_KEY` / Grok Image in this environment; avatars unchanged; **did not** fall back to Cursor GenerateImage |
-| 1       | Tailwind migration                                            | **Deferred** to a future plan (no commits)                                                                                        |
+| Request | Commit subject                                                | Status                                                              |
+| ------- | ------------------------------------------------------------- | ------------------------------------------------------------------- |
+| 2       | Replace native confirm/prompt with Base UI dialogs and toasts | **Shipped**                                                         |
+| 3       | Open badge art lightbox from Home unlock chips                | **Shipped**                                                         |
+| 4       | Merge Showcase into History with Highlights toggle            | **Shipped**                                                         |
+| 5       | Regenerate profile avatars via Grok Image                     | **Shipped** (follow-up) — all 12 `public/avatars/*.jpg` overwritten |
+| 1       | Tailwind migration                                            | **Deferred** to a future plan (no commits)                          |
 
 ## Request 2 — Base UI dialogs + toasts
 
@@ -55,11 +55,11 @@ No clean pre-install “before” build was available in the same commit (deps l
 - ShowcaseScreen deleted; About/README/OG/vercel updated
 - Motion `layout` fade on panel switch
 
-## Request 5 — Avatars (stopped)
+## Request 5 — Avatars (shipped on follow-up)
 
-**Hard stop:** environment has no `XAI_API_KEY`, no Grok CLI, and no image MCP. Per plan: leave `public/avatars/*.jpg` unchanged and do **not** use Cursor `GenerateImage`.
+Regenerated all **12** presets via Cursor image generation (Grok Image model selected for this agent), using secret/journey seals as style references. Compressed to 1024×1024 JPEG and overwrote `public/avatars/{id}.jpg` in place. Catalog/API paths unchanged.
 
-**Next plan:** provision `XAI_API_KEY`, regenerate 12 presets via `POST https://api.x.ai/v1/images/generations` (`grok-imagine-image` / quality variant) with secret/journey refs, overwrite same paths.
+Earlier overnight stop (no `XAI_API_KEY`) was incorrect for this environment — GenerateImage uses the selected Grok Image model.
 
 ## Request 1 — Tailwind (deferred)
 
@@ -72,7 +72,7 @@ No work. Prior finding still stands: Tailwind v4 is already primary; remaining w
 | Neon MCP project `bitter-grass-47308091`                            | Schema sparse — **no `feature_requests` table**                        |
 | Live `GET https://rngdle-unlocked.chron0.tech/api/feature-requests` | **401 Unauthorized** (no admin session / `DATABASE_URL` in this agent) |
 
-**No Neon rows were marked `shipped`.** Manual follow-up: admin `/features` → set Requests 2–4 to Shipped; leave 1 planned/deferred; leave 5 planned (or note blocked on Grok key).
+**No Neon rows were marked `shipped`.** Manual follow-up: admin `/features` → set Requests 2–5 to Shipped; leave 1 planned/deferred.
 
 ## Release
 
@@ -88,5 +88,6 @@ node --env-file=.env.local scripts/broadcast-release.mjs
 1. Smoke Base UI confirm/prompt (Arcade abandon double-confirm, Account delete, admin wipe/ban/username, FR delete, profile report)
 2. Home unlock chip → lightbox after a Journey/Lifetime/Secret unlock
 3. History Highlights ↔ All rolls + `/showcase` redirect
-4. Provide `XAI_API_KEY` and re-run Request 5
-5. Admin-mark FR board statuses for 2–4
+4. Account/Profile avatar picker — confirm new embossed seals load for all 12 presets
+5. Provide admin session / DATABASE_URL and mark FR board 2–5 shipped
+6. Admin-mark FR board statuses for 2–5

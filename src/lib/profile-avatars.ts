@@ -1,4 +1,4 @@
-/** Pre-generated public profile pictures (public/avatars). */
+/** Custom Grok Imagine profile emblems (public/avatars) — same seal style as secrets/journey. */
 
 export type ProfileAvatarDef = {
   id: string;

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Profile avatars** — regenerate all 12 public emblems in embossed badge-seal style (gold/purple/teal relief) matching secret/journey art; same ids/paths.
+
 ## [0.16.1] - 2026-07-14
 
 ### Added
