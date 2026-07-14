@@ -74,6 +74,15 @@ No work. Prior finding still stands: Tailwind v4 is already primary; remaining w
 
 **No Neon rows were marked `shipped`.** Manual follow-up: admin `/features` → set Requests 2–4 to Shipped; leave 1 planned/deferred; leave 5 planned (or note blocked on Grok key).
 
+## Release
+
+- Tagged **v0.16.1** and published GitHub release.
+- System inbox broadcast **skipped** in this environment (no `.env.local` / `DATABASE_URL`). Run locally:
+
+```bash
+node --env-file=.env.local scripts/broadcast-release.mjs
+```
+
 ## Morning review priorities
 
 1. Smoke Base UI confirm/prompt (Arcade abandon double-confirm, Account delete, admin wipe/ban/username, FR delete, profile report)
