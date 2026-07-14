@@ -59,24 +59,26 @@ export function ArcadeDigitsDisplay({
 
   return (
     <div className={className}>
-      <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-(--prose-3)">
-        <img
-          src={ARCADE_DIGITS_ICON}
-          alt=""
-          width={18}
-          height={18}
-          className="size-[18px] shrink-0 object-contain"
-          aria-hidden
-        />
+      <p className="text-xs font-semibold uppercase tracking-wide text-(--prose-3)">
         Digits
       </p>
-      <p
-        className={`mono-number text-3xl font-bold text-amber-500 ${
+      <div
+        className={`flex items-center gap-2.5 ${
           pulseStakes ? 'arcade-digits-stakes-pulse' : ''
         }`}
       >
-        {shown.toLocaleString()}
-      </p>
+        <img
+          src={ARCADE_DIGITS_ICON}
+          alt=""
+          width={40}
+          height={40}
+          className="size-10 shrink-0 object-contain drop-shadow-sm"
+          aria-hidden
+        />
+        <p className="mono-number text-3xl font-bold text-amber-500">
+          {shown.toLocaleString()}
+        </p>
+      </div>
     </div>
   );
 }

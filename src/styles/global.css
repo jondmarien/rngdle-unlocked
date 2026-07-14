@@ -1247,7 +1247,7 @@ html.celebrate-shake-mythic {
 .arcade-btn-cash-out {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.5rem;
   border-color: color-mix(in oklab, #10b981 45%, var(--outline));
   color: #34d399;
   animation: arcade-risk-safe-glow 2.4s ease-in-out infinite;
@@ -1256,6 +1256,6 @@ html.celebrate-shake-mythic {
 .arcade-btn-abandon {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.5rem;
   animation: arcade-risk-danger-glow 2s ease-in-out infinite;
 }

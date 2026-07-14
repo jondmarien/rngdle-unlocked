@@ -431,7 +431,7 @@ export function ArcadeScreen({
                       <button
                         type="button"
                         disabled={busy || run.digits <= 0}
-                        className={`rounded-md border px-3 py-2 text-sm font-semibold disabled:opacity-40 ${
+                        className={`inline-flex items-center gap-2 rounded-md border px-3 py-2.5 text-sm font-semibold disabled:opacity-40 ${
                           run.digits > 0 && !busy ? 'arcade-btn-cash-out' : ''
                         }`}
                         onClick={() => cashMut.mutate()}
@@ -439,9 +439,9 @@ export function ArcadeScreen({
                         <img
                           src={ARCADE_RISK_ICON.cashOut}
                           alt=""
-                          width={18}
-                          height={18}
-                          className="size-[18px] shrink-0 object-contain"
+                          width={32}
+                          height={32}
+                          className="size-8 shrink-0 object-contain"
                           aria-hidden
                         />
                         Cash out
@@ -449,7 +449,7 @@ export function ArcadeScreen({
                       <button
                         type="button"
                         disabled={busy}
-                        className={`rounded-md border border-red-500/50 px-3 py-2 text-sm font-semibold text-red-400 disabled:opacity-40 ${
+                        className={`inline-flex items-center gap-2 rounded-md border border-red-500/50 px-3 py-2.5 text-sm font-semibold text-red-400 disabled:opacity-40 ${
                           !busy ? 'arcade-btn-abandon' : ''
                         }`}
                         onClick={() => {
@@ -466,9 +466,9 @@ export function ArcadeScreen({
                         <img
                           src={ARCADE_RISK_ICON.abandon}
                           alt=""
-                          width={18}
-                          height={18}
-                          className="size-[18px] shrink-0 object-contain"
+                          width={32}
+                          height={32}
+                          className="size-8 shrink-0 object-contain"
                           aria-hidden
                         />
                         Abandon
