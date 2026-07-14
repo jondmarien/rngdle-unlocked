@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Codex filter chip row** — equal-column `auto-fill` grid (`minmax(7.25rem, 1fr)`) so wrapped rows share a flush right edge; labels stay centered in each cell.
-- **Cold lazy route pop-in** — `SuspenseReveal` fades resolved screen content after Suspense (skips when chunk resolves warm / reduced motion) so first visit no longer hard-cuts after Loading….
+- **Cold lazy route pop-in** — `SuspenseReveal` always fades resolved screen content after Suspense (opacity + y, Corporate-quick); removes the Loading… → instant snap on first visit to a lazy tab.
 
 ## [0.16.3] - 2026-07-14
 

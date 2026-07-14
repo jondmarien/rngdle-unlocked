@@ -36,12 +36,12 @@ Existing global CSS also kills animations under `@media (prefers-reduced-motion:
 
 Prefer reusable wrappers under [`src/ui/motion/`](../ui/motion/) (`FadeIn`, `MotionCard`, `RouteEnter`, `SuspenseReveal`) over one-off `motion.div` prop soup. Screens may still use `motion`/`layoutId` directly for shared-element transitions (e.g. badge → lightbox).
 
-| Primitive        | Role                                                                                                      |
-| ---------------- | --------------------------------------------------------------------------------------------------------- |
-| `FadeIn`         | Enter-only opacity (+ optional `y`) for leaf chrome (e.g. Suspense fallbacks)                             |
-| `MotionCard`     | Hover/press card chrome                                                                                   |
-| `RouteEnter`     | Route-level enter/exit for `AnimatePresence` in `AppRoutes` (opacity + small `y`; exit ~70%)              |
-| `SuspenseReveal` | Opacity settle when lazy screen children mount after Suspense; skips if warm (&lt;50ms) or reduced motion |
+| Primitive        | Role                                                                                                                                  |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `FadeIn`         | Enter-only opacity (+ optional `y`) for leaf chrome (e.g. Suspense fallbacks)                                                         |
+| `MotionCard`     | Hover/press card chrome                                                                                                               |
+| `RouteEnter`     | Route-level enter/exit for `AnimatePresence` in `AppRoutes` (opacity + small `y`; exit ~70%)                                          |
+| `SuspenseReveal` | Opacity + small `y` settle when lazy screen children mount after Suspense (always on mount; composites with RouteEnter on warm loads) |
 
 ## Imports
 

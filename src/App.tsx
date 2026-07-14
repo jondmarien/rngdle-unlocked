@@ -1,13 +1,6 @@
 import { Analytics } from '@vercel/analytics/react';
 import { AnimatePresence } from 'motion/react';
-import {
-  Suspense,
-  lazy,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { useSession } from './lib/auth-client';
 import { createLogger } from './lib/logger';
 import {
@@ -242,7 +235,6 @@ function AppRoutes() {
     );
 
   const currentRouteKey = routeKey(route);
-  const routeStartedAt = useMemo(() => performance.now(), [currentRouteKey]);
 
   return (
     <AppShell
@@ -257,7 +249,7 @@ function AppRoutes() {
           className="flex min-h-0 flex-1 flex-col"
         >
           <Suspense fallback={<ScreenFallback />}>
-            <SuspenseReveal startedAt={routeStartedAt}>
+            <SuspenseReveal>
               {route.kind === 'legal' && <LegalScreen kind={route.page} />}
               {route.kind === 'profile' && (
                 <ProfileScreen
