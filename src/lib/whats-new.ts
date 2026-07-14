@@ -34,7 +34,7 @@ export const WHATS_NEW: WhatsNewEntry[] = [
   {
     title: 'Years, accents, Arcade ×N, and sync polish',
     date: '2026-07-14',
-    version: '0.12.3',
+    version: '0.13.0',
     tags: ['Badges', 'Arcade', 'Sync', 'UI'],
     content: [
       {

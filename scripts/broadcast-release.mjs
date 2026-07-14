@@ -12,10 +12,10 @@ if (!process.env.DATABASE_URL) {
 const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
-const title = 'New Update! v0.12.2 — Collapsible How to roll';
+const title = 'New Update! v0.13.0 — Years, accents, Arcade ×N';
 const body = [
-  'How to roll on Home can collapse once you know the modes — expand for the full explainers, or collapse for a compact Free play / Ranked / Daily / Weekly switch.',
-  'Your open/closed preference is remembered on this device.',
+  'New Years era badges (1700s–2020s) and Beverly Hills 90210, plus clearer Prove roll help and Profile seal subtitles.',
+  'Optional site-wide accent, auto cloud pull on sign-in, lifetime rarity histogram, Arcade Roll ×N, and Bases hex/binary proofs.',
   'Read the full player notes: https://rngdle-unlocked.chron0.tech/whats-new',
   'Open: /whats-new',
 ].join(' ');

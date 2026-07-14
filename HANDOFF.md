@@ -7,8 +7,8 @@
 | **Repo**                   | `jondmarien/rngdle-unlocked`                                                  |
 | **Live**                   | https://rngdle-unlocked.chron0.tech                                           |
 | **Branch**                 | `main` (auto-deploys Vercel)                                                  |
-| **Version**                | `0.12.2` (`package.json`; Settings uses `VITE_APP_VERSION`)                   |
-| **Latest release**         | [v0.12.2](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.12.2) |
+| **Version**                | `0.13.0` (`package.json`; Settings uses `VITE_APP_VERSION`)                   |
+| **Latest release**         | [v0.13.0](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.13.0) |
 | **Handoff commit context** | Opus audit refactor (`aa8e91e`…`fc4fa65` on `main`) + prior P0/P1 wave        |
 
 ---
@@ -247,6 +247,7 @@ node scripts/add-roll-source.mjs   # if source column missing
 - [x] **v0.12.0** — Lifetime EP badges (22 seals + Entropy Treasury + omega gate); abbreviate large numbers setting; FR edit rate-limit fix; Discord OG cache bust
 - [x] **v0.12.1** — Ranked · All-time best Home tile + Ranked-prefixed crown labels; Profile Lifetime EP under Best roll
 - [x] **v0.12.2** — Collapsible How to roll (compact label-only mode switch; preference persisted)
+- [x] **v0.13.0** — Years family + 90210; Prove roll popover; Profile seal subtitles; site-wide accent; auto-pull; lifetime histogram; View Site As; Bases radix eqs; Arcade Roll ×N
 
 ### Still open for you / ops
 
