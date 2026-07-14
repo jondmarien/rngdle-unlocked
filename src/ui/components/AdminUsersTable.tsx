@@ -14,6 +14,7 @@ import {
   wipeUser,
   type AdminUserRow,
 } from '../../lib/admin-api';
+import { startViewAs } from '../../lib/view-as';
 
 const columnHelper = createColumnHelper<AdminUserRow>();
 
@@ -21,10 +22,12 @@ export function AdminUsersTable({
   busy,
   setBusy,
   setMsg,
+  onOpenProfile,
 }: {
   busy: boolean;
   setBusy: (v: boolean) => void;
   setMsg: (v: string | null) => void;
+  onOpenProfile: (username: string) => void;
 }) {
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
@@ -190,6 +193,23 @@ export function AdminUsersTable({
             <div className="flex flex-wrap justify-end gap-2">
               <button
                 type="button"
+                disabled={busy || !u.username}
+                className="rounded-md border border-(--outline) px-2 py-1 text-xs font-semibold disabled:opacity-40"
+                title={
+                  u.username
+                    ? 'Open public profile (read-only view as)'
+                    : 'Set @username first'
+                }
+                onClick={() => {
+                  if (!u.username) return;
+                  startViewAs(u.username);
+                  onOpenProfile(u.username);
+                }}
+              >
+                View as
+              </button>
+              <button
+                type="button"
                 disabled={busy}
                 className="rounded-md border border-(--outline) px-2 py-1 text-xs font-semibold disabled:opacity-40"
                 onClick={() => void onEditUsername(u)}
@@ -217,7 +237,7 @@ export function AdminUsersTable({
         },
       }),
     ],
-    [busy, onBan, onEditUsername, onWipe],
+    [busy, onBan, onEditUsername, onOpenProfile, onWipe],
   );
 
   const table = useReactTable({

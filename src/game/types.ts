@@ -22,6 +22,7 @@ export type BadgeFamily =
   | 'poker'
   | 'element'
   | 'bases'
+  | 'years'
   | 'journey'
   | 'lifetime'
   | 'secret';
@@ -123,6 +124,11 @@ export type AppSettings = {
    */
   abbreviateLargeNumbers: boolean;
   /**
+   * When on (signed-in), apply Account profile accent to global `--accent`.
+   * Default off; localStorage only. Does not override Ranked amber or feature-tag tokens.
+   */
+  applyProfileAccentSiteWide: boolean;
+  /**
    * Home “How to roll” help expanded (blurb + shorts + detail).
    * Default on; when false, show label-only mode selector. localStorage only.
    */
@@ -174,6 +180,11 @@ export type PlayStats = {
   /** Consecutive even rolls (incl. 0); resets on odd. */
   evenStreak: number;
   bestEvenStreak: number;
+  /**
+   * Lifetime rarity histogram counters (synced via statsJson).
+   * Never shrink; each scored roll increments one tier.
+   */
+  lifetimeRarityCounts: Record<RarityTier, number>;
 };
 
 export function rollToHighlight(roll: RollResult): RollHighlight {

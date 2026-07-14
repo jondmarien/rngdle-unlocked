@@ -17,7 +17,13 @@ import { SegmentedToggle } from '../components/SegmentedToggle';
 
 const log = createLogger('admin-ui');
 
-export function AdminScreen({ onBack }: { onBack: () => void }) {
+export function AdminScreen({
+  onBack,
+  onOpenProfile,
+}: {
+  onBack: () => void;
+  onOpenProfile: (username: string) => void;
+}) {
   const { data: session, isPending } = useSession();
   const { isAdmin, checking } = useIsAdmin(session?.user?.id);
   const allowed: boolean | null = checking ? null : isAdmin;
@@ -201,7 +207,12 @@ export function AdminScreen({ onBack }: { onBack: () => void }) {
       )}
 
       {tab === 'users' && (
-        <AdminUsersTable busy={busy} setBusy={setBusy} setMsg={setMsg} />
+        <AdminUsersTable
+          busy={busy}
+          setBusy={setBusy}
+          setMsg={setMsg}
+          onOpenProfile={onOpenProfile}
+        />
       )}
 
       {tab === 'reports' && (

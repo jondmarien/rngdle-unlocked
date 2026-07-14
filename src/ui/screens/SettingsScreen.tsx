@@ -26,6 +26,7 @@ export function SettingsScreen() {
     setShowLatestRuns,
     setShareShowUnlockedBadges,
     setAbbreviateLargeNumbers,
+    setApplyProfileAccentSiteWide,
   } = useGameSettings();
   const [confirm, setConfirm] = useState(false);
   const [importMsg, setImportMsg] = useState<string | null>(null);
@@ -126,6 +127,19 @@ export function SettingsScreen() {
         <p className="text-xs text-(--prose-3)">
           When on, big EP and roll counts show as 4.8M-style shorthand. Hover or
           long-press the value for the exact figure. Default off.
+        </p>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={settings.applyProfileAccentSiteWide === true}
+            onChange={(e) => setApplyProfileAccentSiteWide(e.target.checked)}
+          />
+          Apply profile accent site-wide
+        </label>
+        <p className="text-xs text-(--prose-3)">
+          When signed in, use your Account profile accent for global UI accents
+          (links, highlights). Ranked amber and Features tag colors stay
+          dedicated. Default off.
         </p>
       </section>
 

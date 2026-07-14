@@ -503,23 +503,57 @@ export function HomeScreen({
                 Share
               </button>
               {!lastRoll.attestationSeal ? (
-                <button
-                  type="button"
-                  className="rounded-md border border-(--outline) bg-(--surface) px-3 py-2 text-sm font-semibold text-(--prose) hover:border-(--prose-2)"
-                  title="Ask the server to HMAC-seal this roll claim. Not proof of honest RNG."
-                  onClick={() => {
-                    setAttestMsg(null);
-                    void attestRoll(lastRoll).then((r) => {
-                      setAttestMsg(
-                        r
-                          ? 'Server seal attached. This stamps the claim; free-play RNG is still client-side.'
-                          : 'Seal failed. Sign in and sync first.',
-                      );
-                    });
-                  }}
-                >
-                  Prove roll
-                </button>
+                <>
+                  <button
+                    type="button"
+                    className="rounded-md border border-(--outline) bg-(--surface) px-3 py-2 text-sm font-semibold text-(--prose) hover:border-(--prose-2)"
+                    aria-describedby="prove-roll-tip"
+                    onMouseEnter={() => {
+                      const tip = document.getElementById('prove-roll-tip');
+                      tip?.showPopover?.();
+                    }}
+                    onMouseLeave={() => {
+                      const tip = document.getElementById('prove-roll-tip');
+                      tip?.hidePopover?.();
+                    }}
+                    onFocus={() => {
+                      const tip = document.getElementById('prove-roll-tip');
+                      tip?.showPopover?.();
+                    }}
+                    onBlur={() => {
+                      const tip = document.getElementById('prove-roll-tip');
+                      tip?.hidePopover?.();
+                    }}
+                    onClick={() => {
+                      setAttestMsg(null);
+                      void attestRoll(lastRoll).then((r) => {
+                        setAttestMsg(
+                          r
+                            ? 'Server seal attached. This stamps the claim; free-play RNG is still client-side.'
+                            : 'Seal failed. Sign in and sync first.',
+                        );
+                      });
+                    }}
+                  >
+                    Prove roll
+                  </button>
+                  <div
+                    id="prove-roll-tip"
+                    popover="auto"
+                    className="m-0 max-w-xs rounded-lg border border-(--outline) bg-(--surface-raised) p-3 text-left text-sm text-(--prose) shadow-lg"
+                  >
+                    <p className="font-semibold text-(--prose)">Prove roll</p>
+                    <p className="mt-1 text-(--prose-2)">
+                      Asks the server to HMAC-seal this roll <em>claim</em>{' '}
+                      after you sign in and sync. Use it when you want a
+                      timestamped stamp on a shareable roll.
+                    </p>
+                    <p className="mt-1.5 text-xs text-(--prose-3)">
+                      Not proof of honest Free-play RNG — only the claim is
+                      sealed.
+                    </p>
+                  </div>
+                </>
               ) : (
                 <span className="rounded-md border border-emerald-600/40 bg-emerald-500/10 px-3 py-2 text-sm font-semibold text-emerald-800 dark:text-emerald-300">
                   Sealed

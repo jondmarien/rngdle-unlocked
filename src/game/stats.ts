@@ -28,6 +28,19 @@ export function localDateKey(d = new Date()): string {
   return `${y}-${m}-${day}`;
 }
 
+export function emptyRarityCounts(): Record<RarityTier, number> {
+  return {
+    trash: 0,
+    common: 0,
+    uncommon: 0,
+    rare: 0,
+    epic: 0,
+    anomaly: 0,
+    mythic: 0,
+    divine: 0,
+  };
+}
+
 export function defaultPlayStats(): PlayStats {
   return {
     qualityStreak: 0,
@@ -41,7 +54,54 @@ export function defaultPlayStats(): PlayStats {
     bestOddStreak: 0,
     evenStreak: 0,
     bestEvenStreak: 0,
+    lifetimeRarityCounts: emptyRarityCounts(),
   };
+}
+
+/** Max-merge rarity counters (sync / import). */
+export function mergeRarityCounts(
+  a: Partial<Record<RarityTier, number>> | null | undefined,
+  b: Partial<Record<RarityTier, number>> | null | undefined,
+): Record<RarityTier, number> {
+  const out = emptyRarityCounts();
+  for (const tier of Object.keys(out) as RarityTier[]) {
+    out[tier] = Math.max(Number(a?.[tier]) || 0, Number(b?.[tier]) || 0);
+  }
+  return out;
+}
+
+/** Ensure counters exist; backfill from history when sum is behind the window. */
+export function ensureLifetimeRarityCounts(
+  stats: PlayStats,
+  history: RollResult[],
+): PlayStats {
+  const current = mergeRarityCounts(
+    emptyRarityCounts(),
+    stats.lifetimeRarityCounts,
+  );
+  const fromHistory = emptyRarityCounts();
+  for (const r of history) {
+    const tier = r.rarity;
+    if (tier in fromHistory) {
+      fromHistory[tier] += 1;
+    }
+  }
+  return {
+    ...stats,
+    lifetimeRarityCounts: mergeRarityCounts(current, fromHistory),
+  };
+}
+
+export function bumpLifetimeRarity(
+  stats: PlayStats,
+  rarity: RarityTier,
+): PlayStats {
+  const counts = mergeRarityCounts(
+    emptyRarityCounts(),
+    stats.lifetimeRarityCounts,
+  );
+  counts[rarity] = (counts[rarity] ?? 0) + 1;
+  return { ...stats, lifetimeRarityCounts: counts };
 }
 
 function dayDiff(a: string, b: string): number {

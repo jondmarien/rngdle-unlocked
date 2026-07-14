@@ -12,6 +12,34 @@ export const PROFILE_ACCENTS = [
 
 export type ProfileAccent = (typeof PROFILE_ACCENTS)[number];
 
+/** Hex values for optional site-wide `--accent` override (light / dark). */
+export const PROFILE_ACCENT_CSS: Record<
+  ProfileAccent,
+  { light: string; dark: string }
+> = {
+  teal: { light: '#0f766e', dark: '#2dd4bf' },
+  violet: { light: '#7c3aed', dark: '#a78bfa' },
+  amber: { light: '#d97706', dark: '#fbbf24' },
+  rose: { light: '#e11d48', dark: '#fb7185' },
+  sky: { light: '#0284c7', dark: '#38bdf8' },
+  emerald: { light: '#059669', dark: '#34d399' },
+  mono: { light: '#52525b', dark: '#a1a1aa' },
+};
+
+/** Apply or clear document `--accent` only — never touches `--feature-*` tokens. */
+export function applyDocumentAccent(
+  accent: ProfileAccent | null,
+  dark: boolean,
+): void {
+  const root = document.documentElement;
+  if (!accent) {
+    root.style.removeProperty('--accent');
+    return;
+  }
+  const pair = PROFILE_ACCENT_CSS[accent];
+  root.style.setProperty('--accent', dark ? pair.dark : pair.light);
+}
+
 export function isProfileAccent(
   v: string | null | undefined,
 ): v is ProfileAccent {

@@ -5,6 +5,7 @@ import {
   NUMBER_BADGES,
   sumMatchingEPExcluding,
 } from './badges';
+import { equationForBadge } from './badges/equation';
 
 function ids(n: number): string[] {
   return evaluateBadges(n).map((b) => b.id);
@@ -48,6 +49,19 @@ describe('badge fixtures', () => {
   });
   it('error 404', () => {
     expect(ids(404)).toContain('error-404');
+  });
+  it('beverly hills 90210', () => {
+    expect(ids(90210)).toContain('beverly-hills');
+  });
+  it('years era buckets', () => {
+    expect(ids(1755)).toContain('years-1700s');
+    expect(ids(1888)).toContain('years-1800s');
+    expect(ids(1987)).toContain('years-1900s');
+    expect(ids(2005)).toContain('years-2000s');
+    expect(ids(2015)).toContain('years-2010s');
+    expect(ids(2024)).toContain('years-2020s');
+    expect(ids(2024)).not.toContain('years-2010s');
+    expect(ids(1999)).not.toContain('years-2000s');
   });
   it('low ball 7', () => {
     expect(ids(7)).toContain('low-ball');
@@ -240,6 +254,31 @@ describe('badge fixtures', () => {
     // 0b1111111111111111111 = 524287 has 19 ones
     expect(ids(524287)).toContain('base-pop-max');
     expect(ids(524287)).toContain('base-bin-ones');
+  });
+  it('bases badges expose radix equations with highlight masks', () => {
+    const hexTwin = equationForBadge('base-hex-twin', 255);
+    expect(hexTwin).toMatchObject({
+      kind: 'radix',
+      base: 16,
+      digits: 'ff',
+    });
+    expect(hexTwin && hexTwin.kind === 'radix' && hexTwin.highlight).toEqual([
+      true,
+      true,
+    ]);
+    const speak = equationForBadge('base-hex-word', 57005);
+    expect(speak).toMatchObject({
+      kind: 'radix',
+      base: 16,
+      digits: 'dead',
+      note: 'dead',
+    });
+    const ones = equationForBadge('base-bin-ones', 1023);
+    expect(ones).toMatchObject({
+      kind: 'radix',
+      base: 2,
+      digits: '1111111111',
+    });
   });
 
   // Workstream H — The Worst

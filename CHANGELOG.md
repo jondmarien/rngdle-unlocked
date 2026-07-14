@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.3] - 2026-07-14
+
+### Added
+
+- **Beverly Hills (90210)** — cultural exact badge.
+- **Years family** — era-bucket badges (1700s / 1800s / 1900s / 2000s / 2010s / 2020s) with Chronarch section mastery; cultural year badges unchanged.
+- **Prove roll popover** — native HTML Popover explains claim HMAC seal (not Free-play CSPRNG proof).
+- **Profile seal subtitles** — Lifetime / Journey / Secret / Mastery cards show milestone `description` between name and life EP.
+- **Site-wide profile accent** — Settings toggle applies Account accent to `--accent` (Ranked amber + Features `--feature-tag-*` stay dedicated).
+- **Auto-pull on sign-in** — merge-safe `pullFromCloud` once per logged-out→in transition.
+- **Lifetime rarity histogram** — local+synced `lifetimeRarityCounts` (no Neon full-history aggregate).
+- **View Site As (admin, read-only)** — open a public profile layout with banner; no roll/sync/settings-as-them.
+- **Bases radix equations** — BadgeCard shows `0x` / `0b` / `0o` digit strings with highlight masks.
+- **Arcade Roll ×N** — 1/2/5/10/15 multi-roll inside an active Arcade run only (Home Free/Ranked unchanged).
+
 ## [0.12.2] - 2026-07-11
 
 ### Added

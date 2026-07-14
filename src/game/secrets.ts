@@ -16,6 +16,7 @@ export const SECTION_FAMILIES = [
   'poker',
   'element',
   'bases',
+  'years',
 ] as const satisfies readonly Exclude<
   BadgeFamily,
   'journey' | 'lifetime' | 'secret'
@@ -123,6 +124,14 @@ const SECTION_META: Record<
     ep: 2_500,
     blurb: 'Every numeral-base pattern in the codex is yours.',
     image: '/secrets/bases.jpg',
+  },
+  years: {
+    id: 'secret-master-years',
+    name: 'Chronarch',
+    emoji: '⏳',
+    ep: 2_500,
+    blurb: 'Every era bucket in the years codex is claimed.',
+    image: '/secrets/years.jpg',
   },
   journey: {
     id: 'secret-master-journey',

@@ -8,6 +8,7 @@ import {
   lifetimeEpBadgesForEp,
   NUMBER_BADGES,
   OMEGA_SECRET,
+  secretById,
   STREAK_SECRETS,
   topPercentFromEP,
   type BadgeFamily,
@@ -97,6 +98,7 @@ const CODEX_FAMILY_FILTERS: { id: BadgeFamily | 'all'; label: string }[] = [
   { id: 'poker', label: 'Poker' },
   { id: 'element', label: 'Element' },
   { id: 'bases', label: 'Bases' },
+  { id: 'years', label: 'Years' },
 ];
 
 const PREVIEW_LIMIT = 10;
@@ -670,6 +672,9 @@ export function ProfileScreen({
                           : ''}
                       </p>
                       <p className="font-bold tracking-tight">{b.name}</p>
+                      <p className="mt-0.5 text-sm text-(--prose-2)">
+                        {b.description}
+                      </p>
                       <p className="text-sm text-amber-800 dark:text-amber-300">
                         +{b.ep.toLocaleString()} life EP
                       </p>
@@ -758,6 +763,9 @@ export function ProfileScreen({
                           : ''}
                       </p>
                       <p className="font-bold tracking-tight">{b.name}</p>
+                      <p className="mt-0.5 text-sm text-(--prose-2)">
+                        {b.description}
+                      </p>
                       <p className="text-sm text-amber-800 dark:text-amber-300">
                         +{b.ep.toLocaleString()} life EP
                       </p>
@@ -826,6 +834,9 @@ export function ProfileScreen({
                         Streak secret
                       </p>
                       <p className="font-bold tracking-tight">{s.name}</p>
+                      <p className="mt-0.5 text-sm text-(--prose-2)">
+                        {s.description}
+                      </p>
                       <p className="text-sm text-amber-800 dark:text-amber-300">
                         +{s.ep.toLocaleString()} life EP
                       </p>
@@ -925,6 +936,10 @@ export function ProfileScreen({
                           {s.section}
                         </p>
                         <p className="font-bold tracking-tight">{s.name}</p>
+                        <p className="mt-0.5 text-sm text-(--prose-2)">
+                          {secretById(s.id)?.description ??
+                            `Section mastery · ${s.section}`}
+                        </p>
                         <p className="text-sm text-amber-800 dark:text-amber-300">
                           +{s.ep.toLocaleString()} life EP
                         </p>

@@ -4,7 +4,14 @@
  */
 
 import { ROLL_MAX } from '../rng.js';
-import { digitArray, digitSum, digitsOf, isPrime } from './matchers.js';
+import {
+  digitArray,
+  digitSum,
+  digitsOf,
+  hexSpeakWord,
+  isPrime,
+  popcount,
+} from './matchers.js';
 
 export type ProductEquation = {
   kind?: 'product';
@@ -50,6 +57,21 @@ export type BookendPrimeEquation = {
   digit: number;
 };
 
+/**
+ * Inline radix proof for Bases badges — hex / binary / octal digit string
+ * with a parallel highlight mask (not remapped onto decimal tiles).
+ */
+export type RadixEquation = {
+  kind: 'radix';
+  base: 2 | 8 | 16;
+  /** Digits without `0x` / `0b` / `0o` prefix (lowercase for hex). */
+  digits: string;
+  /** Parallel to `digits`: true = emphasize this glyph. */
+  highlight: readonly boolean[];
+  /** Optional note (e.g. popcount). */
+  note?: string;
+};
+
 export type BadgeEquation =
   | ProductEquation
   | PowerEquation
@@ -57,7 +79,8 @@ export type BadgeEquation =
   | DigitSumEquation
   | PrimeEquation
   | FibonacciEquation
-  | BookendPrimeEquation;
+  | BookendPrimeEquation
+  | RadixEquation;
 
 /** Predecessors for Fibonacci recurrence display (skips 0). */
 const FIB_PREDECESSORS: ReadonlyMap<number, { left: number; right: number }> =
@@ -135,7 +158,172 @@ export function equationForBadge(
   if (id === 'fibonacci') return fibonacciEquation(n);
   if (id === 'twin-prime-adjacent') return bookendPrimeEquation(n);
 
+  if (id.startsWith('base-')) return radixEquationForBaseBadge(id, n);
+
   return undefined;
+}
+
+function allHighlight(len: number, on = true): boolean[] {
+  return Array.from({ length: len }, () => on);
+}
+
+function maskSubstring(len: number, start: number, end: number): boolean[] {
+  return Array.from({ length: len }, (_, i) => i >= start && i < end);
+}
+
+/** Longest run of `ch` with length ≥ minLen; highlights that run. */
+function maskLongestRun(digits: string, ch: string, minLen: number): boolean[] {
+  let bestStart = -1;
+  let bestLen = 0;
+  let i = 0;
+  while (i < digits.length) {
+    if (digits[i] !== ch) {
+      i += 1;
+      continue;
+    }
+    let j = i;
+    while (j < digits.length && digits[j] === ch) j += 1;
+    const len = j - i;
+    if (len >= minLen && len > bestLen) {
+      bestStart = i;
+      bestLen = len;
+    }
+    i = j;
+  }
+  if (bestStart < 0) return allHighlight(digits.length, false);
+  return maskSubstring(digits.length, bestStart, bestStart + bestLen);
+}
+
+/** First consecutive twin pair `(.)\1` in hex. */
+function maskFirstTwin(digits: string): boolean[] {
+  const m = /(.)\1/.exec(digits);
+  if (!m || m.index === undefined) return allHighlight(digits.length, false);
+  return maskSubstring(digits.length, m.index, m.index + 2);
+}
+
+export function radixEquationForBaseBadge(
+  id: string,
+  n: number,
+): RadixEquation | undefined {
+  switch (id) {
+    case 'base-hex-twin': {
+      const digits = n.toString(16);
+      if (digits.length < 2 || !/(.)\1/.test(digits)) return undefined;
+      return {
+        kind: 'radix',
+        base: 16,
+        digits,
+        highlight: maskFirstTwin(digits),
+      };
+    }
+    case 'base-bin-run': {
+      const digits = n.toString(2);
+      if (!/1{8,}/.test(digits)) return undefined;
+      return {
+        kind: 'radix',
+        base: 2,
+        digits,
+        highlight: maskLongestRun(digits, '1', 8),
+      };
+    }
+    case 'base-pop-dense': {
+      const digits = n.toString(2);
+      const pc = popcount(n);
+      if (pc < 15) return undefined;
+      return {
+        kind: 'radix',
+        base: 2,
+        digits,
+        highlight: [...digits].map((d) => d === '1'),
+        note: `popcount ${pc}`,
+      };
+    }
+    case 'base-hex-palindrome': {
+      const digits = n.toString(16);
+      if (digits.length < 2 || digits !== [...digits].reverse().join('')) {
+        return undefined;
+      }
+      return {
+        kind: 'radix',
+        base: 16,
+        digits,
+        highlight: allHighlight(digits.length),
+      };
+    }
+    case 'base-oct-palindrome': {
+      const digits = n.toString(8);
+      if (digits.length < 2 || digits !== [...digits].reverse().join('')) {
+        return undefined;
+      }
+      return {
+        kind: 'radix',
+        base: 8,
+        digits,
+        highlight: allHighlight(digits.length),
+      };
+    }
+    case 'base-bin-palindrome': {
+      const digits = n.toString(2);
+      if (digits.length < 2 || digits !== [...digits].reverse().join('')) {
+        return undefined;
+      }
+      return {
+        kind: 'radix',
+        base: 2,
+        digits,
+        highlight: allHighlight(digits.length),
+      };
+    }
+    case 'base-hex-word': {
+      const digits = n.toString(16);
+      const word = hexSpeakWord(n);
+      if (!word) return undefined;
+      const start = digits.indexOf(word);
+      if (start < 0) return undefined;
+      return {
+        kind: 'radix',
+        base: 16,
+        digits,
+        highlight: maskSubstring(digits.length, start, start + word.length),
+        note: word,
+      };
+    }
+    case 'base-hex-repdigit': {
+      const digits = n.toString(16);
+      if (digits.length < 2 || !/^([0-9a-f])\1+$/.test(digits)) {
+        return undefined;
+      }
+      return {
+        kind: 'radix',
+        base: 16,
+        digits,
+        highlight: allHighlight(digits.length),
+      };
+    }
+    case 'base-bin-ones': {
+      const digits = n.toString(2);
+      if (n <= 0 || !/^1+$/.test(digits)) return undefined;
+      return {
+        kind: 'radix',
+        base: 2,
+        digits,
+        highlight: allHighlight(digits.length),
+      };
+    }
+    case 'base-pop-max': {
+      const digits = n.toString(2);
+      if (popcount(n) !== 19) return undefined;
+      return {
+        kind: 'radix',
+        base: 2,
+        digits,
+        highlight: [...digits].map((d) => d === '1'),
+        note: 'popcount 19',
+      };
+    }
+    default:
+      return undefined;
+  }
 }
 
 /** Catalog annotator factory for fixed-divisor badges. */

@@ -32,6 +32,29 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Years, accents, Arcade ×N, and sync polish',
+    date: '2026-07-14',
+    version: '0.12.3',
+    tags: ['Badges', 'Arcade', 'Sync', 'UI'],
+    content: [
+      {
+        body: 'A backlog wave: new era badges, clearer Prove roll help, profile seal subtitles, optional site-wide accent, auto cloud pull on sign-in, lifetime rarity histogram, admin View as, Bases hex/binary proofs, and Arcade multi-roll.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'More collectibles and less sync friction — competitive Ranked amber and Features tags stay their own colors.',
+        bullets: [
+          '**90210 + Years family** — Beverly Hills exact; 1700s–2020s era buckets with Chronarch mastery.',
+          '**Prove roll popover** — hover/focus explains the claim seal (not honest Free-play RNG).',
+          '**Site-wide accent** — optional Settings toggle; Ranked amber and feature tags unchanged.',
+          '**Sign-in auto-pull** — cloud progress merges in without a manual Account pull.',
+          '**Lifetime histogram** — Stats rarity bars use lifetime counters, not just recent history.',
+          '**Arcade Roll ×N** — roll 1/2/5/10/15 steps in an active Digits run (Arcade only).',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Collapsible How to roll',
     date: '2026-07-11',
     version: '0.12.2',

@@ -34,9 +34,15 @@ import {
   type RollResult,
   type ThemeMode,
 } from '../game';
-import { applyStreaks, finalizeStatsFromHistory } from '../game/stats';
+import {
+  applyStreaks,
+  bumpLifetimeRarity,
+  finalizeStatsFromHistory,
+} from '../game/stats';
 import { useSession } from '../lib/auth-client';
 import { createLogger } from '../lib/logger';
+import { fetchMe } from '../lib/me-api';
+import { applyDocumentAccent, normalizeAccent } from '../lib/profile-theme';
 import {
   RANKED_QUOTA_QUERY_KEY,
   requestAttestation,
@@ -125,6 +131,7 @@ type GameSettingsValue = {
   setLatestRunsSpoilersHidden: (v: boolean) => void;
   setShareShowUnlockedBadges: (v: boolean) => void;
   setAbbreviateLargeNumbers: (v: boolean) => void;
+  setApplyProfileAccentSiteWide: (v: boolean) => void;
   setHowToRollOpen: (v: boolean) => void;
 };
 
@@ -132,10 +139,14 @@ const GameContext = createContext<GameContextValue | null>(null);
 const GameSettingsContext = createContext<GameSettingsValue | null>(null);
 const CloudSyncContext = createContext<SyncControls | null>(null);
 
+function isDarkTheme(theme: ThemeMode): boolean {
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return theme === 'dark' || (theme === 'system' && prefersDark);
+}
+
 function applyTheme(theme: ThemeMode): void {
   const root = document.documentElement;
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const dark = theme === 'dark' || (theme === 'system' && prefersDark);
+  const dark = isDarkTheme(theme);
   root.classList.toggle('dark', dark);
   root.dataset.theme = dark ? 'dark' : 'light';
 }
@@ -178,6 +189,41 @@ export function GameProvider({ children }: { children: ReactNode }) {
     applyTheme(state.settings.theme);
   }, [state.settings.theme]);
 
+  /** Optional site-wide `--accent` from Account profile accent (signed-in only). */
+  useEffect(() => {
+    const enabled =
+      Boolean(session?.user) &&
+      state.settings.applyProfileAccentSiteWide === true;
+    if (!enabled) {
+      applyDocumentAccent(null, isDarkTheme(state.settings.theme));
+      return;
+    }
+    let cancelled = false;
+    const dark = isDarkTheme(state.settings.theme);
+    const applyFromMe = () => {
+      void fetchMe()
+        .then((data) => {
+          if (cancelled) return;
+          applyDocumentAccent(normalizeAccent(data.user?.profileAccent), dark);
+        })
+        .catch(() => {
+          if (!cancelled) applyDocumentAccent(null, dark);
+        });
+    };
+    applyFromMe();
+    const onMeUpdated = () => applyFromMe();
+    window.addEventListener('rngdle:me-updated', onMeUpdated);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('rngdle:me-updated', onMeUpdated);
+      applyDocumentAccent(null, isDarkTheme(state.settings.theme));
+    };
+  }, [
+    session?.user,
+    state.settings.applyProfileAccentSiteWide,
+    state.settings.theme,
+  ]);
+
   const persist = useCallback((next: PersistedState) => {
     const ok = saveState(next);
     if (!ok) {
@@ -194,7 +240,22 @@ export function GameProvider({ children }: { children: ReactNode }) {
     persist,
     onSecretUnlocks: setLastSecretUnlocks,
   });
-  const { enqueueAutoSync } = sync;
+  const { enqueueAutoSync, pullFromCloud } = sync;
+
+  /** Auto-pull cloud on signed-out → signed-in (merge-safe; never blocks auth). */
+  const wasLoggedInRef = useRef(Boolean(session?.user));
+  useEffect(() => {
+    const now = Boolean(session?.user);
+    const was = wasLoggedInRef.current;
+    wasLoggedInRef.current = now;
+    if (!now || was) return;
+    log.info('auth:signed-in:auto-pull');
+    void pullFromCloud({ quietEmpty: true }).catch((err) => {
+      log.warn('auth:signed-in:auto-pull-fail', {
+        message: err instanceof Error ? err.message : String(err),
+      });
+    });
+  }, [session?.user, pullFromCloud]);
 
   // Backfill secret masteries + streak secrets if collection/stats already qualify
   useEffect(() => {
@@ -418,6 +479,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       // Compute next state synchronously so auto-sync pushes this roll, not stale state
       const history = prependHistory(base.history, result);
       let stats = applyStreaks(base.stats, result);
+      stats = bumpLifetimeRarity(stats, result.rarity);
       stats = finalizeStatsFromHistory(stats, history);
       const ownedBefore = new Set(base.collection.map((c) => c.badgeId));
       let collection = mergeCollection(base.collection, collectionAdds, at);
@@ -790,6 +852,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
         dispatchSettings({ type: 'setShareShowUnlockedBadges', value }),
       setAbbreviateLargeNumbers: (value) =>
         dispatchSettings({ type: 'setAbbreviateLargeNumbers', value }),
+      setApplyProfileAccentSiteWide: (value) =>
+        dispatchSettings({ type: 'setApplyProfileAccentSiteWide', value }),
       setHowToRollOpen: (value) =>
         dispatchSettings({ type: 'setHowToRollOpen', value }),
     }),

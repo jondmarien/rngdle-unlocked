@@ -12,6 +12,7 @@ export type SettingsAction =
   | { type: 'setLatestRunsSpoilersHidden'; value: boolean }
   | { type: 'setShareShowUnlockedBadges'; value: boolean }
   | { type: 'setAbbreviateLargeNumbers'; value: boolean }
+  | { type: 'setApplyProfileAccentSiteWide'; value: boolean }
   | { type: 'setHowToRollOpen'; value: boolean };
 
 /** Pure reducer behind the near-identical settings setters. */
@@ -42,6 +43,8 @@ export function settingsReducer(
       return { ...settings, shareShowUnlockedBadges: action.value };
     case 'setAbbreviateLargeNumbers':
       return { ...settings, abbreviateLargeNumbers: action.value };
+    case 'setApplyProfileAccentSiteWide':
+      return { ...settings, applyProfileAccentSiteWide: action.value };
     case 'setHowToRollOpen':
       return { ...settings, howToRollOpen: action.value };
     default: {

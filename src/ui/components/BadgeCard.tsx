@@ -163,6 +163,37 @@ function BadgeEquationLine({
           </span>
         </p>
       );
+    case 'radix': {
+      const prefix =
+        equation.base === 16 ? '0x' : equation.base === 2 ? '0b' : '0o';
+      const baseLabel =
+        equation.base === 16 ? 'hex' : equation.base === 2 ? 'binary' : 'octal';
+      return (
+        <p
+          className="mono-number mt-1.5 text-xs font-semibold tracking-tight sm:text-sm"
+          aria-label={`${number.toLocaleString()} in ${baseLabel} is ${prefix}${equation.digits}${equation.note ? ` (${equation.note})` : ''}`}
+        >
+          <span className="text-(--prose)">{number.toLocaleString()}</span>
+          <span className="text-(--prose-2)"> = </span>
+          <span className="text-(--prose-3)">{prefix}</span>
+          {[...equation.digits].map((ch, i) => (
+            <span
+              key={i}
+              className={
+                equation.highlight[i]
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : 'text-(--prose-2)'
+              }
+            >
+              {ch}
+            </span>
+          ))}
+          {equation.note ? (
+            <span className="text-(--prose-3)"> · {equation.note}</span>
+          ) : null}
+        </p>
+      );
+    }
     default: {
       const _exhaustive: never = equation;
       void _exhaustive;

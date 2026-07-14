@@ -5,7 +5,11 @@ import type {
   PlayStats,
   RollResult,
 } from '../game/types';
-import { defaultPlayStats, finalizeStatsFromHistory } from '../game/stats';
+import {
+  defaultPlayStats,
+  ensureLifetimeRarityCounts,
+  finalizeStatsFromHistory,
+} from '../game/stats';
 import { collectionEntrySchema, rollResultSchema } from '../lib/schemas';
 import { STORAGE_KEYS } from '../lib/storage-keys';
 
@@ -59,6 +63,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   shareShowUnlockedBadges: true,
   /** Default off — opt-in compact EP / roll counts. */
   abbreviateLargeNumbers: false,
+  /** Default off — profile accent stays on /u until opted in site-wide. */
+  applyProfileAccentSiteWide: false,
   /** Default on — full How to roll help until the user collapses it. */
   howToRollOpen: true,
 };
@@ -184,13 +190,16 @@ export function loadState(): PersistedState {
     ...readJSON<Partial<AppSettings>>(KEYS.settings, {}),
     ...shareRollPatch,
   };
-  const stats = finalizeStatsFromHistory(
+  const statsPartial = readJSON<Partial<PlayStats>>(KEYS.stats, {});
+  const statsRaw = finalizeStatsFromHistory(
     {
       ...defaultPlayStats(),
-      ...readJSON<Partial<PlayStats>>(KEYS.stats, {}),
+      ...statsPartial,
     },
     history,
   );
+  const stats = ensureLifetimeRarityCounts(statsRaw, history);
+  const rarityBackfill = statsPartial.lifetimeRarityCounts == null;
   const state: PersistedState = {
     history,
     lifetimeEP: Number.isFinite(lifetimeEP) ? lifetimeEP : 0,
@@ -202,8 +211,12 @@ export function loadState(): PersistedState {
     settings,
     stats,
   };
-  // Persist retroactive timestamps / share-roll migration so prefs stick offline
-  if (collectionNeedsPersist(collectionIn, collection) || shareRollPatch) {
+  // Persist retroactive timestamps / share-roll / rarity-hist migration
+  if (
+    collectionNeedsPersist(collectionIn, collection) ||
+    shareRollPatch ||
+    rarityBackfill
+  ) {
     saveState(state);
   }
   return state;

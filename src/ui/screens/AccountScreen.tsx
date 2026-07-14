@@ -418,6 +418,7 @@ export function AccountScreen({
         profileAvatar,
         profileShowCodex,
       });
+      window.dispatchEvent(new Event('rngdle:me-updated'));
       setMsg('Profile look saved. Open your public /u page to preview.');
     } catch (err) {
       setMsg(err instanceof Error ? err.message : 'Failed');

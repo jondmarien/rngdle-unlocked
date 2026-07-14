@@ -96,6 +96,14 @@ const SECTION_SEALS: {
     ep: 2_500,
   },
   {
+    section: 'years',
+    id: 'secret-master-years',
+    name: 'Chronarch',
+    emoji: '⏳',
+    image: '/secrets/years.jpg',
+    ep: 2_500,
+  },
+  {
     section: 'journey',
     id: 'secret-master-journey',
     name: 'Path Eternal',

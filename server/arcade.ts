@@ -631,24 +631,36 @@ export async function armArcadeActive(
   return { ok: true, run: runToPublic(updated!) };
 }
 
-export async function processArcadeRoll(
+/** Allowed Arcade multi-roll multipliers (Home Free/Ranked never use these). */
+export const ARCADE_ROLL_COUNTS = [1, 2, 5, 10, 15] as const;
+export type ArcadeRollCount = (typeof ARCADE_ROLL_COUNTS)[number];
+
+export function isArcadeRollCount(n: number): n is ArcadeRollCount {
+  return (ARCADE_ROLL_COUNTS as readonly number[]).includes(n);
+}
+
+type ArcadeRollOk = {
+  ok: true;
+  run: ArcadeRunPublic;
+  meta: ArcadeMetaPublic;
+  roll: ArcadeRollPublic;
+  rolls: ArcadeRollPublic[];
+  busted: boolean;
+  donResult?: 'win' | 'lose';
+};
+
+async function processArcadeRollOnce(
   db: Db,
   userId: string,
-  opts: { useReroll?: boolean } = {},
-): Promise<
-  | {
-      ok: true;
-      run: ArcadeRunPublic;
-      meta: ArcadeMetaPublic;
-      roll: ArcadeRollPublic;
-      busted: boolean;
-      donResult?: 'win' | 'lose';
-    }
-  | { ok: false; response: Response }
-> {
+  opts: {
+    useReroll?: boolean;
+    /** Keep existing shop (multi-roll intermediates). */
+    forceSkipShop?: boolean;
+  } = {},
+): Promise<ArcadeRollOk | { ok: false; response: Response }> {
   const gate = await requireActiveRun(db, userId);
   if (!gate.ok) return gate;
-  let row = gate.row;
+  const row = gate.row;
   const metaRow = await ensureMeta(db, userId);
   const owned = parseOwned(row.ownedUpgradesJson);
   let cds = parseCooldowns(row.cooldownsJson);
@@ -727,7 +739,7 @@ export async function processArcadeRoll(
   );
   cds = tickCooldowns(cds);
   const rollCount = row.rollCount + 1;
-  const skipShop = Boolean(pending.skipShopOnce);
+  const skipShop = Boolean(pending.skipShopOnce) || Boolean(opts.forceSkipShop);
   pending.skipShopOnce = false;
 
   const shop = skipShop
@@ -787,6 +799,7 @@ export async function processArcadeRoll(
       run: finished.run,
       meta: finished.meta,
       roll: rollPublic,
+      rolls: [rollPublic],
       busted: true,
       donResult,
     };
@@ -826,7 +839,68 @@ export async function processArcadeRoll(
     run: runToPublic(updated!),
     meta: metaToPublic(metaRow, metaRow.unlocked),
     roll: rollPublic,
+    rolls: [rollPublic],
     busted: false,
     donResult,
   };
+}
+
+/**
+ * Arcade roll — optional `count` ∈ {1,2,5,10,15} advances Digits N steps.
+ * Stops early on bust. Shop refreshes only after the last non-bust step.
+ */
+export async function processArcadeRoll(
+  db: Db,
+  userId: string,
+  opts: { useReroll?: boolean; count?: number } = {},
+): Promise<ArcadeRollOk | { ok: false; response: Response }> {
+  const count = opts.count ?? 1;
+  if (!isArcadeRollCount(count)) {
+    return {
+      ok: false,
+      response: Response.json(
+        {
+          error: 'Invalid roll count (use 1, 2, 5, 10, or 15)',
+          code: 'invalid_count',
+        },
+        { status: 400 },
+      ),
+    };
+  }
+  if (opts.useReroll && count !== 1) {
+    return {
+      ok: false,
+      response: Response.json(
+        {
+          error: 'Reroll only works with Roll ×1',
+          code: 'reroll_requires_single',
+        },
+        { status: 400 },
+      ),
+    };
+  }
+
+  if (count === 1) {
+    return processArcadeRollOnce(db, userId, { useReroll: opts.useReroll });
+  }
+
+  const rolls: ArcadeRollPublic[] = [];
+  let lastDon: 'win' | 'lose' | undefined;
+  let last: ArcadeRollOk | undefined;
+
+  for (let i = 0; i < count; i++) {
+    const isLast = i === count - 1;
+    const step = await processArcadeRollOnce(db, userId, {
+      forceSkipShop: !isLast,
+    });
+    if (!step.ok) return step;
+    rolls.push(step.roll);
+    if (step.donResult) lastDon = step.donResult;
+    last = { ...step, rolls, donResult: lastDon ?? step.donResult };
+    if (step.busted) {
+      return last;
+    }
+  }
+
+  return last!;
 }

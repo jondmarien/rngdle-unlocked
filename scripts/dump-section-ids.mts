@@ -13,6 +13,7 @@ const sections = [
   'poker',
   'element',
   'bases',
+  'years',
 ] as const;
 
 const out: Record<string, string[]> = {};

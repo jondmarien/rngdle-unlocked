@@ -3,7 +3,7 @@
  * No React / DB imports — safe for Vite and Node (use .js extensions from server).
  */
 import type { CollectionEntry, PlayStats, RollResult } from '../game/types.js';
-import { defaultPlayStats } from '../game/stats.js';
+import { defaultPlayStats, mergeRarityCounts } from '../game/stats.js';
 
 export const SYNC_HISTORY_CAP = 500;
 
@@ -82,6 +82,10 @@ export function mergeStats(
     bestEvenStreak: Math.max(
       left.bestEvenStreak ?? 0,
       right.bestEvenStreak ?? 0,
+    ),
+    lifetimeRarityCounts: mergeRarityCounts(
+      left.lifetimeRarityCounts,
+      right.lifetimeRarityCounts,
     ),
   };
 }

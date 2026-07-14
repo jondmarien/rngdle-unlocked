@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import type { RarityTier } from '../../game';
 import { RARITY_LABELS, RARITY_ORDER, localDateKey } from '../../game';
+import { emptyRarityCounts } from '../../game/stats';
 import { RARITY_BAR } from '../../lib/badge-theme';
 import { useGame } from '../../state/GameProvider';
 import { FormattedCount } from '../components/FormattedCount';
@@ -13,21 +14,12 @@ export function StatsScreen() {
 
   const hist = useMemo(() => {
     const counts: Record<RarityTier, number> = {
-      trash: 0,
-      common: 0,
-      uncommon: 0,
-      rare: 0,
-      epic: 0,
-      anomaly: 0,
-      mythic: 0,
-      divine: 0,
+      ...emptyRarityCounts(),
+      ...stats.lifetimeRarityCounts,
     };
-    for (const r of history) {
-      counts[r.rarity] = (counts[r.rarity] ?? 0) + 1;
-    }
     const max = Math.max(1, ...Object.values(counts));
     return { counts, max };
-  }, [history]);
+  }, [stats.lifetimeRarityCounts]);
 
   const epPerHour = useMemo(() => {
     if (history.length < 2) return null;
@@ -131,7 +123,8 @@ export function StatsScreen() {
           Rarity histogram
         </h2>
         <p className="mb-3 text-xs text-(--prose-3)">
-          Counts in current history window (not lifetime if history rotated).
+          Lifetime rarity counts (synced counters; never shrink). EP/hour and
+          calendar below still use the local history window.
         </p>
         <ul className="space-y-2">
           {RARITY_ORDER.map((tier) => {

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useSession } from '../../lib/auth-client';
 import { countGroupedUnread } from '../../lib/inboxPresentation';
 import {
@@ -10,6 +10,11 @@ import {
 } from '../../lib/notifications-api';
 import { tabPath, type TabId } from '../../lib/routes';
 import { useIsAdmin } from '../../lib/useIsAdmin';
+import {
+  clearViewAs,
+  getViewAsUsername,
+  VIEW_AS_EVENT,
+} from '../../lib/view-as';
 import { useGame, useGameSettings } from '../../state/GameProvider';
 import { FormattedCount } from '../components/FormattedCount';
 import { ThemeToggle } from './ThemeToggle';
@@ -57,6 +62,13 @@ export function AppShell({
   const { data: session } = useSession();
   const { isAdmin } = useIsAdmin(session?.user?.id);
   const lastUnread = useRef(0);
+  const [viewAsUsername, setViewAsUsername] = useState(getViewAsUsername);
+
+  useEffect(() => {
+    const sync = () => setViewAsUsername(getViewAsUsername());
+    window.addEventListener(VIEW_AS_EVENT, sync);
+    return () => window.removeEventListener(VIEW_AS_EVENT, sync);
+  }, []);
 
   const inboxQuery = useQuery({
     queryKey: NOTIFICATIONS_QUERY_KEY,
@@ -122,6 +134,26 @@ export function AppShell({
     <div className="flex min-h-dvh flex-col bg-(--bg) text-(--prose)">
       {/* Sticky chrome: brand bar + nav stay visible while content scrolls */}
       <div className="sticky top-0 z-40 border-b border-(--outline) bg-(--bg)/95 shadow-sm backdrop-blur-md supports-backdrop-filter:bg-(--bg)/85">
+        {isAdmin && viewAsUsername && (
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-500/40 bg-amber-500/15 px-4 py-2 text-sm">
+            <p className="font-semibold text-amber-900 dark:text-amber-200">
+              Viewing site as @{viewAsUsername}{' '}
+              <span className="font-normal text-amber-800/90 dark:text-amber-300/90">
+                (read-only public surfaces — you are still admin)
+              </span>
+            </p>
+            <button
+              type="button"
+              className="rounded-md border border-amber-600/50 bg-(--surface) px-2.5 py-1 text-xs font-bold text-amber-900 dark:text-amber-200"
+              onClick={() => {
+                clearViewAs();
+                onTab('admin');
+              }}
+            >
+              Exit view as
+            </button>
+          </div>
+        )}
         <header className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
           <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
             <a

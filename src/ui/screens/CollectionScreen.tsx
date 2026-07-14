@@ -35,6 +35,7 @@ const FAMILIES: { id: FilterId; label: string }[] = [
   { id: 'poker', label: 'Poker' },
   { id: 'element', label: 'Element' },
   { id: 'bases', label: 'Bases' },
+  { id: 'years', label: 'Years' },
   { id: 'journey', label: 'Journey' },
   { id: 'lifetime', label: 'Lifetime EP' },
   { id: 'secret', label: 'Secret' },
@@ -50,6 +51,7 @@ const FAMILY_HINT: Record<Exclude<BadgeFamily, 'secret'>, string> = {
   poker: 'Hand-like digit combinations.',
   element: 'Periodic-table vibes.',
   bases: 'A numeral-base pattern hides here.',
+  years: 'An era bucket — centuries and decades.',
   journey: 'Lifetime milestone — keep rolling.',
   lifetime: 'Lifetime EP milestone — keep earning.',
 };

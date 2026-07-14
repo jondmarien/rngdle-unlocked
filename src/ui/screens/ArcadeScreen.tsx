@@ -4,6 +4,7 @@ import { ARCADE_UPGRADES, type ArcadeUpgradeId } from '../../game/arcade';
 import { useSession } from '../../lib/auth-client';
 import {
   abandonArcadeRun,
+  ARCADE_ROLL_COUNTS,
   arcadeRoll,
   armArcadeActive,
   buyArcadeUpgrade,
@@ -12,6 +13,7 @@ import {
   startArcadeRun,
   type ArcadeMeta,
   type ArcadeRoll,
+  type ArcadeRollCount,
   type ArcadeRun,
 } from '../../lib/arcade-api';
 import { QueryErrorBanner } from '../components/QueryErrorBanner';
@@ -38,6 +40,8 @@ export function ArcadeScreen({
   const { data: session } = useSession();
   const qc = useQueryClient();
   const [lastRoll, setLastRoll] = useState<ArcadeRoll | null>(null);
+  const [lastBatchSize, setLastBatchSize] = useState(1);
+  const [rollCount, setRollCount] = useState<ArcadeRollCount>(1);
   const [endBanner, setEndBanner] = useState<string | null>(null);
   const [panel, setPanel] = useState<'run' | 'meta'>('run');
 
@@ -88,23 +92,32 @@ export function ArcadeScreen({
   });
 
   const rollMut = useMutation({
-    mutationFn: (opts?: { useReroll?: boolean }) => arcadeRoll(opts),
+    mutationFn: (opts?: { useReroll?: boolean; count?: ArcadeRollCount }) =>
+      arcadeRoll(opts),
     onSuccess: (data) => {
       setLastRoll(data.roll);
+      setLastBatchSize(data.rolls.length);
       qc.setQueryData(['arcade-state'], {
         meta: data.meta,
         activeRun: data.busted ? null : data.run,
         usernameRequired: false,
       });
       if (data.busted) {
+        const multi =
+          data.rolls.length > 1 ? ` After ${data.rolls.length} of batch.` : '';
         setEndBanner(
           data.donResult === 'lose'
-            ? `Busted on Double or Nothing. Run score: ${data.run.runScore?.toLocaleString() ?? 0} Digits (peak).`
-            : `Run ended. Score: ${data.run.runScore?.toLocaleString() ?? 0}`,
+            ? `Busted on Double or Nothing. Run score: ${data.run.runScore?.toLocaleString() ?? 0} Digits (peak).${multi}`
+            : `Run ended. Score: ${data.run.runScore?.toLocaleString() ?? 0}${multi}`,
         );
         invalidate();
       } else if (data.donResult === 'win') {
         setEndBanner('Double or Nothing hit — Digits doubled!');
+      } else if (data.rolls.length > 1) {
+        const gained = data.rolls.reduce((s, r) => s + r.digitsAwarded, 0);
+        setEndBanner(
+          `Rolled ×${data.rolls.length} — +${gained.toLocaleString()} Digits this batch.`,
+        );
       } else {
         setEndBanner(null);
       }
@@ -354,40 +367,54 @@ export function ArcadeScreen({
                         : ''}
                     </p>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      disabled={busy}
-                      className="rounded-md border border-(--prose) bg-(--prose) px-3 py-2 text-sm font-bold text-(--bg) disabled:opacity-40"
-                      onClick={() => rollMut.mutate({})}
-                    >
-                      Roll
-                    </button>
-                    <button
-                      type="button"
-                      disabled={busy || run.digits <= 0}
-                      className="rounded-md border border-(--outline) px-3 py-2 text-sm font-semibold disabled:opacity-40"
-                      onClick={() => cashMut.mutate()}
-                    >
-                      Cash out
-                    </button>
-                    <button
-                      type="button"
-                      disabled={busy}
-                      className="rounded-md border border-red-500/50 px-3 py-2 text-sm font-semibold text-red-400 disabled:opacity-40"
-                      onClick={() => {
-                        const ok = window.confirm(
-                          'Abandon this run? This ends the run at your peak Digits score. This cannot be undone.',
-                        );
-                        if (!ok) return;
-                        const ok2 = window.confirm(
-                          'Really abandon? Confirm again to end the run.',
-                        );
-                        if (ok2) abandonMut.mutate();
-                      }}
-                    >
-                      Abandon
-                    </button>
+                  <div className="flex flex-col items-end gap-2">
+                    <SegmentedToggle
+                      aria-label="Arcade roll multiplier"
+                      value={String(rollCount)}
+                      onChange={(id) =>
+                        setRollCount(Number(id) as ArcadeRollCount)
+                      }
+                      options={ARCADE_ROLL_COUNTS.map((n) => ({
+                        id: String(n),
+                        label: `×${n}`,
+                      }))}
+                      chipClassName="rounded-md border px-2 py-1 text-xs font-semibold"
+                    />
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        disabled={busy}
+                        className="rounded-md border border-(--prose) bg-(--prose) px-3 py-2 text-sm font-bold text-(--bg) disabled:opacity-40"
+                        onClick={() => rollMut.mutate({ count: rollCount })}
+                      >
+                        {rollCount === 1 ? 'Roll' : `Roll ×${rollCount}`}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={busy || run.digits <= 0}
+                        className="rounded-md border border-(--outline) px-3 py-2 text-sm font-semibold disabled:opacity-40"
+                        onClick={() => cashMut.mutate()}
+                      >
+                        Cash out
+                      </button>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        className="rounded-md border border-red-500/50 px-3 py-2 text-sm font-semibold text-red-400 disabled:opacity-40"
+                        onClick={() => {
+                          const ok = window.confirm(
+                            'Abandon this run? This ends the run at your peak Digits score. This cannot be undone.',
+                          );
+                          if (!ok) return;
+                          const ok2 = window.confirm(
+                            'Really abandon? Confirm again to end the run.',
+                          );
+                          if (ok2) abandonMut.mutate();
+                        }}
+                      >
+                        Abandon
+                      </button>
+                    </div>
                   </div>
                 </div>
                 {(run.pending.donArmed || run.pending.rarityLockArmed) && (
@@ -410,6 +437,9 @@ export function ArcadeScreen({
                       <p className="text-sm text-(--prose-2)">
                         +{lastRoll.digitsAwarded.toLocaleString()} Digits ·{' '}
                         {lastRoll.totalEP.toLocaleString()} EP (Arcade only)
+                        {lastBatchSize > 1
+                          ? ` · last of ×${lastBatchSize}`
+                          : ''}
                       </p>
                     </div>
                     <RarityBadge rarity={lastRoll.rarity} />

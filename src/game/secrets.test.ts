@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { NUMBER_BADGES } from './badges/catalog';
 import { JOURNEY_BADGES } from './journey';
+import { LIFETIME_EP_BADGES } from './lifetimeEp';
 import {
   OMEGA_SECRET,
   SECTION_SECRETS,
@@ -53,6 +54,7 @@ describe('secrets', () => {
     const ids = new Set([
       ...NUMBER_BADGES.map((b) => b.id),
       ...JOURNEY_BADGES.map((b) => b.id),
+      ...LIFETIME_EP_BADGES.map((b) => b.id),
       ...SECTION_SECRETS.map((s) => s.id),
     ]);
     const nu = newlyUnlockedSecrets(ids);
@@ -64,6 +66,7 @@ describe('secrets', () => {
     const ids = new Set([
       ...NUMBER_BADGES.map((b) => b.id),
       ...JOURNEY_BADGES.map((b) => b.id),
+      ...LIFETIME_EP_BADGES.map((b) => b.id),
       ...SECTION_SECRETS.map((s) => s.id),
     ]);
     for (const s of STREAK_SECRETS) {
@@ -110,6 +113,14 @@ describe('secrets', () => {
     );
     const nu = newlyUnlockedSecrets(ids);
     expect(nu.some((s) => s.id === 'secret-master-bases')).toBe(true);
+  });
+
+  it('chronarch unlocks when years complete', () => {
+    const years = NUMBER_BADGES.filter((b) => b.family === 'years');
+    expect(years.length).toBe(6);
+    const ids = new Set(years.map((b) => b.id));
+    const nu = newlyUnlockedSecrets(ids);
+    expect(nu.some((s) => s.id === 'secret-master-years')).toBe(true);
   });
 });
 

@@ -93,19 +93,30 @@ export async function startArcadeRun(): Promise<{
   };
 }
 
-export async function arcadeRoll(opts?: { useReroll?: boolean }): Promise<{
+export const ARCADE_ROLL_COUNTS = [1, 2, 5, 10, 15] as const;
+export type ArcadeRollCount = (typeof ARCADE_ROLL_COUNTS)[number];
+
+export async function arcadeRoll(opts?: {
+  useReroll?: boolean;
+  count?: ArcadeRollCount;
+}): Promise<{
   run: ArcadeRun;
   meta: ArcadeMeta;
   roll: ArcadeRoll;
+  rolls: ArcadeRoll[];
   busted: boolean;
   donResult?: 'win' | 'lose';
 }> {
+  const count = opts?.count ?? 1;
   const res = await withTimeout(
     fetch('/api/arcade/roll', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ useReroll: Boolean(opts?.useReroll) }),
+      body: JSON.stringify({
+        useReroll: Boolean(opts?.useReroll),
+        count,
+      }),
     }),
     FETCH_MS,
     'arcade roll',
@@ -116,13 +127,19 @@ export async function arcadeRoll(opts?: { useReroll?: boolean }): Promise<{
     run: unknown;
     meta: unknown;
     roll: unknown;
+    rolls?: unknown;
     busted?: boolean;
     donResult?: 'win' | 'lose';
   };
+  const roll = arcadeRollSchema.parse(data.roll);
+  const rolls = Array.isArray(data.rolls)
+    ? data.rolls.map((r) => arcadeRollSchema.parse(r))
+    : [roll];
   return {
     run: arcadeRunSchema.parse(data.run),
     meta: arcadeMetaSchema.parse(data.meta),
-    roll: arcadeRollSchema.parse(data.roll),
+    roll,
+    rolls,
     busted: Boolean(data.busted),
     donResult: data.donResult,
   };

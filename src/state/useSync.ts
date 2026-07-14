@@ -67,7 +67,7 @@ export type SyncControls = {
   lastSyncAt: string | null;
   syncError: string | null;
   syncToCloud: () => Promise<void>;
-  pullFromCloud: () => Promise<void>;
+  pullFromCloud: (opts?: { quietEmpty?: boolean }) => Promise<void>;
   /** Wait until roll is visible via public API (or fail). Logged-out → 'logged-out'. */
   waitForCloudPublish: (
     roll: RollResult,
@@ -290,48 +290,53 @@ export function useSync(opts: {
     }
   }, [pushDeltaFrom, stateRef]);
 
-  const pullFromCloud = useCallback(async () => {
-    setSyncing(true);
-    setSyncError(null);
-    log.info('pullFromCloud:start');
-    try {
-      const { cloud, updatedAt } = await fetchCloudSave();
-      if (!cloud) {
-        log.warn('pullFromCloud:empty');
-        setSyncError('Nothing in the cloud yet — push first.');
-        return;
+  const pullFromCloud = useCallback(
+    async (opts?: { quietEmpty?: boolean }) => {
+      setSyncing(true);
+      setSyncError(null);
+      log.info('pullFromCloud:start');
+      try {
+        const { cloud, updatedAt } = await fetchCloudSave();
+        if (!cloud) {
+          log.warn('pullFromCloud:empty');
+          if (!opts?.quietEmpty) {
+            setSyncError('Nothing in the cloud yet — push first.');
+          }
+          return;
+        }
+        const local = stateRef.current;
+        const merged = mergeLocalWithCloud(local, cloud);
+        applyCloudPayload(merged);
+
+        // Seed cursor; mark cloud history as acked so we don't re-upload it.
+        // Local-only rolls stay unacked and drain via follow-up delta.
+        const cloudIds = new Set(cloud.history.map((r) => r.id));
+        const localOnly = local.history.filter((r) => !cloudIds.has(r.id));
+        saveSyncMeta({
+          cursorUpdatedAt: updatedAt,
+          ackedRollIds: cloud.history.map((r) => r.id),
+          ackedBadgeIds: cloud.collection.map((c) => c.badgeId).filter(Boolean),
+        });
+
+        if (localOnly.length > 0) {
+          // Upload device-local exclusives as delta — never full 500 POST.
+          enqueueAutoSync(merged);
+        }
+
+        log.info('pullFromCloud:ok', {
+          rolls: merged.lifetimeRollCount,
+          localOnly: localOnly.length,
+        });
+      } catch (e) {
+        const message = e instanceof Error ? e.message : 'Pull failed';
+        log.error('pullFromCloud:fail', { message });
+        setSyncError(message);
+      } finally {
+        setSyncing(false);
       }
-      const local = stateRef.current;
-      const merged = mergeLocalWithCloud(local, cloud);
-      applyCloudPayload(merged);
-
-      // Seed cursor; mark cloud history as acked so we don't re-upload it.
-      // Local-only rolls stay unacked and drain via follow-up delta.
-      const cloudIds = new Set(cloud.history.map((r) => r.id));
-      const localOnly = local.history.filter((r) => !cloudIds.has(r.id));
-      saveSyncMeta({
-        cursorUpdatedAt: updatedAt,
-        ackedRollIds: cloud.history.map((r) => r.id),
-        ackedBadgeIds: cloud.collection.map((c) => c.badgeId).filter(Boolean),
-      });
-
-      if (localOnly.length > 0) {
-        // Upload device-local exclusives as delta — never full 500 POST.
-        enqueueAutoSync(merged);
-      }
-
-      log.info('pullFromCloud:ok', {
-        rolls: merged.lifetimeRollCount,
-        localOnly: localOnly.length,
-      });
-    } catch (e) {
-      const message = e instanceof Error ? e.message : 'Pull failed';
-      log.error('pullFromCloud:fail', { message });
-      setSyncError(message);
-    } finally {
-      setSyncing(false);
-    }
-  }, [applyCloudPayload, enqueueAutoSync, stateRef]);
+    },
+    [applyCloudPayload, enqueueAutoSync, stateRef],
+  );
 
   const waitForCloudPublish = useCallback(
     async (roll: RollResult): Promise<'ok' | 'error' | 'logged-out'> => {

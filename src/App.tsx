@@ -33,10 +33,10 @@ const WhatsNewScreen = lazyScreen(
   () => import('./ui/screens/WhatsNewScreen'),
   'WhatsNewScreen',
 );
-const AdminScreen = lazyScreen<{ onBack: () => void }>(
-  () => import('./ui/screens/AdminScreen'),
-  'AdminScreen',
-);
+const AdminScreen = lazyScreen<{
+  onBack: () => void;
+  onOpenProfile: (username: string) => void;
+}>(() => import('./ui/screens/AdminScreen'), 'AdminScreen');
 const CollectionScreen = lazyScreen(
   () => import('./ui/screens/CollectionScreen'),
   'CollectionScreen',
@@ -272,7 +272,10 @@ function AppRoutes() {
         {route.kind === 'tab' && tab === 'whats-new' && <WhatsNewScreen />}
         {route.kind === 'tab' && tab === 'about' && <AboutScreen />}
         {route.kind === 'tab' && tab === 'admin' && (
-          <AdminScreen onBack={() => goTab('account')} />
+          <AdminScreen
+            onBack={() => goTab('account')}
+            onOpenProfile={goProfile}
+          />
         )}
         {route.kind === 'tab' && tab === 'settings' && <SettingsScreen />}
       </Suspense>
