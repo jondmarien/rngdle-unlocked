@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Firefox dark chrome** — restore Tailwind v4 `--tw-border-style` / shadow var fallbacks under `@supports (-moz-orient: inline)` so borders and sticky header structure match Chrome (modern Firefox skipped Tailwind’s gated fallbacks after relative-color support landed). Sticky header uses solid `--bg` instead of oklab `color-mix` opacity.
+
 ## [0.13.0] - 2026-07-14
 
 ### Added
