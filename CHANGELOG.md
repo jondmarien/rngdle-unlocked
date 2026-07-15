@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-07-15
+
+### Added
+
+- **All-Time Best Roll lane chips** — optional `source` on `view=best&scope=alltime` entries; Leaderboard UI shows Free / Ranked / Challenge via `RollLaneChip`.
+- **Ranked Neon RTT counter** — dev/preview (`NEON_RTT_COUNT=1` / `NODE_ENV=development` / `VERCEL_ENV=preview`) logs statement count around POST `/api/ranked-roll` (target ~3–4 no-crown / ~4–6 crown-win).
+
+### Changed
+
+- **Ranked persist** — single CTE (`INSERT rolls RETURNING` → `UPSERT user_progress`); short_code collision retries the CTE without vanity code. Prefer over `db.batch`.
+- **Ranked crowns** — one `UNION ALL` of today / week / alltime top-1 Ranked rolls (typed period column + `asCrownPeriod`); previous #1 + system/overtake writes only on wins. Username/name pass-through removes duplicate user SELECT.
+- **Ranked quota** — `rankedRollsPerHour` **90 → 180** via shared `RANKED_ROLLS_PER_HOUR` (`src/lib/ranked-limits.ts`); About / Roll mode picker / README copy updated. Quota pill already uses API `limit`.
+
+### Notes
+
+- EXPLAIN spike on Neon `lively-field-29847013`: CTE persist one statement; UNION ALL crown tops use `rolls_leaderboard_source_public_ep_idx` (warm buffers 9=9 vs 3 discrete SELECTs). Crown notif race remains acceptable cosmetic; future CAS `WHERE` documented (not advisory locks).
+
 ## [0.16.7] - 2026-07-15
 
 ### Added
