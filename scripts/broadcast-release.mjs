@@ -13,10 +13,11 @@ const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
 const title =
-  'New Update! v0.16.4 — Smoother tab loads & a steadier Latest Runs rail';
+  'New Update! v0.16.5 — Vibration, UTC resets & optional Settings sync';
 const body = [
-  'First visits to a tab ease in after Loading instead of hard-cutting.',
-  'Codex filter rows stay flush, and Latest Runs stays docked on the right when you return to Roll.',
+  'Mobile vibration feedback is in Settings (where your phone supports it).',
+  'Ranked today/week crowns and the Ranked rolls/hour timer now follow UTC.',
+  'Optionally sync Settings across devices from Account → Cloud sync (off by default).',
   'Read the full player notes: https://rngdle-unlocked.chron0.tech/whats-new',
   'Open: /whats-new',
 ].join(' ');

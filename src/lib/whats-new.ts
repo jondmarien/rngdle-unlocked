@@ -32,6 +32,26 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Mobile vibration, UTC resets, and optional Settings sync',
+    date: '2026-07-15',
+    version: '0.16.5',
+    tags: ['Mobile', 'Board', 'Account'],
+    content: [
+      {
+        body: 'Feel short vibration pulses on Generate and Arcade actions (where your phone supports it), Ranked today/week crowns reset on UTC clocks, and you can optionally sync Settings across signed-in devices.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'Smaller quality-of-life upgrades — toggles stay under your control.',
+        bullets: [
+          '**Vibration** — Settings → Vibration feedback (on for new installs; Safari phones stay silent).',
+          '**UTC resets** — Ranked today / this week, day streak, and Ranked rolls/hour follow UTC boundaries.',
+          '**Settings sync** — Account → Cloud sync, off by default; turn it on only if you want prefs on every device.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Smoother tab loads and a steadier Latest Runs rail',
     date: '2026-07-14',
     version: '0.16.4',

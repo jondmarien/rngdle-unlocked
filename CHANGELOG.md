@@ -7,14 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.5] - 2026-07-15
+
 ### Added
 
 - **Vibration feedback (mobile)** — Web Vibration API pulses on Home Generate / Arcade actions (Settings → Vibration feedback). Default on for new installs; existing devices keep off until enabled. Silent no-op where unsupported (incl. Safari).
-- **Optional Settings cloud sync** — Account → Cloud sync opt-in (`settings_sync_enabled`, default off). LWW allowlisted prefs; never automatic. Empty cloud uploads this device; existing cloud prefs prompt Use cloud / Keep this device. Additive migration: `scripts/migrate-settings-sync.mjs`.
+- **Optional Settings cloud sync** — Account → Cloud sync opt-in (`settings_sync_enabled`, default off). LWW allowlisted prefs; never automatic. Empty cloud uploads this device; existing cloud prefs prompt Use cloud / Keep this device.
 
 ### Changed
 
 - **UTC period resets** — Ranked community “today” / “this week” (highlights, crowns, leaderboard week) use UTC calendar day and UTC ISO week (Monday 00:00 UTC). Day streak + Stats calendar use UTC date keys. Ranked rolls/hour quota resets at each UTC hour (`:00:00Z`), not a rolling 60m window from first roll.
+
+### Notes
+
+- Run after deploy: `node --env-file=.env.local scripts/migrate-settings-sync.mjs` (adds `user_progress.settings_sync_enabled`).
 
 ## [0.16.4] - 2026-07-14
 
