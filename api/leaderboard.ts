@@ -17,9 +17,9 @@ function parseFriendsOnly(raw: string | null): boolean {
 /**
  * GET /api/leaderboard
  * ?view=total|best     (default total — Total EP board)
- * ?scope=ranked|practice  (default ranked)
- * ?period=all|week
- * ?sort=ep|rolls|badges  (total view; badges mainly for practice all-time)
+ * ?scope=ranked|practice|alltime  (default ranked; lifetime alias → alltime)
+ * ?period=all|week     (ignored for scope=alltime — always all)
+ * ?sort=ep|rolls|badges  (total view; badges only for alltime)
  * ?sortBy=ep|rarity      (best view only)
  * ?friendsOnly=1         (auth required — follow circle + self)
  *

@@ -16,25 +16,27 @@ Instructions for AI coding agents and humans working in this repository.
 
 ### Roll modes (do not collapse these)
 
-| Mode               | RNG                                     | Where it places                              | Crowns / overtake             |
-| ------------------ | --------------------------------------- | -------------------------------------------- | ----------------------------- |
-| **Free play**      | Browser CSPRNG (`src/game/rng.ts`)      | Leaderboard → **Practice** (synced progress) | No                            |
-| **Ranked**         | Server CSPRNG (`POST /api/ranked-roll`) | Leaderboard → **Ranked**                     | Yes (today / week / all-time) |
-| **Daily / Weekly** | Deterministic seed + subject id         | Challenge flavor; not Ranked crowns          | No                            |
-| **Arcade**         | Server CSPRNG (run loop; not Home mode) | Leaderboard → **Arcade** (best Digits run)   | No (Digits ≠ EP)              |
+| Mode               | RNG                                     | Where it places                                          | Crowns / overtake             |
+| ------------------ | --------------------------------------- | -------------------------------------------------------- | ----------------------------- |
+| **Free play**      | Browser CSPRNG (`src/game/rng.ts`)      | Leaderboard → **Practice** (+ **All-Time** via sync)     | No                            |
+| **Ranked**         | Server CSPRNG (`POST /api/ranked-roll`) | Leaderboard → **Ranked** (+ **All-Time** via sync)       | Yes (today / week / all-time) |
+| **Daily / Weekly** | Deterministic seed + subject id         | Challenge flavor; Practice + All-Time; not Ranked crowns | No                            |
+| **Arcade**         | Server CSPRNG (run loop; not Home mode) | Leaderboard → **Arcade** (best Digits run)               | No (Digits ≠ EP)              |
 
 - Free play stays unlimited and offline-capable.
 - Ranked requires **signed-in user + public `@username`**.
 - Client sync **must never** write `rolls.source = 'ranked'` (server only). On conflict, preserve `ranked`.
 - Absolute Ceiling `1_000_000` has a uniform chance in range plus an independent **1-in-100M** jackpot (client Free + server Ranked).
 - Arcade lives on `/arcade` (not `RollModePicker`); Digits never convert to EP; Arcade does not write `rolls`.
+- Top-left HUD + journey/lifetime seals use **combined** lifetime rolls/EP (all modes).
 
-### Dual leaderboards (+ Arcade)
+### EP leaderboards (+ Arcade)
 
 - **Ranked** (`?scope=ranked`): sum public `source=ranked` rolls.
-- **Practice** (`?scope=practice`): all-time from `user_progress`; week from public non-ranked rolls.
-- **Metric view** (`?view=total|best`, default `total`): Total EP (existing) or Best Roll (`sortBy=ep|rarity`) — one personal best per player; Practice Best Roll uses public practice rolls.
-- **Arcade** (`GET /api/arcade/leaderboard`): best Digits run score — separate from EP; UI tab on Leaderboard (mode-first: Ranked | Practice | Arcade | Feed | Find).
+- **Practice** (`?scope=practice`): public non-ranked rolls (`source != ranked`) for all-time and week.
+- **All-Time** (`?scope=alltime`): synced overall lifetime from `user_progress` (Free + Ranked + Challenge + journey EP); badges sort lives here.
+- **Metric view** (`?view=total|best`, default `total`): Total EP or Best Roll (`sortBy=ep|rarity`) — one personal best per player; All-Time Best Roll uses any public roll.
+- **Arcade** (`GET /api/arcade/leaderboard`): best Digits run score — separate from EP; UI tab on Leaderboard (mode-first: Ranked | Practice | All-Time | Arcade | Feed | Find).
 
 ### Feed & history lanes
 
@@ -363,7 +365,7 @@ These four checks require a **manual browser smoke** — automated `pnpm test` /
 | Ranked issue             | `server/rankedRoll.ts`, `api/ranked-roll/index.ts`, quota: `api/ranked-roll/quota.ts` + `server/rankedQuota.ts`     |
 | Crowns / overtake        | `server/rollActivity.ts`                                                                                            |
 | Sync merge               | `server/sync.ts`, `api/sync.ts`                                                                                     |
-| Leaderboards             | `server/leaderboard.ts`, `api/leaderboard.ts`, `LeaderboardScreen.tsx` (Ranked/Practice/Arcade)                     |
+| Leaderboards             | `server/leaderboard.ts`, `api/leaderboard.ts`, `LeaderboardScreen.tsx` (Ranked/Practice/All-Time/Arcade)            |
 | Feature requests         | `server/featureRequests.ts`, `api/feature-requests*`, `FeatureRequestsScreen.tsx`                                   |
 | Arcade Mode              | `src/game/arcade/`, `server/arcade.ts`, `arcadeLeaderboard.ts`, `api/arcade/*`, `ArcadeScreen.tsx`, `arcade-api.ts` |
 | Feed                     | `server/feed.ts`, `api/feed.ts`                                                                                     |
@@ -376,7 +378,7 @@ These four checks require a **manual browser smoke** — automated `pnpm test` /
 
 ---
 
-_When instructions conflict: user request > this file > README > older design docs. Prefer the current dual-board Ranked/Practice model over any pre-Ranked “all synced rolls are competitive” wording in historical specs._
+_When instructions conflict: user request > this file > README > older design docs. Prefer the current Ranked / Practice / All-Time model over any pre-Ranked “all synced rolls are competitive” wording or “Practice = overall progress” wording in historical specs._
 
 ---
 

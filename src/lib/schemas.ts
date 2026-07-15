@@ -131,7 +131,7 @@ export const bestRollLeaderboardResponseSchema = z.object({
   view: z.literal('best'),
   period: z.enum(['all', 'week']),
   sortBy: z.enum(['ep', 'rarity']),
-  scope: z.enum(['ranked', 'practice']),
+  scope: z.enum(['ranked', 'practice', 'alltime']),
   entries: z.array(bestRollLeaderboardEntrySchema),
   me: bestRollLeaderboardEntrySchema.nullable().optional(),
   friendsOnly: z.literal(true).optional(),

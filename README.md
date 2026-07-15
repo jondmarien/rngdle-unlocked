@@ -4,7 +4,7 @@
 
 ### Unlimited CSPRNG rolls · badges · EP · cloud social — _no 24-hour lock._
 
-Inspired by the daily number-game genre, but **unlocked**: roll as often as you want, keep a lifetime collection, and optionally sync to Neon for accounts, **Ranked + Practice leaderboards**, **Arcade Digits runs**, follows, challenges, and shareable rolls.
+Inspired by the daily number-game genre, but **unlocked**: roll as often as you want, keep a lifetime collection, and optionally sync to Neon for accounts, **Ranked + Practice + All-Time leaderboards**, **Arcade Digits runs**, follows, challenges, and shareable rolls.
 
 **[Live Site](https://rngdle-unlocked.chron0.tech)**
 
@@ -33,10 +33,10 @@ Unlike a classic daily lock, you can roll **unlimited** times. Progress defaults
 
 > **Not affiliated with [rngdle.com](https://www.rngdle.com/).** Badge names, scoring, and implementation are original.
 
-| Mode                | What you get                                                                                                                                                                                                                                                      |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Solo (default)**  | Fortified browser CSPRNG Free play, reel animation, badges, EP, history (incl. Highlights), codex, stats, export/import — offline-capable                                                                                                                         |
-| **Social (opt-in)** | Email sign-up, `@username`, auto cloud sync, **Leaderboard → Practice** (synced free play) + **Leaderboard → Ranked** (server free play) + **Arcade** Digits board, community crowns (Ranked only), follows/feed, profiles, alerts, share + OG, challenges, seals |
+| Mode                | What you get                                                                                                                                                                                                                                                                                                                        |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Solo (default)**  | Fortified browser CSPRNG Free play, reel animation, badges, EP, history (incl. Highlights), codex, stats, export/import — offline-capable                                                                                                                                                                                           |
+| **Social (opt-in)** | Email sign-up, `@username`, auto cloud sync, **Leaderboard → Practice** (public Free/challenge rolls) + **Leaderboard → Ranked** (server free play) + **Leaderboard → All-Time** (synced overall lifetime) + **Arcade** Digits board, community crowns (Ranked only), follows/feed, profiles, alerts, share + OG, challenges, seals |
 
 ## 📋 Table of contents
 
@@ -91,7 +91,7 @@ flowchart LR
 
 Deeper diagrams (roll lifecycle, Ranked vs Free, Arcade Digits, notifications, OG): **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)**.
 
-**Free play (practice):** fortified browser CSPRNG → badge evaluation → EP / rarity → history + collection → localStorage → auto-sync when signed in → places on **Leaderboard → Practice**. Does **not** claim community crowns.
+**Free play (practice):** fortified browser CSPRNG → badge evaluation → EP / rarity → history + collection → localStorage → auto-sync when signed in → places on **Leaderboard → Practice** (public Free/challenge rolls) and **Leaderboard → All-Time** (synced overall lifetime). Does **not** claim community crowns.
 
 **Ranked free play (competitive):** sign-in + `@username` → `POST /api/ranked-roll` (server CSPRNG + server score) → `rolls.source = ranked` → places on **Leaderboard → Ranked**, community today/week/all-time crowns, overtake alerts. Client sync cannot forge ranked rows.
 
@@ -99,7 +99,7 @@ Deeper diagrams (roll lifecycle, Ranked vs Free, Arcade Digits, notifications, O
 
 **Challenge path (optional):** Roll tab → **Daily** or **Weekly**. Shared UTC period seed + your account id → one personal deterministic number for that period.
 
-**Social path (optional):** Better Auth → merge-safe sync → Ranked / Practice / Arcade boards → follows/feed → vanity share after cloud confirm → OG. Sync may enqueue Activity unlocks; Ranked rolls may enqueue System crown messages.
+**Social path (optional):** Better Auth → merge-safe sync → Ranked / Practice / All-Time / Arcade boards → follows/feed → vanity share after cloud confirm → OG. Sync may enqueue Activity unlocks; Ranked rolls may enqueue System crown messages.
 
 ## 🚀 Quick start
 
@@ -169,7 +169,7 @@ Or `pnpm dev` for the SPA only and point APIs at a deployed preview.
 
 | Mode          | Number source                           | Leaderboard / crowns                                                                    |
 | ------------- | --------------------------------------- | --------------------------------------------------------------------------------------- |
-| **Free play** | Browser CSPRNG each Generate            | **Practice** board (synced progress). No community crowns.                              |
+| **Free play** | Browser CSPRNG each Generate            | **Practice** board (public Free/challenge rolls) + **All-Time** via sync. No crowns.    |
 | **Ranked**    | Server CSPRNG (`POST /api/ranked-roll`) | **Ranked** board + today/week/all-time crowns + overtakes. Needs sign-in + `@username`. |
 | **Daily**     | `hash(daySeed + yourId)`                | Challenge number; Free/Ranked stay available.                                           |
 | **Weekly**    | `hash(weekSeed + yourId)`               | Same idea for the ISO week.                                                             |
@@ -182,9 +182,9 @@ Switch modes anytime (board fully resets). Badges, EP, history, and share work a
 - **Email + password** auth (Better Auth)
 - **@username** public identity
 - **Auto cloud sync** on Free play / challenges when signed in (merge-safe; cannot forge `source=ranked`)
-- **Dual EP leaderboard** — **Ranked** (server free play) · **Practice** (synced free play / overall progress); **Total EP** or **Best Roll** (by EP / by rarity); all-time / week; Practice all-time Total EP can sort EP / rolls / badges
+- **EP leaderboards** — **Ranked** (server free play) · **Practice** (public Free/challenge rolls) · **All-Time** (synced overall lifetime); **Total EP** or **Best Roll** (by EP / by rarity); Ranked/Practice all-time / week; All-Time Total EP can sort EP / rolls / badges
 - **Arcade Mode** — `/arcade` Digits runs (upgrades, cash out / bust); **Leaderboard → Arcade** ranks best Digits run (never EP)
-- **Mode-first Board tabs** — Ranked | Practice | Arcade | Feed | Find
+- **Mode-first Board tabs** — Ranked | Practice | All-Time | Arcade | Feed | Find
 - **Features tab** — signed-in feature requests with upvotes; Active / Shipped / Declined sections; admin status workflow
 - **Community highlights** — today’s + weekly best **Ranked** rolls on the home tab when idle (`/api/highlights`)
 - **You on the board** — rank highlighted + sticky card if outside top list (per active board)
@@ -238,23 +238,23 @@ rngdle-unlocked/
 
 ## 🗺️ Routes (SPA)
 
-| Path                       | Screen                                                                       |
-| -------------------------- | ---------------------------------------------------------------------------- |
-| `/`                        | Roll (Free / Ranked / Daily / Weekly)                                        |
-| `/history`                 | Roll log + Highlights (former Showcase: bests & streaks)                     |
-| `/history?view=highlights` | Deep link to History → Highlights                                            |
-| `/collection`              | Badge **codex** (encyclopedia, unlock times, **New** 5‑min tab)              |
-| `/stats`                   | Rarity histogram, EP/hour, calendar                                          |
-| `/leaderboard`             | **Ranked** · **Practice** · **Arcade** · Feed · **Find** (mode-first)        |
-| `/arcade`                  | Arcade Digits runs (shop, cash out / bust) — sign-in + `@username`           |
-| `/features`                | Feature requests (sign-in) — tags, edit, optional screenshot, upvote, status |
-| `/notifications`           | Alerts (Activity + System)                                                   |
-| `/account`                 | Auth, username, profile look (avatar/accent/flair/bio), push/pull            |
-| `/about`                   | How to play, social, fairness                                                |
-| `/settings`                | Theme, effects, tips, export/import                                          |
-| `/u/:username`             | Public profile (+ follow)                                                    |
-| `/s/:user/:code`           | Vanity public roll (SPA)                                                     |
-| `/r/:id`                   | Legacy public roll path                                                      |
+| Path                       | Screen                                                                               |
+| -------------------------- | ------------------------------------------------------------------------------------ |
+| `/`                        | Roll (Free / Ranked / Daily / Weekly)                                                |
+| `/history`                 | Roll log + Highlights (former Showcase: bests & streaks)                             |
+| `/history?view=highlights` | Deep link to History → Highlights                                                    |
+| `/collection`              | Badge **codex** (encyclopedia, unlock times, **New** 5‑min tab)                      |
+| `/stats`                   | Rarity histogram, EP/hour, calendar                                                  |
+| `/leaderboard`             | **Ranked** · **Practice** · **All-Time** · **Arcade** · Feed · **Find** (mode-first) |
+| `/arcade`                  | Arcade Digits runs (shop, cash out / bust) — sign-in + `@username`                   |
+| `/features`                | Feature requests (sign-in) — tags, edit, optional screenshot, upvote, status         |
+| `/notifications`           | Alerts (Activity + System)                                                           |
+| `/account`                 | Auth, username, profile look (avatar/accent/flair/bio), push/pull                    |
+| `/about`                   | How to play, social, fairness                                                        |
+| `/settings`                | Theme, effects, tips, export/import                                                  |
+| `/u/:username`             | Public profile (+ follow)                                                            |
+| `/s/:user/:code`           | Vanity public roll (SPA)                                                             |
+| `/r/:id`                   | Legacy public roll path                                                              |
 
 **API (serverless):**  
 `/api/auth/*`, `/api/me`, `/api/sync`, `/api/ranked-roll` (+ `/quota`), `/api/leaderboard?view=total|best&scope=ranked|practice`, `/api/arcade` (+ `/start` `/roll` `/buy` `/arm` `/cash-out` `/abandon` `/leaderboard`), `/api/feature-requests`, `/api/feature-requests/:id/vote`, `/api/admin/feature-requests`, `/api/highlights`, `/api/follow`, `/api/feed`, `/api/users/search`, `/api/notifications`, `/api/system-messages`, `/api/admin/*`, `/api/reports`, `/api/challenge`, `/api/attest`, `/api/og`, `/api/profile/:user`, `/api/u/:user`, `/api/rolls/:id`, `/api/share/:id`, `/api/health`.
@@ -383,7 +383,7 @@ The roll must exist in Neon (`rolls` table). Sign in so auto-sync runs, or Accou
 Need `follows` table — run `node scripts/migrate-feature-wave.mjs` on that database. Sign in required.
 
 **Leaderboard empty / “you” missing**  
-Needs a **username**. **Ranked** board: generate via Roll → Ranked. **Practice** board: Free play + sync. **Arcade** board: complete a Digits run on `/arcade`. Toggle boards on the Leaderboard screen (Ranked | Practice | Arcade | Feed | Find).
+Needs a **username**. **Ranked** board: generate via Roll → Ranked. **Practice** board: public Free play / challenge rolls. **All-Time** board: synced overall lifetime progress. **Arcade** board: complete a Digits run on `/arcade`. Toggle boards on the Leaderboard screen (Ranked | Practice | All-Time | Arcade | Feed | Find).
 
 **Arcade start rejected / “run in progress”**  
 One active run per user — Continue or Cash out (or two-step Abandon) from the Arcade tab.
@@ -410,7 +410,7 @@ The Account screen times out after a few seconds and shows the sign-in form. Che
 | Codex unlock times + 5‑min New tab                                        | ✅ Shipped                                                                        |
 | Accounts + auto cloud sync                                                | ✅ Shipped                                                                        |
 | Community today/week bests (Ranked)                                       | ✅ Shipped                                                                        |
-| Dual leaderboards (Ranked + Practice) + follows + feed                    | ✅ Shipped                                                                        |
+| EP leaderboards (Ranked + Practice + All-Time) + follows + feed           | ✅ Shipped                                                                        |
 | Best Roll board (EP / rarity) + Features tab                              | ✅ Shipped (`v0.6.0`)                                                             |
 | Arcade Mode (Digits runs) + mode-first Board tabs                         | ✅ Shipped (`v0.7.0`)                                                             |
 | Alerts hierarchy + crown grouping; Features status sections               | ✅ Shipped (`v0.7.1`)                                                             |

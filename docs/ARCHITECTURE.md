@@ -200,12 +200,12 @@ flowchart LR
   ArcadeBoard --> BestDigits[Best Digits run]
 ```
 
-- **UI tabs (v0.7+):** Ranked | Practice | Arcade | Feed | Find (mode-first).
-- **Practice all-time (Total EP)** — `user_progress` lifetime EP / rolls / badge counts (synced free play).
+- **UI tabs:** Ranked | Practice | All-Time | Arcade | Feed | Find (mode-first).
+- **Practice all-time / week (Total EP)** — public rolls with `source != ranked` (Free + Challenge).
+- **All-Time (Total EP)** — `user_progress` lifetime EP / rolls / badge counts (synced overall progress: Free + Ranked + Challenge + journey EP).
 - **Arcade** — `arcade_meta.best_run_score` (Digits); never mixes with EP boards.
-- **Practice week (Total EP)** — public rolls with `source != ranked`.
 - **Ranked all-time / week (Total EP)** — sum of public `source=ranked` rolls only.
-- **Best Roll (`?view=best`)** — one personal best per player from public rolls matching scope/period; sort by EP or rarity (`RARITY_ORDER`); earliest `rolled_at` ties. Practice all-time Best Roll uses public practice rolls (not `user_progress`).
+- **Best Roll (`?view=best`)** — one personal best per player from public rolls matching scope/period; sort by EP or rarity (`RARITY_ORDER`); earliest `rolled_at` ties. Practice uses non-ranked rolls; All-Time Best Roll uses any public roll.
 - Client sync **cannot** set `source=ranked` (server preserves ranked on conflict).
 - Sync **rejects** payloads that claim another user’s roll ids or inflate EP/collection without matching rolls (`SyncIntegrityError` → 409). Lifetime roll-count vs new-history is only enforced when client history is below `HISTORY_CAP` (500) — the counter is unbounded while history is retention-capped.
 - Public profiles expose progress provenance pills (`cloud_sync` / `cloned_local` / `local_progress`) from best-roll ownership.
@@ -272,7 +272,8 @@ Static SPA routes use [`server/pageOg.ts`](../server/pageOg.ts) titles/descripti
 | Challenge numbers           | Deterministic from period seed + subject id                                           |
 | Attestation seal            | Server HMAC on a **claim** — not proof of honest client RNG                           |
 | Leaderboard Ranked          | Fair competition baseline (server-issued only)                                        |
-| Leaderboard Practice        | Who **synced** free-play progress with a username                                     |
+| Leaderboard Practice        | Public Free play + challenge rolls (`source != ranked`); honor system                 |
+| Leaderboard All-Time        | Synced overall lifetime from `user_progress` (includes Ranked + journey EP)           |
 | Leaderboard Arcade          | Best Digits run (`arcade_meta.best_run_score`); Digits ≠ EP; no crowns                |
 | Community crowns            | Ranked rolls only                                                                     |
 | Share links                 | Only after roll row exists in Neon                                                    |

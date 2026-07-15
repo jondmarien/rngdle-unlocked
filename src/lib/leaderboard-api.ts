@@ -21,7 +21,7 @@ export type BestRollLeaderboardEntry = z.infer<
   typeof bestRollLeaderboardEntrySchema
 >;
 
-export type LeaderboardScope = 'ranked' | 'practice';
+export type LeaderboardScope = 'ranked' | 'practice' | 'alltime';
 export type LeaderboardPeriod = 'all' | 'week';
 export type LeaderboardSort = 'ep' | 'rolls' | 'badges';
 export type BestRollSortBy = 'ep' | 'rarity';

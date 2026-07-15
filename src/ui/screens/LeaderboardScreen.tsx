@@ -30,9 +30,9 @@ import {
 import { SegmentedToggle } from '../components/SegmentedToggle';
 
 /** Mode-first primary tabs (replaces Board/Feed/Find + nested Ranked/Practice). */
-type BoardView = 'ranked' | 'practice' | 'arcade' | 'feed' | 'find';
+type BoardView = 'ranked' | 'practice' | 'alltime' | 'arcade' | 'feed' | 'find';
 
-/** Collapsed metric + sort for Ranked / Practice. */
+/** Collapsed metric + sort for Ranked / Practice / All-Time. */
 type BoardMetricKey =
   | 'total-ep'
   | 'total-rolls'
@@ -89,30 +89,36 @@ export function LeaderboardScreen({
   const following = followingQuery.data ?? new Set<string>();
 
   const { metric, sort, sortBy } = metricToState(metricKey);
-  const scope = view === 'practice' ? 'practice' : 'ranked';
-  const onEpBoard = view === 'ranked' || view === 'practice';
+  const scope =
+    view === 'practice'
+      ? 'practice'
+      : view === 'alltime'
+        ? 'alltime'
+        : 'ranked';
+  const onEpBoard =
+    view === 'ranked' || view === 'practice' || view === 'alltime';
+  const boardPeriod = view === 'alltime' ? 'all' : period;
 
-  // Ranked has no badges sort — coerce if needed
+  // Badges sort is All-Time only — coerce elsewhere
   const effectiveSort: LeaderboardSort =
-    scope === 'ranked' && sort === 'badges' ? 'ep' : sort;
+    scope !== 'alltime' && sort === 'badges' ? 'ep' : sort;
   const effectiveMetricKey: BoardMetricKey =
-    scope === 'ranked' && metricKey === 'total-badges' ? 'total-ep' : metricKey;
+    scope !== 'alltime' && metricKey === 'total-badges'
+      ? 'total-ep'
+      : metricKey;
 
   useEffect(() => {
-    if (
-      metricKey === 'total-badges' &&
-      (scope === 'ranked' || period !== 'all')
-    ) {
+    if (metricKey === 'total-badges' && scope !== 'alltime') {
       setMetricKey('total-ep');
     }
-  }, [metricKey, scope, period]);
+  }, [metricKey, scope]);
 
   const boardQuery = useQuery({
-    queryKey: ['leaderboard', scope, period, effectiveSort, friendsOnly],
+    queryKey: ['leaderboard', scope, boardPeriod, effectiveSort, friendsOnly],
     queryFn: ({ signal }) =>
       fetchLeaderboard({
         scope,
-        period,
+        period: boardPeriod,
         sort: effectiveSort,
         limit: 50,
         friendsOnly,
@@ -124,11 +130,11 @@ export function LeaderboardScreen({
       (!friendsOnly || Boolean(session?.user)),
   });
   const bestQuery = useQuery({
-    queryKey: ['leaderboard-best', scope, period, sortBy, friendsOnly],
+    queryKey: ['leaderboard-best', scope, boardPeriod, sortBy, friendsOnly],
     queryFn: ({ signal }) =>
       fetchBestRollLeaderboard({
         scope,
-        period,
+        period: boardPeriod,
         sortBy,
         limit: 50,
         friendsOnly,
@@ -246,22 +252,35 @@ export function LeaderboardScreen({
   const metricOptions: { id: BoardMetricKey; label: string }[] = [
     { id: 'total-ep', label: 'Total EP' },
     { id: 'total-rolls', label: 'Total · Rolls' },
-    ...(scope === 'practice' && period === 'all'
+    ...(scope === 'alltime'
       ? [{ id: 'total-badges' as const, label: 'Total · Badges' }]
       : []),
     { id: 'best-ep', label: 'Best Roll · EP' },
     { id: 'best-rarity', label: 'Best Roll · Rarity' },
   ];
 
+  const epBoardBlurb =
+    view === 'ranked'
+      ? 'Only rolls from Roll → Ranked (server CSPRNG). Sign-in + @username required. Crowns use this board too.'
+      : view === 'alltime'
+        ? metric === 'best'
+          ? 'Best public roll across Free, Ranked, and Challenge. Synced overall lifetime — not a competitive Ranked crown board.'
+          : 'Synced overall lifetime progress (Free + Ranked + Challenge + journey EP). Same totals as the top-left HUD. Social — not anti-cheat competitive.'
+        : metric === 'best'
+          ? 'Public Free play + challenge rolls (not Ranked). One personal best per player.'
+          : 'Public Free play + challenge rolls (not Ranked). All-time and this week use the same definition. Social — not anti-cheat competitive.';
+
   return (
     <div className="space-y-4">
       <div>
         <h1 className="text-xl font-bold tracking-tight">Leaderboard</h1>
         <p className="text-sm text-(--prose-2)">
-          <strong className="text-(--prose)">Ranked</strong> (server free play)
-          and <strong className="text-(--prose)">Practice</strong> (synced Free
-          play) use EP. <strong className="text-(--prose)">Arcade</strong> ranks
-          best Digits run — separate from EP. Feed and Find stay social.
+          <strong className="text-(--prose)">Ranked</strong> (server free play),{' '}
+          <strong className="text-(--prose)">Practice</strong> (public Free /
+          challenge rolls), and{' '}
+          <strong className="text-(--prose)">All-Time</strong> (synced overall
+          lifetime) use EP. <strong className="text-(--prose)">Arcade</strong>{' '}
+          ranks best Digits run — separate from EP. Feed and Find stay social.
         </p>
       </div>
 
@@ -269,6 +288,7 @@ export function LeaderboardScreen({
         options={[
           { id: 'ranked', label: 'Ranked', accent: 'amber' },
           { id: 'practice', label: 'Practice' },
+          { id: 'alltime', label: 'All-Time' },
           { id: 'arcade', label: 'Arcade' },
           { id: 'feed', label: 'Feed' },
           { id: 'find', label: 'Find' },
@@ -531,29 +551,27 @@ export function LeaderboardScreen({
               ))}
             </select>
             <p className="text-xs leading-snug text-(--prose-3)">
-              {view === 'ranked'
-                ? 'Only rolls from Roll → Ranked (server CSPRNG). Sign-in + @username required. Crowns use this board too.'
-                : metric === 'best'
-                  ? 'Public Free play + challenge rolls (not Ranked). One personal best per player.'
-                  : 'Synced Free play progress (all-time) and public practice rolls this week. Social — not anti-cheat competitive.'}
+              {epBoardBlurb}
             </p>
           </div>
 
           <div className="flex flex-wrap items-end gap-4">
-            <div className="space-y-1">
-              <span className="text-xs font-semibold uppercase tracking-wide text-(--prose-3)">
-                Period
-              </span>
-              <SegmentedToggle
-                chipClassName="rounded-md border px-2 py-1 text-xs font-semibold"
-                options={[
-                  { id: 'all', label: 'All-time' },
-                  { id: 'week', label: 'This week (UTC)' },
-                ]}
-                value={period}
-                onChange={setPeriod}
-              />
-            </div>
+            {view !== 'alltime' && (
+              <div className="space-y-1">
+                <span className="text-xs font-semibold uppercase tracking-wide text-(--prose-3)">
+                  Period
+                </span>
+                <SegmentedToggle
+                  chipClassName="rounded-md border px-2 py-1 text-xs font-semibold"
+                  options={[
+                    { id: 'all', label: 'All-time' },
+                    { id: 'week', label: 'This week (UTC)' },
+                  ]}
+                  value={period}
+                  onChange={setPeriod}
+                />
+              </div>
+            )}
             <div className="space-y-1">
               <span className="text-xs font-semibold uppercase tracking-wide text-(--prose-3)">
                 Circle
@@ -629,9 +647,11 @@ export function LeaderboardScreen({
               <p className="text-sm text-(--prose-2)">
                 {view === 'ranked'
                   ? 'Claim @username and generate Ranked free-play rolls to place here.'
-                  : metric === 'best'
-                    ? 'Set a public @username and make a public Free play roll to appear.'
-                    : 'Set a public @username and sync free-play progress to appear on Practice.'}
+                  : view === 'alltime'
+                    ? 'Set a public @username and sync progress (Free or Ranked) to appear on All-Time.'
+                    : metric === 'best'
+                      ? 'Set a public @username and make a public Free play roll to appear.'
+                      : 'Set a public @username and make a public Free play or challenge roll to appear on Practice.'}
               </p>
             )}
 
@@ -667,7 +687,9 @@ export function LeaderboardScreen({
                   ? 'No friends on this board yet. Follow players from Find or Friends, then check back.'
                   : view === 'ranked'
                     ? 'No Ranked rolls on the board yet. Sign in, claim @username, and Generate with Roll → Ranked.'
-                    : 'No Practice entries yet. Sync Free play progress or make a public Free play roll.'}
+                    : view === 'alltime'
+                      ? 'No All-Time entries yet. Sign in, claim @username, and sync Free or Ranked progress.'
+                      : 'No Practice entries yet. Make a public Free play or challenge roll with @username.'}
               </div>
             )}
 

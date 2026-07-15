@@ -57,9 +57,10 @@ export function AboutScreen() {
         </p>
         <p className="max-w-[65ch]">
           Solo by default (everything stays in your browser). Optional cloud
-          accounts unlock usernames, auto-sync, dual EP leaderboards (Ranked +
-          Practice), Arcade Digits runs, Best Roll boards, Features requests,
-          follows, public profiles, share links, challenges, and roll seals.
+          accounts unlock usernames, auto-sync, EP leaderboards (Ranked +
+          Practice + All-Time), Arcade Digits runs, Best Roll boards, Features
+          requests, follows, public profiles, share links, challenges, and roll
+          seals.
         </p>
         <p className="text-xs text-(--prose-3)">
           Version <span className="font-mono tabular-nums">{APP_VERSION}</span>
@@ -105,20 +106,23 @@ export function AboutScreen() {
             <ul className="mt-1.5 list-disc space-y-1 pl-5">
               <li>
                 <strong className="text-(--prose)">Free play</strong> —
-                unlimited browser CSPRNG (practice). Synced progress places on
-                Leaderboard →{' '}
+                unlimited browser CSPRNG (practice). Public Free play rolls
+                place on Leaderboard →{' '}
                 <strong className="text-(--prose)">Practice</strong> (social /
-                honor system). Does not place on Ranked or claim community
-                crowns. Absolute Ceiling (
-                <span className="font-mono">1,000,000</span>) ~1 in a million,
-                or a separate 1-in-100M jackpot, unlocks the ultra-rare seal.
+                honor system) and count toward top-left lifetime + Leaderboard →{' '}
+                <strong className="text-(--prose)">All-Time</strong> when
+                synced. Does not place on Ranked or claim community crowns.
+                Absolute Ceiling (<span className="font-mono">1,000,000</span>)
+                ~1 in a million, or a separate 1-in-100M jackpot, unlocks the
+                ultra-rare seal.
               </li>
               <li>
                 <strong className="text-(--prose)">Ranked</strong> —
                 server-issued free-play rolls (sign-in + @username). Places on
                 Leaderboard → <strong className="text-(--prose)">Ranked</strong>
-                , and is the only free-play mode that can claim today / week /
-                all-time community crowns and overtake alerts. Fair competition.
+                , counts toward top-left lifetime + All-Time, and is the only
+                free-play mode that can claim today / week / all-time community
+                crowns and overtake alerts. Fair competition.
               </li>
               <li>
                 <strong className="text-(--prose)">Daily / Weekly</strong> —
@@ -350,9 +354,9 @@ export function AboutScreen() {
             >
               leaderboard
             </a>{' '}
-            (Ranked, Practice, Arcade; Total EP and Best Roll on EP boards),
-            profiles at <code className="text-xs">/u/you</code>, and vanity
-            share paths.
+            (Ranked, Practice, All-Time, Arcade; Total EP and Best Roll on EP
+            boards), profiles at <code className="text-xs">/u/you</code>, and
+            vanity share paths.
           </li>
           <li>
             <strong className="text-(--prose)">Features</strong> — submit and
@@ -364,8 +368,8 @@ export function AboutScreen() {
           </li>
           <li>
             <strong className="text-(--prose)">You on the board</strong> — your
-            rank is highlighted on Ranked or Practice after you place, even if
-            you are outside the top 50 list.
+            rank is highlighted on Ranked, Practice, or All-Time after you
+            place, even if you are outside the top 50 list.
           </li>
           <li>
             <strong className="text-(--prose)">Follow friends</strong> — Board →
@@ -473,9 +477,14 @@ export function AboutScreen() {
             server-issued free-play only. Fair competition baseline.
           </li>
           <li>
-            <strong className="text-(--prose)">Practice board</strong> — synced
-            free-play / overall progress. Social honor system; still
+            <strong className="text-(--prose)">Practice board</strong> — public
+            Free play + challenge rolls (not Ranked). Social honor system; still
             client-authoritative for Free play RNG.
+          </li>
+          <li>
+            <strong className="text-(--prose)">All-Time board</strong> — synced
+            overall lifetime progress (Free + Ranked + Challenge + journey EP).
+            Matches the top-left HUD totals.
           </li>
           <li>
             <strong className="text-(--prose)">Arcade board</strong> — best
@@ -512,8 +521,9 @@ export function AboutScreen() {
           </li>
           <li>
             <strong className="text-(--prose)">Board</strong> — Ranked /
-            Practice / Arcade / Feed / Find; EP metric dropdown + period on
-            Ranked/Practice; Arcade best Digits run
+            Practice / All-Time / Arcade / Feed / Find; EP metric dropdown +
+            period on Ranked/Practice; All-Time is overall lifetime; Arcade best
+            Digits run
           </li>
           <li>
             <strong className="text-(--prose)">Arcade</strong> — Digits runs,

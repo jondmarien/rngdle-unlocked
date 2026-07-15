@@ -13,14 +13,14 @@ const MODES: {
     label: 'Free play',
     short: 'Local RNG · practice',
     detail:
-      'Unlimited CSPRNG rolls in your browser — offline-friendly practice. Synced progress appears on the Leaderboard → Practice board (social / honor system). Does not place on Ranked, and does not claim community today/week crowns.',
+      'Unlimited CSPRNG rolls in your browser — offline-friendly practice. Public Free play rolls place on Leaderboard → Practice (social / honor system). They also count toward your top-left lifetime totals and Leaderboard → All-Time when synced. Does not place on Ranked, and does not claim community today/week crowns.',
   },
   {
     id: 'ranked',
     label: 'Ranked',
     short: 'Server RNG · competitive',
     detail:
-      'Server-issued free-play rolls. Requires sign-in and a public @username. Soft cap ~90 Ranked rolls per UTC hour (server cost; resets at :00 UTC). These are the only free-play rolls that place on Leaderboard → Ranked, claim today/week/all-time community crowns (UTC day / UTC ISO week), and trigger overtake alerts. Fair competition.',
+      'Server-issued free-play rolls. Requires sign-in and a public @username. Soft cap ~90 Ranked rolls per UTC hour (server cost; resets at :00 UTC). These are the only free-play rolls that place on Leaderboard → Ranked, claim today/week/all-time community crowns (UTC day / UTC ISO week), and trigger overtake alerts. They also count toward your top-left lifetime totals and Leaderboard → All-Time — not Practice. Fair competition.',
   },
   {
     id: 'daily',

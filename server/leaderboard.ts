@@ -44,7 +44,7 @@ type BestRollEntry = {
   userId?: string;
 };
 
-type Scope = 'ranked' | 'practice';
+export type Scope = 'ranked' | 'practice' | 'alltime';
 type BestSortBy = 'ep' | 'rarity';
 
 /** Competitive fairness filters for Ranked surfaces. */
@@ -65,6 +65,18 @@ export function practiceRollFilters() {
   );
 }
 
+/** All-Time Best Roll: any public roll (Free, Ranked, or Challenge). */
+export function allPublicRollFilters() {
+  return and(isNotNull(user.username), eq(rolls.isPublic, true));
+}
+
+/** Exported for unit tests — maps query `scope` to board pipeline. */
+export function parseScope(raw: string | null): Scope {
+  if (raw === 'practice' || raw === 'local') return 'practice';
+  if (raw === 'alltime' || raw === 'lifetime') return 'alltime';
+  return 'ranked';
+}
+
 /** SQL CASE rank from RARITY_ORDER (trash=0 … mythic=N). */
 function rarityRankSql() {
   const cases = RARITY_ORDER.map((tier, i) =>
@@ -80,10 +92,11 @@ function parseFriendsOnly(raw: string | null): boolean {
 }
 
 /**
- * Board query pipeline (moved verbatim from api/leaderboard.ts).
+ * Board query pipeline.
  *
- * Ranked  = server free-play rolls only (fair competition)
- * Practice = synced progress / public free-play activity (social / honor-system)
+ * Ranked   = server free-play rolls only (fair competition)
+ * Practice = public Free play + challenge rolls (honor-system; not Ranked)
+ * All-Time = synced overall lifetime progress from user_progress
  *
  * Optional `?view=best` switches to personal-best roll ranking (Total EP default).
  * Optional `?friendsOnly=1` restricts to the signed-in user's follow circle + self
@@ -96,10 +109,13 @@ export async function leaderboardResponse(
   opts?: { meId?: string },
 ): Promise<Response> {
   const url = requestUrl(request);
-  const scopeParam = url.searchParams.get('scope');
-  const scope: Scope =
-    scopeParam === 'practice' || scopeParam === 'local' ? 'practice' : 'ranked';
-  const period = url.searchParams.get('period') === 'week' ? 'week' : 'all';
+  const scope = parseScope(url.searchParams.get('scope'));
+  const period =
+    scope === 'alltime'
+      ? 'all'
+      : url.searchParams.get('period') === 'week'
+        ? 'week'
+        : 'all';
   const sort = url.searchParams.get('sort') ?? 'ep';
   const view = url.searchParams.get('view') === 'best' ? 'best' : 'total';
   const sortByParam = url.searchParams.get('sortBy');
@@ -192,6 +208,18 @@ export async function leaderboardResponse(
     });
   }
 
+  if (scope === 'alltime') {
+    return allTimeBoard(db, {
+      sort,
+      limit,
+      meUserId,
+      meUsername,
+      started,
+      friendIds,
+      friendsExtras,
+    });
+  }
+
   return practiceBoard(db, {
     period,
     sort,
@@ -205,6 +233,12 @@ export async function leaderboardResponse(
 }
 
 type FriendsExtras = ReturnType<typeof friendsBoardExtras> | null;
+
+function scopeRollFilters(scope: Scope) {
+  if (scope === 'ranked') return rankedRollFilters();
+  if (scope === 'alltime') return allPublicRollFilters();
+  return practiceRollFilters();
+}
 
 async function bestRollBoard(
   db: Db,
@@ -223,8 +257,7 @@ async function bestRollBoard(
   const weekStart = startOfUtcIsoWeek(new Date());
   const periodFilter =
     opts.period === 'week' ? gte(rolls.rolledAt, weekStart) : undefined;
-  const scopeFilter =
-    opts.scope === 'ranked' ? rankedRollFilters() : practiceRollFilters();
+  const scopeFilter = scopeRollFilters(opts.scope);
   const friendsFilter =
     opts.friendIds != null ? inArray(rolls.userId, opts.friendIds) : undefined;
 
@@ -412,66 +445,89 @@ async function practiceBoard(
     friendsExtras: FriendsExtras;
   },
 ) {
-  // Week: public free-play / challenge activity (not ranked competitive)
-  if (opts.period === 'week') {
-    const weekStart = startOfUtcIsoWeek(new Date());
-    const friendsFilter =
-      opts.friendIds != null
-        ? inArray(rolls.userId, opts.friendIds)
-        : undefined;
-    const rows = await db
-      .select({
-        userId: rolls.userId,
-        username: user.username,
-        name: user.name,
-        weekEP: sql<number>`coalesce(sum(${rolls.totalEp}), 0)`.mapWith(Number),
-        weekRolls: sql<number>`count(*)`.mapWith(Number),
-      })
-      .from(rolls)
-      .innerJoin(user, eq(user.id, rolls.userId))
-      .where(
-        and(
-          gte(rolls.rolledAt, weekStart),
-          practiceRollFilters(),
-          ...(friendsFilter ? [friendsFilter] : []),
-        ),
-      )
-      .groupBy(rolls.userId, user.username, user.name)
-      .orderBy(desc(sql`sum(${rolls.totalEp})`))
-      .limit(Math.max(opts.limit, 500));
+  // Public Free play + challenge rolls (not Ranked) — week and all-time share filters.
+  const weekStart = startOfUtcIsoWeek(new Date());
+  const periodFilter =
+    opts.period === 'week' ? gte(rolls.rolledAt, weekStart) : undefined;
+  const friendsFilter =
+    opts.friendIds != null ? inArray(rolls.userId, opts.friendIds) : undefined;
 
-    const all: Entry[] = rows.map((r, i) => ({
-      rank: i + 1,
+  const rows = await db
+    .select({
+      userId: rolls.userId,
+      username: user.username,
+      name: user.name,
+      periodEP: sql<number>`coalesce(sum(${rolls.totalEp}), 0)`.mapWith(Number),
+      periodRolls: sql<number>`count(*)`.mapWith(Number),
+    })
+    .from(rolls)
+    .innerJoin(user, eq(user.id, rolls.userId))
+    .where(
+      and(
+        practiceRollFilters(),
+        ...(periodFilter ? [periodFilter] : []),
+        ...(friendsFilter ? [friendsFilter] : []),
+      ),
+    )
+    .groupBy(rolls.userId, user.username, user.name)
+    .orderBy(
+      opts.sort === 'rolls'
+        ? desc(sql`count(*)`)
+        : desc(sql`sum(${rolls.totalEp})`),
+    )
+    .limit(Math.max(opts.limit, 500));
+
+  const all: Entry[] = rows
+    .map((r) => ({
       username: r.username,
       name: r.name,
-      lifetimeEP: r.weekEP,
-      lifetimeRollCount: r.weekRolls,
+      lifetimeEP: r.periodEP,
+      lifetimeRollCount: r.periodRolls,
       badgeCount: null as number | null,
       userId: r.userId,
-    }));
+    }))
+    .sort((a, b) => {
+      if (opts.sort === 'rolls')
+        return b.lifetimeRollCount - a.lifetimeRollCount;
+      return b.lifetimeEP - a.lifetimeEP;
+    })
+    .map((e, i) => ({ rank: i + 1, ...e }));
 
-    const me = findMe(all, opts.meUserId, opts.meUsername);
-    const entries = all.slice(0, opts.limit).map(publicEntry);
+  const me = findMe(all, opts.meUserId, opts.meUsername);
+  const entries = all.slice(0, opts.limit).map(publicEntry);
 
-    log.info('ok', {
-      scope: 'practice',
-      period: 'week',
-      count: entries.length,
-      meRank: me?.rank ?? null,
-      ms: Date.now() - opts.started,
-    });
+  log.info('ok', {
+    scope: 'practice',
+    period: opts.period,
+    sort: opts.sort,
+    count: entries.length,
+    meRank: me?.rank ?? null,
+    ms: Date.now() - opts.started,
+  });
 
-    return Response.json({
-      period: 'week',
-      sort: 'ep',
-      scope: 'practice',
-      entries,
-      me,
-      ...opts.friendsExtras,
-    });
-  }
+  return Response.json({
+    period: opts.period,
+    sort: opts.sort === 'rolls' ? 'rolls' : 'ep',
+    scope: 'practice',
+    entries,
+    me,
+    ...opts.friendsExtras,
+  });
+}
 
-  // All-time practice: synced lifetime progress (local free play + challenges + any cloud totals)
+/** Combined synced lifetime progress (Free + Ranked + Challenge + journey EP). */
+async function allTimeBoard(
+  db: Db,
+  opts: {
+    sort: string;
+    limit: number;
+    meUserId: string | null;
+    meUsername: string | null;
+    started: number;
+    friendIds: string[] | null;
+    friendsExtras: FriendsExtras;
+  },
+) {
   const friendsFilter =
     opts.friendIds != null
       ? inArray(userProgress.userId, opts.friendIds)
@@ -527,7 +583,7 @@ async function practiceBoard(
   const entries = all.slice(0, opts.limit).map(publicEntry);
 
   log.info('ok', {
-    scope: 'practice',
+    scope: 'alltime',
     period: 'all',
     sort: opts.sort,
     count: entries.length,
@@ -538,7 +594,7 @@ async function practiceBoard(
   return Response.json({
     period: 'all',
     sort: opts.sort,
-    scope: 'practice',
+    scope: 'alltime',
     entries,
     me,
     ...opts.friendsExtras,
