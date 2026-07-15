@@ -51,12 +51,12 @@ flowchart TB
 
 ## Roll modes
 
-| Mode               | RNG                | Persist                                           | Competitive surfaces                                    |
-| ------------------ | ------------------ | ------------------------------------------------- | ------------------------------------------------------- |
-| **Free play**      | Browser CSPRNG     | localStorage → sync as `source=client`            | **Leaderboard → Practice** only                         |
-| **Ranked**         | Server CSPRNG      | Neon `source=ranked` first; client merges history | **Leaderboard → Ranked**, community crowns, overtakes   |
-| **Daily / Weekly** | Deterministic seed | sync as `source=challenge`                        | Optional challenge; not Ranked crowns                   |
-| **Arcade**         | Server CSPRNG      | `arcade_*` tables only (Digits)                   | **Leaderboard → Arcade** (best Digits run); Digits ≠ EP |
+| Mode               | RNG                | Persist                                           | Competitive / board surfaces                                                                         |
+| ------------------ | ------------------ | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| **Free play**      | Browser CSPRNG     | localStorage → sync as `source=client`            | **Leaderboard → Practice** + **All-Time** (via sync); no Ranked crowns                               |
+| **Ranked**         | Server CSPRNG      | Neon `source=ranked` first; client merges history | **Leaderboard → Ranked**, community crowns, overtakes; also bumps **All-Time**                       |
+| **Daily / Weekly** | Deterministic seed | sync as `source=challenge`                        | Practice + All-Time (public); not Ranked crowns                                                      |
+| **Arcade**         | Server CSPRNG      | `arcade_*` tables only (Digits)                   | **Leaderboard → Arcade** (best Digits run); Digits ≠ EP                                              |
 
 Mode switch fully resets the home reel / session roll (and abandons in-flight Generate). Arcade is a **separate `/arcade` screen**, not a Home `RollMode`.
 
@@ -159,16 +159,19 @@ sequenceDiagram
   H->>G: roll() ranked
   G->>RollApi: requestRankedRoll
   RollApi->>R: POST credentials
-  R->>R: apiGuards + username + rate limit
+  R->>R: apiGuards + identity + rate limit (~180/h UTC)
   R->>R: server CSPRNG + evaluateBadges
-  R->>DB: insert rolls source=ranked
-  R->>A: crowns / overtake if #1
+  R->>DB: CTE insert rolls + upsert user_progress
+  R->>DB: UNION ALL today/week/alltime tops
+  R->>A: announce crown / overtake if #1
   R-->>RollApi: RollResult
   RollApi-->>G: RollResult
   G->>G: local history + collection merge
   G-->>H: lastRoll source=ranked
   Note over DB: Leaderboard Ranked + highlights query source=ranked
 ```
+
+Ranked persist + crowns (v0.17+) prefer **neon-http one-shot SQL**: one CTE for `rolls` + `user_progress`, one `UNION ALL` for the three crown tops; previous-#1 fetch and system/overtake writes run only on wins. Soft gameplay cap is `RANKED_ROLLS_PER_HOUR` (**180**/UTC hour). Dev/preview can log Neon statement/RTT counts via `runWithNeonRttCount`.
 
 ## Client data layer
 
@@ -189,23 +192,28 @@ sequenceDiagram
 ```mermaid
 flowchart LR
   Free[Free play sync] --> Practice[Leaderboard Practice]
+  Free --> AllTime[Leaderboard All-Time]
   Ranked[Ranked API rolls] --> RankedBoard[Leaderboard Ranked]
+  Ranked --> AllTime
   Ranked --> Crowns[Community crowns + overtakes]
   Free -.->|does not| Crowns
   RankedBoard --> TotalEP[Total EP view]
   RankedBoard --> BestRoll[Best Roll view]
   Practice --> TotalEP
   Practice --> BestRoll
+  AllTime --> TotalEP
+  AllTime --> BestRoll
   ArcadeRuns[Arcade Digits runs] --> ArcadeBoard[Leaderboard Arcade]
   ArcadeBoard --> BestDigits[Best Digits run]
 ```
 
 - **UI tabs:** Ranked | Practice | All-Time | Arcade | Feed | Find (mode-first).
-- **Practice all-time / week (Total EP)** — public rolls with `source != ranked` (Free + Challenge).
-- **All-Time (Total EP)** — `user_progress` lifetime EP / rolls / badge counts (synced overall progress: Free + Ranked + Challenge + journey EP).
+- **Practice all-time / week (Total EP)** — public rolls with `source != ranked` (Free + Challenge). Shipped in **v0.16.7** (Practice no longer ranks combined `user_progress`).
+- **All-Time (Total EP)** — `user_progress` lifetime EP / rolls / badge counts (synced overall progress: Free + Ranked + Challenge + journey EP). Same combined totals as the top-left HUD / journey. Shipped in **v0.16.7**.
 - **Arcade** — `arcade_meta.best_run_score` (Digits); never mixes with EP boards.
 - **Ranked all-time / week (Total EP)** — sum of public `source=ranked` rolls only.
-- **Best Roll (`?view=best`)** — one personal best per player from public rolls matching scope/period; sort by EP or rarity (`RARITY_ORDER`); earliest `rolled_at` ties. Practice uses non-ranked rolls; All-Time Best Roll uses any public roll.
+- **Best Roll (`?view=best`)** — one personal best per player from public rolls matching scope/period; sort by EP or rarity (`RARITY_ORDER`); earliest `rolled_at` ties. Practice uses non-ranked rolls; **All-Time Best Roll** uses any public roll and (v0.17+) may expose `source` so the UI can show Free / Ranked / Challenge lane chips.
+- **Period clocks (v0.16.5+)** — Ranked community “today” / “this week”, leaderboard week, and crown windows use **UTC** calendar day / UTC ISO week; Ranked rolls/hour quota resets each UTC hour (`:00:00Z`).
 - Client sync **cannot** set `source=ranked` (server preserves ranked on conflict).
 - Sync **rejects** payloads that claim another user’s roll ids or inflate EP/collection without matching rolls (`SyncIntegrityError` → 409). Lifetime roll-count vs new-history is only enforced when client history is below `HISTORY_CAP` (500) — the counter is unbounded while history is retention-capped.
 - Public profiles expose progress provenance pills (`cloud_sync` / `cloned_local` / `local_progress`) from best-roll ownership.
@@ -274,13 +282,17 @@ Static SPA routes use [`server/pageOg.ts`](../server/pageOg.ts) titles/descripti
 | Leaderboard Ranked          | Fair competition baseline (server-issued only)                                        |
 | Leaderboard Practice        | Public Free play + challenge rolls (`source != ranked`); honor system                 |
 | Leaderboard All-Time        | Synced overall lifetime from `user_progress` (includes Ranked + journey EP)           |
+| All-Time Best Roll lanes    | Optional `source` on best entries (`client` / `ranked` / `challenge`) — UI chips      |
+| Ranked soft quota           | `RANKED_ROLLS_PER_HOUR` (**180**/UTC hour); pill uses API `limit`                     |
 | Leaderboard Arcade          | Best Digits run (`arcade_meta.best_run_score`); Digits ≠ EP; no crowns                |
-| Community crowns            | Ranked rolls only                                                                     |
+| Community crowns            | Ranked rolls only (UNION ALL tops; notifs only on wins)                               |
 | Share links                 | Only after roll row exists in Neon                                                    |
 | Runtime schema validation   | Zod at **import / sync / profile / arcade** boundaries — not blanket on every API     |
 
 ## Related docs
 
+- [README Status & roadmap](../README.md#-status--roadmap) — feature → release tag map (`v0.2.0`…`v0.17.0`)
+- [CHANGELOG](../CHANGELOG.md) — developer release notes
 - [Arcade Mode design](./superpowers/specs/2026-07-09-arcade-mode-design.md)
 - [Refactor notes (July 2026)](./refactor-notes-2026-07.md)
 - [Opus audit + §H implementation status](./opus-report.md)

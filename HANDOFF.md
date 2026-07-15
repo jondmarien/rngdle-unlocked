@@ -247,19 +247,19 @@ node scripts/add-roll-source.mjs   # if source column missing
 - [x] **v0.12.0** — Lifetime EP badges (22 seals + Entropy Treasury + omega gate); abbreviate large numbers setting; FR edit rate-limit fix; Discord OG cache bust
 - [x] **v0.12.1** — Ranked · All-time best Home tile + Ranked-prefixed crown labels; Profile Lifetime EP under Best roll
 - [x] **v0.12.2** — Collapsible How to roll (compact label-only mode switch; preference persisted)
+- [x] **v0.13.0** — Years family + 90210; Prove roll popover; Profile seal subtitles; site-wide accent; auto-pull; lifetime histogram; View Site As; Bases radix eqs; Arcade Roll ×N
 - [x] **v0.14.0** — Atomic Registry (118 elements) + Atomic Seal; Firefox dark chrome border fix
 - [x] **v0.14.1** — Site-wide accent coverage across tabs; Prove roll popover above button; Oganesson mythic EP align
 - [x] **v0.15.0** — Arcade juice (Digits tween, rarity punch, shop/SFX, Cash Out/Abandon weight); Oganesson divine EP restore; Prove roll cloud-publish gate
 - [x] **v0.16.0** — Arcade Deadline, Idle Digits, trash soft-fail; Epic+ settle FX on Arcade
+- [x] **v0.16.1** — Base UI dialogs/toasts; Home unlock lightbox; History Highlights (Showcase merge)
 - [x] **v0.16.2** — Motion polish (shop/Codex/layout), conventions + skill, embossed profile avatars
 - [x] **v0.16.3** — Route-level screen entrance; Codex filter chip layout shift + uniform pill sizing
-- [x] **v0.17.0** — All-Time Best lane chips; Ranked CTE persist + UNION ALL crowns + username pass-through; rankedRollsPerHour 90→180; dev/preview Neon RTT counter
-- [x] **v0.16.7** — Practice Free-only (public non-ranked rolls); Leaderboard → All-Time for synced overall lifetime; top-left/journey stay combined
-- [x] **v0.16.6** — Section Mastery seals full-art refresh; Ranked quota pill yellow/orange/red by remaining
-- [x] **v0.16.5** — Mobile vibration feedback; UTC today/week + Ranked hour resets; optional Settings cloud sync (opt-in)
 - [x] **v0.16.4** — Cold lazy tab settle; Codex chip row flush grid; Latest Runs fixed-rail portal (no centered flash)
-- [x] **v0.16.1** — Base UI dialogs/toasts; Home unlock lightbox; History Highlights (Showcase merge)
-- [x] **v0.13.0** — Years family + 90210; Prove roll popover; Profile seal subtitles; site-wide accent; auto-pull; lifetime histogram; View Site As; Bases radix eqs; Arcade Roll ×N
+- [x] **v0.16.5** — Mobile vibration feedback; UTC today/week + Ranked hour resets; optional Settings cloud sync (opt-in)
+- [x] **v0.16.6** — Section Mastery seals full-art refresh; Ranked quota pill yellow/orange/red by remaining
+- [x] **v0.16.7** — Practice Free-only (public non-ranked rolls); Leaderboard → All-Time for synced overall lifetime; top-left/journey stay combined
+- [x] **v0.17.0** — All-Time Best lane chips; Ranked CTE persist + UNION ALL crowns + username pass-through; rankedRollsPerHour 90→180; dev/preview Neon RTT counter
 
 ### Still open for you / ops
 
