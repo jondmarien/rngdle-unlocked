@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Vibration feedback (mobile)** — Web Vibration API pulses on Home Generate / Arcade actions (Settings → Vibration feedback). Default on for new installs; existing devices keep off until enabled. Silent no-op where unsupported (incl. Safari).
+
 ## [0.16.4] - 2026-07-14
 
 ### Fixed

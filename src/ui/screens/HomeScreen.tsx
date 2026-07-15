@@ -15,6 +15,7 @@ import {
   shouldTrashCrack,
 } from '../../game/fx';
 import { useSession } from '../../lib/auth-client';
+import { haptic } from '../../lib/haptics';
 import { createLogger } from '../../lib/logger';
 import {
   useCloudSync,
@@ -265,6 +266,7 @@ export function HomeScreen({
 
   const handleRoll = async () => {
     if (periodLocked) return;
+    haptic('tap', settings.hapticsEnabled === true);
     // Cancel deferred anomaly/mythic share from a previous roll
     clearShareTimer();
     setShareRoll(null);
@@ -285,6 +287,7 @@ export function HomeScreen({
         setRevealDone(false);
         pendingFx.current = false;
         setAwaitingResult(false);
+        haptic('error', settings.hapticsEnabled === true);
         return;
       }
       revealRollRef.current = outcome.roll;
@@ -297,6 +300,7 @@ export function HomeScreen({
       const msg = e instanceof Error ? e.message : String(e);
       log.error('handleRoll failed', { err: msg });
       reportSaveError(msg || 'Roll failed — try again.');
+      haptic('error', settings.hapticsEnabled === true);
     } finally {
       setAwaitingResult(false);
     }
@@ -308,6 +312,7 @@ export function HomeScreen({
     const settled = revealRollRef.current;
     if (pendingFx.current && settled) {
       playRollSound(settled.rarity, settings.soundEnabled);
+      haptic('reveal', settings.hapticsEnabled === true);
       if (settings.confettiEnabled && shouldCelebrate(settled.rarity)) {
         fireCelebration(settled.rarity);
       } else if (

@@ -133,6 +133,7 @@ type GameSettingsValue = {
   setTheme: (theme: ThemeMode) => void;
   setShareShowRollCount: (v: boolean) => void;
   setSoundEnabled: (v: boolean) => void;
+  setHapticsEnabled: (v: boolean) => void;
   setConfettiEnabled: (v: boolean) => void;
   setTrashCrackEnabled: (v: boolean) => void;
   setAutoScrollBadges: (v: boolean) => void;
@@ -864,6 +865,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
         dispatchSettings({ type: 'setShareShowRollCount', value }),
       setSoundEnabled: (value) =>
         dispatchSettings({ type: 'setSoundEnabled', value }),
+      setHapticsEnabled: (value) =>
+        dispatchSettings({ type: 'setHapticsEnabled', value }),
       setConfettiEnabled: (value) =>
         dispatchSettings({ type: 'setConfettiEnabled', value }),
       setTrashCrackEnabled: (value) =>

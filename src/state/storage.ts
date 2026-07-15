@@ -48,6 +48,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   /** Default on; include lifetime roll count on Discord share text. */
   shareShowRollCount: true,
   soundEnabled: false,
+  /** Default on for new installs; existing blobs without key stay off via migration. */
+  hapticsEnabled: true,
   confettiEnabled: true,
   /** Default on; cracked-screen + heavy shake on trash settles. */
   trashCrackEnabled: true,
@@ -72,6 +74,11 @@ export const DEFAULT_SETTINGS: AppSettings = {
 type SettingsMigrations = {
   /** Presence-check backfill for shareShowRollCount default-on. */
   shareShowRollCountPresence?: boolean;
+  /**
+   * Presence-check for hapticsEnabled: existing settings JSON without the key
+   * stays off; brand-new installs keep DEFAULT_SETTINGS (on).
+   */
+  hapticsEnabledPresence?: boolean;
   /** One-shot Lifetime EP badge collection backfill (cosmetic, no EP). */
   lifetimeEpBackfillV1?: boolean;
 };
@@ -117,6 +124,36 @@ export function migrateShareShowRollCountPresence(
   writeMigrations({
     ...mig,
     shareShowRollCountPresence: true,
+  });
+  return patch;
+}
+
+/**
+ * One-time: if raw settings JSON existed but never had `hapticsEnabled`, keep off.
+ * Brand-new installs (no settings key) keep DEFAULT_SETTINGS.hapticsEnabled (true).
+ * Explicit true/false is preserved.
+ */
+export function migrateHapticsEnabledPresence(
+  rawSettingsJson: string | null,
+): Partial<AppSettings> | null {
+  if (typeof localStorage === 'undefined') return null;
+  const mig = readMigrations();
+  if (mig.hapticsEnabledPresence) return null;
+
+  let patch: Partial<AppSettings> | null = null;
+  if (rawSettingsJson != null) {
+    try {
+      const raw = JSON.parse(rawSettingsJson) as Record<string, unknown>;
+      if (raw && typeof raw === 'object' && !('hapticsEnabled' in raw)) {
+        patch = { hapticsEnabled: false };
+      }
+    } catch {
+      /* corrupt settings — leave alone; DEFAULT_SETTINGS applies on merge */
+    }
+  }
+  writeMigrations({
+    ...mig,
+    hapticsEnabledPresence: true,
   });
   return patch;
 }
@@ -185,10 +222,12 @@ export function loadState(): PersistedState {
       ? localStorage.getItem(KEYS.settings)
       : null;
   const shareRollPatch = migrateShareShowRollCountPresence(rawSettingsJson);
+  const hapticsPatch = migrateHapticsEnabledPresence(rawSettingsJson);
   const settings = {
     ...DEFAULT_SETTINGS,
     ...readJSON<Partial<AppSettings>>(KEYS.settings, {}),
     ...shareRollPatch,
+    ...hapticsPatch,
   };
   const statsPartial = readJSON<Partial<PlayStats>>(KEYS.stats, {});
   const statsRaw = finalizeStatsFromHistory(
@@ -211,10 +250,11 @@ export function loadState(): PersistedState {
     settings,
     stats,
   };
-  // Persist retroactive timestamps / share-roll / rarity-hist migration
+  // Persist retroactive timestamps / share-roll / haptics / rarity-hist migration
   if (
     collectionNeedsPersist(collectionIn, collection) ||
     shareRollPatch ||
+    hapticsPatch ||
     rarityBackfill
   ) {
     saveState(state);

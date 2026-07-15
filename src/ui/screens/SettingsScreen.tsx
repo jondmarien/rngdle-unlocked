@@ -19,6 +19,7 @@ export function SettingsScreen() {
     setTheme,
     setShareShowRollCount,
     setSoundEnabled,
+    setHapticsEnabled,
     setConfettiEnabled,
     setTrashCrackEnabled,
     setAutoScrollBadges,
@@ -80,6 +81,14 @@ export function SettingsScreen() {
             onChange={(e) => setSoundEnabled(e.target.checked)}
           />
           Soft sound (Home + Arcade)
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={settings.hapticsEnabled === true}
+            onChange={(e) => setHapticsEnabled(e.target.checked)}
+          />
+          Vibration feedback (mobile)
         </label>
         <label className="flex items-center gap-2 text-sm">
           <input

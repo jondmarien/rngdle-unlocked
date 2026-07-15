@@ -4,6 +4,7 @@ export type SettingsAction =
   | { type: 'setTheme'; value: ThemeMode }
   | { type: 'setShareShowRollCount'; value: boolean }
   | { type: 'setSoundEnabled'; value: boolean }
+  | { type: 'setHapticsEnabled'; value: boolean }
   | { type: 'setConfettiEnabled'; value: boolean }
   | { type: 'setTrashCrackEnabled'; value: boolean }
   | { type: 'setAutoScrollBadges'; value: boolean }
@@ -27,6 +28,8 @@ export function settingsReducer(
       return { ...settings, shareShowRollCount: action.value };
     case 'setSoundEnabled':
       return { ...settings, soundEnabled: action.value };
+    case 'setHapticsEnabled':
+      return { ...settings, hapticsEnabled: action.value };
     case 'setConfettiEnabled':
       return { ...settings, confettiEnabled: action.value };
     case 'setTrashCrackEnabled':

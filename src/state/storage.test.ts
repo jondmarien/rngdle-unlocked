@@ -212,4 +212,22 @@ describe('storage', () => {
     expect(loaded.settings.shareShowRollCount).toBe(false);
     expect(migrateShareShowRollCountPresence(null)).toBe(null);
   });
+
+  it('presence-migrates hapticsEnabled off when key absent from existing JSON', () => {
+    localStorage.setItem(
+      STORAGE_KEYS.settings,
+      JSON.stringify({ theme: 'dark', soundEnabled: true }),
+    );
+    const loaded = loadState();
+    expect(loaded.settings.hapticsEnabled).toBe(false);
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEYS.settings)!);
+    expect(raw.hapticsEnabled).toBe(false);
+    const mig = JSON.parse(localStorage.getItem(STORAGE_KEYS.migrations)!);
+    expect(mig.hapticsEnabledPresence).toBe(true);
+  });
+
+  it('keeps hapticsEnabled default on for brand-new installs', () => {
+    const loaded = loadState();
+    expect(loaded.settings.hapticsEnabled).toBe(true);
+  });
 });

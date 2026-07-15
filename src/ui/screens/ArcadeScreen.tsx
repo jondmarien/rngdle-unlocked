@@ -12,6 +12,7 @@ import {
   playPurchaseSound,
 } from '../../game';
 import { useSession } from '../../lib/auth-client';
+import { haptic } from '../../lib/haptics';
 import {
   abandonArcadeRun,
   ARCADE_ROLL_COUNTS,
@@ -61,6 +62,7 @@ export function ArcadeScreen({
   const { fireCelebration, clearCelebration } = useGame();
   const { confirmAsync } = useFeedback();
   const soundOn = settings.soundEnabled;
+  const hapticsOn = settings.hapticsEnabled === true;
   const qc = useQueryClient();
   const [lastRoll, setLastRoll] = useState<ArcadeRoll | null>(null);
   const [lastBatchSize, setLastBatchSize] = useState(1);
@@ -90,9 +92,13 @@ export function ArcadeScreen({
 
   const startMut = useMutation({
     mutationFn: startArcadeRun,
+    onMutate: () => {
+      haptic('tap', hapticsOn);
+    },
     onSuccess: (data) => {
       setLastRoll(null);
       setEndBanner(null);
+      haptic('success', hapticsOn);
       qc.setQueryData(['arcade-state'], {
         meta: data.meta,
         activeRun: data.run,
@@ -124,17 +130,21 @@ export function ArcadeScreen({
       arcadeRoll(opts),
     onMutate: () => {
       clearCelebration();
+      haptic('tap', hapticsOn);
     },
     onSuccess: (data) => {
       setLastRoll(data.roll);
       setLastBatchSize(data.rolls.length);
       setRevealKey((k) => k + 1);
       playArcadeRollSound(data.roll.rarity, soundOn);
+      haptic('reveal', hapticsOn);
       if (!data.busted && data.roll.digitsAwarded > 0) {
         playDigitsGainSound(soundOn);
+        haptic('success', hapticsOn);
       }
       if (data.busted) {
         playAbandonSound(soundOn);
+        haptic('error', hapticsOn);
       }
       // Epic→Divine: same CelebrationLayer shake (+ confetti/edge) as Home.
       // Rare keeps art-only punch; Common stays quiet.
@@ -175,8 +185,12 @@ export function ArcadeScreen({
 
   const buyMut = useMutation({
     mutationFn: buyArcadeUpgrade,
+    onMutate: () => {
+      haptic('tap', hapticsOn);
+    },
     onSuccess: (data, upgradeId) => {
       playPurchaseSound(soundOn);
+      haptic('success', hapticsOn);
       setJustBoughtId(upgradeId as ArcadeUpgradeId);
       window.setTimeout(() => setJustBoughtId(null), 600);
       qc.setQueryData(['arcade-state'], (prev: unknown) => {
@@ -218,8 +232,12 @@ export function ArcadeScreen({
 
   const cashMut = useMutation({
     mutationFn: cashOutArcadeRun,
+    onMutate: () => {
+      haptic('tap', hapticsOn);
+    },
     onSuccess: (data) => {
       playCashOutSound(soundOn);
+      haptic('success', hapticsOn);
       setEndBanner(
         `Cashed out for ${data.run.runScore?.toLocaleString() ?? 0} Digits.`,
       );
@@ -234,9 +252,13 @@ export function ArcadeScreen({
 
   const claimIdleMut = useMutation({
     mutationFn: claimArcadeIdle,
+    onMutate: () => {
+      haptic('tap', hapticsOn);
+    },
     onSuccess: (data) => {
       if (data.claimed > 0) {
         playDigitsGainSound(soundOn);
+        haptic('success', hapticsOn);
         setEndBanner(
           `Claimed ${data.claimed.toLocaleString()} idle Digits into your bank.`,
         );
@@ -262,8 +284,12 @@ export function ArcadeScreen({
 
   const abandonMut = useMutation({
     mutationFn: abandonArcadeRun,
+    onMutate: () => {
+      haptic('tap', hapticsOn);
+    },
     onSuccess: (data) => {
       playAbandonSound(soundOn);
+      haptic('error', hapticsOn);
       setEndBanner(
         `Abandoned. Run score: ${data.run.runScore?.toLocaleString() ?? 0} Digits (peak).`,
       );

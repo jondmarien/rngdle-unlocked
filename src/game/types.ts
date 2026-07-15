@@ -87,6 +87,11 @@ export type AppSettings = {
   shareShowRollCount: boolean;
   /** Optional SFX on roll settle / high rarity. Default off. */
   soundEnabled: boolean;
+  /**
+   * Vibration feedback via Vibration API (mobile). Default on for new installs;
+   * existing devices without the key stay off (presence migration).
+   */
+  hapticsEnabled: boolean;
   /** Optional confetti on rare+ settles. Default on. */
   confettiEnabled: boolean;
   /**
