@@ -125,6 +125,8 @@ export const bestRollLeaderboardEntrySchema = z.object({
   totalEP: z.number(),
   rarity: rarityTierSchema.or(z.string()),
   rolledAt: isoDateSchema,
+  /** All-Time Best Roll only — Free / Ranked / Challenge lane. */
+  source: z.enum(['client', 'ranked', 'challenge']).optional(),
 });
 
 export const bestRollLeaderboardResponseSchema = z.object({

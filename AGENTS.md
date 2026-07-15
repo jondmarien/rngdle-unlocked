@@ -160,7 +160,7 @@ Vite resolves `.js` → `.ts` fine. Keep this pattern when adding game modules u
 - Auth: Better Auth session via `apiGuards` / `getSessionUser` (typed username/role — no `as` casts for session fields).
 - Rate limits: `server/rateLimit.ts` via `rateGuard` — soft API burst guards, **not** free-play gameplay locks.
   - There is **no** hourly free-play roll-upload cap (removed).
-  - Ranked still has `rankedRollsPerHour` (server cost).
+  - Ranked still has `rankedRollsPerHour` (**180**/h UTC; server cost; shared `RANKED_ROLLS_PER_HOUR`).
 - Prefer keeping handler graphs esbuild-friendly (static imports) so `scripts/bundle-api.mjs` can emit one `.js` per entry. Dynamic `import()` of local modules is avoided for the Vercel prebundle path.
 - **Vercel deploy:** `buildCommand` is `pnpm build:vercel` — after the SPA build, `scripts/bundle-api.mjs` esbuild-bundles each `api/**/*.ts` into `api/_bundles/**` (underscore dir is ignored for function discovery). On `VERCEL=1`, each `api/**/*.ts` becomes a thin `@ts-nocheck` stub importing the matching bundle. Do not colocate `export { default } from './name.js'` next to `name.ts` (TS2303 circular alias under NodeNext). Do not delete `.ts` entry paths (Vercel already registered them). Local `vercel dev` / `bundle:api` keep real TypeScript sources; do not commit `api/_bundles/` or `api/**/*.js`.
 

@@ -25,6 +25,7 @@ import { RarityBadge } from '../components/RarityBadge';
 import {
   laneFromSource,
   RelativeTime,
+  RollLaneChip,
   RollMetaLine,
 } from '../components/RollRow';
 import { SegmentedToggle } from '../components/SegmentedToggle';
@@ -632,6 +633,11 @@ export function LeaderboardScreen({
                   <span className="ml-2 rounded bg-(--prose) px-1.5 py-0.5 text-xs text-(--bg)">
                     you
                   </span>
+                  {view === 'alltime' && bestMe.source && (
+                    <span className="ml-2 inline-flex align-middle">
+                      <RollLaneChip lane={laneFromSource(bestMe.source)} />
+                    </span>
+                  )}
                 </span>
                 <span className="text-sm text-(--prose-2)">
                   {bestMe.number.toLocaleString()} ·{' '}
@@ -811,10 +817,15 @@ export function LeaderboardScreen({
                         <div className="mono-number text-lg font-bold">
                           {e.number.toLocaleString()}
                         </div>
-                        <RelativeTime
-                          iso={e.rolledAt}
-                          className="text-[11px] text-(--prose-3)"
-                        />
+                        <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                          {view === 'alltime' && e.source && (
+                            <RollLaneChip lane={laneFromSource(e.source)} />
+                          )}
+                          <RelativeTime
+                            iso={e.rolledAt}
+                            className="text-[11px] text-(--prose-3)"
+                          />
+                        </div>
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">

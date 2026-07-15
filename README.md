@@ -197,7 +197,7 @@ Switch modes anytime (board fully resets). Badges, EP, history, and share work a
 - **Mythic / anomaly / divine** auto-open share after reveal (optional setting)
 - **Prove this roll** — optional server HMAC seal (`/api/attest`) for claims
 - **Dynamic OG** — `/api/og` PNG cards for Discord/social (SVG is not supported by Discord); bot rewrite of `/u/:user` → profile OG HTML
-- **Soft rate limits** on sync, Ranked rolls (~90/h), and public APIs
+- **Soft rate limits** on sync, Ranked rolls (~180/h), and public APIs
 - **Discord / GitHub OAuth** — wired in app; finish portal + env via [`docs/oauth-setup.md`](./docs/oauth-setup.md)
 
 ### Planned later / in progress

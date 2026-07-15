@@ -1,9 +1,13 @@
 import { rateCheckUtcHour, requireUser } from '../../server/apiGuards.js';
-import { createDb } from '../../server/db/index.js';
+import {
+  createDb,
+  isNeonRttCountEnabled,
+  runWithNeonRttCount,
+} from '../../server/db/index.js';
 import { createLogger } from '../../server/logger.js';
 import { LIMITS } from '../../server/rateLimit.js';
 import { rankedRollRateKey } from '../../server/rankedQuota.js';
-import { getUsername, issueRankedRoll } from '../../server/rankedRoll.js';
+import { getPublicIdentity, issueRankedRoll } from '../../server/rankedRoll.js';
 import { defineHandler } from '../../server/vercel-adapter.js';
 
 const log = createLogger('api/ranked-roll');
@@ -17,6 +21,10 @@ export const config = {
  * POST /api/ranked-roll
  * Auth + public username required.
  * Server CSPRNG free-play roll that counts for leaderboard / community crowns.
+ *
+ * Neon statement/RTT target after auth (dev/preview counter):
+ * - no crown win ≈ 3–4 (quota + identity + CTE persist + UNION ALL tops)
+ * - crown win ≈ 4–6 (+ prev #1 + system/overtake writes)
  */
 export default defineHandler(async (request) => {
   if (request.method !== 'POST') {
@@ -30,33 +38,59 @@ export default defineHandler(async (request) => {
     const userId = gate.user.id;
     userIdForLog = userId;
 
-    const db = createDb();
+    const countEnabled = isNeonRttCountEnabled();
+    const {
+      result: response,
+      count,
+      labels,
+    } = await runWithNeonRttCount(
+      async () => {
+        const db = createDb();
 
-    const limited = await rateCheckUtcHour(
-      db,
-      rankedRollRateKey(userId),
-      LIMITS.rankedRollsPerHour,
-      { error: 'Ranked roll rate limit — try again later' },
+        const limited = await rateCheckUtcHour(
+          db,
+          rankedRollRateKey(userId),
+          LIMITS.rankedRollsPerHour,
+          { error: 'Ranked roll rate limit — try again later' },
+        );
+        if (!limited.ok) {
+          log.warn('rate limited', { userId });
+          return limited.response;
+        }
+
+        const identity = await getPublicIdentity(db, userId);
+        if (!identity) {
+          return Response.json(
+            {
+              error:
+                'Claim a public @username on Account before Ranked free play (required for the board).',
+              code: 'username_required',
+            },
+            { status: 400 },
+          );
+        }
+
+        const roll = await issueRankedRoll(db, {
+          userId,
+          username: identity.username,
+          name: identity.name,
+        });
+        return Response.json({ roll, quota: limited.result.quota });
+      },
+      { enabled: countEnabled },
     );
-    if (!limited.ok) {
-      log.warn('rate limited', { userId });
-      return limited.response;
+
+    if (countEnabled) {
+      log.info('ranked neon rtt', {
+        userId: userIdForLog,
+        count,
+        labels,
+        targetNoCrown: '3-4',
+        targetCrownWin: '4-6',
+      });
     }
 
-    const username = await getUsername(db, userId);
-    if (!username) {
-      return Response.json(
-        {
-          error:
-            'Claim a public @username on Account before Ranked free play (required for the board).',
-          code: 'username_required',
-        },
-        { status: 400 },
-      );
-    }
-
-    const roll = await issueRankedRoll(db, { userId });
-    return Response.json({ roll, quota: limited.result.quota });
+    return response;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     const stack = err instanceof Error ? err.stack : undefined;
