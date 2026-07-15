@@ -35,7 +35,7 @@ Instructions for AI coding agents and humans working in this repository.
 - **Ranked** (`?scope=ranked`): sum public `source=ranked` rolls.
 - **Practice** (`?scope=practice`): public non-ranked rolls (`source != ranked`) for all-time and week.
 - **All-Time** (`?scope=alltime`): synced overall lifetime from `user_progress` (Free + Ranked + Challenge + journey EP); badges sort lives here.
-- **Metric view** (`?view=total|best`, default `total`): Total EP or Best Roll (`sortBy=ep|rarity`) — one personal best per player; All-Time Best Roll uses any public roll.
+- **Metric view** (`?view=total|best`, default `total`): Total EP or Best Roll (`sortBy=ep|rarity`) — one personal best per player; All-Time Best Roll uses any public roll and may include `source` for Free / Ranked / Challenge lane chips (v0.17+).
 - **Arcade** (`GET /api/arcade/leaderboard`): best Digits run score — separate from EP; UI tab on Leaderboard (mode-first: Ranked | Practice | All-Time | Arcade | Feed | Find).
 
 ### Feed & history lanes
@@ -130,7 +130,7 @@ See [`.env.example`](./.env.example). Typical vars:
 ### 5.1 Client vs server RNG
 
 - **Free play:** `performRoll()` / `rollNumber()` in the browser. Trust model is honor-system for Practice board.
-- **Ranked:** only `issueRankedRoll` / `POST /api/ranked-roll`. Score on server with the same badge catalog.
+- **Ranked:** only `issueRankedRoll` / `POST /api/ranked-roll`. Score on server with the same badge catalog. Persist is a CTE (`rolls` + `user_progress`); crowns use one `UNION ALL` tops query (v0.17+).
 - **Challenges:** `buildPeriodSeed` + `challengeNumber(seed, subjectId)` — deterministic, re-runnable.
 
 Never claim “proof of honest client RNG” for Free play. Attestation (`/api/attest`) seals a **claim**, not honest CSPRNG.
@@ -317,6 +317,7 @@ These four checks require a **manual browser smoke** — automated `pnpm test` /
 - Prefer small, focused commits with complete sentences in messages.
 - Do not force-push `main` unless the user explicitly requests it.
 - Version in `package.json` (currently **0.17.0**); Settings footer reads `VITE_APP_VERSION` from the build.
+- Feature → release map: README **Status & roadmap** (keep in sync when cutting releases).
 - Releases: annotated tags (`v0.x.y`) + `gh release create` when the user asks.
 
 ---
