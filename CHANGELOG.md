@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.7] - 2026-07-15
+
+### Added
+
+- **Leaderboard → All-Time** — new EP board tab ranking synced overall lifetime progress from `user_progress` (Free + Ranked + Challenge + journey EP). Hosts Total · Badges sort; Best Roll uses any public roll.
+
+### Changed
+
+- **Leaderboard → Practice all-time** — now sums public non-ranked rolls (`source != ranked`), matching Practice week. No longer ranks combined `user_progress` totals.
+- Copy across Leaderboard, Roll mode picker, About, README, AGENTS, and ARCHITECTURE clarifies Ranked / Practice / All-Time vs combined top-left HUD + journey achievements.
+
 ## [0.16.6] - 2026-07-15
 
 ### Changed

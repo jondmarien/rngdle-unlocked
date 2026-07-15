@@ -32,6 +32,26 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Practice stays practice — meet the All-Time board',
+    date: '2026-07-15',
+    version: '0.16.7',
+    tags: ['Board', 'Practice', 'All-Time'],
+    content: [
+      {
+        body: 'Leaderboard → Practice now counts only public Free play and challenge rolls. Your combined lifetime totals live on a new All-Time tab — the same overall progress as the top-left rolls · EP counter.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'Clearer boards — Ranked stays competitive, Practice is practice, All-Time is everything synced.',
+        bullets: [
+          '**Practice** — Free play + challenge rolls only (all-time and this week).',
+          '**All-Time** — synced overall lifetime EP, rolls, and badge collection (includes Ranked).',
+          '**Top-left HUD** — still combined lifetime; journey achievements still use that total.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Sharper Section Mastery seals and clearer Ranked quota colors',
     date: '2026-07-15',
     version: '0.16.6',

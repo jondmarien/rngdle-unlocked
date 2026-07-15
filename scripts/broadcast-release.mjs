@@ -12,11 +12,11 @@ if (!process.env.DATABASE_URL) {
 const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
-const title =
-  'New Update! v0.16.6 — Sharper Section Mastery seals & Ranked quota colors';
+const title = 'New Update! v0.16.7 — Practice stays practice + All-Time board';
 const body = [
-  'All thirteen Section Mastery seals in the Codex now use the same embossed full-art style as profile avatars.',
-  'The Ranked rolls remaining pill turns yellow under 10, orange under 5, and red under 3.',
+  'Leaderboard → Practice now counts only public Free play and challenge rolls.',
+  'A new All-Time tab shows your synced overall lifetime totals — the same idea as the top-left rolls · EP counter.',
+  'Ranked stays competitive; journey achievements still use combined lifetime progress.',
   'Read the full player notes: https://rngdle-unlocked.chron0.tech/whats-new',
   'Open: /whats-new',
 ].join(' ');

@@ -7,8 +7,8 @@
 | **Repo**                   | `jondmarien/rngdle-unlocked`                                                  |
 | **Live**                   | https://rngdle-unlocked.chron0.tech                                           |
 | **Branch**                 | `main` (auto-deploys Vercel)                                                  |
-| **Version**                | `0.16.6` (`package.json`; Settings uses `VITE_APP_VERSION`)                   |
-| **Latest release**         | [v0.16.6](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.16.6) |
+| **Version**                | `0.16.7` (`package.json`; Settings uses `VITE_APP_VERSION`)                   |
+| **Latest release**         | [v0.16.7](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.16.7) |
 | **Handoff commit context** | Opus audit refactor (`aa8e91e`…`fc4fa65` on `main`) + prior P0/P1 wave        |
 
 ---
@@ -253,6 +253,7 @@ node scripts/add-roll-source.mjs   # if source column missing
 - [x] **v0.16.0** — Arcade Deadline, Idle Digits, trash soft-fail; Epic+ settle FX on Arcade
 - [x] **v0.16.2** — Motion polish (shop/Codex/layout), conventions + skill, embossed profile avatars
 - [x] **v0.16.3** — Route-level screen entrance; Codex filter chip layout shift + uniform pill sizing
+- [x] **v0.16.7** — Practice Free-only (public non-ranked rolls); Leaderboard → All-Time for synced overall lifetime; top-left/journey stay combined
 - [x] **v0.16.6** — Section Mastery seals full-art refresh; Ranked quota pill yellow/orange/red by remaining
 - [x] **v0.16.5** — Mobile vibration feedback; UTC today/week + Ranked hour resets; optional Settings cloud sync (opt-in)
 - [x] **v0.16.4** — Cold lazy tab settle; Codex chip row flush grid; Latest Runs fixed-rail portal (no centered flash)
