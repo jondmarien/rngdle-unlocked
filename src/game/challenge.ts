@@ -38,6 +38,29 @@ export function utcWeekKey(d = new Date()): string {
   return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
 }
 
+/** Start of the UTC calendar day containing `d`. */
+export function startOfUtcDay(d = new Date()): Date {
+  return new Date(
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()),
+  );
+}
+
+/** Start of the UTC ISO week (Monday 00:00 UTC) containing `d`. */
+export function startOfUtcIsoWeek(d = new Date()): Date {
+  const day = d.getUTCDay() || 7; // Mon=1 … Sun=7
+  const mondayOffset = day - 1;
+  return new Date(
+    Date.UTC(
+      d.getUTCFullYear(),
+      d.getUTCMonth(),
+      d.getUTCDate() - mondayOffset,
+      0,
+      0,
+      0,
+    ),
+  );
+}
+
 function endOfUtcDay(d = new Date()): Date {
   return new Date(
     Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1, 0, 0, 0),

@@ -139,9 +139,9 @@ export function AboutScreen() {
           <li>
             <strong className="text-(--prose)">Community bests</strong> — on an
             idle Roll tab (no session roll yet), see Ranked · Today&apos;s best,
-            Ranked · Best this week, and Ranked · All-time best from Ranked
-            (server) free-play rolls. They hide while you spin so your result
-            stays center stage.
+            Ranked · Best this week (UTC ISO week), and Ranked · All-time best
+            from Ranked (server) free-play rolls. They hide while you spin so
+            your result stays center stage.
           </li>
           <li>
             <strong className="text-(--prose)">Badges</strong> — number

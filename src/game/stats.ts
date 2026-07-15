@@ -5,6 +5,7 @@ import type {
   RollResult,
 } from './types.js';
 import { rollToHighlight } from './types.js';
+import { utcDateKey } from './challenge.js';
 
 const QUALITY: RarityTier[] = [
   'uncommon',
@@ -105,8 +106,8 @@ export function bumpLifetimeRarity(
 }
 
 function dayDiff(a: string, b: string): number {
-  const da = new Date(a + 'T12:00:00');
-  const db = new Date(b + 'T12:00:00');
+  const da = new Date(a + 'T12:00:00.000Z');
+  const db = new Date(b + 'T12:00:00.000Z');
   return Math.round((db.getTime() - da.getTime()) / 86_400_000);
 }
 
@@ -117,7 +118,7 @@ export function applyStreaks(
   now = new Date(),
 ): PlayStats {
   const next = { ...stats };
-  const today = localDateKey(now);
+  const today = utcDateKey(now);
 
   // Quality streak
   if (isQualityRarity(roll.rarity)) {

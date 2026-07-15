@@ -77,18 +77,18 @@ export function CommunityHighlights({
     <div className={`mx-auto grid w-full max-w-4xl gap-3 ${gridCols}`}>
       {data.today && (
         <HighlightCard
-          label="Ranked · Today's best"
+          label="Ranked · Today's best (UTC)"
           roll={data.today}
-          footer={`${data.todayRollCount.toLocaleString()} today`}
+          footer={`${data.todayRollCount.toLocaleString()} today (UTC)`}
           onOpenProfile={onOpenProfile}
           onOpenRoll={onOpenRoll}
         />
       )}
       {data.week && (
         <HighlightCard
-          label="Ranked · Best this week"
+          label="Ranked · Best this week (UTC)"
           roll={data.week}
-          footer={`${data.weekRollCount.toLocaleString()} this week`}
+          footer={`${data.weekRollCount.toLocaleString()} this week (UTC)`}
           onOpenProfile={onOpenProfile}
           onOpenRoll={onOpenRoll}
         />

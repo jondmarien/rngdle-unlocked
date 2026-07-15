@@ -20,7 +20,7 @@ const MODES: {
     label: 'Ranked',
     short: 'Server RNG · competitive',
     detail:
-      'Server-issued free-play rolls. Requires sign-in and a public @username. Soft cap ~90 Ranked rolls/hour (server cost). These are the only free-play rolls that place on Leaderboard → Ranked, claim today/week/all-time community crowns, and trigger overtake alerts. Fair competition.',
+      'Server-issued free-play rolls. Requires sign-in and a public @username. Soft cap ~90 Ranked rolls per UTC hour (server cost; resets at :00 UTC). These are the only free-play rolls that place on Leaderboard → Ranked, claim today/week/all-time community crowns (UTC day / UTC ISO week), and trigger overtake alerts. Fair competition.',
   },
   {
     id: 'daily',

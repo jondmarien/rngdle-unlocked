@@ -4,6 +4,8 @@ import {
   challengeKeyForPeriod,
   challengeNumber,
   findChallengeRollForPeriod,
+  startOfUtcDay,
+  startOfUtcIsoWeek,
   utcDateKey,
   utcWeekKey,
 } from './challenge';
@@ -19,6 +21,18 @@ describe('challenge seeds', () => {
     expect(daily.seed).toBe('rngdle:daily:2026-07-08');
     expect(daily.periodKey).toBe('2026-07-08');
     expect(challengeKeyForPeriod('daily', d)).toBe('daily:2026-07-08');
+  });
+
+  it('startOfUtcDay / startOfUtcIsoWeek use UTC calendar boundaries', () => {
+    const wed = new Date('2026-07-08T15:00:00.000Z'); // Wednesday
+    expect(startOfUtcDay(wed).toISOString()).toBe('2026-07-08T00:00:00.000Z');
+    expect(startOfUtcIsoWeek(wed).toISOString()).toBe(
+      '2026-07-06T00:00:00.000Z',
+    ); // Monday
+    const sun = new Date('2026-07-12T01:00:00.000Z');
+    expect(startOfUtcIsoWeek(sun).toISOString()).toBe(
+      '2026-07-06T00:00:00.000Z',
+    );
   });
 
   it('challengeNumber is deterministic and in range', async () => {

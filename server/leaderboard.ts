@@ -9,6 +9,7 @@ import {
   ne,
   sql,
 } from 'drizzle-orm';
+import { startOfUtcIsoWeek } from '../src/game/challenge.js';
 import { RARITY_ORDER } from '../src/game/rarity.js';
 import { createAuth } from './auth.js';
 import type { Db } from './db/index.js';
@@ -219,9 +220,9 @@ async function bestRollBoard(
     friendsExtras: FriendsExtras;
   },
 ) {
-  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const weekStart = startOfUtcIsoWeek(new Date());
   const periodFilter =
-    opts.period === 'week' ? gte(rolls.rolledAt, weekAgo) : undefined;
+    opts.period === 'week' ? gte(rolls.rolledAt, weekStart) : undefined;
   const scopeFilter =
     opts.scope === 'ranked' ? rankedRollFilters() : practiceRollFilters();
   const friendsFilter =
@@ -327,9 +328,9 @@ async function rankedBoard(
     friendsExtras: FriendsExtras;
   },
 ) {
-  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const weekStart = startOfUtcIsoWeek(new Date());
   const periodFilter =
-    opts.period === 'week' ? gte(rolls.rolledAt, weekAgo) : undefined;
+    opts.period === 'week' ? gte(rolls.rolledAt, weekStart) : undefined;
   const friendsFilter =
     opts.friendIds != null ? inArray(rolls.userId, opts.friendIds) : undefined;
 
@@ -413,7 +414,7 @@ async function practiceBoard(
 ) {
   // Week: public free-play / challenge activity (not ranked competitive)
   if (opts.period === 'week') {
-    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const weekStart = startOfUtcIsoWeek(new Date());
     const friendsFilter =
       opts.friendIds != null
         ? inArray(rolls.userId, opts.friendIds)
@@ -430,7 +431,7 @@ async function practiceBoard(
       .innerJoin(user, eq(user.id, rolls.userId))
       .where(
         and(
-          gte(rolls.rolledAt, weekAgo),
+          gte(rolls.rolledAt, weekStart),
           practiceRollFilters(),
           ...(friendsFilter ? [friendsFilter] : []),
         ),

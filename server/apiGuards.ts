@@ -9,6 +9,7 @@ import { createDb } from './db/index.js';
 import { user as userTable } from './db/schema.js';
 import {
   checkRateLimit,
+  checkRateLimitUtcHour,
   isRateLimited,
   rateLimitedResponse,
   type RateLimitBlocked,
@@ -118,6 +119,27 @@ export async function rateCheck(
   options?: RateGuardOptions,
 ): Promise<RateCheckResult> {
   const rl: RateLimitResult = await checkRateLimit(db, key, limit, windowMs);
+  if (!isRateLimited(rl)) return { ok: true, result: rl };
+  const error =
+    typeof options?.error === 'function' ? options.error(rl) : options?.error;
+  return {
+    ok: false,
+    response: rateLimitedResponse(
+      rl,
+      error,
+      options?.withRetryAfterHeader ?? true,
+    ),
+  };
+}
+
+/** Ranked rolls/hour — calendar UTC hour window (resets at :00:00Z). */
+export async function rateCheckUtcHour(
+  db: Db,
+  key: string,
+  limit: number,
+  options?: RateGuardOptions,
+): Promise<RateCheckResult> {
+  const rl: RateLimitResult = await checkRateLimitUtcHour(db, key, limit);
   if (!isRateLimited(rl)) return { ok: true, result: rl };
   const error =
     typeof options?.error === 'function' ? options.error(rl) : options?.error;

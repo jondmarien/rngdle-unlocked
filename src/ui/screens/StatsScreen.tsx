@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { RarityTier } from '../../game';
-import { RARITY_LABELS, RARITY_ORDER, localDateKey } from '../../game';
+import { RARITY_LABELS, RARITY_ORDER, utcDateKey } from '../../game';
 import { emptyRarityCounts } from '../../game/stats';
 import { RARITY_BAR } from '../../lib/badge-theme';
 import { useGame } from '../../state/GameProvider';
@@ -35,18 +35,19 @@ export function StatsScreen() {
     const days: { key: string; rolls: number; ep: number }[] = [];
     const byDay = new Map<string, { rolls: number; ep: number }>();
     for (const r of history) {
-      const key = localDateKey(new Date(r.rolledAt));
+      const key = utcDateKey(new Date(r.rolledAt));
       const cur = byDay.get(key) ?? { rolls: 0, ep: 0 };
       cur.rolls += 1;
       cur.ep += r.totalEP;
       byDay.set(key, cur);
     }
-    // Last 28 local days
+    // Last 28 UTC calendar days
     const now = new Date();
     for (let i = 27; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - i);
-      const key = localDateKey(d);
+      const d = new Date(
+        Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - i),
+      );
+      const key = utcDateKey(d);
       const v = byDay.get(key) ?? { rolls: 0, ep: 0 };
       days.push({ key, ...v });
     }
@@ -153,7 +154,7 @@ export function StatsScreen() {
           Streak calendar
         </h2>
         <p className="mb-3 text-xs text-(--prose-3)">
-          Last 28 local days — intensity by roll count in history.
+          Last 28 UTC days — intensity by roll count in history.
         </p>
         <div className="grid grid-cols-7 gap-1">
           {calendar.days.map((d) => {

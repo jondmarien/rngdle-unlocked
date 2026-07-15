@@ -91,6 +91,8 @@ export {
   findChallengeRollForPeriod,
   utcDateKey,
   utcWeekKey,
+  startOfUtcDay,
+  startOfUtcIsoWeek,
   type ChallengeInfo,
   type ChallengeKind,
 } from './challenge.js';

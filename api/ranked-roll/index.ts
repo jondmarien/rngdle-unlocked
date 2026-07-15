@@ -1,11 +1,8 @@
-import { rateCheck, requireUser } from '../../server/apiGuards.js';
+import { rateCheckUtcHour, requireUser } from '../../server/apiGuards.js';
 import { createDb } from '../../server/db/index.js';
 import { createLogger } from '../../server/logger.js';
 import { LIMITS } from '../../server/rateLimit.js';
-import {
-  RANKED_ROLL_WINDOW_MS,
-  rankedRollRateKey,
-} from '../../server/rankedQuota.js';
+import { rankedRollRateKey } from '../../server/rankedQuota.js';
 import { getUsername, issueRankedRoll } from '../../server/rankedRoll.js';
 import { defineHandler } from '../../server/vercel-adapter.js';
 
@@ -35,11 +32,10 @@ export default defineHandler(async (request) => {
 
     const db = createDb();
 
-    const limited = await rateCheck(
+    const limited = await rateCheckUtcHour(
       db,
       rankedRollRateKey(userId),
       LIMITS.rankedRollsPerHour,
-      RANKED_ROLL_WINDOW_MS,
       { error: 'Ranked roll rate limit — try again later' },
     );
     if (!limited.ok) {

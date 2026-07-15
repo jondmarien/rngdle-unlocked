@@ -1,4 +1,5 @@
 import { and, desc, eq, gte, isNotNull, ne } from 'drizzle-orm';
+import { startOfUtcDay, startOfUtcIsoWeek } from '../src/game/challenge.js';
 import { NUMBER_BADGES } from '../src/game/badges/catalog.js';
 import { JOURNEY_BADGES } from '../src/game/journey.js';
 import { LIFETIME_EP_BADGES } from '../src/game/lifetimeEp.js';
@@ -9,7 +10,7 @@ import { rolls, systemMessages, user } from './db/schema.js';
 import { createLogger } from './logger.js';
 import { createNotification } from './notifications.js';
 
-/** Community crown windows: calendar day, rolling week, all-time (general). */
+/** Community crown windows: UTC calendar day, UTC ISO week, all-time. */
 type CrownPeriod = 'today' | 'week' | 'alltime';
 
 const log = createLogger('roll-activity');
@@ -147,7 +148,7 @@ async function maybeBroadcastCommunityBests(
 
   const now = Date.now();
   const dayStart = startOfUtcDay(new Date(now));
-  const weekStart = new Date(now - 7 * 24 * 60 * 60 * 1000);
+  const weekStart = startOfUtcIsoWeek(new Date(now));
 
   const base = {
     championUserId: opts.userId,
@@ -374,10 +375,4 @@ function summarizeBadges(roll: RollResult): string {
   } catch {
     return '';
   }
-}
-
-function startOfUtcDay(d: Date): Date {
-  return new Date(
-    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()),
-  );
 }

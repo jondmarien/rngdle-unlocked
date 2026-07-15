@@ -101,6 +101,98 @@ export async function peekRateLimit(
   return activeQuota(limit, row.count, start, windowMs, now);
 }
 
+/** Floor `now` to the start of its UTC calendar hour. */
+export function startOfUtcHourMs(now = Date.now()): number {
+  const d = new Date(now);
+  return Date.UTC(
+    d.getUTCFullYear(),
+    d.getUTCMonth(),
+    d.getUTCDate(),
+    d.getUTCHours(),
+    0,
+    0,
+    0,
+  );
+}
+
+const UTC_HOUR_MS = 3_600_000;
+
+/**
+ * Read-only view of a calendar-UTC-hour counter.
+ * Window starts at :00:00.000Z and ends at the next UTC hour.
+ */
+export async function peekRateLimitUtcHour(
+  db: Db,
+  key: string,
+  limit: number,
+): Promise<RateLimitQuota> {
+  const now = Date.now();
+  const hourStart = startOfUtcHourMs(now);
+  const [row] = await db
+    .select()
+    .from(rateLimits)
+    .where(eq(rateLimits.key, key))
+    .limit(1);
+
+  if (!row || row.windowStart.getTime() < hourStart) {
+    return fullQuota(limit);
+  }
+
+  return activeQuota(limit, row.count, hourStart, UTC_HOUR_MS, now);
+}
+
+/**
+ * Calendar-UTC-hour fixed window (resets at each :00:00.000Z).
+ * Used for Ranked rolls/hour — not for soft burst limits.
+ */
+export async function checkRateLimitUtcHour(
+  db: Db,
+  key: string,
+  limit: number,
+): Promise<RateLimitResult> {
+  const now = Date.now();
+  const hourStart = startOfUtcHourMs(now);
+  const [row] = await db
+    .select()
+    .from(rateLimits)
+    .where(eq(rateLimits.key, key))
+    .limit(1);
+
+  if (!row || row.windowStart.getTime() < hourStart) {
+    if (!row) {
+      await db.insert(rateLimits).values({
+        key,
+        windowStart: new Date(hourStart),
+        count: 1,
+      });
+    } else {
+      await db
+        .update(rateLimits)
+        .set({ windowStart: new Date(hourStart), count: 1 })
+        .where(eq(rateLimits.key, key));
+    }
+    const quota = activeQuota(limit, 1, hourStart, UTC_HOUR_MS, now);
+    return { ok: true, remaining: quota.remaining, quota };
+  }
+
+  if (row.count >= limit) {
+    const quota = activeQuota(limit, row.count, hourStart, UTC_HOUR_MS, now);
+    return {
+      ok: false,
+      retryAfterSec: quota.resetsInSec ?? 1,
+      quota,
+    };
+  }
+
+  const nextCount = row.count + 1;
+  await db
+    .update(rateLimits)
+    .set({ count: nextCount })
+    .where(eq(rateLimits.key, key));
+  const quota = activeQuota(limit, nextCount, hourStart, UTC_HOUR_MS, now);
+  return { ok: true, remaining: quota.remaining, quota };
+}
+
 /**
  * Sliding fixed-window counter in Postgres (serverless-safe).
  * key e.g. `user:abc:sync` or `ip:1.2.3.4:leaderboard`

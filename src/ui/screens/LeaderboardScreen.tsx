@@ -548,7 +548,7 @@ export function LeaderboardScreen({
                 chipClassName="rounded-md border px-2 py-1 text-xs font-semibold"
                 options={[
                   { id: 'all', label: 'All-time' },
-                  { id: 'week', label: 'This week' },
+                  { id: 'week', label: 'This week (UTC)' },
                 ]}
                 value={period}
                 onChange={setPeriod}

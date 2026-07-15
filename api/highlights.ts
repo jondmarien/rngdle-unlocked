@@ -1,8 +1,8 @@
 import { and, desc, eq, gte, isNotNull, sql } from 'drizzle-orm';
+import { startOfUtcDay, startOfUtcIsoWeek } from '../src/game/challenge.js';
 import { rateGuard } from '../server/apiGuards.js';
 import { createDb } from '../server/db/index.js';
 import { rolls, user } from '../server/db/schema.js';
-import { requestUrl } from '../server/http.js';
 import { createLogger } from '../server/logger.js';
 import { clientIp, LIMITS } from '../server/rateLimit.js';
 import { defineHandler } from '../server/vercel-adapter.js';
@@ -31,7 +31,7 @@ type HighlightRoll = {
 
 /**
  * Community roll highlights for the home screen.
- * ?tzOffset= minutes from Date.getTimezoneOffset() so “today” matches the client calendar.
+ * Today = UTC calendar day; week = UTC ISO week (Monday 00:00 UTC).
  */
 export default defineHandler(async (request) => {
   if (request.method !== 'GET') {
@@ -49,22 +49,9 @@ export default defineHandler(async (request) => {
     );
     if (limited) return limited;
 
-    const url = requestUrl(request);
-    // Date.getTimezoneOffset(): minutes *behind* UTC (EST = 300)
-    const tzOffset = Number(url.searchParams.get('tzOffset') ?? 0);
-    const offsetMs = Number.isFinite(tzOffset) ? tzOffset * 60_000 : 0;
-
-    const now = Date.now();
-    // Local "now" as wall clock via offset
-    const localNow = new Date(now - offsetMs);
-    const localMidnightUtcMs =
-      Date.UTC(
-        localNow.getUTCFullYear(),
-        localNow.getUTCMonth(),
-        localNow.getUTCDate(),
-      ) + offsetMs;
-    const dayStart = new Date(localMidnightUtcMs);
-    const weekStart = new Date(now - 7 * 24 * 60 * 60 * 1000);
+    const now = new Date();
+    const dayStart = startOfUtcDay(now);
+    const weekStart = startOfUtcIsoWeek(now);
 
     const [
       todayBest,

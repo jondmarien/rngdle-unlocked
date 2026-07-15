@@ -27,15 +27,14 @@ export type HighlightsPayload = {
   allTimeRollCount: number;
 };
 
-/** Community Ranked bests for the home screen (tz-aware "today"). */
+/** Community Ranked bests for the home screen (UTC today / UTC ISO week). */
 export async function fetchHighlights(
   signal?: AbortSignal,
 ): Promise<HighlightsPayload> {
-  const tzOffset = new Date().getTimezoneOffset();
-  const res = await fetch(
-    `/api/highlights?tzOffset=${encodeURIComponent(String(tzOffset))}`,
-    { signal, credentials: 'same-origin' },
-  );
+  const res = await fetch('/api/highlights', {
+    signal,
+    credentials: 'same-origin',
+  });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return (await res.json()) as HighlightsPayload;
 }
