@@ -41,6 +41,8 @@ type BestRollEntry = {
   totalEP: number;
   rarity: string;
   rolledAt: string;
+  /** Present on All-Time Best Roll rows so the UI can show Free / Ranked / Challenge. */
+  source?: 'client' | 'ranked' | 'challenge';
   userId?: string;
 };
 
@@ -234,7 +236,8 @@ export async function leaderboardResponse(
 
 type FriendsExtras = ReturnType<typeof friendsBoardExtras> | null;
 
-function scopeRollFilters(scope: Scope) {
+/** Exported for unit tests — scope → roll filter contract. */
+export function scopeRollFilters(scope: Scope) {
   if (scope === 'ranked') return rankedRollFilters();
   if (scope === 'alltime') return allPublicRollFilters();
   return practiceRollFilters();
@@ -279,6 +282,7 @@ async function bestRollBoard(
       totalEp: rolls.totalEp,
       rarity: rolls.rarity,
       rolledAt: rolls.rolledAt,
+      source: rolls.source,
       rarityRank: sql<number>`${rankExpr}`.mapWith(Number),
     })
     .from(rolls)
@@ -310,19 +314,26 @@ async function bestRollBoard(
       const bt = b.rolledAt instanceof Date ? b.rolledAt.getTime() : 0;
       return at - bt;
     })
-    .map((r, i) => ({
-      rank: i + 1,
-      username: r.username,
-      name: r.name,
-      number: r.number,
-      totalEP: r.totalEp,
-      rarity: r.rarity,
-      rolledAt:
-        r.rolledAt instanceof Date
-          ? r.rolledAt.toISOString()
-          : String(r.rolledAt),
-      userId: r.userId,
-    }));
+    .map((r, i) => {
+      const entry: BestRollEntry = {
+        rank: i + 1,
+        username: r.username,
+        name: r.name,
+        number: r.number,
+        totalEP: r.totalEp,
+        rarity: r.rarity,
+        rolledAt:
+          r.rolledAt instanceof Date
+            ? r.rolledAt.toISOString()
+            : String(r.rolledAt),
+        userId: r.userId,
+      };
+      // Lane chip only on All-Time Best (Free + Ranked + Challenge).
+      if (opts.scope === 'alltime') {
+        entry.source = normalizeRollSource(r.source);
+      }
+      return entry;
+    });
 
   const me = findBestMe(all, opts.meUserId, opts.meUsername);
   const entries = all.slice(0, opts.limit).map(publicBestEntry);
@@ -609,6 +620,13 @@ function publicEntry(e: Entry): Omit<Entry, 'userId'> {
 function publicBestEntry(e: BestRollEntry): Omit<BestRollEntry, 'userId'> {
   const { userId: _u, ...rest } = e;
   return rest;
+}
+
+function normalizeRollSource(
+  raw: string | null | undefined,
+): 'client' | 'ranked' | 'challenge' {
+  if (raw === 'ranked' || raw === 'challenge') return raw;
+  return 'client';
 }
 
 function findMe(

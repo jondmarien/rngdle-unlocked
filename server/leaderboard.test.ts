@@ -7,6 +7,7 @@ import {
   parseScope,
   practiceRollFilters,
   rankedRollFilters,
+  scopeRollFilters,
 } from './leaderboard.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -64,5 +65,28 @@ describe('board pipeline contracts (source)', () => {
     expect(leaderboardSrc).toMatch(
       /scope === 'alltime'\) return allPublicRollFilters/,
     );
+    // Runtime smoke: each scope builds a filter tree (not practice-only for alltime).
+    expect(scopeRollFilters('alltime')).toBeTruthy();
+    expect(scopeRollFilters('practice')).toBeTruthy();
+    expect(scopeRollFilters('ranked')).toBeTruthy();
+    const scopeFn = leaderboardSrc.slice(
+      leaderboardSrc.indexOf('export function scopeRollFilters'),
+      leaderboardSrc.indexOf('async function bestRollBoard'),
+    );
+    expect(scopeFn).toMatch(/alltime.*allPublicRollFilters/s);
+    expect(scopeFn).not.toMatch(/alltime.*practiceRollFilters/);
+  });
+
+  it('bestRollBoard reads rolls.source and exposes it on alltime entries', () => {
+    const bestFn = leaderboardSrc.slice(
+      leaderboardSrc.indexOf('async function bestRollBoard'),
+      leaderboardSrc.indexOf('async function rankedBoard'),
+    );
+    expect(bestFn).toContain('scopeRollFilters(opts.scope)');
+    expect(bestFn).toContain('source: rolls.source');
+    expect(bestFn).toContain("opts.scope === 'alltime'");
+    expect(bestFn).toContain('normalizeRollSource');
+    // Must not hard-filter alltime best to practice-only.
+    expect(bestFn).not.toContain('practiceRollFilters()');
   });
 });

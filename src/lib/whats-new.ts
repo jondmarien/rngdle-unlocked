@@ -32,6 +32,26 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Faster Ranked rolls, bigger hourly room, clearer All-Time Best',
+    date: '2026-07-15',
+    version: '0.17.0',
+    tags: ['Ranked', 'Board', 'Performance'],
+    content: [
+      {
+        body: 'Ranked Generate talks to the database in fewer steps, so settles should feel snappier. You also get about twice as many Ranked rolls per UTC hour — and All-Time Best Roll now shows whether a personal best came from Free, Ranked, or Challenge.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'Same fair Ranked rules — just quicker and roomier.',
+        bullets: [
+          '**Ranked quota** — about **180** Ranked rolls per UTC hour (was ~90); the Home pill still shows `N/limit left`.',
+          '**All-Time → Best Roll** — lane chips mark Free / Ranked / Challenge winners.',
+          '**Crowns & overtakes** — still Ranked-only; inbox alerts still fire when you take a crown.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Practice stays practice — meet the All-Time board',
     date: '2026-07-15',
     version: '0.16.7',

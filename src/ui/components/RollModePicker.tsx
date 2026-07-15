@@ -1,3 +1,4 @@
+import { RANKED_ROLLS_PER_HOUR } from '../../lib/ranked-limits';
 import type { RollMode } from '../../state/GameProvider';
 import { useGameSettings } from '../../state/GameProvider';
 import { SectionHeader } from './SectionHeader';
@@ -19,8 +20,7 @@ const MODES: {
     id: 'ranked',
     label: 'Ranked',
     short: 'Server RNG · competitive',
-    detail:
-      'Server-issued free-play rolls. Requires sign-in and a public @username. Soft cap ~90 Ranked rolls per UTC hour (server cost; resets at :00 UTC). These are the only free-play rolls that place on Leaderboard → Ranked, claim today/week/all-time community crowns (UTC day / UTC ISO week), and trigger overtake alerts. They also count toward your top-left lifetime totals and Leaderboard → All-Time — not Practice. Fair competition.',
+    detail: `Server-issued free-play rolls. Requires sign-in and a public @username. Soft cap ~${RANKED_ROLLS_PER_HOUR} Ranked rolls per UTC hour (server cost; resets at :00 UTC). These are the only free-play rolls that place on Leaderboard → Ranked, claim today/week/all-time community crowns (UTC day / UTC ISO week), and trigger overtake alerts. They also count toward your top-left lifetime totals and Leaderboard → All-Time — not Practice. Fair competition.`,
   },
   {
     id: 'daily',

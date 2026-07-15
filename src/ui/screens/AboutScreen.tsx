@@ -6,6 +6,7 @@ import {
   type RarityTier,
 } from '../../game';
 import { APP_VERSION } from '../../lib/app-version';
+import { RANKED_ROLLS_PER_HOUR } from '../../lib/ranked-limits';
 import { getWhatsNew } from '../../lib/whats-new';
 import { RarityBadge } from '../components/RarityBadge';
 
@@ -469,8 +470,8 @@ export function AboutScreen() {
           <li>
             Daily / Weekly lock after one spin per UTC period. No free-play
             roll-upload cap. Soft rate limits only protect cloud APIs from spam
-            bursts. Ranked is capped at about 90 rolls per hour (server cost);
-            Free play stays unlimited.
+            bursts. Ranked is capped at about {RANKED_ROLLS_PER_HOUR} rolls per
+            hour (server cost); Free play stays unlimited.
           </li>
           <li>
             <strong className="text-(--prose)">Ranked board</strong> —

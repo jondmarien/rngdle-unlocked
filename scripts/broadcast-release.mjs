@@ -12,11 +12,12 @@ if (!process.env.DATABASE_URL) {
 const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
-const title = 'New Update! v0.16.7 — Practice stays practice + All-Time board';
+const title =
+  'New Update! v0.17.0 — Faster Ranked + ~180/h + All-Time Best lanes';
 const body = [
-  'Leaderboard → Practice now counts only public Free play and challenge rolls.',
-  'A new All-Time tab shows your synced overall lifetime totals — the same idea as the top-left rolls · EP counter.',
-  'Ranked stays competitive; journey achievements still use combined lifetime progress.',
+  'Ranked Generate is leaner on the server, so settles should feel snappier.',
+  'Soft Ranked cap is now about 180 rolls per UTC hour (was ~90).',
+  'All-Time → Best Roll shows Free / Ranked / Challenge lane chips on each personal best.',
   'Read the full player notes: https://rngdle-unlocked.chron0.tech/whats-new',
   'Open: /whats-new',
 ].join(' ');

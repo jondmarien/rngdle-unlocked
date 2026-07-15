@@ -1,4 +1,5 @@
 import { eq } from 'drizzle-orm';
+import { RANKED_ROLLS_PER_HOUR } from '../src/lib/ranked-limits.js';
 import type { Db } from './db/index.js';
 import { rateLimits } from './db/schema.js';
 
@@ -263,7 +264,7 @@ export const LIMITS = {
   /** Burst guard on /api/sync only — not a per-roll-hour cap. */
   syncPerMinute: 60,
   /** Server-issued ranked free-play rolls per user per hour. */
-  rankedRollsPerHour: 90,
+  rankedRollsPerHour: RANKED_ROLLS_PER_HOUR,
   /** Soft burst on GET /api/ranked-roll/quota (not the gameplay cap). */
   rankedQuotaPerMinute: 60,
   leaderboardPerMinute: 60,
