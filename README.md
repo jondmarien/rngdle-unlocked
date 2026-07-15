@@ -433,9 +433,9 @@ The Account screen times out after a few seconds and shows the sign-in form. Che
 | Site-wide accent coverage + Prove roll tip placement                      | ✅ Shipped (`v0.14.1`)                                                            |
 | Arcade juice (Digits tween, rarity punch, shop/SFX, Cash Out weight)      | ✅ Shipped (`v0.15.0`)                                                            |
 | Arcade Deadline + Idle Digits + trash soft-fail                           | ✅ Shipped (`v0.16.0`)                                                            |
-| All-Time Best lane chips + Ranked CTE/UNION RTTs + quota ~180/h           | ✅ Shipped (`v0.17.0`)                                                            |
-| Practice Free-only board + Leaderboard All-Time tab                       | ✅ Shipped (`v0.16.7`)                                                            |
 | Section Mastery seal art refresh + Ranked quota pill colors               | ✅ Shipped (`v0.16.6`)                                                            |
+| Practice Free-only board + Leaderboard All-Time tab                       | ✅ Shipped (`v0.16.7`)                                                            |
+| All-Time Best lane chips + Ranked CTE/UNION RTTs + quota ~180/h           | ✅ Shipped (`v0.17.0`)                                                            |
 | Server Ranked free play (`/api/ranked-roll`)                              | ✅ Shipped                                                                        |
 | Profiles (vanity + avatars) + follows                                     | ✅ Shipped                                                                        |
 | Activity unlocks + Ranked crown msgs + overtake notifs                    | ✅ Shipped                                                                        |
