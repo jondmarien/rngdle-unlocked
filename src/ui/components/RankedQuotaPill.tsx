@@ -56,24 +56,28 @@ export function RankedQuotaPill() {
 
   if (quota == null) return null;
 
-  const low = quota.remaining <= 10;
+  const remaining = quota.remaining;
+  const tone =
+    remaining < 3
+      ? 'border-red-500/70 text-red-600 dark:text-red-400'
+      : remaining < 5
+        ? 'border-orange-500/70 text-orange-600 dark:text-orange-400'
+        : remaining < 10
+          ? 'border-yellow-500/70 text-yellow-700 dark:text-yellow-400'
+          : 'border-(--outline) text-(--prose-2)';
   const resetLabel =
     quota.resetsInSec != null ? formatRankedResetsIn(quota.resetsInSec) : null;
 
   return (
     <span
-      className={`max-w-full truncate rounded-md border px-2.5 py-1 ${
-        low
-          ? 'border-amber-500/70 text-amber-600'
-          : 'border-(--outline) text-(--prose-2)'
-      }`}
+      className={`max-w-full truncate rounded-md border px-2.5 py-1 ${tone}`}
       title={
         resetLabel
-          ? `${quota.remaining}/${quota.limit} Ranked rolls left · ${resetLabel}`
-          : `${quota.remaining}/${quota.limit} Ranked rolls left this hour`
+          ? `${remaining}/${quota.limit} Ranked rolls left · ${resetLabel}`
+          : `${remaining}/${quota.limit} Ranked rolls left this hour`
       }
     >
-      {quota.remaining}/{quota.limit} left
+      {remaining}/{quota.limit} left
       {resetLabel ? (
         <span className="ml-1.5 opacity-80">· {resetLabel}</span>
       ) : null}
