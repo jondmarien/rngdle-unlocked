@@ -8,7 +8,7 @@ Inspired by the daily number-game genre, but **unlocked**: roll as often as you 
 
 **[Live Site](https://rngdle-unlocked.chron0.tech)**
 
-[![Version](https://img.shields.io/badge/version-0.16.5-8b5cf6)](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.16.5)
+[![Version](https://img.shields.io/badge/version-0.16.6-8b5cf6)](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.16.6)
 [![React 19](https://img.shields.io/badge/UI-React_19-61dafb?logo=react&logoColor=black)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/lang-TypeScript_7-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite 6](https://img.shields.io/badge/build-Vite_Plus-646cff?logo=vite&logoColor=white)](https://vitejs.dev)
@@ -433,6 +433,7 @@ The Account screen times out after a few seconds and shows the sign-in form. Che
 | Site-wide accent coverage + Prove roll tip placement                      | ✅ Shipped (`v0.14.1`)                                                            |
 | Arcade juice (Digits tween, rarity punch, shop/SFX, Cash Out weight)      | ✅ Shipped (`v0.15.0`)                                                            |
 | Arcade Deadline + Idle Digits + trash soft-fail                           | ✅ Shipped (`v0.16.0`)                                                            |
+| Section Mastery seal art refresh + Ranked quota pill colors               | ✅ Shipped (`v0.16.6`)                                                            |
 | Server Ranked free play (`/api/ranked-roll`)                              | ✅ Shipped                                                                        |
 | Profiles (vanity + avatars) + follows                                     | ✅ Shipped                                                                        |
 | Activity unlocks + Ranked crown msgs + overtake notifs                    | ✅ Shipped                                                                        |

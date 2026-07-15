@@ -32,6 +32,25 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Sharper Section Mastery seals and clearer Ranked quota colors',
+    date: '2026-07-15',
+    version: '0.16.6',
+    tags: ['Codex', 'UI', 'Ranked'],
+    content: [
+      {
+        body: 'Section Mastery seals in the Codex get the same embossed full-art treatment as profile avatars, and the Ranked rolls remaining pill shifts color as you run low.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'Art and UI polish — no rule changes.',
+        bullets: [
+          '**Section Mastery art** — all thirteen seals (Voidwalker, Pattern Weaver, Periodic Crown, and the rest) are denser embossed plates.',
+          '**Ranked quota pill** — yellow under 10 remaining, orange under 5, red under 3.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Mobile vibration, UTC resets, and optional Settings sync',
     date: '2026-07-15',
     version: '0.16.5',
