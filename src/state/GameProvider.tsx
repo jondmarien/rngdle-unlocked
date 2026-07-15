@@ -251,7 +251,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     persist,
     onSecretUnlocks: setLastSecretUnlocks,
   });
-  const { enqueueAutoSync, pullFromCloud } = sync;
+  const { enqueueAutoSync, enqueueSettingsSync, pullFromCloud } = sync;
 
   /** Auto-pull cloud on signed-out → signed-in (merge-safe; never blocks auth). */
   const wasLoggedInRef = useRef(Boolean(session?.user));
@@ -306,7 +306,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
         });
       }
       if (loggedInRef.current) {
-        enqueueAutoSync(toCloudPayload(next));
+        enqueueAutoSync(
+          toCloudPayload(next, {
+            settingsSyncEnabled: sync.settingsSyncEnabled,
+          }),
+        );
       }
       return next;
     });
@@ -351,7 +355,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
         secretsEP,
       });
       if (loggedInRef.current) {
-        enqueueAutoSync(toCloudPayload(next));
+        enqueueAutoSync(
+          toCloudPayload(next, {
+            settingsSyncEnabled: sync.settingsSyncEnabled,
+          }),
+        );
       }
       return next;
     });
@@ -571,7 +579,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
           willAutoSync: loggedInRef.current,
         });
 
-        enqueueAutoSync(toCloudPayload(next));
+        enqueueAutoSync(
+          toCloudPayload(next, {
+            settingsSyncEnabled: sync.settingsSyncEnabled,
+          }),
+        );
 
         return {
           roll: result,
@@ -623,7 +635,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
       });
 
       // Fire-and-forget cloud push when signed in (share links + leaderboards stay live)
-      enqueueAutoSync(toCloudPayload(next));
+      enqueueAutoSync(
+        toCloudPayload(next, {
+          settingsSyncEnabled: sync.settingsSyncEnabled,
+        }),
+      );
 
       return {
         roll: result,
@@ -644,7 +660,15 @@ export function GameProvider({ children }: { children: ReactNode }) {
       rollInFlightRef.current = false;
       setRolling(false);
     }
-  }, [enqueueAutoSync, persist, queryClient, rolling, rollMode, session?.user]);
+  }, [
+    enqueueAutoSync,
+    persist,
+    queryClient,
+    rolling,
+    rollMode,
+    session?.user,
+    sync.settingsSyncEnabled,
+  ]);
 
   const attestRoll = useCallback(
     async (rollResult: RollResult): Promise<AttestRollResult> => {
@@ -725,8 +749,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
         persist(next);
         return next;
       });
+      enqueueSettingsSync();
     },
-    [persist],
+    [persist, enqueueSettingsSync],
   );
 
   const selectRoll = useCallback((rollResult: RollResult | null) => {
@@ -896,17 +921,23 @@ export function GameProvider({ children }: { children: ReactNode }) {
       syncing: sync.syncing,
       lastSyncAt: sync.lastSyncAt,
       syncError: sync.syncError,
+      settingsSyncEnabled: sync.settingsSyncEnabled,
+      setSettingsSyncEnabledFlag: sync.setSettingsSyncEnabledFlag,
       syncToCloud: sync.syncToCloud,
       pullFromCloud: sync.pullFromCloud,
       waitForCloudPublish: sync.waitForCloudPublish,
+      enqueueSettingsSync: sync.enqueueSettingsSync,
     }),
     [
       sync.syncing,
       sync.lastSyncAt,
       sync.syncError,
+      sync.settingsSyncEnabled,
+      sync.setSettingsSyncEnabledFlag,
       sync.syncToCloud,
       sync.pullFromCloud,
       sync.waitForCloudPublish,
+      sync.enqueueSettingsSync,
     ],
   );
 

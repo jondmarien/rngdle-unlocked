@@ -118,6 +118,7 @@ export async function issueRankedRoll(
         collectionJson: '[]',
         statsJson: '{}',
         settingsJson: '{}',
+        settingsSyncEnabled: false,
         updatedAt: now,
       })
       .onConflictDoUpdate({

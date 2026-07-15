@@ -21,6 +21,7 @@ export type MeUser = {
 export type MePayload = {
   user?: MeUser | null;
   linkedAccounts?: LinkedAccount[];
+  settingsSyncEnabled?: boolean;
 };
 
 export type MePatch = {
@@ -30,6 +31,7 @@ export type MePatch = {
   profileFlair?: string;
   profileAvatar?: string;
   profileShowCodex?: boolean;
+  settingsSyncEnabled?: boolean;
 };
 
 /** GET /api/me — vanity fields, username, linked OAuth providers. */
@@ -39,7 +41,9 @@ export async function fetchMe(): Promise<MePayload> {
 }
 
 /** PATCH /api/me — throws with the server's error message on failure. */
-export async function patchMe(patch: MePatch): Promise<{ username?: string }> {
+export async function patchMe(
+  patch: MePatch,
+): Promise<{ username?: string; settingsSyncEnabled?: boolean }> {
   const res = await withTimeout(
     fetch('/api/me', {
       method: 'PATCH',
@@ -50,7 +54,11 @@ export async function patchMe(patch: MePatch): Promise<{ username?: string }> {
     FETCH_MS,
     'PATCH /api/me',
   );
-  const data = (await res.json()) as { error?: string; username?: string };
+  const data = (await res.json()) as {
+    error?: string;
+    username?: string;
+    settingsSyncEnabled?: boolean;
+  };
   if (!res.ok) {
     log.warn('patch failed', { status: res.status, error: data.error });
     throw new Error(data.error ?? 'Failed');

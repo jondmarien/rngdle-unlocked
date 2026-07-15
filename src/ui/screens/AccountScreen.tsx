@@ -29,8 +29,15 @@ export function AccountScreen({
   onOpenAdmin?: () => void;
 } = {}) {
   const { data: session, isPending, error, refetch } = useSession();
-  const { syncToCloud, pullFromCloud, lastSyncAt, syncError, syncing } =
-    useCloudSync();
+  const {
+    syncToCloud,
+    pullFromCloud,
+    lastSyncAt,
+    syncError,
+    syncing,
+    settingsSyncEnabled,
+    setSettingsSyncEnabledFlag,
+  } = useCloudSync();
   const { confirmAsync } = useFeedback();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [emailAuthTab, setEmailAuthTab] = useState<'magic' | 'password'>(
@@ -104,6 +111,7 @@ export function AccountScreen({
         setProfileAvatar(normalizeProfileAvatar(data.user.profileAvatar));
         setProfileShowCodex(data.user.profileShowCodex !== false);
         setLinkedAccounts(data.linkedAccounts ?? []);
+        setSettingsSyncEnabledFlag(Boolean(data.settingsSyncEnabled));
       })
       .catch(() => {
         /* ignore */
@@ -111,7 +119,7 @@ export function AccountScreen({
     return () => {
       cancelled = true;
     };
-  }, [session?.user?.id]);
+  }, [session?.user?.id, setSettingsSyncEnabledFlag]);
 
   useEffect(() => {
     if (!isPending) {
@@ -889,7 +897,75 @@ export function AccountScreen({
             <p className="text-xs text-(--prose-3)">
               While signed in, every new roll is auto-pushed to the cloud
               (merge-safe). Manual pull/push still available for catch-up.
+              Settings stay on this device unless you opt in below.
             </p>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={settingsSyncEnabled}
+                disabled={busy || syncing}
+                onChange={(e) => {
+                  void (async () => {
+                    const next = e.target.checked;
+                    setBusy(true);
+                    setMsg(null);
+                    try {
+                      if (!next) {
+                        await patchMe({ settingsSyncEnabled: false });
+                        setSettingsSyncEnabledFlag(false);
+                        setMsg('Settings sync turned off. Cloud copy kept.');
+                        return;
+                      }
+                      const { fetchCloudSave } =
+                        await import('../../lib/sync-api');
+                      // Enable gate first, then decide first-sync direction.
+                      await patchMe({ settingsSyncEnabled: true });
+                      setSettingsSyncEnabledFlag(true);
+                      const { cloud } = await fetchCloudSave();
+                      const hasCloudPrefs = Boolean(
+                        cloud?.settings && cloud.settingsUpdatedAt,
+                      );
+                      if (!hasCloudPrefs) {
+                        await syncToCloud();
+                        setMsg('Settings sync on — this device uploaded.');
+                        return;
+                      }
+                      const useCloud = await confirmAsync({
+                        title: 'Cloud settings found',
+                        body: 'This account already has synced settings. Use cloud prefs on this device, or keep this device and overwrite the cloud?',
+                        confirmLabel: 'Use cloud',
+                        cancelLabel: 'Keep this device',
+                      });
+                      if (useCloud) {
+                        await pullFromCloud();
+                        setMsg('Applied cloud settings to this device.');
+                      } else {
+                        await syncToCloud();
+                        setMsg('Uploaded this device’s settings to the cloud.');
+                      }
+                    } catch (err) {
+                      setMsg(
+                        err instanceof Error
+                          ? err.message
+                          : 'Could not update settings sync',
+                      );
+                      // Revert optimistic UI if enable failed mid-flight
+                      try {
+                        const me = await fetchMe();
+                        setSettingsSyncEnabledFlag(
+                          Boolean(me.settingsSyncEnabled),
+                        );
+                      } catch {
+                        /* ignore */
+                      }
+                    } finally {
+                      setBusy(false);
+                    }
+                  })();
+                }}
+              />
+              Sync Settings across devices (optional)
+            </label>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"

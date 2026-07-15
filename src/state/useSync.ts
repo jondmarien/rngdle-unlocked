@@ -30,12 +30,31 @@ import {
   type SyncDeltaPayload,
 } from './syncMeta';
 import { mergeCollection, mergeHistory, mergeStats } from '../lib/sync-merge';
+import { pickSyncableSettings } from '../lib/syncable-settings';
 
 const log = createLogger('game');
 const AUTO_SYNC_DEBOUNCE_MS = 12_000;
+const SETTINGS_SYNC_DEBOUNCE_MS = 1_000;
 
-export function toCloudPayload(s: PersistedState): CloudSavePayload {
-  return {
+const SETTINGS_UPDATED_AT_KEY = 'rngdle-unlocked:v1:settingsUpdatedAt';
+
+function readSettingsUpdatedAt(): string {
+  if (typeof localStorage === 'undefined') return new Date().toISOString();
+  return (
+    localStorage.getItem(SETTINGS_UPDATED_AT_KEY) ?? new Date().toISOString()
+  );
+}
+
+function writeSettingsUpdatedAt(iso: string): void {
+  if (typeof localStorage === 'undefined') return;
+  localStorage.setItem(SETTINGS_UPDATED_AT_KEY, iso);
+}
+
+export function toCloudPayload(
+  s: PersistedState,
+  opts?: { settingsSyncEnabled?: boolean },
+): CloudSavePayload {
+  const base: CloudSavePayload = {
     lifetimeEP: s.lifetimeEP,
     lifetimeRollCount: s.lifetimeRollCount,
     journeyEP: s.journeyEP,
@@ -43,6 +62,11 @@ export function toCloudPayload(s: PersistedState): CloudSavePayload {
     stats: s.stats,
     history: s.history,
   };
+  if (opts?.settingsSyncEnabled) {
+    base.settings = pickSyncableSettings(s.settings);
+    base.settingsUpdatedAt = readSettingsUpdatedAt();
+  }
+  return base;
 }
 
 function mergeLocalWithCloud(
@@ -66,16 +90,23 @@ export type SyncControls = {
   syncing: boolean;
   lastSyncAt: string | null;
   syncError: string | null;
+  settingsSyncEnabled: boolean;
+  setSettingsSyncEnabledFlag: (enabled: boolean) => void;
   syncToCloud: () => Promise<void>;
   pullFromCloud: (opts?: { quietEmpty?: boolean }) => Promise<void>;
   /** Wait until roll is visible via public API (or fail). Logged-out → 'logged-out'. */
   waitForCloudPublish: (
     roll: RollResult,
   ) => Promise<'ok' | 'error' | 'logged-out'>;
+  /** Debounced push of settings when opted in (call after local settings change). */
+  enqueueSettingsSync: () => void;
 };
 
 export type SyncEngine = SyncControls & {
-  applyCloudPayload: (cloud: CloudSavePayload) => void;
+  applyCloudPayload: (
+    cloud: CloudSavePayload,
+    opts?: { applySettings?: boolean },
+  ) => void;
   /** Background push after rolls when signed in (does not block the roll UI). */
   enqueueAutoSync: (payload: CloudSavePayload) => void;
 };
@@ -97,14 +128,23 @@ export function useSync(opts: {
   const [syncing, setSyncing] = useState(false);
   const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [settingsSyncEnabled, setSettingsSyncEnabledState] = useState(false);
+  const settingsSyncEnabledRef = useRef(false);
+  settingsSyncEnabledRef.current = settingsSyncEnabled;
+
+  const setSettingsSyncEnabledFlag = useCallback((enabled: boolean) => {
+    settingsSyncEnabledRef.current = enabled;
+    setSettingsSyncEnabledState(enabled);
+  }, []);
 
   /** Coalesce rapid auto-syncs so spam-rolling doesn't race the server. */
   const autoSyncChain = useRef(Promise.resolve());
   const latestAutoPayload = useRef<CloudSavePayload | null>(null);
   const autoSyncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const settingsSyncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const applyCloudPayload = useCallback(
-    (cloud: CloudSavePayload) => {
+    (cloud: CloudSavePayload, opts?: { applySettings?: boolean }) => {
       const at = new Date().toISOString();
       const history = cloud.history;
       const stats = finalizeStatsFromHistory(cloud.stats, history);
@@ -131,6 +171,13 @@ export function useSync(opts: {
           stats,
           history,
         };
+        if (opts?.applySettings && cloud.settings && cloud.settingsUpdatedAt) {
+          next.settings = {
+            ...prev.settings,
+            ...pickSyncableSettings(cloud.settings),
+          };
+          writeSettingsUpdatedAt(cloud.settingsUpdatedAt);
+        }
         persist(next);
         return next;
       });
@@ -263,11 +310,14 @@ export function useSync(opts: {
       let guard = 0;
       while (guard < 20) {
         guard += 1;
-        const payload = toCloudPayload(stateRef.current);
+        const payload = toCloudPayload(stateRef.current, {
+          settingsSyncEnabled: settingsSyncEnabledRef.current,
+        });
         const pending = buildDeltaPayload(payload, loadSyncMeta());
         if (
           pending.history.length === 0 &&
           pending.collection.length === 0 &&
+          !pending.settings &&
           guard > 1
         ) {
           break;
@@ -277,6 +327,7 @@ export function useSync(opts: {
           upserted: ack.counts.historyUpserted,
           pending: pending.history.length,
         });
+        if (pending.history.length < 60 && !pending.settings) break;
         if (pending.history.length < 60) break;
       }
       setSyncError(null);
@@ -296,7 +347,12 @@ export function useSync(opts: {
       setSyncError(null);
       log.info('pullFromCloud:start');
       try {
-        const { cloud, updatedAt } = await fetchCloudSave();
+        const {
+          cloud,
+          updatedAt,
+          settingsSyncEnabled: flag,
+        } = await fetchCloudSave();
+        setSettingsSyncEnabledFlag(flag);
         if (!cloud) {
           log.warn('pullFromCloud:empty');
           if (!opts?.quietEmpty) {
@@ -306,7 +362,11 @@ export function useSync(opts: {
         }
         const local = stateRef.current;
         const merged = mergeLocalWithCloud(local, cloud);
-        applyCloudPayload(merged);
+        if (flag && cloud.settings && cloud.settingsUpdatedAt) {
+          merged.settings = cloud.settings;
+          merged.settingsUpdatedAt = cloud.settingsUpdatedAt;
+        }
+        applyCloudPayload(merged, { applySettings: flag });
 
         // Seed cursor; mark cloud history as acked so we don't re-upload it.
         // Local-only rolls stay unacked and drain via follow-up delta.
@@ -320,7 +380,11 @@ export function useSync(opts: {
 
         if (localOnly.length > 0) {
           // Upload device-local exclusives as delta — never full 500 POST.
-          enqueueAutoSync(merged);
+          enqueueAutoSync(
+            toCloudPayload(stateRef.current, {
+              settingsSyncEnabled: flag,
+            }),
+          );
         }
 
         log.info('pullFromCloud:ok', {
@@ -335,8 +399,22 @@ export function useSync(opts: {
         setSyncing(false);
       }
     },
-    [applyCloudPayload, enqueueAutoSync, stateRef],
+    [applyCloudPayload, enqueueAutoSync, setSettingsSyncEnabledFlag, stateRef],
   );
+
+  const enqueueSettingsSync = useCallback(() => {
+    if (!loggedInRef.current || !settingsSyncEnabledRef.current) return;
+    const iso = new Date().toISOString();
+    writeSettingsUpdatedAt(iso);
+    if (settingsSyncTimer.current) clearTimeout(settingsSyncTimer.current);
+    settingsSyncTimer.current = setTimeout(() => {
+      settingsSyncTimer.current = null;
+      const payload = toCloudPayload(stateRef.current, {
+        settingsSyncEnabled: true,
+      });
+      enqueueAutoSync(payload);
+    }, SETTINGS_SYNC_DEBOUNCE_MS);
+  }, [enqueueAutoSync, loggedInRef, stateRef]);
 
   const waitForCloudPublish = useCallback(
     async (roll: RollResult): Promise<'ok' | 'error' | 'logged-out'> => {
@@ -350,7 +428,9 @@ export function useSync(opts: {
 
       try {
         setSyncing(true);
-        const base = toCloudPayload(stateRef.current);
+        const base = toCloudPayload(stateRef.current, {
+          settingsSyncEnabled: settingsSyncEnabledRef.current,
+        });
         const withRoll = base.history.some((r) => r.id === roll.id)
           ? base
           : {
@@ -389,8 +469,11 @@ export function useSync(opts: {
     syncing,
     lastSyncAt,
     syncError,
+    settingsSyncEnabled,
+    setSettingsSyncEnabledFlag,
     applyCloudPayload,
     enqueueAutoSync,
+    enqueueSettingsSync,
     syncToCloud,
     pullFromCloud,
     waitForCloudPublish,

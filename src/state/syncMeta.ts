@@ -63,6 +63,8 @@ export type DeltaBuildInput = {
   collection: CollectionEntry[];
   stats: PlayStats;
   history: RollResult[];
+  settings?: Partial<import('../game/types').AppSettings>;
+  settingsUpdatedAt?: string;
 };
 
 export type SyncDeltaPayload = {
@@ -74,6 +76,8 @@ export type SyncDeltaPayload = {
   collection: CollectionEntry[];
   stats: PlayStats;
   history: RollResult[];
+  settings?: Partial<import('../game/types').AppSettings>;
+  settingsUpdatedAt?: string;
 };
 
 /** Build a compact delta from local state + ack cursor. */
@@ -102,6 +106,12 @@ export function buildDeltaPayload(
     collection,
     stats: state.stats,
     history,
+    ...(state.settings && state.settingsUpdatedAt
+      ? {
+          settings: state.settings,
+          settingsUpdatedAt: state.settingsUpdatedAt,
+        }
+      : {}),
   };
 }
 

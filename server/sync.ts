@@ -19,6 +19,13 @@ import { rolls, userProgress } from './db/schema.js';
 import { createLogger } from './logger.js';
 import { processRollActivity } from './rollActivity.js';
 import { assertSyncIntegrity } from './syncIntegrity.js';
+import {
+  mergeSettingsLww,
+  parseCloudSettingsJson,
+  pickSyncableSettings,
+  serializeCloudSettingsBlob,
+  type CloudSettingsBlob,
+} from './syncSettings.js';
 
 const log = createLogger('sync');
 
@@ -60,6 +67,9 @@ export type CloudSavePayload = {
   collection: CollectionEntry[];
   stats: PlayStats;
   history: RollResult[];
+  /** Present only when settings_sync_enabled; allowlisted prefs + LWW stamp. */
+  settings?: Partial<import('../src/game/types.js').AppSettings>;
+  settingsUpdatedAt?: string;
 };
 
 /**
@@ -97,6 +107,8 @@ export const cloudSavePayloadSchema = z.looseObject({
     .nullish(),
   stats: z.looseObject({}).nullish(),
   history: z.array(cloudRollSchema),
+  settings: z.looseObject({}).nullish(),
+  settingsUpdatedAt: z.string().nullish(),
 });
 
 /** Cap how many roll rows we write per sync (keeps Vercel under timeout). */
@@ -136,6 +148,8 @@ export const syncDeltaPayloadSchema = z.object({
   collection: z.array(collectionEntrySchema).default([]),
   stats: z.looseObject({}).optional(),
   history: z.array(cloudRollSchema).max(UPSERT_CAP),
+  settings: z.looseObject({}).optional(),
+  settingsUpdatedAt: z.string().optional(),
 });
 
 export type SyncDeltaPayload = z.infer<typeof syncDeltaPayloadSchema>;
@@ -171,6 +185,7 @@ export function toSyncAck(
 export type CloudSaveLoad = {
   cloud: CloudSavePayload;
   updatedAt: string;
+  settingsSyncEnabled: boolean;
 };
 
 export async function loadCloudSave(
@@ -230,6 +245,24 @@ export async function loadCloudSave(
     stats = defaultPlayStats();
   }
 
+  const settingsSyncEnabled = Boolean(row.settingsSyncEnabled);
+  const cloud: CloudSavePayload = {
+    lifetimeEP: row.lifetimeEp,
+    lifetimeRollCount: row.lifetimeRollCount,
+    journeyEP: row.journeyEp,
+    collection: Array.isArray(collection) ? collection : [],
+    stats,
+    history,
+  };
+
+  if (settingsSyncEnabled) {
+    const blob = parseCloudSettingsJson(row.settingsJson);
+    if (blob) {
+      cloud.settings = blob.prefs;
+      cloud.settingsUpdatedAt = blob.updatedAt;
+    }
+  }
+
   const updatedAt =
     row.updatedAt instanceof Date
       ? row.updatedAt.toISOString()
@@ -237,14 +270,8 @@ export async function loadCloudSave(
 
   return {
     updatedAt,
-    cloud: {
-      lifetimeEP: row.lifetimeEp,
-      lifetimeRollCount: row.lifetimeRollCount,
-      journeyEP: row.journeyEp,
-      collection: Array.isArray(collection) ? collection : [],
-      stats,
-      history,
-    },
+    settingsSyncEnabled,
+    cloud,
   };
 }
 
@@ -349,6 +376,31 @@ export async function saveCloudMerge(
         history: mergeHistory(local.history, []),
       };
 
+  const settingsSyncEnabled = loaded?.settingsSyncEnabled === true;
+  let settingsJsonWrite: string | undefined;
+  if (settingsSyncEnabled) {
+    const localBlob: CloudSettingsBlob | null =
+      local.settings && local.settingsUpdatedAt
+        ? {
+            updatedAt: local.settingsUpdatedAt,
+            prefs: pickSyncableSettings(local.settings),
+          }
+        : null;
+    const cloudBlob: CloudSettingsBlob | null =
+      cloud?.settings && cloud.settingsUpdatedAt
+        ? {
+            updatedAt: cloud.settingsUpdatedAt,
+            prefs: pickSyncableSettings(cloud.settings),
+          }
+        : null;
+    const winner = mergeSettingsLww(localBlob, cloudBlob);
+    if (winner) {
+      settingsJsonWrite = serializeCloudSettingsBlob(winner);
+      merged.settings = winner.prefs;
+      merged.settingsUpdatedAt = winner.updatedAt;
+    }
+  }
+
   const now = new Date();
   const updatedAt = now.toISOString();
   await db
@@ -360,7 +412,8 @@ export async function saveCloudMerge(
       journeyEp: merged.journeyEP,
       collectionJson: JSON.stringify(merged.collection ?? []),
       statsJson: JSON.stringify(merged.stats ?? defaultPlayStats()),
-      settingsJson: '{}',
+      settingsJson: settingsJsonWrite ?? '{}',
+      settingsSyncEnabled: false,
       updatedAt: now,
     })
     .onConflictDoUpdate({
@@ -371,6 +424,9 @@ export async function saveCloudMerge(
         journeyEp: merged.journeyEP,
         collectionJson: JSON.stringify(merged.collection ?? []),
         statsJson: JSON.stringify(merged.stats ?? defaultPlayStats()),
+        ...(settingsJsonWrite != null
+          ? { settingsJson: settingsJsonWrite }
+          : {}),
         updatedAt: now,
       },
     });
@@ -477,4 +533,50 @@ export async function saveCloudMerge(
   }
 
   return { merged, updatedAt, historyUpserted: wrote };
+}
+
+/** Read the settings sync opt-in gate (default false). */
+export async function getSettingsSyncEnabled(
+  db: Db,
+  userId: string,
+): Promise<boolean> {
+  const [row] = await db
+    .select({ enabled: userProgress.settingsSyncEnabled })
+    .from(userProgress)
+    .where(eq(userProgress.userId, userId))
+    .limit(1);
+  return Boolean(row?.enabled);
+}
+
+/**
+ * Set the settings sync opt-in gate. Does not touch settings_json.
+ * Ensures a user_progress row exists.
+ */
+export async function setSettingsSyncEnabled(
+  db: Db,
+  userId: string,
+  enabled: boolean,
+): Promise<boolean> {
+  const now = new Date();
+  await db
+    .insert(userProgress)
+    .values({
+      userId,
+      lifetimeEp: 0,
+      lifetimeRollCount: 0,
+      journeyEp: 0,
+      collectionJson: '[]',
+      statsJson: '{}',
+      settingsJson: '{}',
+      settingsSyncEnabled: enabled,
+      updatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: userProgress.userId,
+      set: {
+        settingsSyncEnabled: enabled,
+        updatedAt: now,
+      },
+    });
+  return enabled;
 }

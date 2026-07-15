@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Vibration feedback (mobile)** — Web Vibration API pulses on Home Generate / Arcade actions (Settings → Vibration feedback). Default on for new installs; existing devices keep off until enabled. Silent no-op where unsupported (incl. Safari).
+- **Optional Settings cloud sync** — Account → Cloud sync opt-in (`settings_sync_enabled`, default off). LWW allowlisted prefs; never automatic. Empty cloud uploads this device; existing cloud prefs prompt Use cloud / Keep this device. Additive migration: `scripts/migrate-settings-sync.mjs`.
 
 ### Changed
 

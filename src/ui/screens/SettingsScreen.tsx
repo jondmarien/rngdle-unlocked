@@ -115,9 +115,10 @@ export function SettingsScreen() {
           Show Latest runs on the Roll tab
         </label>
         <p className="text-xs text-(--prose-3)">
-          Scroll, share, and Latest runs prefs save on this device
-          (localStorage). Auto-share is off by default so a quick re-roll never
-          steals a popup.
+          Scroll, share, Latest runs, and vibration prefs save on this device
+          (localStorage). Optional cloud sync for Settings lives under Account →
+          Cloud sync (off by default). Auto-share is off by default so a quick
+          re-roll never steals a popup.
         </p>
       </section>
 

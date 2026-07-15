@@ -6,6 +6,10 @@ import { user } from '../server/db/schema.js';
 import { getLinkedSocialAccounts } from '../server/linkedAccounts.js';
 import { createLogger } from '../server/logger.js';
 import { LIMITS } from '../server/rateLimit.js';
+import {
+  getSettingsSyncEnabled,
+  setSettingsSyncEnabled,
+} from '../server/sync.js';
 import { isValidUsername, normalizeUsername } from '../server/username.js';
 import { defineHandler } from '../server/vercel-adapter.js';
 
@@ -68,6 +72,10 @@ export default defineHandler(async (request) => {
         .where(eq(user.id, session.user.id))
         .limit(1);
       const linkedAccounts = await getLinkedSocialAccounts(db, session.user.id);
+      const settingsSyncEnabled = await getSettingsSyncEnabled(
+        db,
+        session.user.id,
+      );
       return Response.json({
         user: {
           ...session.user,
@@ -78,12 +86,14 @@ export default defineHandler(async (request) => {
           profileAvatar: row?.profileAvatar ?? '',
           profileShowCodex: row?.profileShowCodex ?? true,
         },
+        settingsSyncEnabled,
         linkedAccounts,
         session: session.session,
       });
     } catch {
       return Response.json({
         user: session.user,
+        settingsSyncEnabled: false,
         linkedAccounts: [],
         session: session.session,
       });
@@ -110,9 +120,19 @@ export default defineHandler(async (request) => {
       profileFlair?: string;
       profileAvatar?: string;
       profileShowCodex?: boolean;
+      settingsSyncEnabled?: boolean;
     }>(request);
     if (!parsed.ok) return parsed.response;
     const body = parsed.body;
+
+    let settingsSyncEnabledOut: boolean | undefined;
+    if (body.settingsSyncEnabled !== undefined) {
+      settingsSyncEnabledOut = await setSettingsSyncEnabled(
+        db,
+        me.id,
+        Boolean(body.settingsSyncEnabled),
+      );
+    }
 
     const patch: {
       username?: string;
@@ -190,18 +210,29 @@ export default defineHandler(async (request) => {
       patch.profileBio === undefined &&
       patch.profileFlair === undefined &&
       patch.profileAvatar === undefined &&
-      patch.profileShowCodex === undefined
+      patch.profileShowCodex === undefined &&
+      settingsSyncEnabledOut === undefined
     ) {
       return Response.json({ error: 'Nothing to update' }, { status: 400 });
     }
 
-    try {
-      await db.update(user).set(patch).where(eq(user.id, me.id));
-    } catch {
-      return Response.json(
-        { error: 'Username taken or invalid' },
-        { status: 409 },
-      );
+    const hasVanityPatch =
+      patch.username !== undefined ||
+      patch.profileAccent !== undefined ||
+      patch.profileBio !== undefined ||
+      patch.profileFlair !== undefined ||
+      patch.profileAvatar !== undefined ||
+      patch.profileShowCodex !== undefined;
+
+    if (hasVanityPatch) {
+      try {
+        await db.update(user).set(patch).where(eq(user.id, me.id));
+      } catch {
+        return Response.json(
+          { error: 'Username taken or invalid' },
+          { status: 409 },
+        );
+      }
     }
 
     const [row] = await db
@@ -209,6 +240,9 @@ export default defineHandler(async (request) => {
       .from(user)
       .where(eq(user.id, me.id))
       .limit(1);
+
+    const settingsSyncEnabled =
+      settingsSyncEnabledOut ?? (await getSettingsSyncEnabled(db, me.id));
 
     return Response.json({
       ok: true,
@@ -218,6 +252,7 @@ export default defineHandler(async (request) => {
       profileFlair: row?.profileFlair ?? '',
       profileAvatar: row?.profileAvatar ?? '',
       profileShowCodex: row?.profileShowCodex ?? true,
+      settingsSyncEnabled,
     });
   }
 

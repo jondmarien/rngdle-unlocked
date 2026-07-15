@@ -27,6 +27,8 @@ function normalizeLocalPayload(body: CloudSavePayload): CloudSavePayload {
     collection: Array.isArray(body.collection) ? body.collection : [],
     stats: body.stats,
     history: body.history ?? [],
+    settings: body.settings,
+    settingsUpdatedAt: body.settingsUpdatedAt,
   };
 }
 
@@ -56,6 +58,7 @@ export default defineHandler(async (request) => {
       return Response.json({
         cloud: loaded?.cloud ?? null,
         updatedAt: loaded?.updatedAt ?? null,
+        settingsSyncEnabled: loaded?.settingsSyncEnabled ?? false,
       });
     }
 
@@ -122,6 +125,8 @@ export default defineHandler(async (request) => {
           collection: d.collection as CloudSavePayload['collection'],
           stats: d.stats as CloudSavePayload['stats'],
           history: d.history as CloudSavePayload['history'],
+          settings: d.settings as CloudSavePayload['settings'],
+          settingsUpdatedAt: d.settingsUpdatedAt,
         };
       } else {
         const validated = cloudSavePayloadSchema.safeParse(parsed.body);

@@ -89,6 +89,10 @@ export const userProgress = pgTable('user_progress', {
   collectionJson: text('collection_json').notNull().default('[]'),
   statsJson: text('stats_json').notNull().default('{}'),
   settingsJson: text('settings_json').notNull().default('{}'),
+  /** Opt-in gate for cloud settings sync — never infer from settings_json. */
+  settingsSyncEnabled: boolean('settings_sync_enabled')
+    .notNull()
+    .default(false),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 

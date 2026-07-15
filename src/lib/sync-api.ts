@@ -12,6 +12,14 @@ export type CloudSavePayload = {
   collection: CollectionEntry[];
   stats: PlayStats;
   history: RollResult[];
+  settings?: Partial<import('../game/types').AppSettings>;
+  settingsUpdatedAt?: string;
+};
+
+export type CloudSaveFetch = {
+  cloud: CloudSavePayload | null;
+  updatedAt: string | null;
+  settingsSyncEnabled: boolean;
 };
 
 export type SyncAck = {
@@ -26,11 +34,6 @@ export type SyncAck = {
   };
 };
 
-export type CloudSaveFetch = {
-  cloud: CloudSavePayload | null;
-  updatedAt: string | null;
-};
-
 export async function fetchCloudSave(): Promise<CloudSaveFetch> {
   return log.time('GET /api/sync', async () => {
     const res = await withTimeout(
@@ -39,7 +42,9 @@ export async function fetchCloudSave(): Promise<CloudSaveFetch> {
       'fetchCloudSave',
     );
     log.debug('status', { status: res.status });
-    if (res.status === 401) return { cloud: null, updatedAt: null };
+    if (res.status === 401) {
+      return { cloud: null, updatedAt: null, settingsSyncEnabled: false };
+    }
     if (!res.ok) {
       const text = await res.text();
       log.error('pull failed', { status: res.status, text });
@@ -48,14 +53,17 @@ export async function fetchCloudSave(): Promise<CloudSaveFetch> {
     const data = (await res.json()) as {
       cloud: CloudSavePayload | null;
       updatedAt?: string | null;
+      settingsSyncEnabled?: boolean;
     };
     log.info('pull ok', {
       hasCloud: Boolean(data.cloud),
       rolls: data.cloud?.lifetimeRollCount,
+      settingsSyncEnabled: Boolean(data.settingsSyncEnabled),
     });
     return {
       cloud: data.cloud,
       updatedAt: data.updatedAt ?? null,
+      settingsSyncEnabled: Boolean(data.settingsSyncEnabled),
     };
   });
 }
