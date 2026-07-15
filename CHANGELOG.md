@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Ranked quota pill** — warn by remaining rolls: yellow under 10, orange under 5, red under 3.
+- **Section Mastery seals** — all 13 Codex plates under `public/secrets/` regenerated to embossed full-art square chassis style (matching profile avatars / journey / lifetime). Same paths and ids; no catalog wiring changes.
 
 ## [0.16.5] - 2026-07-15
 
