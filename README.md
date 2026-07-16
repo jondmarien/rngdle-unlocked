@@ -51,6 +51,7 @@ Unlike a classic daily lock, you can roll **unlimited** times. Progress defaults
 - [Architecture notes](#-architecture-notes) · [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)
 - [FAQ / troubleshooting](#-faq--troubleshooting)
 - [Status & roadmap](#-status--roadmap)
+- [What's next](#-whats-next)
 
 ## 🔭 How it works
 
@@ -404,6 +405,8 @@ The Account screen times out after a few seconds and shows the sign-in form. Che
 
 Version tags match [`CHANGELOG.md`](./CHANGELOG.md) / GitHub releases. Status is only **Shipped** / **Later** — details stay in the Area column.
 
+![Shipped roadmap timeline from v0.2.0 through v0.17.0, plus Turnstile / EP velocity marked Later](./docs/assets/roadmap-shipped.png)
+
 | Area                                                                      | Status                         |
 | ------------------------------------------------------------------------- | ------------------------------ |
 | Solo unlimited playground                                                 | ✅ Shipped (`v0.2.0`)          |
@@ -453,6 +456,12 @@ Version tags match [`CHANGELOG.md`](./CHANGELOG.md) / GitHub releases. Status is
 | Practice Free-only board + Leaderboard All-Time tab                       | ✅ Shipped (`v0.16.7`)         |
 | All-Time Best lane chips + Ranked CTE/UNION RTTs + quota ~180/h           | ✅ Shipped (`v0.17.0`)         |
 | Turnstile / EP velocity                                                   | 🔮 Later                       |
+
+## 🔮 What's next
+
+Community Features board ideas not yet on the shipped timeline. Maturity differs: one item is scoped enough to build; three are still idea-stage.
+
+![What's next: Discord bot (scoped) and three idea-stage features](./docs/assets/roadmap-whats-next.png)
 
 Design docs:
 

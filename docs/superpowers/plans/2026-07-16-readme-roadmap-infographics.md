@@ -1,8 +1,10 @@
 # Plan: README companion roadmap infographics (Part A + Part B)
 
 **Date:** 2026-07-16  
-**Status:** Awaiting confirmation before image generation  
-**Branch:** `jondmarien/readme-roadmap-infographics-4b52`
+**Status:** Confirmed 2026-07-16 — proceed with generation  
+**Branch:** `jondmarien/readme-roadmap-infographics-4b52`  
+**Confirmed:** counts 46/35/1, layout A1, placement above table, title softening, `docs/assets/` paths  
+**Override:** #6 — use Cursor `GenerateImage` (Grok), not programmatic HTML→PNG
 
 ---
 
@@ -248,13 +250,13 @@ Every label below must appear verbatim (no paraphrasing, no omitted rows):
 
 ---
 
-## Confirmation checklist (please affirm before generation)
+## Confirmation checklist (resolved 2026-07-16)
 
-1. **Source counts:** Proceed with README reality — **46 shipped / 35 versions / 1 Later** (not 45 / 21)?
-2. **Part A layout:** Approve **A1 era-clustered card grid** (vs A2 wrapping timeline / A3 vertical ladder)?
-3. **Part A placement:** Image **above** the table?
-4. **Part B titles:** Soften `Discord bot!!!` → `Discord bot`; Title-Case the Ranked board title?
-5. **Assets path:** `docs/assets/roadmap-shipped.png` + `docs/assets/roadmap-whats-next.png`?
-6. **Render method:** Programmatic HTML → PNG (exact text), not generative fill?
+1. **Source counts:** ✅ 46 shipped / 35 versions / 1 Later
+2. **Part A layout:** ✅ A1 era-clustered card grid
+3. **Part A placement:** ✅ Above the table
+4. **Part B titles:** ✅ Soften Discord bot; Title-Case Ranked title
+5. **Assets path:** ✅ `docs/assets/`
+6. **Render method:** ✅ **Override** — Cursor `GenerateImage` (Grok), not programmatic HTML→PNG
 
-Once confirmed, execute U1→U4 with no further product invention.
+Shipped: U1–U3 complete (assets + README wired).
