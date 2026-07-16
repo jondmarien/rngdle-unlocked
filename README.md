@@ -407,6 +407,9 @@ Version tags match [`CHANGELOG.md`](./CHANGELOG.md) / GitHub releases. Status is
 
 ![Shipped roadmap timeline from v0.2.0 through v0.17.0, plus Turnstile / EP velocity marked Later](./docs/assets/roadmap-shipped.png)
 
+<details>
+<summary>Full version → area table (click to expand)</summary>
+
 | Area                                                                      | Status                         |
 | ------------------------------------------------------------------------- | ------------------------------ |
 | Solo unlimited playground                                                 | ✅ Shipped (`v0.2.0`)          |
@@ -456,6 +459,8 @@ Version tags match [`CHANGELOG.md`](./CHANGELOG.md) / GitHub releases. Status is
 | Practice Free-only board + Leaderboard All-Time tab                       | ✅ Shipped (`v0.16.7`)         |
 | All-Time Best lane chips + Ranked CTE/UNION RTTs + quota ~180/h           | ✅ Shipped (`v0.17.0`)         |
 | Turnstile / EP velocity                                                   | 🔮 Later                       |
+
+</details>
 
 ## 🔮 What's next
 
