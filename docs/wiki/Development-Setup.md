@@ -13,7 +13,7 @@ Open the URL Vite prints (usually `http://localhost:5173`). Rolls and badges wor
 
 ## Full stack (auth + leaderboard + sync)
 
-1. Copy env: `cp .env.example .env.local` — see [[Environment]]
+1. Copy env: `cp .env.example .env.local` - see [[Environment]]
 2. Apply schema to Neon:
 
 ```bash
@@ -36,19 +36,19 @@ Live: https://rngdle-unlocked.chron0.tech
 | Command | Purpose |
 |---------|---------|
 | `pnpm dev` | Vite SPA |
-| `pnpm build` | Typecheck + Vite → `dist/` |
+| `pnpm build` | Typecheck + Vite -> `dist/` |
 | `pnpm typecheck` | App + node + server (NodeNext) |
 | `pnpm test` | Unit tests |
 | `pnpm lint` / `pnpm fmt` | Lint / Oxfmt |
 | `npx vercel dev` | SPA + `/api/*` |
 | `pnpm db:push` | Drizzle schema push |
-| `pnpm wiki:publish` | Push [`docs/wiki/`](https://github.com/jondmarien/rngdle-unlocked/tree/main/docs/wiki) → GitHub Wiki |
+| `pnpm wiki:publish` | Push [`docs/wiki/`](https://github.com/jondmarien/rngdle-unlocked/tree/main/docs/wiki) -> GitHub Wiki |
 
 ## Social / cloud checklist
 
-1. **Neon** — pooled `DATABASE_URL` (local + Vercel Production)
-2. **Better Auth** — `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` (prod = real domain), `VITE_APP_URL`
-3. **Vercel** — Framework Vite, output `dist`, env on Production
-4. **Share links** — vanity URLs only for rolls that exist in Neon (sign in → sync → Share)
+1. **Neon** - pooled `DATABASE_URL` (local + Vercel Production)
+2. **Better Auth** - `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` (prod = real domain), `VITE_APP_URL`
+3. **Vercel** - Framework Vite, output `dist`, env on Production
+4. **Share links** - vanity URLs only for rolls that exist in Neon (sign in -> sync -> Share)
 
 Optional integrations: [[OAuth]], [[Email-Auth]], [[Discord-Bot]], [[Polar-Monetization]].

@@ -10,9 +10,9 @@
  */
 import { spawnSync } from 'node:child_process';
 import {
-  cpSync,
   existsSync,
   mkdtempSync,
+  readFileSync,
   readdirSync,
   rmSync,
   writeFileSync,
@@ -32,6 +32,16 @@ const wikiRemote =
 if (!existsSync(staging)) {
   console.error('Missing docs/wiki staging directory');
   process.exit(1);
+}
+
+// Keep staging UTF-8-clean before every publish (mojibake + Mermaid-hostile glyphs).
+const sanitize = spawnSync(process.execPath, [join(__dirname, 'sanitize-wiki.mjs')], {
+  cwd: root,
+  encoding: 'utf8',
+  stdio: 'inherit',
+});
+if (sanitize.status !== 0) {
+  process.exit(sanitize.status ?? 1);
 }
 
 const files = readdirSync(staging).filter(
@@ -70,7 +80,9 @@ GitHub does not create rngdle-unlocked.wiki.git until step 3 succeeds.
   }
 
   for (const f of files) {
-    cpSync(join(staging, f), join(dir, f));
+    // Read/write as UTF-8 so Windows tooling cannot re-corrupt pages.
+    const body = readFileSync(join(staging, f), 'utf8');
+    writeFileSync(join(dir, f), body, 'utf8');
   }
 
   writeFileSync(

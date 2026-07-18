@@ -6,7 +6,7 @@ Markdown here is published to https://github.com/jondmarien/rngdle-unlocked/wiki
 pnpm wiki:publish
 ```
 
-Do not edit pages only on GitHub — change files here and re-publish.
+Do not edit pages only on GitHub - change files here and re-publish.
 
 ## First-time bootstrap
 
@@ -15,3 +15,7 @@ GitHub does not create `*.wiki.git` until **one** page exists in the UI:
 1. Open https://github.com/jondmarien/rngdle-unlocked/wiki (signed in as a repo admin).
 2. Create the initial **Home** page (any short body is fine; publish overwrites it).
 3. Run `pnpm wiki:publish`.
+
+## Encoding
+
+`pnpm wiki:publish` runs `scripts/sanitize-wiki.mjs` first. That undoes double-UTF-8 mojibake and replaces Mermaid-hostile glyphs (` | `, `->`, ` - `, `<=`, ...) with ASCII so GitHub Wiki diagrams stay readable. Always edit staging here  -  do not paste via PowerShell `Set-Content` without `-Encoding utf8`.

@@ -1,6 +1,6 @@
 # Design Archive
 
-Historical design specs and plans (may describe pre-Ranked or pre-Arcade wording — prefer [[Architecture]] and [[Game-Modes-and-Trust]] for current behavior).
+Historical design specs and plans (may describe pre-Ranked or pre-Arcade wording - prefer [[Architecture]] and [[Game-Modes-and-Trust]] for current behavior).
 
 ## Specs
 

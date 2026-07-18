@@ -1,1 +1,1 @@
-[Live](https://rngdle-unlocked.chron0.tech) · [GitHub](https://github.com/jondmarien/rngdle-unlocked) · [Wiki](https://github.com/jondmarien/rngdle-unlocked/wiki) · [chron0.tech](https://chron0.tech) · Not affiliated with rngdle.com
+[Live](https://rngdle-unlocked.chron0.tech) | [GitHub](https://github.com/jondmarien/rngdle-unlocked) | [Wiki](https://github.com/jondmarien/rngdle-unlocked/wiki) | [chron0.tech](https://chron0.tech) | Not affiliated with rngdle.com

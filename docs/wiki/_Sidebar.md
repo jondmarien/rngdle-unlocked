@@ -1,6 +1,6 @@
 **RNGdle Unlocked**
 
-[Play live](https://rngdle-unlocked.chron0.tech) · [chron0.tech](https://chron0.tech)
+[Play live](https://rngdle-unlocked.chron0.tech) | [chron0.tech](https://chron0.tech)
 
 ### New here?
 - [[Home]]

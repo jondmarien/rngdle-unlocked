@@ -1,10 +1,10 @@
 # Polar checkout foundation
 
-Branded Ranked Plus checkout for RNGdle Unlocked. **P2 + P3 implemented** — Checkout Sessions, Account Ranked Plus, friend code, hour-scoped Boost/Overload top-ups, and Ranked Plus 6‑minute refill regen. See [`polar-monetization.md`](./polar-monetization.md) and [`docs/superpowers/specs/2026-07-17-ranked-topups-design.md`](./superpowers/specs/2026-07-17-ranked-topups-design.md).
+Branded Ranked Plus checkout for RNGdle Unlocked. **P2 + P3 implemented** - Checkout Sessions, Account Ranked Plus, friend code, hour-scoped Boost/Overload top-ups, and Ranked Plus 6-minute refill regen. See [`polar-monetization.md`](Polar-Monetization) and [`docs/superpowers/specs/2026-07-17-ranked-topups-design.md`](./superpowers/specs/2026-07-17-ranked-topups-design.md).
 
 ## Goals
 
-- Sell Rare / Epic / Anomaly monthly subs without leaving the product’s visual language.
+- Sell Rare / Epic / Anomaly monthly subs without leaving the product's visual language.
 - Keep Polar as Merchant of Record (tax, receipts, renewals).
 - Require signed-in user + public `@username` before checkout.
 - Set Polar customer `external_id` = Better Auth `user.id` so webhooks map entitlements.
@@ -16,25 +16,25 @@ Branded Ranked Plus checkout for RNGdle Unlocked. **P2 + P3 implemented** — Ch
 
 | Approach                 | Status                                                                              |
 | ------------------------ | ----------------------------------------------------------------------------------- |
-| Checkout Links           | Skipped as primary (P1) — Sessions cover `external_id` + discount mapping           |
-| Checkout Sessions API    | **Shipped (P2)** — `POST /api/checkout` → Polar URL                                 |
-| Fully embedded card form | Avoid for MoR compliance unless Polar’s embedded product is explicitly chosen later |
+| Checkout Links           | Skipped as primary (P1) - Sessions cover `external_id` + discount mapping           |
+| Checkout Sessions API    | **Shipped (P2)** - `POST /api/checkout` -> Polar URL                                 |
+| Fully embedded card form | Avoid for MoR compliance unless Polar's embedded product is explicitly chosen later |
 
 Do not invent a custom card capture path.
 
 ## In-app surfaces
 
-1. **Account → Ranked Plus** — product cards + current tier + Subscribe/Upgrade + Manage billing (portal when Polar-linked).
-2. **Home Ranked quota pill** — when remaining is `0`, soft “Upgrade” CTA to `/account?upgrade=…`.
-3. **Deep links** — `/account?upgrade=rare|epic|anomaly` highlights the card; `?checkout=success|cancel` for return.
-4. **Locked cosmetics** — Account avatar/frame popovers link to `/account?upgrade={minTier}` (Payments remains for legal).
+1. **Account -> Ranked Plus** - product cards + current tier + Subscribe/Upgrade + Manage billing (portal when Polar-linked).
+2. **Home Ranked quota pill** - when remaining is `0`, soft "Upgrade" CTA to `/account?upgrade=...`.
+3. **Deep links** - `/account?upgrade=rare|epic|anomaly` highlights the card; `?checkout=success|cancel` for return.
+4. **Locked cosmetics** - Account avatar/frame popovers link to `/account?upgrade={minTier}` (Payments remains for legal).
 
 ## Brand shell
 
 - Fonts: Outfit (UI), Syne (display), JetBrains Mono (numbers).
 - Tokens: `--bg`, `--prose`, `--accent`, `--rare` / `--epic` / `--anomaly`, surface/outline.
-- Dark app chrome around any Polar redirect interstitial (“Continuing to secure checkout…”).
-- Avoid a generic Polar-only marketing page as the only touchpoint — our cards + copy first.
+- Dark app chrome around any Polar redirect interstitial ("Continuing to secure checkout...").
+- Avoid a generic Polar-only marketing page as the only touchpoint - our cards + copy first.
 
 ## Product cards (copy)
 
@@ -46,7 +46,7 @@ Do not invent a custom card capture path.
 
 Note on Rare+: Discord bot gate is **later**, not a checkout blocker.
 
-Optional discount field: “Friend code” → passed as `discountCode` on session create (`allowDiscountCodes` also on Polar page).
+Optional discount field: "Friend code" -> passed as `discountCode` on session create (`allowDiscountCodes` also on Polar page).
 
 ## Checkout flow
 
@@ -66,21 +66,21 @@ flowchart LR
 ```
 
 1. Gate: session + `@username`.
-2. `POST /api/checkout` with `{ tier, discountCode? }` → Polar Checkout Session (`externalCustomerId` = user id).
+2. `POST /api/checkout` with `{ tier, discountCode? }` -> Polar Checkout Session (`externalCustomerId` = user id).
 3. Redirect to Polar; apply discount code if provided.
-4. Success URL → SPA polls `GET /api/me` until `rankedTier` upgrades (~15s).
+4. Success URL -> SPA polls `GET /api/me` until `rankedTier` upgrades (~15s).
 5. Toast + unlock frames/avatars; optional auto-apply tier frame when previous was `none`.
-6. Manage: `POST /api/checkout/portal` → Polar customer portal (requires linked Polar customer).
+6. Manage: `POST /api/checkout/portal` -> Polar customer portal (requires linked Polar customer).
 
 ### API paths
 
 | Endpoint                    | Role                                                    |
 | --------------------------- | ------------------------------------------------------- |
-| `POST /api/checkout`        | Create Checkout Session → `{ url }`                     |
-| `POST /api/checkout/portal` | Customer portal session → `{ url }`                     |
-| Client                      | [`src/lib/checkout-api.ts`](../src/lib/checkout-api.ts) |
+| `POST /api/checkout`        | Create Checkout Session -> `{ url }`                     |
+| `POST /api/checkout/portal` | Customer portal session -> `{ url }`                     |
+| Client                      | [`src/lib/checkout-api.ts`](https://github.com/jondmarien/rngdle-unlocked/blob/main/src/lib/checkout-api.ts) |
 
-Server helpers: [`server/polar/client.ts`](../server/polar/client.ts), [`products.ts`](../server/polar/products.ts), [`checkout.ts`](../server/polar/checkout.ts).
+Server helpers: [`server/polar/client.ts`](https://github.com/jondmarien/rngdle-unlocked/blob/main/server/polar/client.ts), [`products.ts`](https://github.com/jondmarien/rngdle-unlocked/blob/main/server/polar/products.ts), [`checkout.ts`](https://github.com/jondmarien/rngdle-unlocked/blob/main/server/polar/checkout.ts).
 
 ## Customization knobs
 
@@ -93,13 +93,13 @@ Server helpers: [`server/polar/client.ts`](../server/polar/client.ts), [`product
 
 - Player disclosure: `/payments`.
 - Terms / Privacy Polar MoR sections already present.
-- Top-ups: Overload / Boosts **no rollover** — current UTC hour only; Account shows minutes left.
+- Top-ups: Overload / Boosts **no rollover** - current UTC hour only; Account shows minutes left.
 
 ## Phased build
 
 | Phase  | Deliverable                                                       | Status      |
 | ------ | ----------------------------------------------------------------- | ----------- |
-| **P1** | Checkout Links + return URL + Account “Ranked Plus” stub cards    | Skipped     |
+| **P1** | Checkout Links + return URL + Account "Ranked Plus" stub cards    | Skipped     |
 | **P2** | API checkout sessions + in-app product picker + friend code field | **Shipped** |
 | **P3** | Hour-scoped top-ups + Plus regen (6 min refill) + CTA polish      | **Shipped** |
 

@@ -1,10 +1,10 @@
-# Refactor notes — July 2026
+# Refactor notes - July 2026
 
 Internal architecture pass for **readability and expandability**. No intentional behavior, API contract, or game-rule changes.
 
-**Commits:** `aa8e91e`…`fc4fa65` (11 commits).  
+**Commits:** `aa8e91e`...`fc4fa65` (11 commits).  
 **Canonical handoff:** [`HANDOFF.md`](../HANDOFF.md) §1b.  
-**Audit trail:** [`opus-report.md`](./opus-report.md) §§A–G (historical findings) · §H (landed status).
+**Audit trail:** [`opus-report.md`](https://github.com/jondmarien/rngdle-unlocked/blob/main/docs/opus-report.md) §§A-G (historical findings) | §H (landed status).
 
 ---
 
@@ -30,11 +30,11 @@ Internal architecture pass for **readability and expandability**. No intentional
 
 ## 3. Mandatory `lib/*-api.ts` client API wrappers
 
-**Decision:** Screens and components call typed wrappers under `src/lib/*-api.ts` — never raw `fetch('/api/...')` in `src/ui/**`.
+**Decision:** Screens and components call typed wrappers under `src/lib/*-api.ts` - never raw `fetch('/api/...')` in `src/ui/**`.
 
 **TanStack Query:** `QueryClientProvider` in `src/main.tsx`. Cached reads today: leaderboard, feed, highlights, profile, admin-check (`useIsAdmin`). Notifications/account may still use effects + wrappers.
 
-**Terminology:** prefer **client API wrappers** + **TanStack Query** (not “network layer” / “API client” interchangeably).
+**Terminology:** prefer **client API wrappers** + **TanStack Query** (not "network layer" / "API client" interchangeably).
 
 ---
 
@@ -52,13 +52,13 @@ Internal architecture pass for **readability and expandability**. No intentional
 
 **Decision:** Move leaderboard, profile, feed, OG SVG, and notifications assembly out of fat `api/*` handlers into `server/{leaderboard,profile,feed,ogSvg,notifications}.ts`.
 
-**Still fatter inline:** `follow`, `me`, `attest`, and parts of sync orchestration — extract when next touched.
+**Still fatter inline:** `follow`, `me`, `attest`, and parts of sync orchestration - extract when next touched.
 
 ---
 
 ## 6. GameProvider split
 
-**Decision:** Extract `src/state/useSync.ts` and a settings reducer; expose three contexts — `useGame`, `useGameSettings`, `useCloudSync`.
+**Decision:** Extract `src/state/useSync.ts` and a settings reducer; expose three contexts - `useGame`, `useGameSettings`, `useCloudSync`.
 
 **Not landed from audit:** `useSaveTransfer` (import/export remain in `GameProvider`).
 
@@ -66,8 +66,8 @@ Internal architecture pass for **readability and expandability**. No intentional
 
 ## Intentional deltas (not bugs)
 
-- `PATCH /api/me` malformed JSON → HTTP **400** via `readJson`.
-- Corrupt save imports → `Invalid save file: …`; valid legacy exports still work.
+- `PATCH /api/me` malformed JSON -> HTTP **400** via `readJson`.
+- Corrupt save imports -> `Invalid save file: ...`; valid legacy exports still work.
 - `SegmentedToggle` not applied to `RollModePicker` or Collection family chips.
 - `POST /api/system-messages` still live alongside `api/admin/broadcast.ts`.
 - Manual AGENTS.md §9 roll-mode browser smoke still required before claiming reel UX verified.

@@ -1,6 +1,6 @@
 # Roadmap
 
-Version tags match [`CHANGELOG.md`](https://github.com/jondmarien/rngdle-unlocked/blob/main/CHANGELOG.md) and [GitHub Releases](https://github.com/jondmarien/rngdle-unlocked/releases). Status is **Shipped** / **Later** — details stay in the Area column.
+Version tags match [`CHANGELOG.md`](https://github.com/jondmarien/rngdle-unlocked/blob/main/CHANGELOG.md) and [GitHub Releases](https://github.com/jondmarien/rngdle-unlocked/releases). Status is **Shipped** / **Later** - details stay in the Area column.
 
 ![Shipped roadmap](https://raw.githubusercontent.com/jondmarien/rngdle-unlocked/main/docs/assets/roadmap-shipped.png)
 
@@ -15,7 +15,7 @@ Version tags match [`CHANGELOG.md`](https://github.com/jondmarien/rngdle-unlocke
 | Dual EP boards (Ranked + Practice) + follows + feed | ✅ Shipped (`v0.4.0`) |
 | Community today/week/all-time crowns (Ranked) + overtake notifs | ✅ Shipped (`v0.4.0`) |
 | Profiles (vanity + avatars) + Activity unlocks | ✅ Shipped (`v0.4.0`) |
-| Codex unlock times + 5‑min New tab | ✅ Shipped (`v0.4.0`) |
+| Codex unlock times + 5-min New tab | ✅ Shipped (`v0.4.0`) |
 | Custom fonts + rarity/family icon art | ✅ Shipped (`v0.4.0`) |
 | OAuth (Discord/GitHub) wiring | ✅ Shipped (`v0.4.1`) |
 | Email verification + magic link (Resend) | ✅ Shipped (`v0.4.1`) |
@@ -37,7 +37,7 @@ Version tags match [`CHANGELOG.md`](https://github.com/jondmarien/rngdle-unlocke
 | Delta cloud sync + OG PNG fix + sync quota stopgap | ✅ Shipped (`v0.11.0`) |
 | Share seals toggle + Features tags/edit/screenshots + UI polish | ✅ Shipped (`v0.11.1`) |
 | Lifetime EP badges + abbreviate large numbers setting | ✅ Shipped (`v0.12.0`) |
-| Ranked all-time Home crown tile + Ranked · crown labels | ✅ Shipped (`v0.12.1`) |
+| Ranked all-time Home crown tile + Ranked | crown labels | ✅ Shipped (`v0.12.1`) |
 | Collapsible How to roll (compact mode switch when collapsed) | ✅ Shipped (`v0.12.2`) |
 | Years family + site accent + Arcade ×N + sync/View As backlog | ✅ Shipped (`v0.13.0`) |
 | Atomic Registry (118 elements) + Atomic Seal | ✅ Shipped (`v0.14.0`) |
@@ -55,9 +55,9 @@ Version tags match [`CHANGELOG.md`](https://github.com/jondmarien/rngdle-unlocke
 | Polar monetization foundation + Ranked free 90/h + paid tier caps | ✅ Shipped (`v0.18.0`) |
 | Profile frames + Ranked Plus tier emblems (cumulative 4/8/12) | ✅ Shipped (`v0.18.1`) |
 | Account Ranked Plus checkout (Polar Sessions + friend code) | ✅ Shipped (`v0.18.2`) |
-| Hour-scoped Ranked top-ups / Overload + Plus 6‑min regen | ✅ Shipped (`v0.18.3`) |
+| Hour-scoped Ranked top-ups / Overload + Plus 6-min regen | ✅ Shipped (`v0.18.3`) |
 | Ranked Plus at `/plus` + display name + username cooldown/hold | ✅ Shipped (`v0.18.4`) |
-| Discord HTTP bot (`/roll`, `/board`; free play; Rare+ guild install) | ✅ Shipped (`v0.19.1`) — [[Discord-Bot]] |
+| Discord HTTP bot (`/roll`, `/board`; free play; Rare+ guild install) | ✅ Shipped (`v0.19.1`) - [[Discord-Bot]] |
 | Discord `/board` EP fix + Ranked quota / hour-cap CTAs | ✅ Shipped (`v0.19.2`) |
 | Wiki + SEO site plumbing | ✅ Shipped (docs wave) |
 | Turnstile / EP velocity | 🔮 Later |
