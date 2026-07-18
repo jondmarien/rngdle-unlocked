@@ -205,7 +205,7 @@ Switch modes anytime (board fully resets). Badges, EP, history, and share work a
 - **Dynamic OG** — `/api/og` PNG cards for Discord/social (SVG is not supported by Discord); bot rewrite of `/u/:user` → profile OG HTML
 - **Soft rate limits** on sync, Ranked rolls (**~90/h free** UTC; Rare 120 / Epic 150 / Anomaly 180 via Polar entitlements), and public APIs
 - **Polar monetization** — public CAD Ranked Plus products (Rare/Epic/Anomaly), webhook entitlements, org KYC/payouts approved; see [`docs/polar-monetization.md`](./docs/polar-monetization.md)
-- **Account Ranked Plus checkout** — Checkout Sessions + product cards + friend code + Manage portal; hour Boost/Overload top-ups; Plus regen (+1/+2/+3 every 6 min toward cap); see [`docs/polar-checkout-foundation.md`](./docs/polar-checkout-foundation.md)
+- **Ranked Plus (`/plus`)** — Checkout Sessions + product cards + friend code + Manage portal; hour Boost/Overload top-ups; Plus regen (+1/+2/+3 every 6 min toward cap); Account keeps identity + profile look; see [`docs/polar-checkout-foundation.md`](./docs/polar-checkout-foundation.md)
 - **Legal** — `/terms`, `/privacy`, `/payments` (Polar MoR disclosure — not a buy page)
 - **Discord / GitHub OAuth** — wired in app; finish portal + env via [`docs/oauth-setup.md`](./docs/oauth-setup.md)
 

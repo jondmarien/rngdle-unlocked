@@ -77,8 +77,8 @@ export async function createRankedCheckout(
     externalCustomerId: input.userId,
     customerEmail: input.email,
     customerName: input.name || undefined,
-    successUrl: `${origin}/account?checkout=success&tier=${input.tier}&checkout_id={CHECKOUT_ID}`,
-    returnUrl: `${origin}/account?checkout=cancel`,
+    successUrl: `${origin}/plus?checkout=success&tier=${input.tier}&checkout_id={CHECKOUT_ID}`,
+    returnUrl: `${origin}/plus?checkout=cancel`,
     allowDiscountCodes: true,
     ...(discountId ? { discountId } : {}),
     metadata: {
@@ -120,8 +120,8 @@ export async function createTopupCheckout(input: {
     externalCustomerId: input.userId,
     customerEmail: input.email,
     customerName: input.name || undefined,
-    successUrl: `${origin}/account?checkout=topup_success&sku=${input.sku}&checkout_id={CHECKOUT_ID}`,
-    returnUrl: `${origin}/account?checkout=cancel`,
+    successUrl: `${origin}/plus?checkout=topup_success&sku=${input.sku}&checkout_id={CHECKOUT_ID}`,
+    returnUrl: `${origin}/plus?checkout=cancel`,
     allowDiscountCodes: false,
     metadata: {
       kind: 'topup',

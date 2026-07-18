@@ -8,6 +8,10 @@ import {
   isValidUsername,
   normalizeUsername,
 } from '../../../server/username.js';
+import {
+  holdFormerUsername,
+  isUsernameAvailableFor,
+} from '../../../server/usernameChange.js';
 import { defineHandler } from '../../../server/vercel-adapter.js';
 
 const log = createLogger('api/admin/users/username');
@@ -78,22 +82,29 @@ export default defineHandler(async (request) => {
     );
   }
 
-  const [taken] = await db
-    .select({ id: user.id })
-    .from(user)
-    .where(eq(user.username, username))
-    .limit(1);
-  if (taken && taken.id !== targetId) {
+  // Admin bypasses the 7-day player cooldown; still respects uniqueness + holds.
+  const available = await isUsernameAvailableFor(db, username, targetId);
+  if (!available) {
     return Response.json(
-      { error: `@${username} is already taken` },
+      { error: `@${username} is already taken or reserved` },
       { status: 409 },
     );
   }
 
+  const previous = target.username ? normalizeUsername(target.username) : null;
+  const now = new Date();
   await db
     .update(user)
-    .set({ username, updatedAt: new Date() })
+    .set({
+      username,
+      usernameChangedAt: now,
+      updatedAt: now,
+    })
     .where(eq(user.id, targetId));
+
+  if (previous && previous !== username) {
+    await holdFormerUsername(db, previous, targetId, now);
+  }
 
   await writeAdminAudit(db, {
     actorUserId: adminUser.id,

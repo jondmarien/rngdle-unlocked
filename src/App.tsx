@@ -45,6 +45,10 @@ const AccountScreen = lazyScreen<{ onOpenAdmin?: () => void }>(
   () => import('./ui/screens/AccountScreen'),
   'AccountScreen',
 );
+const PlusScreen = lazyScreen(
+  () => import('./ui/screens/PlusScreen'),
+  'PlusScreen',
+);
 const AboutScreen = lazyScreen(
   () => import('./ui/screens/AboutScreen'),
   'AboutScreen',
@@ -308,6 +312,7 @@ function AppRoutes() {
               {route.kind === 'tab' && tab === 'account' && (
                 <AccountScreen onOpenAdmin={() => goTab('admin')} />
               )}
+              {route.kind === 'tab' && tab === 'plus' && <PlusScreen />}
               {route.kind === 'tab' && tab === 'whats-new' && (
                 <WhatsNewScreen />
               )}

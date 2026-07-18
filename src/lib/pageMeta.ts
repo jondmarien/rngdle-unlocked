@@ -14,6 +14,7 @@ const TAB_DOCUMENT_TITLE: Record<TabId, string> = {
   'whats-new': "What's new · RNGdle Unlocked",
   notifications: 'Alerts · RNGdle Unlocked',
   account: 'Account · RNGdle Unlocked',
+  plus: 'Ranked Plus · RNGdle Unlocked',
   about: 'About · RNGdle Unlocked',
   admin: 'Admin · RNGdle Unlocked',
   settings: 'Settings · RNGdle Unlocked',

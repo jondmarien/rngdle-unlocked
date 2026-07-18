@@ -65,7 +65,7 @@ export const WHATS_NEW: WhatsNewEntry[] = [
         heading: 'What you will notice',
         body: 'Buy where you customize your look.',
         bullets: [
-          '**Account → Ranked Plus** — three tiers with rolls/hour and CAD prices; optional friend code; Manage billing when subscribed.',
+          '**/plus (Ranked Plus)** — three tiers with rolls/hour and CAD prices; optional friend code; Manage billing when subscribed.',
           '**Home quota** — when you hit **0** left, a soft **Upgrade** link jumps to Account.',
           '**Public profiles** — subscribers show a **Ranked Plus · tier** chip on `/u` (separate from flair).',
           '**Locked cosmetics** — unlock tips now point at Account upgrade (Payments stays for legal info).',

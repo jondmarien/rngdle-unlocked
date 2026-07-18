@@ -10,6 +10,7 @@ export type TabId =
   | 'whats-new'
   | 'notifications'
   | 'account'
+  | 'plus'
   | 'about'
   | 'admin'
   | 'settings';
@@ -30,6 +31,7 @@ export const TAB_PATH: Record<TabId, string> = {
   'whats-new': '/whats-new',
   notifications: '/notifications',
   account: '/account',
+  plus: '/plus',
   about: '/about',
   admin: '/admin',
   settings: '/settings',
@@ -51,6 +53,7 @@ const PATH_TO_TAB: Record<string, TabId> = {
   notifications: 'notifications',
   alerts: 'notifications',
   account: 'account',
+  plus: 'plus',
   about: 'about',
   admin: 'admin',
   settings: 'settings',

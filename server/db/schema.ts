@@ -19,6 +19,8 @@ export const user = pgTable('user', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
   /** Public handle for profiles / leaderboards */
   username: text('username').unique(),
+  /** Last successful @username change (null = never changed / first claim still free of cooldown until stamped) */
+  usernameChangedAt: timestamp('username_changed_at'),
   /** Profile vanity: accent key (teal, violet, amber, rose, sky, emerald, mono) */
   profileAccent: text('profile_accent').notNull().default('teal'),
   /** Short public bio (max ~160 chars enforced in API) */
@@ -36,6 +38,15 @@ export const user = pgTable('user', {
   banned: boolean('banned').notNull().default(false),
   banReason: text('ban_reason'),
   banExpires: timestamp('ban_expires'),
+});
+
+/** Former @username reserved for 7 days after a change (anti-snipe). */
+export const usernameHolds = pgTable('username_holds', {
+  username: text('username').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  expiresAt: timestamp('expires_at').notNull(),
 });
 
 export const session = pgTable('session', {

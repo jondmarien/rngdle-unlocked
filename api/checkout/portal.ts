@@ -60,7 +60,7 @@ export default defineHandler(async (request) => {
     const url = await createCustomerPortalUrl({
       userId: me.id,
       polarCustomerId: ent.polarCustomerId,
-      returnUrl: `${origin}/account`,
+      returnUrl: `${origin}/plus`,
     });
     return Response.json({ url });
   } catch (err) {

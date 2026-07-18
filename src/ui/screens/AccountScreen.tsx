@@ -1,12 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { authClient, useSession } from '../../lib/auth-client';
-import {
-  createCheckout,
-  createTopupCheckout,
-  openBillingPortal,
-  type PaidRankedTier,
-  type TopupSku,
-} from '../../lib/checkout-api';
 import { createLogger, withTimeout } from '../../lib/logger';
 import { fetchMe, patchMe, type LinkedAccount } from '../../lib/me-api';
 import {
@@ -32,16 +25,8 @@ import {
   type ProfileAccent,
 } from '../../lib/profile-theme';
 import type { RankedTier } from '../../lib/ranked-limits';
-import { rankedRegenPerTick, rankedTierRank } from '../../lib/ranked-limits';
-import {
-  RANKED_PLUS_CATALOG,
-  tierChipClass,
-} from '../../lib/ranked-plus-catalog';
-import {
-  RANKED_TOPUP_CATALOG,
-  TOPUP_NON_ROLLOVER,
-} from '../../lib/ranked-topup-catalog';
-import { fetchRankedQuota } from '../../lib/roll-api';
+import { rankedRegenPerTick } from '../../lib/ranked-limits';
+import { tierChipClass } from '../../lib/ranked-plus-catalog';
 import { useIsAdmin } from '../../lib/useIsAdmin';
 import { useCloudSync } from '../../state/GameProvider';
 import { ProfileAvatar } from '../components/ProfileAvatar';
@@ -86,16 +71,9 @@ export function AccountScreen({
   const [profileFrame, setProfileFrame] = useState<ProfileFrameId>('none');
   const [rankedTier, setRankedTier] = useState<RankedTier>('free');
   const [hasPolarBilling, setHasPolarBilling] = useState(false);
-  const [friendCode, setFriendCode] = useState('');
-  const [checkoutBusy, setCheckoutBusy] = useState(false);
-  const [highlightTier, setHighlightTier] = useState<PaidRankedTier | null>(
-    null,
-  );
-  const [hasOverload, setHasOverload] = useState(false);
-  const [topupPackBonus, setTopupPackBonus] = useState(0);
-  const [quotaResetsInSec, setQuotaResetsInSec] = useState<number | null>(null);
-  const rankedPlusRef = useRef<HTMLDivElement>(null);
-  const topupRef = useRef<HTMLDivElement>(null);
+  const [usernameNextChangeAt, setUsernameNextChangeAt] = useState<
+    string | null
+  >(null);
   const [profileShowCodex, setProfileShowCodex] = useState(true);
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -131,124 +109,26 @@ export function AccountScreen({
     window.history.replaceState(null, '', next);
   }, []);
 
-  // Ranked Plus deep links: ?upgrade= · ?topup= · ?checkout=success|topup_success|cancel
+  // Commerce deep links moved to /plus — keep old /account?upgrade|topup|checkout bookmarks working
   useEffect(() => {
-    if (typeof window === 'undefined' || !session?.user) return;
+    if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
     const upgrade = params.get('upgrade');
     const topup = params.get('topup');
     const checkout = params.get('checkout');
-    let dirty = false;
-
-    if (upgrade === 'rare' || upgrade === 'epic' || upgrade === 'anomaly') {
-      setHighlightTier(upgrade);
-      rankedPlusRef.current?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      });
-      params.delete('upgrade');
-      dirty = true;
-    }
-
-    if (topup === '1' || topup === 'true') {
-      topupRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      params.delete('topup');
-      dirty = true;
-    }
-
-    if (checkout === 'cancel') {
-      setMsg('Checkout cancelled — no charge. You can try again anytime.');
-      params.delete('checkout');
-      params.delete('tier');
-      params.delete('sku');
-      params.delete('checkout_id');
-      dirty = true;
-    }
-
-    if (checkout === 'topup_success') {
-      setMsg('Top-up received — raising this hour’s Ranked cap…');
-      let tries = 0;
-      const baselineBonus = topupPackBonus;
-      const poll = window.setInterval(() => {
-        tries += 1;
-        void fetchRankedQuota()
-          .then((q) => {
-            if (!q) return;
-            setHasOverload(Boolean(q.hasOverload));
-            setTopupPackBonus(q.packBonus ?? 0);
-            setQuotaResetsInSec(q.resetsInSec);
-            if (
-              (q.packBonus ?? 0) > baselineBonus ||
-              q.hasOverload ||
-              (q.topupBonus ?? 0) > 0 ||
-              tries >= 8
-            ) {
-              window.clearInterval(poll);
-              setMsg(
-                `Top-up active — ${q.remaining}/${q.limit} Ranked rolls left this UTC hour.`,
-              );
-            }
-          })
-          .catch(() => {});
-        if (tries >= 12) {
-          window.clearInterval(poll);
-          setMsg(
-            'Payment received. If your hour cap did not rise yet, wait a moment and refresh.',
-          );
-        }
-      }, 1200);
-      params.delete('checkout');
-      params.delete('sku');
-      params.delete('checkout_id');
-      dirty = true;
-      return () => window.clearInterval(poll);
-    }
-
-    if (checkout === 'success') {
-      const wantTier = params.get('tier');
-      setMsg('Payment received — unlocking Ranked Plus…');
-      let tries = 0;
-      const poll = window.setInterval(() => {
-        tries += 1;
-        void fetchMe()
-          .then((data) => {
-            if (!data.user) return;
-            const tier = (data.user.rankedTier ?? 'free') as RankedTier;
-            setRankedTier(tier);
-            setHasPolarBilling(Boolean(data.user.hasPolarBilling));
-            if (
-              tier !== 'free' &&
-              (!wantTier || tier === wantTier || tries >= 8)
-            ) {
-              window.clearInterval(poll);
-              setMsg(
-                `Ranked Plus · ${tier} is active. Frames and emblems are unlocked — save your look below.`,
-              );
-              if (normalizeProfileFrame(data.user.profileFrame) === 'none') {
-                setProfileFrame(defaultFrameForTier(tier));
-              }
-            }
-          })
-          .catch(() => {});
-        if (tries >= 12) {
-          window.clearInterval(poll);
-          setMsg(
-            'Payment received. If Ranked Plus is not active yet, wait a moment and refresh — webhooks can lag a few seconds.',
-          );
-        }
-      }, 1200);
-      params.delete('checkout');
-      params.delete('tier');
-      params.delete('checkout_id');
-      dirty = true;
-      return () => window.clearInterval(poll);
-    }
-
-    if (dirty) {
-      const next = `${window.location.pathname}${params.toString() ? `?${params}` : ''}${window.location.hash}`;
-      window.history.replaceState(null, '', next);
-    }
-  }, [session?.user?.id]);
+    const commerce =
+      upgrade === 'rare' ||
+      upgrade === 'epic' ||
+      upgrade === 'anomaly' ||
+      topup === '1' ||
+      topup === 'true' ||
+      checkout === 'success' ||
+      checkout === 'topup_success' ||
+      checkout === 'cancel';
+    if (!commerce) return;
+    const qs = params.toString();
+    window.location.replace(`/plus${qs ? `?${qs}` : ''}`);
+  }, []);
 
   useEffect(() => {
     log.debug('session state', {
@@ -269,6 +149,8 @@ export function AccountScreen({
       .then((data) => {
         if (cancelled || !data.user) return;
         if (data.user.username) setUsername(data.user.username);
+        if (typeof data.user.name === 'string') setName(data.user.name);
+        setUsernameNextChangeAt(data.user.usernameNextChangeAt ?? null);
         setProfileAccent(normalizeAccent(data.user.profileAccent));
         setProfileBio(data.user.profileBio ?? '');
         setProfileFlair(data.user.profileFlair ?? '');
@@ -284,12 +166,6 @@ export function AccountScreen({
         setProfileShowCodex(data.user.profileShowCodex !== false);
         setLinkedAccounts(data.linkedAccounts ?? []);
         setSettingsSyncEnabledFlag(Boolean(data.settingsSyncEnabled));
-        void fetchRankedQuota().then((q) => {
-          if (cancelled || !q) return;
-          setHasOverload(Boolean(q.hasOverload));
-          setTopupPackBonus(q.packBonus ?? 0);
-          setQuotaResetsInSec(q.resetsInSec);
-        });
       })
       .catch(() => {
         /* ignore */
@@ -582,6 +458,10 @@ export function AccountScreen({
     }
   };
 
+  const usernameChangeLocked =
+    Boolean(usernameNextChangeAt) &&
+    new Date(usernameNextChangeAt!).getTime() > Date.now();
+
   const saveUsername = async () => {
     setBusy(true);
     setMsg(null);
@@ -589,12 +469,30 @@ export function AccountScreen({
     try {
       const data = await patchMe({ username });
       log.info('username:ok', { username: data.username });
+      if (data.username) setUsername(data.username);
+      setUsernameNextChangeAt(data.usernameNextChangeAt ?? null);
       setMsg(`Username set to @${data.username}`);
       await refetch().catch(() => {});
     } catch (err) {
       log.error('username:fail', {
         err: err instanceof Error ? err.message : String(err),
       });
+      setMsg(err instanceof Error ? err.message : 'Failed');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const saveDisplayName = async () => {
+    setBusy(true);
+    setMsg(null);
+    try {
+      const data = await patchMe({ name });
+      if (typeof data.name === 'string') setName(data.name);
+      setMsg(`Display name saved as ${data.name ?? name}`);
+      await refetch().catch(() => {});
+      window.dispatchEvent(new Event('rngdle:me-updated'));
+    } catch (err) {
       setMsg(err instanceof Error ? err.message : 'Failed');
     } finally {
       setBusy(false);
@@ -619,53 +517,6 @@ export function AccountScreen({
       setMsg(err instanceof Error ? err.message : 'Failed');
     } finally {
       setBusy(false);
-    }
-  };
-
-  const startCheckout = async (tier: PaidRankedTier) => {
-    if (!username.trim()) {
-      setMsg('Claim a public @username before Ranked Plus checkout.');
-      return;
-    }
-    setCheckoutBusy(true);
-    setMsg('Continuing to secure checkout…');
-    try {
-      const { url } = await createCheckout({
-        tier,
-        discountCode: friendCode.trim() || undefined,
-      });
-      window.location.href = url;
-    } catch (err) {
-      setMsg(err instanceof Error ? err.message : 'Checkout failed');
-      setCheckoutBusy(false);
-    }
-  };
-
-  const startPortal = async () => {
-    setCheckoutBusy(true);
-    setMsg(null);
-    try {
-      const { url } = await openBillingPortal();
-      window.location.href = url;
-    } catch (err) {
-      setMsg(err instanceof Error ? err.message : 'Portal unavailable');
-      setCheckoutBusy(false);
-    }
-  };
-
-  const startTopupCheckout = async (sku: TopupSku) => {
-    if (!username.trim()) {
-      setMsg('Claim a public @username before Ranked top-up checkout.');
-      return;
-    }
-    setCheckoutBusy(true);
-    setMsg('Continuing to secure checkout…');
-    try {
-      const { url } = await createTopupCheckout({ sku });
-      window.location.href = url;
-    } catch (err) {
-      setMsg(err instanceof Error ? err.message : 'Top-up checkout failed');
-      setCheckoutBusy(false);
     }
   };
 
@@ -948,37 +799,79 @@ export function AccountScreen({
             })}
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <input
-              className="border border-(--outline) bg-(--surface) px-3 py-2 text-sm"
-              placeholder="username"
-              name="username"
-              autoComplete="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-            />
-            <button
-              type="button"
-              disabled={busy}
-              className="border border-(--prose) px-3 py-2 text-sm font-semibold"
-              onClick={() => void saveUsername()}
-            >
-              Save username
-            </button>
+          <div className="space-y-3 rounded-lg border border-(--outline) bg-(--surface) p-4">
+            <div>
+              <h2 className="text-base font-bold text-(--prose)">Identity</h2>
+              <p className="text-sm text-(--prose-2)">
+                Display name can match other players. @username is unique and
+                powers your public URL.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <input
+                className="min-w-[12rem] flex-1 border border-(--outline) bg-(--bg) px-3 py-2 text-sm"
+                placeholder="Display name"
+                name="displayName"
+                autoComplete="nickname"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                maxLength={48}
+              />
+              <button
+                type="button"
+                disabled={busy}
+                className="border border-(--prose) px-3 py-2 text-sm font-semibold"
+                onClick={() => void saveDisplayName()}
+              >
+                Save display name
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <input
+                className="min-w-[12rem] flex-1 border border-(--outline) bg-(--bg) px-3 py-2 font-mono text-sm"
+                placeholder="username"
+                name="username"
+                autoComplete="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                disabled={usernameChangeLocked}
+              />
+              <button
+                type="button"
+                disabled={busy || usernameChangeLocked}
+                className="border border-(--prose) px-3 py-2 text-sm font-semibold disabled:opacity-50"
+                onClick={() => void saveUsername()}
+              >
+                Save username
+              </button>
+            </div>
+            {usernameChangeLocked && usernameNextChangeAt ? (
+              <p className="text-xs text-(--prose-3)">
+                Username changes are limited to once every 7 days. Next change
+                available{' '}
+                <strong className="text-(--prose)">
+                  {new Date(usernameNextChangeAt).toLocaleString()}
+                </strong>
+                . Your previous handle stays reserved for that week so it cannot
+                be sniped.
+              </p>
+            ) : (
+              <p className="text-xs text-(--prose-3)">
+                After you change @username, the old handle is reserved for 7
+                days and you cannot change again until then.
+              </p>
+            )}
           </div>
 
-          <div
-            ref={rankedPlusRef}
-            className="space-y-3 rounded-lg border border-(--outline) bg-(--surface) p-4"
-          >
+          <div className="space-y-3 rounded-lg border border-(--outline) bg-(--surface) p-4">
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div>
                 <h2 className="text-base font-bold text-(--prose)">
                   Ranked Plus
                 </h2>
                 <p className="text-sm text-(--prose-2)">
-                  Raise your Ranked hour cap and unlock frames + emblems.
-                  Checkout is handled securely by Polar.
+                  Subscriptions, Manage billing, and this-hour top-ups live on
+                  the Plus page.
                 </p>
               </div>
               <span
@@ -992,162 +885,27 @@ export function AccountScreen({
             {isAdmin && rankedTier !== 'free' && !hasPolarBilling && (
               <p className="text-xs text-(--prose-3)">
                 Admin complimentary access — full Anomaly cosmetics and quota
-                without a Polar purchase. Manage billing appears after a real
-                subscription.
+                without a Polar purchase.
               </p>
             )}
             {rankedTier !== 'free' && (
               <p className="text-xs text-(--prose-3)">
-                Plus regenerates{' '}
+                Regen every 6 minutes:{' '}
                 <strong className="text-(--prose)">
-                  {rankedRegenPerTick(rankedTier)}
+                  +{rankedRegenPerTick(rankedTier)}
                 </strong>{' '}
-                Ranked roll
-                {rankedRegenPerTick(rankedTier) === 1 ? '' : 's'} every{' '}
-                <strong className="text-(--prose)">6</strong> minutes toward
-                your hour cap (no rollover past :00 UTC).
+                on {rankedTier} toward your hour cap.
               </p>
             )}
-            <div className="grid gap-2 sm:grid-cols-3">
-              {RANKED_PLUS_CATALOG.map((card) => {
-                const current = rankedTier === card.tier;
-                const highlighted = highlightTier === card.tier;
-                const cardRank = rankedTierRank(card.tier);
-                const currentRank = rankedTierRank(rankedTier);
-                const label = current
-                  ? 'Current'
-                  : rankedTier === 'free'
-                    ? 'Subscribe'
-                    : cardRank > currentRank
-                      ? 'Upgrade'
-                      : 'Downgrade';
-                const disabled = checkoutBusy || current || isAdmin;
-                return (
-                  <div
-                    key={card.tier}
-                    className={`flex flex-col rounded-lg border-2 bg-(--bg) p-3 ${card.borderClass} ${
-                      highlighted ? 'ring-2 ring-(--accent)/50' : ''
-                    }`}
-                  >
-                    <p className="font-display text-lg font-bold text-(--prose)">
-                      {card.label}
-                    </p>
-                    <p className="font-mono text-sm tabular-nums text-(--prose-2)">
-                      {card.rollsPerHour}/h · {card.priceCad}/mo
-                    </p>
-                    <p className="mt-1 flex-1 text-xs text-(--prose-3)">
-                      {card.cosmetics}
-                    </p>
-                    <button
-                      type="button"
-                      disabled={disabled}
-                      className="mt-3 border-2 border-(--accent) bg-(--accent) px-2 py-1.5 text-xs font-bold uppercase text-(--bg) disabled:opacity-50"
-                      onClick={() => void startCheckout(card.tier)}
-                    >
-                      {label}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-(--prose-2)">
-                Friend code (optional)
-              </label>
-              <input
-                value={friendCode}
-                onChange={(e) => setFriendCode(e.target.value.slice(0, 64))}
-                placeholder="Discount code"
-                className="w-full border border-(--outline) bg-(--bg) px-3 py-2 font-mono text-sm"
-                autoComplete="off"
-              />
-              <p className="mt-1 text-xs text-(--prose-3)">
-                You can also enter a code on Polar&apos;s checkout page.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-3 text-xs text-(--prose-3)">
-              {hasPolarBilling && (
-                <button
-                  type="button"
-                  disabled={checkoutBusy}
-                  className="font-semibold text-(--accent) underline-offset-2 hover:underline disabled:opacity-50"
-                  onClick={() => void startPortal()}
-                >
-                  Manage billing
-                </button>
-              )}
-              <a className="underline" href="/payments">
+            <div className="flex flex-wrap gap-3 text-sm">
+              <a
+                className="font-semibold text-(--accent) underline"
+                href="/plus"
+              >
+                Open Ranked Plus
+              </a>
+              <a className="text-(--prose-3) underline" href="/payments">
                 Payments
-              </a>
-              <a className="underline" href="/terms">
-                Terms
-              </a>
-            </div>
-          </div>
-
-          <div
-            ref={topupRef}
-            className="space-y-3 rounded-lg border border-(--outline) bg-(--surface) p-4"
-          >
-            <div>
-              <h2 className="text-base font-bold text-(--prose)">
-                This hour — top-ups
-              </h2>
-              <p className="text-sm text-(--prose-2)">
-                One-time Boosts and Overload for the current UTC hour only.
-                {quotaResetsInSec != null
-                  ? ` About ${Math.max(1, Math.ceil(quotaResetsInSec / 60))}m left this hour.`
-                  : ''}
-              </p>
-              <p className="mt-1 text-xs text-(--prose-3)">
-                {TOPUP_NON_ROLLOVER}
-                {quotaResetsInSec != null && quotaResetsInSec < 600
-                  ? ' Less than 10 minutes remain — buy only if you will use it now.'
-                  : ''}
-              </p>
-            </div>
-            <div className="grid gap-2 sm:grid-cols-3">
-              {RANKED_TOPUP_CATALOG.map((card) => {
-                const packBlocked =
-                  !card.isOverload && topupPackBonus + card.bonusRolls > 90;
-                const overloadBlocked = card.isOverload && hasOverload;
-                const disabled = checkoutBusy || packBlocked || overloadBlocked;
-                return (
-                  <div
-                    key={card.sku}
-                    className="flex flex-col rounded-lg border-2 border-(--outline) bg-(--bg) p-3"
-                  >
-                    <p className="font-display text-lg font-bold text-(--prose)">
-                      {card.label}
-                    </p>
-                    <p className="font-mono text-sm tabular-nums text-(--prose-2)">
-                      +{card.bonusRolls} · {card.priceCad}
-                    </p>
-                    <p className="mt-1 flex-1 text-xs text-(--prose-3)">
-                      {card.blurb}
-                    </p>
-                    <button
-                      type="button"
-                      disabled={disabled}
-                      className="mt-3 border-2 border-(--accent) bg-(--accent) px-2 py-1.5 text-xs font-bold uppercase text-(--bg) disabled:opacity-50"
-                      onClick={() => void startTopupCheckout(card.sku)}
-                    >
-                      {overloadBlocked
-                        ? 'Owned'
-                        : packBlocked
-                          ? 'Cap reached'
-                          : 'Buy'}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="flex flex-wrap gap-3 text-xs text-(--prose-3)">
-              <a className="underline" href="/payments">
-                Payments
-              </a>
-              <a className="underline" href="/terms">
-                Terms
               </a>
             </div>
           </div>

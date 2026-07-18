@@ -17,7 +17,8 @@ export type PageOgSlug =
   | 'stats'
   | 'terms'
   | 'privacy'
-  | 'payments';
+  | 'payments'
+  | 'plus';
 
 export type PageOgMeta = {
   slug: PageOgSlug;
@@ -158,6 +159,15 @@ export const PAGE_OG: Record<PageOgSlug, PageOgMeta> = {
     cardHeadline: 'Payments',
     cardLabel: 'Polar · Ranked tiers · CAD',
   },
+  plus: {
+    slug: 'plus',
+    path: '/plus',
+    title: 'Ranked Plus · RNGdle Unlocked',
+    description:
+      'Subscribe to Ranked Plus (Rare, Epic, Anomaly), manage billing, and buy this-hour Boosts or Overload. Secure Polar checkout.',
+    cardHeadline: 'Ranked Plus',
+    cardLabel: 'Hour caps · cosmetics · top-ups',
+  },
 };
 
 /** Path segment → slug (aliases included). */
@@ -180,6 +190,7 @@ const PATH_TO_SLUG: Record<string, PageOgSlug> = {
   terms: 'terms',
   privacy: 'privacy',
   payments: 'payments',
+  plus: 'plus',
 };
 
 export function resolvePageOgSlug(

@@ -337,7 +337,12 @@ export function AboutScreen() {
           <a className="font-semibold text-(--prose) underline" href="/account">
             Account
           </a>
-          . While signed in:
+          . Optional{' '}
+          <a className="font-semibold text-(--prose) underline" href="/plus">
+            Ranked Plus
+          </a>{' '}
+          subscriptions and this-hour top-ups live on{' '}
+          <code className="text-xs">/plus</code>. While signed in:
         </p>
         <ul className="list-disc space-y-1.5 pl-5">
           <li>

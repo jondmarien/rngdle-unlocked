@@ -10,7 +10,10 @@ export type LinkedAccount = {
 };
 
 export type MeUser = {
+  name?: string | null;
   username?: string | null;
+  usernameChangedAt?: string | null;
+  usernameNextChangeAt?: string | null;
   profileAccent?: string;
   profileBio?: string;
   profileFlair?: string;
@@ -29,6 +32,7 @@ export type MePayload = {
 };
 
 export type MePatch = {
+  name?: string;
   username?: string;
   profileAccent?: string;
   profileBio?: string;
@@ -46,9 +50,12 @@ export async function fetchMe(): Promise<MePayload> {
 }
 
 /** PATCH /api/me — throws with the server's error message on failure. */
-export async function patchMe(
-  patch: MePatch,
-): Promise<{ username?: string; settingsSyncEnabled?: boolean }> {
+export async function patchMe(patch: MePatch): Promise<{
+  name?: string;
+  username?: string;
+  usernameNextChangeAt?: string | null;
+  settingsSyncEnabled?: boolean;
+}> {
   const res = await withTimeout(
     fetch('/api/me', {
       method: 'PATCH',
@@ -61,7 +68,9 @@ export async function patchMe(
   );
   const data = (await res.json()) as {
     error?: string;
+    name?: string;
     username?: string;
+    usernameNextChangeAt?: string | null;
     settingsSyncEnabled?: boolean;
   };
   if (!res.ok) {
