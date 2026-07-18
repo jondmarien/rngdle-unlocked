@@ -301,6 +301,8 @@ Skip multi-touch attribution Rube Goldberg.
 **Spec approved as-written (2026-07-18).**
 
 **Implementation plan:** [`docs/superpowers/plans/2026-07-18-rngdle-unlocked-gtm.md`](../plans/2026-07-18-rngdle-unlocked-gtm.md)  
-**Artifact pack (created during plan execution):** `docs/marketing/gtm-2026-07/`
+**Artifact pack:** [`docs/marketing/gtm-2026-07/`](../../marketing/gtm-2026-07/)
+
+**ai-ugc brand pack branch:** `feat/rngdle-brand-pack` on `jondmarien/ai-ugc-pipeline` (not merged to main).
 
 Plan covers: ai-ugc RNGdle brand pack + `game` theme, launch content bank, channel copy, calendars/runbooks, read-only SEO verification. **No SEO code tasks.**

@@ -10,30 +10,32 @@
 
 **Spec:** [`docs/superpowers/specs/2026-07-18-rngdle-unlocked-gtm-design.md`](../specs/2026-07-18-rngdle-unlocked-gtm-design.md)
 
+**Execution note (2026-07-18):** ai-ugc-pipeline changes live only on branch `feat/rngdle-brand-pack` (commit `3cec273`). Do **not** merge to ai-ugc `main` until Jon approves. rngdle marketing docs ship on rngdle `main`.
+
 **Out of scope:** SEO code changes, Snapchat/FB growth, paid ads, full ai-ugc vanilla multi-brand OS, fake social proof.
 
 ---
 
 ### Task checklist
 
-- [ ] Task 1: Pull baselines + create marketing folder
-- [ ] Task 2: Live SEO verification (read-only) + write checklist result
-- [ ] Task 3: ai-ugc brand brain files (content-only)
-- [ ] Task 4: Add RNGdle pillars + `game` theme to design tokens
-- [ ] Task 5: Mirror pillars/theme in schema + draft CLIs + remotion theme
-- [ ] Task 6: Smoke-scaffold one RNGdle post JSON
-- [ ] Task 7: Commit ai-ugc brand pack
-- [ ] Task 8: Launch content bank outline (8 items)
-- [ ] Task 9: Write post scripts 1–4 (hero, lock contradiction, fairness, codex)
-- [ ] Task 10: Write post scripts 5–8 (arcade, share loop, BIP, crown)
-- [ ] Task 11: Channel copy pack — Discord + Reddit
-- [ ] Task 12: Channel copy pack — LinkedIn + GitHub + portfolio blurb
-- [ ] Task 13: Channel copy pack — IG/YT captions for bank
-- [ ] Task 14: Spike kits (Product Hunt + Show HN) + decision stub
-- [ ] Task 15: 30-day calendar + weekly pack template
-- [ ] Task 16: Ranked seed + Discord event runbooks
-- [ ] Task 17: Week-0 preflight checklist (Jon-facing)
-- [ ] Task 18: Final cross-link from GTM spec + commit rngdle docs
+- [x] Task 1: Pull baselines + create marketing folder
+- [x] Task 2: Live SEO verification (read-only) + write checklist result
+- [x] Task 3: ai-ugc brand brain files (content-only)
+- [x] Task 4: Add RNGdle pillars + `game` theme to design tokens
+- [x] Task 5: Mirror pillars/theme in schema + draft CLIs + remotion theme
+- [x] Task 6: Smoke-scaffold one RNGdle post JSON
+- [x] Task 7: Commit ai-ugc brand pack
+- [x] Task 8: Launch content bank outline (8 items)
+- [x] Task 9: Write post scripts 1–4 (hero, lock contradiction, fairness, codex)
+- [x] Task 10: Write post scripts 5–8 (arcade, share loop, BIP, crown)
+- [x] Task 11: Channel copy pack — Discord + Reddit
+- [x] Task 12: Channel copy pack — LinkedIn + GitHub + portfolio blurb
+- [x] Task 13: Channel copy pack — IG/YT captions for bank
+- [x] Task 14: Spike kits (Product Hunt + Show HN) + decision stub
+- [x] Task 15: 30-day calendar + weekly pack template
+- [x] Task 16: Ranked seed + Discord event runbooks
+- [x] Task 17: Week-0 preflight checklist (Jon-facing)
+- [x] Task 18: Final cross-link from GTM spec + commit rngdle docs
 
 ---
 
