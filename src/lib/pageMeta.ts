@@ -1,27 +1,10 @@
-/** Browser tab titles for SPA routes (humans). OG crawlers use server/pageOg.ts. */
+/** Browser tab titles + meta for SPA routes (humans). Bot OG uses server/pageOg.ts ← seo-copy. */
 
 import type { TabId } from './routes';
-
-const TAB_DOCUMENT_TITLE: Record<TabId, string> = {
-  home: 'Roll · RNGdle Unlocked',
-  history: 'History · RNGdle Unlocked',
-  collection: 'Codex · RNGdle Unlocked',
-  stats: 'Stats · RNGdle Unlocked',
-  leaderboard: 'Leaderboard · RNGdle Unlocked',
-  friends: 'Friends · RNGdle Unlocked',
-  arcade: 'Arcade · RNGdle Unlocked',
-  features: 'Features · RNGdle Unlocked',
-  'whats-new': "What's new · RNGdle Unlocked",
-  notifications: 'Alerts · RNGdle Unlocked',
-  account: 'Account · RNGdle Unlocked',
-  plus: 'Ranked Plus · RNGdle Unlocked',
-  about: 'About · RNGdle Unlocked',
-  admin: 'Admin · RNGdle Unlocked',
-  settings: 'Settings · RNGdle Unlocked',
-};
+import { SEO_COPY, absoluteUrl, type SeoCopy } from './seo-copy';
 
 export function documentTitleForTab(tab: TabId): string {
-  return TAB_DOCUMENT_TITLE[tab];
+  return SEO_COPY[tab].title;
 }
 
 export function documentTitleForProfile(username: string): string {
@@ -35,7 +18,41 @@ export function documentTitleForRoll(): string {
 export function documentTitleForLegal(
   page: 'terms' | 'privacy' | 'payments',
 ): string {
-  if (page === 'terms') return 'Terms of Service · RNGdle Unlocked';
-  if (page === 'privacy') return 'Privacy Policy · RNGdle Unlocked';
-  return 'Payments · RNGdle Unlocked';
+  return SEO_COPY[page].title;
+}
+
+export function seoCopyForTab(tab: TabId): SeoCopy {
+  return SEO_COPY[tab];
+}
+
+export function seoCopyForLegal(
+  page: 'terms' | 'privacy' | 'payments',
+): SeoCopy {
+  return SEO_COPY[page];
+}
+
+/** Update title, description, and canonical for the current SPA route. */
+export function applyDocumentMeta(opts: {
+  title: string;
+  description: string;
+  canonicalPath: string;
+}): void {
+  if (typeof document === 'undefined') return;
+  document.title = opts.title;
+
+  let desc = document.querySelector('meta[name="description"]');
+  if (!desc) {
+    desc = document.createElement('meta');
+    desc.setAttribute('name', 'description');
+    document.head.appendChild(desc);
+  }
+  desc.setAttribute('content', opts.description);
+
+  let canonical = document.querySelector('link[rel="canonical"]');
+  if (!canonical) {
+    canonical = document.createElement('link');
+    canonical.setAttribute('rel', 'canonical');
+    document.head.appendChild(canonical);
+  }
+  canonical.setAttribute('href', absoluteUrl(opts.canonicalPath));
 }

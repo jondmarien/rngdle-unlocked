@@ -1,5 +1,10 @@
 /** Shared OG / Discord preview HTML (crawlers). Humans meta-refresh to SPA. */
 
+import {
+  BING_SITE_VERIFICATION,
+  GOOGLE_SITE_VERIFICATION,
+} from '../src/lib/seo-copy.js';
+
 export function ogHtmlPage(opts: {
   title: string;
   desc: string;
@@ -9,6 +14,8 @@ export function ogHtmlPage(opts: {
   linkLabel?: string;
   /** Open Graph type — rolls use website; profiles use profile */
   ogType?: 'website' | 'profile';
+  /** Optional JSON-LD object (home) */
+  jsonLd?: Record<string, unknown>;
 }): Response {
   const {
     title,
@@ -18,6 +25,7 @@ export function ogHtmlPage(opts: {
     ogImage,
     linkLabel = 'Open in app →',
     ogType = 'website',
+    jsonLd,
   } = opts;
   const imageMeta = ogImage
     ? `
@@ -29,6 +37,21 @@ export function ogHtmlPage(opts: {
   <meta name="twitter:image" content="${escapeHtml(ogImage)}" />`
     : `
   <meta name="twitter:card" content="summary" />`;
+
+  const verifyMeta = [
+    GOOGLE_SITE_VERIFICATION
+      ? `  <meta name="google-site-verification" content="${escapeHtml(GOOGLE_SITE_VERIFICATION)}" />`
+      : '',
+    BING_SITE_VERIFICATION
+      ? `  <meta name="msvalidate.01" content="${escapeHtml(BING_SITE_VERIFICATION)}" />`
+      : '',
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+  const jsonLdBlock = jsonLd
+    ? `\n  <script type="application/ld+json">${JSON.stringify(jsonLd).replace(/</g, '\\u003c')}</script>`
+    : '';
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -44,8 +67,9 @@ export function ogHtmlPage(opts: {
   <meta property="og:site_name" content="RNGdle Unlocked" />${imageMeta}
   <meta name="twitter:title" content="${escapeHtml(title)}" />
   <meta name="twitter:description" content="${escapeHtml(desc)}" />
+${verifyMeta}
   <meta http-equiv="refresh" content="0;url=${escapeHtml(spaUrl)}" />
-  <link rel="canonical" href="${escapeHtml(spaUrl)}" />
+  <link rel="canonical" href="${escapeHtml(spaUrl)}" />${jsonLdBlock}
 </head>
 <body style="font-family:system-ui;background:#0f1412;color:#ecfdf5;padding:2rem">
   <p><strong>${escapeHtml(title)}</strong></p>

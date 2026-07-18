@@ -4,9 +4,9 @@
 
 ### Unlimited CSPRNG rolls · badges · EP · cloud social — _no 24-hour lock._
 
-Inspired by the daily number-game genre, but **unlocked**: roll as often as you want, keep a lifetime collection, and optionally sync to Neon for accounts, **Ranked + Practice + All-Time leaderboards**, **Arcade Digits runs**, follows, challenges, and shareable rolls.
+Inspired by the daily number-game genre, but **unlocked**: roll as often as you want, keep a lifetime collection, and optionally sync for **Ranked + Practice + All-Time** boards, **Arcade Digits**, follows, and shareable rolls.
 
-**[Live Site](https://rngdle-unlocked.chron0.tech)**
+**[Live Site](https://rngdle-unlocked.chron0.tech)** · **[Docs Wiki](https://github.com/jondmarien/rngdle-unlocked/wiki)** · **[Author](https://chron0.tech)**
 
 [![Version](https://img.shields.io/badge/version-0.19.2-8b5cf6)](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.19.2)
 [![React 19](https://img.shields.io/badge/UI-React_19-61dafb?logo=react&logoColor=black)](https://react.dev)
@@ -21,488 +21,73 @@ Inspired by the daily number-game genre, but **unlocked**: roll as often as you 
 [![Neon](https://img.shields.io/badge/db-Neon_Postgres-00E599?logo=postgresql&logoColor=white)](https://neon.tech)
 [![Better Auth](https://img.shields.io/badge/auth-Better_Auth-ffffff?logoColor=black)](https://www.better-auth.com)
 
-[Quick start](#-quick-start) · [How it works](#-how-it-works) · [Features](#-features) · [Architecture](./docs/ARCHITECTURE.md) · [Repo layout](#-whats-in-this-repo) · [Social setup](#-social--cloud-setup) · [Commands](#-commands) · [FAQ](#-faq--troubleshooting)
-
 </div>
 
 ---
 
-## 💡 What is this?
+## What is this?
 
-**RNGdle Unlocked** is a browser game: roll an integer from **0–1,000,000**, earn **entropy points (EP)** and **badges** from number properties, climb **Journey** (roll-count) and **Lifetime EP** milestone seals, and share rolls to Discord.
-
-Unlike a classic daily lock, you can roll **unlimited** times. Progress defaults to **localStorage** on your device. Optional **cloud social** (accounts, username, auto-sync, dual leaderboards, follows/feed, challenges, attestation seals, vanity share URLs + OG images) runs on **Vercel serverless + Neon Postgres + Better Auth**.
+**RNGdle Unlocked** is a browser game: roll **0–1,000,000**, earn **EP** and **badges**, climb Journey / Lifetime seals. Progress is **local-first** (`localStorage`). Cloud is optional — auth, sync, Ranked, social, Arcade — on Vercel + Neon + Better Auth.
 
 > **Not affiliated with [rngdle.com](https://www.rngdle.com/).** Badge names, scoring, and implementation are original.
 
-| Mode                | What you get                                                                                                                                                                                                                                                                                                                        |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Solo (default)**  | Fortified browser CSPRNG Free play, reel animation, badges, EP, history (incl. Highlights), codex, stats, export/import — offline-capable                                                                                                                                                                                           |
-| **Social (opt-in)** | Email sign-up, `@username`, auto cloud sync, **Leaderboard → Practice** (public Free/challenge rolls) + **Leaderboard → Ranked** (server free play) + **Leaderboard → All-Time** (synced overall lifetime) + **Arcade** Digits board, community crowns (Ranked only), follows/feed, profiles, alerts, share + OG, challenges, seals |
+| Mode | What you get |
+| ---- | ------------ |
+| **Solo** | Unlimited Free play, reel, badges, EP, history, codex, stats, export/import — offline-capable |
+| **Social** | `@username`, sync, Ranked / Practice / All-Time / Arcade boards, follows, share + OG |
 
-## 📋 Table of contents
+## How it works
 
-- [How it works](#-how-it-works)
-- [Quick start](#-quick-start)
-- [Features](#-features)
-- [What's in this repo](#-whats-in-this-repo)
-- [Routes (SPA)](#-routes-spa)
-- [Social / cloud setup](#-social--cloud-setup)
-- [Commands](#-commands)
-- [Environment variables](#-environment-variables)
-- [Architecture notes](#-architecture-notes) · [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)
-- [FAQ / troubleshooting](#-faq--troubleshooting)
-- [Status & roadmap](#-status--roadmap)
-- [What's next](#-whats-next)
+- **Free play** — browser CSPRNG → Practice + All-Time (no Ranked crowns)
+- **Ranked** — server CSPRNG (`POST /api/ranked-roll`) → Ranked board + crowns (needs `@username`)
+- **Arcade** — Digits runs on `/arcade` (Digits ≠ EP; never writes `rolls`)
+- **Daily / Weekly** — deterministic challenge seeds
 
-## 🔭 How it works
+Diagrams and trust model: **[Wiki · Architecture](https://github.com/jondmarien/rngdle-unlocked/wiki/Architecture)** · [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)
 
-```mermaid
-flowchart LR
-  subgraph Client["Browser SPA"]
-    UI[React UI]
-    FREE[Free play CSPRNG]
-    CHAL[Daily or Weekly seed]
-    ARCUI["/arcade Digits UI"]
-    LS[(localStorage)]
-    UI --> FREE
-    UI --> CHAL
-    UI --> ARCUI
-    UI --> LS
-  end
-
-  subgraph Host["Vercel"]
-    STATIC[Static dist]
-    API["Serverless API"]
-    RANK["POST ranked-roll"]
-    ARCADE["/api/arcade run loop"]
-  end
-
-  subgraph Data["Neon Postgres"]
-    NEON[(auth progress rolls follows)]
-    ARCTBL[(arcade_meta runs run_rolls)]
-  end
-
-  STATIC --> UI
-  UI -->|Practice sync| API
-  UI -->|Ranked| RANK
-  ARCUI -->|Digits run| ARCADE
-  API --> NEON
-  RANK --> NEON
-  ARCADE --> ARCTBL
-```
-
-Deeper diagrams (roll lifecycle, Ranked vs Free, Arcade Digits, notifications, OG): **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)**.
-
-**Free play (practice):** fortified browser CSPRNG → badge evaluation → EP / rarity → history + collection → localStorage → auto-sync when signed in → places on **Leaderboard → Practice** (public Free/challenge rolls) and **Leaderboard → All-Time** (synced overall lifetime). Does **not** claim community crowns.
-
-**Ranked free play (competitive):** sign-in + `@username` → `POST /api/ranked-roll` (server CSPRNG + server score) → `rolls.source = ranked` → places on **Leaderboard → Ranked**, community today/week/all-time crowns, overtake alerts. Client sync cannot forge ranked rows.
-
-**Arcade Mode (Digits runs):** separate tab `/arcade` (not a Home roll mode). Sign-in + `@username` → server-authoritative run loop (`/api/arcade/*`) → Digits, shop upgrades, cash out or bust → **Leaderboard → Arcade** (best Digits run). Digits never convert to EP; Arcade never writes `rolls` / `user_progress`.
-
-**Challenge path (optional):** Roll tab → **Daily** or **Weekly**. Shared UTC period seed + your account id → one personal deterministic number for that period.
-
-**Social path (optional):** Better Auth → merge-safe sync → Ranked / Practice / All-Time / Arcade boards → follows/feed → vanity share after cloud confirm → OG. Sync may enqueue Activity unlocks; Ranked rolls may enqueue System crown messages.
-
-## 🚀 Quick start
-
-### Play only (no backend)
+## Quick start
 
 ```bash
-corepack enable
-corepack prepare pnpm@10.34.4 --activate   # or use any pnpm 10.x
+corepack enable && corepack prepare pnpm@10.34.4 --activate
 pnpm install
 pnpm dev
 ```
 
-Open the URL Vite prints (usually `http://localhost:5173`). Rolls and badges work immediately with no env vars.
+Open the Vite URL (usually `http://localhost:5173`). No env vars needed for solo play.
 
-### Full stack (auth + leaderboard + sync)
+Full stack (Neon + `vercel dev`), migrations, OAuth, Discord, Polar: **[Wiki · Quick Start](https://github.com/jondmarien/rngdle-unlocked/wiki/Quick-Start)** · **[Development Setup](https://github.com/jondmarien/rngdle-unlocked/wiki/Development-Setup)**
 
-1. Copy env and fill secrets:
+**Live:** https://rngdle-unlocked.chron0.tech
 
-```bash
-cp .env.example .env.local
-```
+---
 
-2. Apply schema to Neon (Drizzle **or** additive scripts):
+## Docs (moved to the Wiki)
 
-```bash
-pnpm db:push
-# if drizzle-kit asks about truncating rolls, prefer:
-node scripts/migrate-feature-wave.mjs
-# Arcade Digits tables (additive; safe to re-run):
-node --env-file=.env.local scripts/migrate-arcade.mjs
-# Polar entitlements + profile frames (additive):
-node --env-file=.env.local scripts/migrate-polar-entitlements.mjs
-node --env-file=.env.local scripts/migrate-profile-frame.mjs
-```
+Long feature lists, routes, env tables, FAQ, and the full shipped roadmap lived here and were hard to scan. They now live in the **[GitHub Wiki](https://github.com/jondmarien/rngdle-unlocked/wiki)** (staged under [`docs/wiki/`](./docs/wiki/), publish with `pnpm wiki:publish`).
 
-3. Run SPA + APIs together (recommended for local social):
+| Want… | Go to |
+| ----- | ----- |
+| Feature checklist | [Wiki · Features](https://github.com/jondmarien/rngdle-unlocked/wiki/Features) |
+| Mode / trust table | [Wiki · Game Modes](https://github.com/jondmarien/rngdle-unlocked/wiki/Game-Modes-and-Trust) |
+| Repo map + routes/API | [Wiki · Repo Layout](https://github.com/jondmarien/rngdle-unlocked/wiki/Repo-Layout) · [Routes](https://github.com/jondmarien/rngdle-unlocked/wiki/Routes-and-API) |
+| Env / OAuth / Discord / Polar | [Wiki · Environment](https://github.com/jondmarien/rngdle-unlocked/wiki/Environment) · [Integrations](https://github.com/jondmarien/rngdle-unlocked/wiki) |
+| FAQ | [Wiki · FAQ](https://github.com/jondmarien/rngdle-unlocked/wiki/FAQ-and-Troubleshooting) |
+| Roadmap + what's next | [Wiki · Roadmap](https://github.com/jondmarien/rngdle-unlocked/wiki/Roadmap) |
+| Agent / contributor rules | [`AGENTS.md`](./AGENTS.md) |
+| Changelog | [`CHANGELOG.md`](./CHANGELOG.md) |
 
 ```bash
-npx vercel dev
+pnpm test && pnpm typecheck   # verify
+npx vercel dev                # SPA + /api/*
+pnpm wiki:publish             # docs/wiki → GitHub Wiki
 ```
 
-Or `pnpm dev` for the SPA only and point APIs at a deployed preview.
-
-4. Production: deploy to Vercel, set the same env vars for **Production**, attach Neon, redeploy. Re-run the migration script against prod `DATABASE_URL` if tables/columns are missing.
-
-**Live production:** [https://rngdle-unlocked.chron0.tech](https://rngdle-unlocked.chron0.tech)
-
-## ✨ Features
-
-### Solo playground
-
-- **Unlimited rolls** 0–1,000,000 (no daily lock)
-- **Fortified CSPRNG** — `crypto.getRandomValues`, entropy mixing, reject sampling (not `Math.random`)
-- **Reel animation** — all digits scramble, then lock with rarity glow; `??? EP` while spinning; badges cascade in; EP counts up
-- **Fresh reel on refresh** — home does not restore the last roll; History/Codex keep progress
-- **Roll mode picker** — Free play · Ranked · Daily · Weekly with plain-language board placement copy
-- **325 number badges** + journey + secret masteries (section seals including Bases / Radix Crown / Atomic Seal, streak secrets, + Codex Absolute)
-- **Badge codex** — spoiler-safe locked entries, **unlock timestamps**, **New** tab (first unlocks in the last 5 minutes)
-- **NEW ribbons** on first-time unlocks in the roll breakdown
-- **Family-colored badge pills** + custom rarity/family icon art
-- **Typography** — Outfit (UI), Syne (display), JetBrains Mono (numbers)
-- **EP + rarity ladder** (trash → divine) and percentile framing
-- **Journey milestones** (lifetime EP)
-- **History, stats** — searchable roll log + Highlights (streaks/best consecutive); rarity histogram, EP/hour, 28-day streak calendar on Stats
-- **Streaks**, optional confetti / SFX
-- **Export / import** save files; theme light / dark / system
-- **Discord-style share text** + PNG card
-
-### Roll modes
-
-| Mode          | Number source                           | Leaderboard / crowns                                                                    |
-| ------------- | --------------------------------------- | --------------------------------------------------------------------------------------- |
-| **Free play** | Browser CSPRNG each Generate            | **Practice** board (public Free/challenge rolls) + **All-Time** via sync. No crowns.    |
-| **Ranked**    | Server CSPRNG (`POST /api/ranked-roll`) | **Ranked** board + today/week/all-time crowns + overtakes. Needs sign-in + `@username`. |
-| **Daily**     | `hash(daySeed + yourId)`                | Challenge number; Free/Ranked stay available.                                           |
-| **Weekly**    | `hash(weekSeed + yourId)`               | Same idea for the ISO week.                                                             |
-| **Arcade**    | Server CSPRNG inside Digits run loop    | **Arcade** board (best Digits run). Separate tab `/arcade` — Digits ≠ EP.               |
-
-Switch modes anytime (board fully resets). Badges, EP, history, and share work after you have a number. Absolute Ceiling jackpot (1 in 100M) exists on Free and Ranked.
-
-### Social & competitive
-
-- **Email + password** auth (Better Auth)
-- **@username** public identity
-- **Auto cloud sync** on Free play / challenges when signed in (merge-safe; cannot forge `source=ranked`)
-- **EP leaderboards** — **Ranked** (server free play) · **Practice** (public Free/challenge rolls) · **All-Time** (synced overall lifetime); **Total EP** or **Best Roll** (by EP / by rarity); Ranked/Practice all-time / week; All-Time Total EP can sort EP / rolls / badges
-- **Arcade Mode** — `/arcade` Digits runs (upgrades, cash out / bust); **Leaderboard → Arcade** ranks best Digits run (never EP)
-- **Mode-first Board tabs** — Ranked | Practice | All-Time | Arcade | Feed | Find
-- **Features tab** — signed-in feature requests with upvotes; Active / Shipped / Declined sections; admin status workflow
-- **Community highlights** — today’s + weekly best **Ranked** rolls on the home tab when idle (`/api/highlights`)
-- **You on the board** — rank highlighted + sticky card if outside top list (per active board)
-- **Follows + Feed** — Board (+), Find search, or profile; **all public rarities** (All / Ranked / Free play toggles)
-- **In-app notifications** — Activity (follows, unlocks, **overtaken** on Ranked crowns); System (broadcasts + Ranked crown notices); same-roll crown periods grouped into one card
-- **System messages** — developer broadcasts (`POST /api/system-messages` + admin session / `api/admin/broadcast`); auto crowns for Ranked day/week/all-time EP #1
-- **Profiles** — `/u/:username` with accent, flair, bio, **preset + Ranked Plus emblem avatars**, **subscription profile frames**, secret seals, recent rolls + Follow
-- **Vanity share URLs** — `/s/:username/:shortCode`
-- **Share gates** — no public link until cloud confirms
-- **Mythic / anomaly / divine** auto-open share after reveal (optional setting)
-- **Prove this roll** — optional server HMAC seal (`/api/attest`) for claims
-- **Dynamic OG** — `/api/og` PNG cards for Discord/social (SVG is not supported by Discord); bot rewrite of `/u/:user` → profile OG HTML
-- **Soft rate limits** on sync, Ranked rolls (**~90/h free** UTC; Rare 120 / Epic 150 / Anomaly 180 via Polar entitlements), and public APIs
-- **Polar monetization** — public CAD Ranked Plus products (Rare/Epic/Anomaly), webhook entitlements, org KYC/payouts approved; see [`docs/polar-monetization.md`](./docs/polar-monetization.md)
-- **Ranked Plus (`/plus`)** — Checkout Sessions + product cards + friend code + Manage portal; hour Boost/Overload top-ups; Plus regen (+1/+2/+3 every 6 min toward cap); Account keeps identity + profile look; see [`docs/polar-checkout-foundation.md`](./docs/polar-checkout-foundation.md)
-- **Legal** — `/terms`, `/privacy`, `/payments` (Polar MoR disclosure — not a buy page)
-- **Discord / GitHub OAuth** — wired in app; finish portal + env via [`docs/oauth-setup.md`](./docs/oauth-setup.md)
-
-### Planned later / in progress
-
-- Turnstile on sign-up
-- Server-side EP velocity caps
-
-## 📁 What's in this repo
-
-```
-rngdle-unlocked/
-├── api/                 ⚡ Thin Vercel handlers (Node adapter → Web Request)
-│   ├── auth.ts · me.ts · sync.ts · health.ts · ranked-roll/ (index + quota)
-│   ├── webhooks/polar.ts · checkout/ · leaderboard.ts · arcade/* · feed.ts · profile/ · og.ts · …
-│   └── admin/* · reports.ts · follow.ts · notifications.ts · …
-├── server/              🧠 Shared API logic
-│   ├── apiGuards · auth · db/schema · sync · rankedRoll · arcade · rollActivity
-│   ├── polar/ (client · products · checkout · webhooks · entitlements) · leaderboard · profile · feed · ogSvg
-│   ├── rateLimit · vercel-adapter · ogHtml · …
-├── src/
-│   ├── game/            Pure TS engine (rng, badges, secrets, challenge, arcade/)
-│   ├── state/           GameProvider (contexts) + useSync + settings + localStorage
-│   ├── lib/             *-api.ts, schemas, profile-avatars/frames, ranked-limits, routes
-│   └── ui/              Screens + reel / cascade (+ ArcadeScreen)
-├── public/              Avatars (+ tier/), rarity/family icons, secret art, PWA
-├── docs/                ARCHITECTURE · polar-monetization · polar-checkout-foundation · …
-├── scripts/             migrate-arcade, migrate-polar-entitlements, migrate-profile-frame, …
-└── vercel.json          SPA + bot OG rewrites for /s, /u, /arcade, /payments, …
-```
-
-| Area                     | Role                                              | Stack                                            |
-| ------------------------ | ------------------------------------------------- | ------------------------------------------------ |
-| **`src/game/`**          | Pure game rules — testable without React          | TypeScript                                       |
-| **`src/ui/` + `state/`** | SPA experience + persistence                      | React 19 · Tailwind v4 · TanStack Query · Motion |
-| **`src/lib/*-api.ts`**   | Mandatory client API wrappers (no raw UI `fetch`) | fetch + Zod at trust boundaries                  |
-| **`api/` + `server/`**   | Social backend on Vercel                          | Better Auth · Drizzle · Neon · Polar · apiGuards |
-| **`docs/`**              | Living architecture + historical specs/plans      | Markdown                                         |
-
-## 🗺️ Routes (SPA)
-
-| Path                                | Screen                                                                               |
-| ----------------------------------- | ------------------------------------------------------------------------------------ |
-| `/`                                 | Roll (Free / Ranked / Daily / Weekly)                                                |
-| `/history`                          | Roll log + Highlights (former Showcase: bests & streaks)                             |
-| `/history?view=highlights`          | Deep link to History → Highlights                                                    |
-| `/collection`                       | Badge **codex** (encyclopedia, unlock times, **New** 5‑min tab)                      |
-| `/stats`                            | Rarity histogram, EP/hour, calendar                                                  |
-| `/leaderboard`                      | **Ranked** · **Practice** · **All-Time** · **Arcade** · Feed · **Find** (mode-first) |
-| `/arcade`                           | Arcade Digits runs (shop, cash out / bust) — sign-in + `@username`                   |
-| `/features`                         | Feature requests (sign-in) — tags, edit, optional screenshot, upvote, status         |
-| `/notifications`                    | Alerts (Activity + System)                                                           |
-| `/account`                          | Auth, username, profile look (avatar/frame/accent/flair/bio), push/pull              |
-| `/about`                            | How to play, social, fairness                                                        |
-| `/settings`                         | Theme, effects, tips, export/import                                                  |
-| `/whats-new`                        | Player-facing release highlights                                                     |
-| `/terms` · `/privacy` · `/payments` | Legal (incl. Polar MoR / payments disclosure)                                        |
-| `/u/:username`                      | Public profile (+ follow)                                                            |
-| `/s/:user/:code`                    | Vanity public roll (SPA)                                                             |
-| `/r/:id`                            | Legacy public roll path                                                              |
-
-**API (serverless):**  
-`/api/auth/*`, `/api/me`, `/api/sync`, `/api/ranked-roll` (+ `/quota`), `/api/webhooks/polar`, `/api/leaderboard?view=total|best&scope=ranked|practice`, `/api/arcade` (+ `/start` `/roll` `/buy` `/arm` `/cash-out` `/abandon` `/leaderboard`), `/api/feature-requests`, `/api/feature-requests/:id/vote`, `/api/admin/feature-requests`, `/api/highlights`, `/api/follow`, `/api/feed`, `/api/users/search`, `/api/notifications`, `/api/system-messages`, `/api/admin/*`, `/api/reports`, `/api/challenge`, `/api/attest`, `/api/og`, `/api/profile/:user`, `/api/u/:user`, `/api/rolls/:id`, `/api/share/:id`, `/api/health`.
-
-Bot user-agents: `/s/:user/:code` → `/api/share/:code`; `/u/:username` → `/api/u/:username`; `/arcade` → `/api/page/arcade` for OG HTML + image.
-
-## ☁️ Social / cloud setup
-
-### 1. Neon
-
-- Create a Postgres project (or use Vercel Neon integration).
-- Put the **pooled** connection string in `DATABASE_URL` (local + Vercel Production).
-- Apply schema:
-  - `pnpm db:push`, **or**
-  - `node scripts/migrate-feature-wave.mjs` (additive: `short_code`, attestation columns, `follows` — avoids truncate prompts)
-
-Tables include: `user` (vanity: accent, bio, flair, avatar, **profile_frame**), `session`, `account`, `verification`, `user_progress`, `rolls`, `arcade_meta`, `arcade_runs`, `arcade_run_rolls`, `follows`, `notifications`, `system_messages`, `system_message_reads`, `rate_limits`, `user_entitlements`, `polar_webhook_events`, `ranked_topups` (top-up stub).
-
-Arcade: `node --env-file=.env.local scripts/migrate-arcade.mjs` · Polar: `migrate-polar-entitlements.mjs` · Frames: `migrate-profile-frame.mjs`
-
-### 2. Better Auth env
-
-| Variable             | Local example           | Production                                                |
-| -------------------- | ----------------------- | --------------------------------------------------------- |
-| `DATABASE_URL`       | Neon pooled URL         | **Same real Neon project** you intend to use live         |
-| `BETTER_AUTH_SECRET` | long random string      | same or stronger (also used as attest HMAC key)           |
-| `BETTER_AUTH_URL`    | `http://localhost:5173` | `https://rngdle-unlocked.chron0.tech` (**not** localhost) |
-| `VITE_APP_URL`       | same as above           | production origin                                         |
-
-Generate a secret:
-
-```bash
-openssl rand -base64 32
-```
-
-### 3. Vercel
-
-- Framework: Vite · build `pnpm run build` · output `dist`
-- Set env for **Production** (and Preview if you use it)
-- Redeploy after any env change
-
-### 4. Share links (cloud-gated)
-
-Public vanity URLs only work for **rolls that exist in Neon**. Flow:
-
-1. Sign in → set `@username`
-2. Roll (auto-sync) or **Push / merge to cloud**
-3. Share panel waits for cloud → then enables the vanity link
-4. Discord crawlers get OG HTML + `/api/og` image; humans open `/s/user/code`
-
-Logged out: Discord-style text / PNG only — no public URL, with a create-account CTA.
-
-## 🧰 Commands
-
-| Command                                 | Purpose                                               |
-| --------------------------------------- | ----------------------------------------------------- |
-| `pnpm dev`                              | Vite dev server (SPA)                                 |
-| `pnpm build`                            | App + node typecheck, then Vite build → `dist/`       |
-| `pnpm typecheck`                        | App, node, and `tsconfig.server.json` (NodeNext)      |
-| `pnpm preview`                          | Preview `dist/`                                       |
-| `pnpm test`                             | Unit tests (`vp test`)                                |
-| `pnpm lint`                             | Lint via Vite+                                        |
-| `pnpm db:push`                          | Push Drizzle schema to Neon                           |
-| `pnpm db:studio`                        | Drizzle Studio                                        |
-| `node scripts/migrate-feature-wave.mjs` | Additive SQL migration (follows, seals, short_code)   |
-| `node scripts/migrate-arcade.mjs`       | Additive Arcade tables (`arcade_meta` / runs / rolls) |
-| `npx vercel dev`                        | Local SPA + serverless APIs                           |
-
-### Debug logging (browser)
-
-Open DevTools console:
-
-```js
-__rngdleLog.setLevel('debug');
-__rngdleLog.dump();
-```
-
-Server logs use the same `[rngdle:…]` prefixes in Vercel function logs.
-
-## 🔐 Environment variables
-
-See [`.env.example`](./.env.example). Never commit `.env` / `.env.local`.
-
-| Name                   | Required for                     | Notes                                                   |
-| ---------------------- | -------------------------------- | ------------------------------------------------------- |
-| `DATABASE_URL`         | Social APIs                      | Neon; must match the project you inspect in the console |
-| `BETTER_AUTH_SECRET`   | Auth + attest seals              | Required in production                                  |
-| `BETTER_AUTH_URL`      | Auth cookies / CSRF              | Production site origin                                  |
-| `VITE_APP_URL`         | Trusted origins                  | Usually same as `BETTER_AUTH_URL`                       |
-| `POLAR_API_KEY`        | Polar API (ops / later checkout) | Server only; never expose to Vite                       |
-| `POLAR_WEBHOOK_SECRET` | `POST /api/webhooks/polar`       | Signature verify                                        |
-| `LOG_LEVEL`            | Server logs                      | Optional (`debug` / `info`)                             |
-| `ADMIN_SECRET`         | System message broadcasts        | Optional; bootstrap / scripts only                      |
-
-## 🏗️ Architecture notes
-
-Full diagrams: **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)**. Refactor summary: **[docs/refactor-notes-2026-07.md](./docs/refactor-notes-2026-07.md)**.
-
-- **Game engine is pure TS** under `src/game/` — no React imports; unit tests cover badges, secrets, challenges, rarity, **Arcade Digits**.
-- **SPA routing** uses the History API (`src/lib/routes.ts`); Vercel rewrites non-`/api` paths to `index.html`.
-- **Client API wrappers** — UI uses `src/lib/*-api.ts` only (no raw `fetch('/api/...')` in screens). **TanStack Query** caches leaderboard / arcade / feed / highlights / profile / admin-check reads.
-- **Zod at trust boundaries** — save import payload, cloud sync POST body, public profile GET response, and Arcade API payloads. Not every endpoint is schema-validated.
-- **State** — `GameProvider` exposes `useGame` / `useGameSettings` / `useCloudSync`; sync orchestration in `src/state/useSync.ts`. Arcade run state is server-owned (TanStack Query + `arcade-api`).
-- **Serverless handlers** — thin `api/*` → `server/*`; preamble via `server/apiGuards.ts` (`requireUser` / `readJson` / `rateGuard`). Read pipelines live in `server/{leaderboard,arcadeLeaderboard,profile,feed,ogSvg}.ts`.
-- **TypeScript** — `tsconfig.server.json` uses **NodeNext** so missing `.js` ESM extensions fail `pnpm typecheck` (prevents Ranked `/var/task` module misses).
-- **Auth multi-segment paths** rewritten to `/api/auth?__path=…` (no Next-style catch-all); Node `(req, res)` adapter in `server/vercel-adapter.ts`.
-- **Merge-safe sync** — max counters, union collections (earliest `firstEarnedAt`), merge histories by id; integrity gate rejects cloned progress dumps.
-- **Ranked rolls** (`POST /api/ranked-roll`, `server/rankedRoll.ts`) — server CSPRNG + score; `rolls.source = ranked`.
-- **Leaderboard scopes** — `?scope=ranked|practice` (default ranked); `?view=total|best` (default total); best view uses `?sortBy=ep|rarity`. Arcade Digits board is `GET /api/arcade/leaderboard` (separate from EP).
-- **Arcade** (`server/arcade.ts`, `src/game/arcade/`) — Digits economy; server is source of truth; never writes `rolls` / EP; one active run; cash out or bust (DoN loss / abandon).
-- **Roll activity** (`server/rollActivity.ts`) — unlock notifications; Ranked-only crowns + overtake alerts.
-- **Share publish** polls `/api/rolls/:key` (`waitForCloudPublish`) before enabling vanity links.
-- **Attestation** — optional HMAC on a claim (does not prove Free-play client RNG honesty).
-- **Session reel** — `lastRoll` is session-only; mode switch fully resets the board.
-
-## ❓ FAQ / troubleshooting
-
-**Sign-up / APIs 404 or hang on Vercel**  
-Confirm latest deploy, Production env vars (especially `BETTER_AUTH_URL` = real domain), and check Function logs. Hit `/api/health` — should return JSON with `ok: true`.
-
-**`Invalid URL` / `headers.get is not a function` in logs**  
-Those were fixed by the Node adapter + absolute URL construction. Redeploy if you still see them on an old build.
-
-**Share link doesn’t show / stuck on “Waiting for cloud…”**  
-The roll must exist in Neon (`rolls` table). Sign in so auto-sync runs, or Account → Push, then share again. Logged-out users never get a public URL (by design).
-
-**Follow / feed fails**  
-Need `follows` table — run `node scripts/migrate-feature-wave.mjs` on that database. Sign in required.
-
-**Leaderboard empty / “you” missing**  
-Needs a **username**. **Ranked** board: generate via Roll → Ranked. **Practice** board: public Free play / challenge rolls. **All-Time** board: synced overall lifetime progress. **Arcade** board: complete a Digits run on `/arcade`. Toggle boards on the Leaderboard screen (Ranked | Practice | All-Time | Arcade | Feed | Find).
-
-**Arcade start rejected / “run in progress”**  
-One active run per user — Continue or Cash out (or two-step Abandon) from the Arcade tab.
-
-**Ranked roll 500 / “Ranked roll failed”**  
-Needs signed-in session + `@username`. Check Vercel function logs for `/api/ranked-roll`. Schema needs `rolls.source` (`node scripts/add-roll-source.mjs`). Extensionless `src/game` imports used to break production while typecheck stayed green — `tsconfig.server.json` **NodeNext** now fails `pnpm typecheck` on that class of bug.
-
-**Arcade 500 / missing tables**  
-Run `node --env-file=.env.local scripts/migrate-arcade.mjs` against the same Neon `DATABASE_URL` as production. Confirm `arcade_meta`, `arcade_runs`, `arcade_run_rolls` exist.
-
-**Wrong database**  
-Compare `DATABASE_URL` host in Vercel with `.env.local`. A Neon project in another region is a different database.
-
-**Session stuck on “Loading…”**  
-The Account screen times out after a few seconds and shows the sign-in form. Check `/api/auth/get-session` in Network.
-
-## 📌 Status & roadmap
-
-Version tags match [`CHANGELOG.md`](./CHANGELOG.md) / GitHub releases. Status is only **Shipped** / **Later** — details stay in the Area column.
-
-![Shipped roadmap timeline from v0.2.0 through v0.18.0, plus later items](./docs/assets/roadmap-shipped.png)
-
-<details>
-<summary>Full version → area table (click to expand)</summary>
-
-| Area                                                                      | Status                                                                      |
-| ------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| Solo unlimited playground                                                 | ✅ Shipped (`v0.2.0`)                                                       |
-| Badges / EP / journey / secrets                                           | ✅ Shipped (`v0.2.0`)                                                       |
-| Accounts + email auth + `@username` + cloud sync                          | ✅ Shipped (`v0.2.0`)                                                       |
-| Auto sync + vanity share/OG + follows/feed + Daily/Weekly + attestation   | ✅ Shipped (`v0.3.0`)                                                       |
-| Reel / cascade / EP count-up UX                                           | ✅ Shipped (`v0.4.0`)                                                       |
-| Server Ranked free play (`/api/ranked-roll`)                              | ✅ Shipped (`v0.4.0`)                                                       |
-| Dual EP boards (Ranked + Practice) + follows + feed                       | ✅ Shipped (`v0.4.0`)                                                       |
-| Community today/week/all-time crowns (Ranked) + overtake notifs           | ✅ Shipped (`v0.4.0`)                                                       |
-| Profiles (vanity + avatars) + Activity unlocks                            | ✅ Shipped (`v0.4.0`)                                                       |
-| Codex unlock times + 5‑min New tab                                        | ✅ Shipped (`v0.4.0`)                                                       |
-| Custom fonts + rarity/family icon art                                     | ✅ Shipped (`v0.4.0`)                                                       |
-| OAuth (Discord/GitHub) wiring                                             | ✅ Shipped (`v0.4.1`)                                                       |
-| Email verification + magic link (Resend)                                  | ✅ Shipped (`v0.4.1`)                                                       |
-| Admin panel (role-gated)                                                  | ✅ Shipped (`v0.4.1`)                                                       |
-| Cloned-progress profile pills + sync integrity gate                       | ✅ Shipped (`v0.4.1`)                                                       |
-| Architecture refactor (NodeNext, apiGuards, lib wrappers, Zod, useSync)   | ✅ Shipped (`v0.5.0`)                                                       |
-| Best Roll board (EP / rarity) + Features tab                              | ✅ Shipped (`v0.6.0`)                                                       |
-| Arcade Mode (Digits runs) + mode-first Board tabs                         | ✅ Shipped (`v0.7.0`)                                                       |
-| Alerts hierarchy + crown grouping; Features status sections               | ✅ Shipped (`v0.7.1`)                                                       |
-| Ranked quota indicator (remaining + window reset)                         | ✅ Shipped (`v0.7.2`)                                                       |
-| Journey badge artwork (Collection + Profile section)                      | ✅ Shipped (`v0.7.3`)                                                       |
-| Codex search (spoiler-safe badge filter)                                  | ✅ Shipped (`v0.7.4`)                                                       |
-| Gap remediation (onboarding, Retry, a11y, shared roll rows, admin/trust)  | ✅ Shipped (`v0.8.0`)                                                       |
-| Checklist detection + challenge reset countdown + sync integrity          | ✅ Shipped (`v0.8.1`)                                                       |
-| Divine rarity + poker hand fixes + badge equation proofs                  | ✅ Shipped (`v0.9.0`)                                                       |
-| Bases family, cat/Ultimeme, streak secrets, The Worst, equation proofs v3 | ✅ Shipped (`v0.10.0`)                                                      |
-| Profile journey collapse + Secret badges; streak unlock art fix           | ✅ Shipped (`v0.10.1`)                                                      |
-| Friends board filter + `/friends` tab                                     | ✅ Shipped (`v0.10.2`)                                                      |
-| Delta cloud sync + OG PNG fix + sync quota stopgap                        | ✅ Shipped (`v0.11.0`)                                                      |
-| Share seals toggle + Features tags/edit/screenshots + UI polish           | ✅ Shipped (`v0.11.1`)                                                      |
-| Lifetime EP badges + abbreviate large numbers setting                     | ✅ Shipped (`v0.12.0`)                                                      |
-| Ranked all-time Home crown tile + Ranked · crown labels                   | ✅ Shipped (`v0.12.1`)                                                      |
-| Collapsible How to roll (compact mode switch when collapsed)              | ✅ Shipped (`v0.12.2`)                                                      |
-| Years family + site accent + Arcade ×N + sync/View As backlog             | ✅ Shipped (`v0.13.0`)                                                      |
-| Atomic Registry (118 elements) + Atomic Seal                              | ✅ Shipped (`v0.14.0`)                                                      |
-| Site-wide accent coverage + Prove roll tip placement                      | ✅ Shipped (`v0.14.1`)                                                      |
-| Arcade juice (Digits tween, rarity punch, shop/SFX, Cash Out weight)      | ✅ Shipped (`v0.15.0`)                                                      |
-| Arcade Deadline + Idle Digits + trash soft-fail                           | ✅ Shipped (`v0.16.0`)                                                      |
-| Base UI dialogs/toasts + Home unlock lightbox + History Highlights        | ✅ Shipped (`v0.16.1`)                                                      |
-| Motion polish + embossed profile avatars + motion-design skill            | ✅ Shipped (`v0.16.2`)                                                      |
-| Route entrance animation + Codex filter chip polish                       | ✅ Shipped (`v0.16.3`)                                                      |
-| Cold lazy-tab settle + Codex chip grid + Latest Runs portal               | ✅ Shipped (`v0.16.4`)                                                      |
-| Mobile vibration + UTC resets + optional Settings cloud sync              | ✅ Shipped (`v0.16.5`)                                                      |
-| Section Mastery seal art refresh + Ranked quota pill colors               | ✅ Shipped (`v0.16.6`)                                                      |
-| Practice Free-only board + Leaderboard All-Time tab                       | ✅ Shipped (`v0.16.7`)                                                      |
-| All-Time Best lane chips + Ranked CTE/UNION RTTs + quota ~180/h           | ✅ Shipped (`v0.17.0`)                                                      |
-| Polar monetization foundation + Ranked free 90/h + paid tier caps         | ✅ Shipped (`v0.18.0`)                                                      |
-| Profile frames + Ranked Plus tier emblems (cumulative 4/8/12)             | ✅ Shipped (`v0.18.1`)                                                      |
-| Account Ranked Plus checkout (Polar Sessions + friend code)               | ✅ Shipped (`v0.18.2`)                                                      |
-| Hour-scoped Ranked top-ups / Overload + Plus 6‑min regen                  | ✅ Shipped (`v0.18.3`)                                                      |
-| Ranked Plus at `/plus` + display name + username cooldown/hold            | ✅ Shipped (`v0.18.4`)                                                      |
-| Discord HTTP bot (`/roll`, `/board`; free play; Rare+ guild install)      | ✅ Shipped (`v0.19.1`) — see [`docs/discord-bot.md`](./docs/discord-bot.md) |
-| Discord `/board` EP fix + Ranked quota / hour-cap CTAs                    | ✅ Shipped (`v0.19.2`)                                                      |
-| Turnstile / EP velocity                                                   | 🔮 Later                                                                    |
-
-</details>
-
-## 🔮 What's next
-
-Community Features board ideas not yet on the shipped timeline. Maturity differs: one item is scoped enough to build; three are still idea-stage.
-
-![What's next: Discord bot (scoped) and three idea-stage features](./docs/assets/roadmap-whats-next.png)
-
-Design docs:
-
-- [**Architecture (mermaid)**](docs/ARCHITECTURE.md)
-- [**Polar monetization**](docs/polar-monetization.md)
-- [**Polar checkout foundation**](docs/polar-checkout-foundation.md)
-- [**Refactor notes (July 2026)**](docs/refactor-notes-2026-07.md)
-- [Arcade Mode design](docs/superpowers/specs/2026-07-09-arcade-mode-design.md)
-- [Solo design](docs/superpowers/specs/2026-07-08-rngdle-unlocked-design.md) _(historical)_
-- [Part 2 social design](docs/superpowers/specs/2026-07-09-mvp-part2-social-design.md) _(historical)_
-- [Feature wave plan](docs/superpowers/plans/2026-07-09-feature-wave.md) _(historical)_
-- [Implementation plan](docs/superpowers/plans/2026-07-08-rngdle-unlocked.md) _(historical)_
+Current version **0.19.2** — [releases](https://github.com/jondmarien/rngdle-unlocked/releases).
 
 ---
 
 <div align="center">
 
-Made for fun · not affiliated with rngdle.com · [Play live](https://rngdle-unlocked.chron0.tech)
+Made for fun · not affiliated with rngdle.com · [Play live](https://rngdle-unlocked.chron0.tech) · [Wiki](https://github.com/jondmarien/rngdle-unlocked/wiki) · [chron0.tech](https://chron0.tech)
 
 </div>

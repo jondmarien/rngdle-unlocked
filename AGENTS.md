@@ -325,7 +325,8 @@ These four checks require a **manual browser smoke** — automated `pnpm test` /
 - Prefer small, focused commits with complete sentences in messages.
 - Do not force-push `main` unless the user explicitly requests it.
 - Version in `package.json` (currently **0.19.2**); Settings footer reads `VITE_APP_VERSION` from the build.
-- Feature → release map: README **Status & roadmap** (keep in sync when cutting releases).
+- Feature → release map: [GitHub Wiki · Roadmap](https://github.com/jondmarien/rngdle-unlocked/wiki/Roadmap) (+ staged [`docs/wiki/Roadmap.md`](./docs/wiki/Roadmap.md)); slim README points at the wiki.
+- Public docs: stage in [`docs/wiki/`](./docs/wiki/), publish with `pnpm wiki:publish`. SEO copy: [`src/lib/seo-copy.ts`](./src/lib/seo-copy.ts).
 - Releases: annotated tags (`v0.x.y`) + `gh release create` when the user asks.
 
 ---

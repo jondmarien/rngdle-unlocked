@@ -219,6 +219,61 @@
       "destination": "/api/page/payments"
     },
     {
+      "source": "/plus",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(bot|crawl|slurp|discord|twitter|facebook|slack|linkedin|telegram|whatsapp|preview|embed).*"
+        }
+      ],
+      "destination": "/api/page/plus"
+    },
+    {
+      "source": "/account",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(bot|crawl|slurp|discord|twitter|facebook|slack|linkedin|telegram|whatsapp|preview|embed).*"
+        }
+      ],
+      "destination": "/api/page/account"
+    },
+    {
+      "source": "/settings",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(bot|crawl|slurp|discord|twitter|facebook|slack|linkedin|telegram|whatsapp|preview|embed).*"
+        }
+      ],
+      "destination": "/api/page/settings"
+    },
+    {
+      "source": "/notifications",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(bot|crawl|slurp|discord|twitter|facebook|slack|linkedin|telegram|whatsapp|preview|embed).*"
+        }
+      ],
+      "destination": "/api/page/notifications"
+    },
+    {
+      "source": "/alerts",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(bot|crawl|slurp|discord|twitter|facebook|slack|linkedin|telegram|whatsapp|preview|embed).*"
+        }
+      ],
+      "destination": "/api/page/notifications"
+    },
+    {
       "source": "/roll",
       "has": [
         {

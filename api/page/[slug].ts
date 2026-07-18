@@ -6,6 +6,7 @@ import {
   pageOgImageUrl,
   resolvePageOgSlug,
 } from '../../server/pageOg.js';
+import { homeJsonLd } from '../../src/lib/seo-copy.js';
 import { defineHandler } from '../../server/vercel-adapter.js';
 
 const log = createLogger('api/page');
@@ -56,6 +57,7 @@ export default defineHandler(async (request) => {
       status: 200,
       linkLabel: 'Open in app →',
       ogType: 'website',
+      jsonLd: slug === 'home' ? homeJsonLd() : undefined,
     });
   } catch (err) {
     log.error('handler threw', {

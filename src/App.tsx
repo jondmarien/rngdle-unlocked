@@ -4,12 +4,15 @@ import { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { useSession } from './lib/auth-client';
 import { createLogger } from './lib/logger';
 import {
+  applyDocumentMeta,
   documentTitleForLegal,
   documentTitleForProfile,
   documentTitleForRoll,
-  documentTitleForTab,
+  seoCopyForLegal,
+  seoCopyForTab,
 } from './lib/pageMeta';
 import { parsePath, tabPath, type AppRoute, type TabId } from './lib/routes';
+import { SEO_COPY } from './lib/seo-copy';
 import { GameProvider } from './state/GameProvider';
 import { FeedbackProvider } from './ui/feedback';
 import { ScreenFallback } from './ui/components/ScreenFallback';
@@ -142,18 +145,38 @@ function AppRoutes() {
   useEffect(() => {
     if (typeof document === 'undefined') return;
     switch (route.kind) {
-      case 'tab':
-        document.title = documentTitleForTab(route.tab);
+      case 'tab': {
+        const copy = seoCopyForTab(route.tab);
+        applyDocumentMeta({
+          title: copy.title,
+          description: copy.description,
+          canonicalPath: copy.path.split('?')[0] || '/',
+        });
         break;
+      }
       case 'profile':
-        document.title = documentTitleForProfile(route.username);
+        applyDocumentMeta({
+          title: documentTitleForProfile(route.username),
+          description: `Public profile for @${route.username} on RNGdle Unlocked — badges, EP, and best rolls.`,
+          canonicalPath: `/u/${encodeURIComponent(route.username)}`,
+        });
         break;
       case 'roll':
-        document.title = documentTitleForRoll();
+        applyDocumentMeta({
+          title: documentTitleForRoll(),
+          description: SEO_COPY.home.description,
+          canonicalPath: `/r/${encodeURIComponent(route.rollId)}`,
+        });
         break;
-      case 'legal':
-        document.title = documentTitleForLegal(route.page);
+      case 'legal': {
+        const copy = seoCopyForLegal(route.page);
+        applyDocumentMeta({
+          title: documentTitleForLegal(route.page),
+          description: copy.description,
+          canonicalPath: copy.path,
+        });
         break;
+      }
       default: {
         const _exhaustive: never = route;
         void _exhaustive;

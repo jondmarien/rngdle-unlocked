@@ -1,0 +1,6 @@
+# RNGdle Unlocked — https://rngdle-unlocked.chron0.tech
+User-agent: *
+Allow: /
+Disallow: /admin
+
+Sitemap: https://rngdle-unlocked.chron0.tech/sitemap.xml

@@ -18,7 +18,8 @@
     "preview": "vite preview",
     "test": "vp test",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "wiki:publish": "node scripts/publish-wiki.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

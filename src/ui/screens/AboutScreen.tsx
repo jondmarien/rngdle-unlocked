@@ -572,6 +572,16 @@ export function AboutScreen() {
             github.com/jondmarien/rngdle-unlocked
           </a>
           {' · '}
+          Docs:{' '}
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href="https://github.com/jondmarien/rngdle-unlocked/wiki"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Wiki
+          </a>
+          {' · '}
           Live:{' '}
           <a
             className="font-semibold text-(--accent) underline-offset-2 hover:underline"
@@ -580,6 +590,16 @@ export function AboutScreen() {
             rel="noreferrer"
           >
             rngdle-unlocked.chron0.tech
+          </a>
+          {' · '}
+          Author:{' '}
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href="https://chron0.tech"
+            target="_blank"
+            rel="noreferrer"
+          >
+            chron0.tech
           </a>
           {' · '}
           Architecture:{' '}

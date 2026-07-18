@@ -9,6 +9,9 @@
 | **Branch**                 | `main` (auto-deploys Vercel)                                                  |
 | **Version**                | `0.19.2` (`package.json`; Settings uses `VITE_APP_VERSION`)                   |
 | **Latest release**         | [v0.19.2](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.19.2) |
+| **Public wiki**            | [GitHub Wiki](https://github.com/jondmarien/rngdle-unlocked/wiki) (stage [`docs/wiki/`](./docs/wiki/), `pnpm wiki:publish`) |
+| **SEO copy**               | [`src/lib/seo-copy.ts`](./src/lib/seo-copy.ts) · `public/robots.txt` · `public/sitemap.xml` |
+| **Author**                 | https://chron0.tech                                                           |
 | **Handoff commit context** | Opus audit refactor (`aa8e91e`…`fc4fa65` on `main`) + prior P0/P1 wave        |
 
 ---
