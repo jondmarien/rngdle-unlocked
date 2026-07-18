@@ -298,4 +298,9 @@ Skip multi-touch attribution Rube Goldberg.
 
 ## 14. Next step
 
-After Jon confirms this written spec (or requests edits): invoke **writing-plans** → `docs/superpowers/plans/2026-07-18-rngdle-unlocked-gtm.md` with bite-sized tasks for brand pack, content bank, calendars, verification — **no SEO code tasks**.
+**Spec approved as-written (2026-07-18).**
+
+**Implementation plan:** [`docs/superpowers/plans/2026-07-18-rngdle-unlocked-gtm.md`](../plans/2026-07-18-rngdle-unlocked-gtm.md)  
+**Artifact pack (created during plan execution):** `docs/marketing/gtm-2026-07/`
+
+Plan covers: ai-ugc RNGdle brand pack + `game` theme, launch content bank, channel copy, calendars/runbooks, read-only SEO verification. **No SEO code tasks.**
