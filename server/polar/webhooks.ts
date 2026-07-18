@@ -11,11 +11,20 @@ import type { Db } from '../db/index.js';
 import { polarWebhookEvents } from '../db/schema.js';
 import { createLogger } from '../logger.js';
 import {
+  getTopupHourState,
+  grantTopupIfNew,
   linkPolarCustomer,
   resolveUserIdFromCustomer,
   revokeToFree,
+  revokeTopupByOrderId,
   upsertSubscriptionEntitlement,
 } from './entitlements.js';
+import {
+  assertTopupAllowed,
+  bonusRollsForSku,
+  isOverloadSku,
+  topupSkuFromMetadata,
+} from './topups.js';
 
 const log = createLogger('polar/webhooks');
 
@@ -243,8 +252,49 @@ async function dispatchPolarEvent(
           orderId: order.id,
           subscriptionId: order.subscriptionId,
         });
+      } else if (!order.subscriptionId && !order.product?.isRecurring) {
+        const userId = await resolveUserIdFromCustomer(db, order.customer);
+        if (!userId) {
+          log.warn('order.paid topup without user', { orderId: order.id });
+          break;
+        }
+        const sku =
+          topupSkuFromMetadata(order.product?.metadata ?? null) ??
+          topupSkuFromMetadata(
+            (order as { metadata?: Record<string, unknown> }).metadata ?? null,
+          );
+        if (!sku) {
+          log.info('order.paid one-time without topup metadata', {
+            orderId: order.id,
+            productId: order.productId,
+          });
+          break;
+        }
+        const state = await getTopupHourState(db, userId);
+        const allowed = assertTopupAllowed(state, sku);
+        if (!allowed.ok) {
+          log.warn('order.paid topup stacking rejected', {
+            orderId: order.id,
+            userId,
+            sku,
+            code: allowed.code,
+          });
+          break;
+        }
+        const granted = await grantTopupIfNew(db, {
+          id: `topup_${order.id}`,
+          userId,
+          bonusRolls: bonusRollsForSku(sku),
+          isOverload: isOverloadSku(sku),
+          sourceOrderId: order.id,
+        });
+        log.info('order.paid topup grant', {
+          orderId: order.id,
+          userId,
+          sku,
+          granted,
+        });
       }
-      // One-time top-ups (phase 2): grant via product metadata + unique order id
       break;
     }
     case 'order.refunded': {
@@ -252,7 +302,11 @@ async function dispatchPolarEvent(
         id: string;
         subscriptionId?: string | null;
         customer: { id: string; externalId?: string | null };
-        product?: { isRecurring?: boolean } | null;
+        product?: {
+          isRecurring?: boolean;
+          metadata?: Record<string, unknown> | null;
+        } | null;
+        metadata?: Record<string, unknown> | null;
       };
       const userId = await resolveUserIdFromCustomer(db, order.customer);
       if (!userId) {
@@ -262,6 +316,13 @@ async function dispatchPolarEvent(
       if (order.subscriptionId || order.product?.isRecurring) {
         await revokeToFree(db, userId, {
           polarCustomerId: order.customer.id,
+        });
+      } else {
+        const revoked = await revokeTopupByOrderId(db, order.id);
+        log.info('order.refunded topup revoke', {
+          orderId: order.id,
+          userId,
+          revoked,
         });
       }
       break;

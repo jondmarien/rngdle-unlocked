@@ -118,6 +118,15 @@ export function startOfUtcHourMs(now = Date.now()): number {
 
 const UTC_HOUR_MS = 3_600_000;
 
+export type UtcHourRateLimitOpts = {
+  /**
+   * Map raw counter → effective used (e.g. Ranked Plus regen refill).
+   * Gate and reported `used`/`remaining` use the mapped value; the stored
+   * counter still increments by 1 on success.
+   */
+  mapUsed?: (rawUsed: number) => number;
+};
+
 /**
  * Read-only view of a calendar-UTC-hour counter.
  * Window starts at :00:00.000Z and ends at the next UTC hour.
@@ -126,9 +135,11 @@ export async function peekRateLimitUtcHour(
   db: Db,
   key: string,
   limit: number,
+  opts?: UtcHourRateLimitOpts,
 ): Promise<RateLimitQuota> {
   const now = Date.now();
   const hourStart = startOfUtcHourMs(now);
+  const mapUsed = opts?.mapUsed ?? ((n: number) => n);
   const [row] = await db
     .select()
     .from(rateLimits)
@@ -139,7 +150,8 @@ export async function peekRateLimitUtcHour(
     return fullQuota(limit);
   }
 
-  return activeQuota(limit, row.count, hourStart, UTC_HOUR_MS, now);
+  const used = Math.max(0, mapUsed(row.count));
+  return activeQuota(limit, used, hourStart, UTC_HOUR_MS, now);
 }
 
 /**
@@ -150,9 +162,11 @@ export async function checkRateLimitUtcHour(
   db: Db,
   key: string,
   limit: number,
+  opts?: UtcHourRateLimitOpts,
 ): Promise<RateLimitResult> {
   const now = Date.now();
   const hourStart = startOfUtcHourMs(now);
+  const mapUsed = opts?.mapUsed ?? ((n: number) => n);
   const [row] = await db
     .select()
     .from(rateLimits)
@@ -172,12 +186,20 @@ export async function checkRateLimitUtcHour(
         .set({ windowStart: new Date(hourStart), count: 1 })
         .where(eq(rateLimits.key, key));
     }
-    const quota = activeQuota(limit, 1, hourStart, UTC_HOUR_MS, now);
+    const used = Math.max(0, mapUsed(1));
+    const quota = activeQuota(limit, used, hourStart, UTC_HOUR_MS, now);
     return { ok: true, remaining: quota.remaining, quota };
   }
 
-  if (row.count >= limit) {
-    const quota = activeQuota(limit, row.count, hourStart, UTC_HOUR_MS, now);
+  const effectiveUsed = Math.max(0, mapUsed(row.count));
+  if (effectiveUsed >= limit) {
+    const quota = activeQuota(
+      limit,
+      effectiveUsed,
+      hourStart,
+      UTC_HOUR_MS,
+      now,
+    );
     return {
       ok: false,
       retryAfterSec: quota.resetsInSec ?? 1,
@@ -190,7 +212,8 @@ export async function checkRateLimitUtcHour(
     .update(rateLimits)
     .set({ count: nextCount })
     .where(eq(rateLimits.key, key));
-  const quota = activeQuota(limit, nextCount, hourStart, UTC_HOUR_MS, now);
+  const used = Math.max(0, mapUsed(nextCount));
+  const quota = activeQuota(limit, used, hourStart, UTC_HOUR_MS, now);
   return { ok: true, remaining: quota.remaining, quota };
 }
 

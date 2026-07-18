@@ -295,6 +295,13 @@ export const rankedQuotaSchema = z.object({
   used: z.number().int().nonnegative(),
   resetsInSec: z.number().int().positive().nullable(),
   resetAt: isoDateSchema.nullable(),
+  topupBonus: z.number().int().nonnegative().optional(),
+  packBonus: z.number().int().nonnegative().optional(),
+  hasOverload: z.boolean().optional(),
+  regenPerTick: z.number().int().nonnegative().optional(),
+  regenIntervalSec: z.number().int().positive().optional(),
+  nextRegenInSec: z.number().int().positive().nullable().optional(),
+  rankedTier: z.enum(['free', 'rare', 'epic', 'anomaly']).optional(),
 });
 
 export const rankedQuotaResponseSchema = z.object({

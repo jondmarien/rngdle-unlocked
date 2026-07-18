@@ -137,9 +137,13 @@ export async function rateCheckUtcHour(
   db: Db,
   key: string,
   limit: number,
-  options?: RateGuardOptions,
+  options?: RateGuardOptions & {
+    mapUsed?: (rawUsed: number) => number;
+  },
 ): Promise<RateCheckResult> {
-  const rl: RateLimitResult = await checkRateLimitUtcHour(db, key, limit);
+  const rl: RateLimitResult = await checkRateLimitUtcHour(db, key, limit, {
+    mapUsed: options?.mapUsed,
+  });
   if (!isRateLimited(rl)) return { ok: true, result: rl };
   const error =
     typeof options?.error === 'function' ? options.error(rl) : options?.error;

@@ -1,6 +1,6 @@
 /**
  * Polar → local Ranked entitlement sync.
- * Effective hourly cap = tier cap (+ phase-2 hour-scoped top-up; not yet wired).
+ * Effective hourly cap = tier cap + current-UTC-hour top-up bonuses.
  */
 
 import { and, eq } from 'drizzle-orm';
@@ -17,6 +17,7 @@ import type { Db } from '../db/index.js';
 import { rankedTopups, user, userEntitlements } from '../db/schema.js';
 import { createLogger } from '../logger.js';
 import { startOfUtcHourMs } from '../rateLimit.js';
+import { summarizeTopupRows, type TopupHourState } from './topups.js';
 
 const log = createLogger('polar/entitlements');
 
@@ -125,7 +126,7 @@ export async function getEffectiveRankedTier(
 }
 
 /**
- * Resolve Ranked hourly limit for a user (tier only; top-ups phase 2).
+ * Resolve Ranked hourly limit for a user (tier cap + current-hour top-ups).
  * Applies past_due grace: after PAST_DUE_GRACE_MS, treat as free.
  */
 export async function getEffectiveRankedLimit(
@@ -134,14 +135,14 @@ export async function getEffectiveRankedLimit(
 ): Promise<number> {
   const tier = await getEffectiveRankedTier(db, userId);
   const tierCap = rankedCapForTier(tier);
-  const topupBonus = await topupBonusForCurrentUtcHour(db, userId);
-  return tierCap + topupBonus;
+  const state = await getTopupHourState(db, userId);
+  return tierCap + state.totalBonus;
 }
 
-async function topupBonusForCurrentUtcHour(
+export async function getTopupHourState(
   db: Db,
   userId: string,
-): Promise<number> {
+): Promise<TopupHourState> {
   const hourStart = new Date(startOfUtcHourMs(Date.now()));
   const rows = await db
     .select({
@@ -155,12 +156,7 @@ async function topupBonusForCurrentUtcHour(
         eq(rankedTopups.utcHourStart, hourStart),
       ),
     );
-  if (rows.length === 0) return 0;
-  let bonus = 0;
-  for (const r of rows) {
-    bonus += r.bonus ?? 0;
-  }
-  return bonus;
+  return summarizeTopupRows(rows);
 }
 
 export async function linkPolarCustomer(
@@ -341,7 +337,7 @@ export async function resolveUserIdFromCustomer(
   return findUserIdByPolarCustomer(db, customer.id);
 }
 
-/** No-op helper kept for future top-up grants (unique on source_order_id). */
+/** Insert hour-scoped top-up; unique on source_order_id (idempotent). */
 export async function grantTopupIfNew(
   db: Db,
   opts: {
@@ -370,6 +366,18 @@ export async function grantTopupIfNew(
     }
     throw err;
   }
+}
+
+/** Remove a top-up granted by a Polar order (refund). Returns true if a row was deleted. */
+export async function revokeTopupByOrderId(
+  db: Db,
+  sourceOrderId: string,
+): Promise<boolean> {
+  const deleted = await db
+    .delete(rankedTopups)
+    .where(eq(rankedTopups.sourceOrderId, sourceOrderId))
+    .returning({ id: rankedTopups.id });
+  return deleted.length > 0;
 }
 
 /** Touch updated_at without changing tier (customer.updated noise). */

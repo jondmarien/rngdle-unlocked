@@ -80,11 +80,20 @@ node --env-file=.env.local scripts/migrate-polar-entitlements.mjs
 node --env-file=.env.local scripts/migrate-profile-frame.mjs
 ```
 
-Tables: `user_entitlements`, `polar_webhook_events`, `ranked_topups` (phase 2 stub). Column: `user.profile_frame`.
+Tables: `user_entitlements`, `polar_webhook_events`, `ranked_topups`. Column: `user.profile_frame`.
 
-## Top-ups (not created yet)
+## Top-ups + Ranked Plus regen (P3)
 
-When approved: one-time products for partial refill / full refill / Overload. All bonuses are keyed by `utc_hour_start` and **do not rollover**. Purchase UI must show UTC hour remaining + explicit non-rollover copy (especially Overload).
+| SKU        | Effect                          | Env override             |
+| ---------- | ------------------------------- | ------------------------ |
+| `boost_30` | +30 `bonus_rolls` this UTC hour | `POLAR_PRODUCT_BOOST_30` |
+| `boost_60` | +60                             | `POLAR_PRODUCT_BOOST_60` |
+| `overload` | +90, `is_overload`              | `POLAR_PRODUCT_OVERLOAD` |
+
+- Checkout: `POST /api/checkout/topup` `{ sku }` → Polar Session; webhook `order.paid` → `grantTopupIfNew`; refund → `revokeTopupByOrderId`.
+- Stacking: pack bonuses ≤ 90/hour; one Overload/hour.
+- **Regen:** Rare/Epic/Anomaly refill **+1/+2/+3 every 6 minutes** toward the hour cap (not above it). Free = 0. See `src/lib/ranked-regen.ts`.
+- Ops: create three **one-time** public Polar products with metadata `kind=topup`, `topup_sku`, `bonus_rolls`, `is_overload`; set env product ids (placeholders ship in code until then).
 
 ## Founder checklist
 
@@ -94,6 +103,6 @@ When approved: one-time products for partial refill / full refill / Overload. Al
 4. ~~Flip draft products to public~~ done
 5. Re-enable webhook endpoint if Polar auto-disabled after failed deliveries
 6. ~~Build branded checkout~~ done (Account Ranked Plus / Checkout Sessions — P2)
-7. Hour-scoped top-ups / Overload (P3 — Later)
+7. ~~Hour-scoped top-ups / Overload + Plus regen~~ done (P3) — create Polar one-time products + set `POLAR_PRODUCT_BOOST_*` / `OVERLOAD` in Vercel
 
 Stay on Polar **Starter** fees until volume justifies Pro.

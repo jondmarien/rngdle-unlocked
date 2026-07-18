@@ -68,15 +68,23 @@ export function RankedQuotaPill() {
   const resetLabel =
     quota.resetsInSec != null ? formatRankedResetsIn(quota.resetsInSec) : null;
 
-  const upgradeHref =
-    remaining === 0
-      ? quota.limit < 120
-        ? '/account?upgrade=rare'
-        : quota.limit < 150
-          ? '/account?upgrade=epic'
-          : quota.limit < 180
-            ? '/account?upgrade=anomaly'
-            : null
+  const atZero = remaining === 0;
+  const upgradeHref = atZero
+    ? quota.limit < 120
+      ? '/account?upgrade=rare'
+      : quota.limit < 150
+        ? '/account?upgrade=epic'
+        : quota.limit < 180
+          ? '/account?upgrade=anomaly'
+          : null
+    : null;
+  const topupHref = atZero ? '/account?topup=1' : null;
+  const regenHint =
+    !atZero &&
+    remaining < quota.limit &&
+    quota.nextRegenInSec != null &&
+    (quota.regenPerTick ?? 0) > 0
+      ? `+${quota.regenPerTick} in ${quota.nextRegenInSec}s`
       : null;
 
   return (
@@ -93,6 +101,9 @@ export function RankedQuotaPill() {
         {resetLabel ? (
           <span className="ml-1.5 opacity-80">· {resetLabel}</span>
         ) : null}
+        {regenHint ? (
+          <span className="ml-1.5 opacity-80">· {regenHint}</span>
+        ) : null}
       </span>
       {upgradeHref ? (
         <a
@@ -100,6 +111,14 @@ export function RankedQuotaPill() {
           className="shrink-0 font-semibold text-(--accent) underline-offset-2 hover:underline"
         >
           Upgrade
+        </a>
+      ) : null}
+      {topupHref ? (
+        <a
+          href={topupHref}
+          className="shrink-0 font-semibold text-(--accent) underline-offset-2 hover:underline"
+        >
+          Top up
         </a>
       ) : null}
     </span>

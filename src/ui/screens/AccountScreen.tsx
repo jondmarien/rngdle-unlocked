@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { authClient, useSession } from '../../lib/auth-client';
 import {
   createCheckout,
+  createTopupCheckout,
   openBillingPortal,
   type PaidRankedTier,
+  type TopupSku,
 } from '../../lib/checkout-api';
 import { createLogger, withTimeout } from '../../lib/logger';
 import { fetchMe, patchMe, type LinkedAccount } from '../../lib/me-api';
@@ -30,10 +32,16 @@ import {
   type ProfileAccent,
 } from '../../lib/profile-theme';
 import type { RankedTier } from '../../lib/ranked-limits';
+import { rankedRegenPerTick, rankedTierRank } from '../../lib/ranked-limits';
 import {
   RANKED_PLUS_CATALOG,
   tierChipClass,
 } from '../../lib/ranked-plus-catalog';
+import {
+  RANKED_TOPUP_CATALOG,
+  TOPUP_NON_ROLLOVER,
+} from '../../lib/ranked-topup-catalog';
+import { fetchRankedQuota } from '../../lib/roll-api';
 import { useIsAdmin } from '../../lib/useIsAdmin';
 import { useCloudSync } from '../../state/GameProvider';
 import { ProfileAvatar } from '../components/ProfileAvatar';
@@ -83,7 +91,11 @@ export function AccountScreen({
   const [highlightTier, setHighlightTier] = useState<PaidRankedTier | null>(
     null,
   );
+  const [hasOverload, setHasOverload] = useState(false);
+  const [topupPackBonus, setTopupPackBonus] = useState(0);
+  const [quotaResetsInSec, setQuotaResetsInSec] = useState<number | null>(null);
   const rankedPlusRef = useRef<HTMLDivElement>(null);
+  const topupRef = useRef<HTMLDivElement>(null);
   const [profileShowCodex, setProfileShowCodex] = useState(true);
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -119,11 +131,12 @@ export function AccountScreen({
     window.history.replaceState(null, '', next);
   }, []);
 
-  // Ranked Plus deep links: ?upgrade= · ?checkout=success|cancel
+  // Ranked Plus deep links: ?upgrade= · ?topup= · ?checkout=success|topup_success|cancel
   useEffect(() => {
     if (typeof window === 'undefined' || !session?.user) return;
     const params = new URLSearchParams(window.location.search);
     const upgrade = params.get('upgrade');
+    const topup = params.get('topup');
     const checkout = params.get('checkout');
     let dirty = false;
 
@@ -137,12 +150,58 @@ export function AccountScreen({
       dirty = true;
     }
 
+    if (topup === '1' || topup === 'true') {
+      topupRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      params.delete('topup');
+      dirty = true;
+    }
+
     if (checkout === 'cancel') {
       setMsg('Checkout cancelled — no charge. You can try again anytime.');
       params.delete('checkout');
       params.delete('tier');
+      params.delete('sku');
       params.delete('checkout_id');
       dirty = true;
+    }
+
+    if (checkout === 'topup_success') {
+      setMsg('Top-up received — raising this hour’s Ranked cap…');
+      let tries = 0;
+      const baselineBonus = topupPackBonus;
+      const poll = window.setInterval(() => {
+        tries += 1;
+        void fetchRankedQuota()
+          .then((q) => {
+            if (!q) return;
+            setHasOverload(Boolean(q.hasOverload));
+            setTopupPackBonus(q.packBonus ?? 0);
+            setQuotaResetsInSec(q.resetsInSec);
+            if (
+              (q.packBonus ?? 0) > baselineBonus ||
+              q.hasOverload ||
+              (q.topupBonus ?? 0) > 0 ||
+              tries >= 8
+            ) {
+              window.clearInterval(poll);
+              setMsg(
+                `Top-up active — ${q.remaining}/${q.limit} Ranked rolls left this UTC hour.`,
+              );
+            }
+          })
+          .catch(() => {});
+        if (tries >= 12) {
+          window.clearInterval(poll);
+          setMsg(
+            'Payment received. If your hour cap did not rise yet, wait a moment and refresh.',
+          );
+        }
+      }, 1200);
+      params.delete('checkout');
+      params.delete('sku');
+      params.delete('checkout_id');
+      dirty = true;
+      return () => window.clearInterval(poll);
     }
 
     if (checkout === 'success') {
@@ -225,6 +284,12 @@ export function AccountScreen({
         setProfileShowCodex(data.user.profileShowCodex !== false);
         setLinkedAccounts(data.linkedAccounts ?? []);
         setSettingsSyncEnabledFlag(Boolean(data.settingsSyncEnabled));
+        void fetchRankedQuota().then((q) => {
+          if (cancelled || !q) return;
+          setHasOverload(Boolean(q.hasOverload));
+          setTopupPackBonus(q.packBonus ?? 0);
+          setQuotaResetsInSec(q.resetsInSec);
+        });
       })
       .catch(() => {
         /* ignore */
@@ -588,6 +653,22 @@ export function AccountScreen({
     }
   };
 
+  const startTopupCheckout = async (sku: TopupSku) => {
+    if (!username.trim()) {
+      setMsg('Claim a public @username before Ranked top-up checkout.');
+      return;
+    }
+    setCheckoutBusy(true);
+    setMsg('Continuing to secure checkout…');
+    try {
+      const { url } = await createTopupCheckout({ sku });
+      window.location.href = url;
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : 'Top-up checkout failed');
+      setCheckoutBusy(false);
+    }
+  };
+
   if (sessionLoading) {
     return <p className="text-sm text-(--prose-3)">Loading session…</p>;
   }
@@ -915,10 +996,32 @@ export function AccountScreen({
                 subscription.
               </p>
             )}
+            {rankedTier !== 'free' && (
+              <p className="text-xs text-(--prose-3)">
+                Plus regenerates{' '}
+                <strong className="text-(--prose)">
+                  {rankedRegenPerTick(rankedTier)}
+                </strong>{' '}
+                Ranked roll
+                {rankedRegenPerTick(rankedTier) === 1 ? '' : 's'} every{' '}
+                <strong className="text-(--prose)">6</strong> minutes toward
+                your hour cap (no rollover past :00 UTC).
+              </p>
+            )}
             <div className="grid gap-2 sm:grid-cols-3">
               {RANKED_PLUS_CATALOG.map((card) => {
                 const current = rankedTier === card.tier;
                 const highlighted = highlightTier === card.tier;
+                const cardRank = rankedTierRank(card.tier);
+                const currentRank = rankedTierRank(rankedTier);
+                const label = current
+                  ? 'Current'
+                  : rankedTier === 'free'
+                    ? 'Subscribe'
+                    : cardRank > currentRank
+                      ? 'Upgrade'
+                      : 'Downgrade';
+                const disabled = checkoutBusy || current || isAdmin;
                 return (
                   <div
                     key={card.tier}
@@ -937,15 +1040,11 @@ export function AccountScreen({
                     </p>
                     <button
                       type="button"
-                      disabled={checkoutBusy || current}
+                      disabled={disabled}
                       className="mt-3 border-2 border-(--accent) bg-(--accent) px-2 py-1.5 text-xs font-bold uppercase text-(--bg) disabled:opacity-50"
                       onClick={() => void startCheckout(card.tier)}
                     >
-                      {current
-                        ? 'Current'
-                        : rankedTier === 'free'
-                          ? 'Subscribe'
-                          : 'Upgrade'}
+                      {label}
                     </button>
                   </div>
                 );
@@ -977,6 +1076,73 @@ export function AccountScreen({
                   Manage billing
                 </button>
               )}
+              <a className="underline" href="/payments">
+                Payments
+              </a>
+              <a className="underline" href="/terms">
+                Terms
+              </a>
+            </div>
+          </div>
+
+          <div
+            ref={topupRef}
+            className="space-y-3 rounded-lg border border-(--outline) bg-(--surface) p-4"
+          >
+            <div>
+              <h2 className="text-base font-bold text-(--prose)">
+                This hour — top-ups
+              </h2>
+              <p className="text-sm text-(--prose-2)">
+                One-time Boosts and Overload for the current UTC hour only.
+                {quotaResetsInSec != null
+                  ? ` About ${Math.max(1, Math.ceil(quotaResetsInSec / 60))}m left this hour.`
+                  : ''}
+              </p>
+              <p className="mt-1 text-xs text-(--prose-3)">
+                {TOPUP_NON_ROLLOVER}
+                {quotaResetsInSec != null && quotaResetsInSec < 600
+                  ? ' Less than 10 minutes remain — buy only if you will use it now.'
+                  : ''}
+              </p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-3">
+              {RANKED_TOPUP_CATALOG.map((card) => {
+                const packBlocked =
+                  !card.isOverload && topupPackBonus + card.bonusRolls > 90;
+                const overloadBlocked = card.isOverload && hasOverload;
+                const disabled = checkoutBusy || packBlocked || overloadBlocked;
+                return (
+                  <div
+                    key={card.sku}
+                    className="flex flex-col rounded-lg border-2 border-(--outline) bg-(--bg) p-3"
+                  >
+                    <p className="font-display text-lg font-bold text-(--prose)">
+                      {card.label}
+                    </p>
+                    <p className="font-mono text-sm tabular-nums text-(--prose-2)">
+                      +{card.bonusRolls} · {card.priceCad}
+                    </p>
+                    <p className="mt-1 flex-1 text-xs text-(--prose-3)">
+                      {card.blurb}
+                    </p>
+                    <button
+                      type="button"
+                      disabled={disabled}
+                      className="mt-3 border-2 border-(--accent) bg-(--accent) px-2 py-1.5 text-xs font-bold uppercase text-(--bg) disabled:opacity-50"
+                      onClick={() => void startTopupCheckout(card.sku)}
+                    >
+                      {overloadBlocked
+                        ? 'Owned'
+                        : packBlocked
+                          ? 'Cap reached'
+                          : 'Buy'}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex flex-wrap gap-3 text-xs text-(--prose-3)">
               <a className="underline" href="/payments">
                 Payments
               </a>

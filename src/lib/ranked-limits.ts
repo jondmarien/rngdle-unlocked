@@ -40,3 +40,23 @@ export function tierMeetsMin(
 ): boolean {
   return TIER_RANK[userTier] >= TIER_RANK[minTier];
 }
+
+/** Numeric rank for Upgrade / Downgrade CTA comparisons. */
+export function rankedTierRank(tier: RankedTier): number {
+  return TIER_RANK[tier];
+}
+
+/** Ranked Plus passive refill interval (6 minutes). */
+export const RANKED_REGEN_INTERVAL_MS = 360_000;
+
+/** Rolls restored per tick toward the hour cap (not above it). */
+export const RANKED_REGEN_PER_TICK: Record<RankedTier, number> = {
+  free: 0,
+  rare: 1,
+  epic: 2,
+  anomaly: 3,
+};
+
+export function rankedRegenPerTick(tier: RankedTier): number {
+  return RANKED_REGEN_PER_TICK[tier];
+}

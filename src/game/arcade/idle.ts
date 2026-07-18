@@ -2,6 +2,7 @@
  * Idle Digits accrual — pure server-side math (never trust client elapsed).
  */
 
+import { accrueRate } from '../timedAccrual.js';
 import {
   IDLE_BANK_CAP,
   IDLE_DIGITS_PER_HOUR,
@@ -30,21 +31,24 @@ export function computeIdleAccrual(input: IdleAccrualInput): IdleAccrualResult {
   const maxHours = input.maxOfflineHours ?? IDLE_MAX_OFFLINE_HOURS;
   const bankCap = input.bankCap ?? IDLE_BANK_CAP;
   const bank = Math.max(0, Math.floor(input.currentBank));
+  const room = Math.max(0, bankCap - bank);
 
   const elapsedMs = Math.max(
     0,
     input.now.getTime() - input.lastClaimAt.getTime(),
   );
-  const cappedMs = Math.min(elapsedMs, maxHours * 3_600_000);
-  const raw = Math.floor((cappedMs / 3_600_000) * rate);
-  const room = Math.max(0, bankCap - bank);
-  const digitsEarned = Math.min(raw, room);
+  const { cappedMs, accrued } = accrueRate({
+    elapsedMs,
+    ratePerHour: rate,
+    room,
+    maxOfflineMs: maxHours * 3_600_000,
+  });
 
   return {
     elapsedMs,
     cappedMs,
-    digitsEarned,
-    nextBank: Math.min(bankCap, bank + digitsEarned),
+    digitsEarned: accrued,
+    nextBank: Math.min(bankCap, bank + accrued),
   };
 }
 

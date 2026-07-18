@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.3] - 2026-07-17
+
+### Added
+
+- **Hour-scoped Ranked top-ups (Polar P3)** — Boost +30 / +60 and Overload +90 via `POST /api/checkout/topup`; webhook grant + refund revoke on `ranked_topups`; Account “This hour” cards; Home **Top up** CTA at 0 remaining.
+- **Ranked Plus passive regen** — Rare/Epic/Anomaly refill **+1/+2/+3 every 6 minutes** toward the hour cap (not above it); shared [`src/game/timedAccrual.ts`](src/game/timedAccrual.ts) (Arcade idle refactored onto it).
+- Design docs — [`docs/superpowers/specs/2026-07-17-ranked-topups-design.md`](docs/superpowers/specs/2026-07-17-ranked-topups-design.md).
+
+### Changed
+
+- Account Ranked Plus CTAs: **Upgrade** / **Downgrade** / **Current**; admin complimentary disables all tier subscribe buttons.
+- Quota DTO exposes `topupBonus`, `packBonus`, `hasOverload`, regen fields (`regenPerTick`, `nextRegenInSec`, …).
+- Docs/README: P3 marked shipped; ops note for Polar one-time product metadata + `POLAR_PRODUCT_BOOST_*` / `POLAR_PRODUCT_OVERLOAD`.
+
+### Notes
+
+- Create three Polar **one-time** products with metadata (`kind`, `topup_sku`, `bonus_rolls`, `is_overload`) and set product id env vars in Vercel (local `.env.local` already supported).
+- No new schema — `ranked_topups` from earlier Polar migrate still applies.
+
 ## [0.18.2] - 2026-07-17
 
 ### Added
@@ -30,7 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Notes
 
 - No new schema — entitlements / frames migrations from `v0.18.x` still apply.
-- Hour-scoped Ranked top-ups / Overload remain Later (P3).
+- Hour-scoped Ranked top-ups / Overload: see `0.18.3`.
 
 ## [0.18.1] - 2026-07-17
 

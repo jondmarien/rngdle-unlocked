@@ -32,6 +32,27 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Ranked hour Boosts, Overload, and Plus regen',
+    date: '2026-07-17',
+    version: '0.18.3',
+    tags: ['Ranked', 'Payments', 'Account'],
+    content: [
+      {
+        body: 'When you burn through Ranked rolls, you can buy a **this-hour Boost** or **Overload** from Account — unused bonus dies at the next UTC hour. Ranked Plus also quietly **refills** toward your cap every six minutes.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'More ways to keep rolling this hour.',
+        bullets: [
+          '**This hour — top-ups** on Account: Boost +30 / +60 and Overload +90 (current UTC hour only, no rollover).',
+          '**Plus regen** — Rare +1 · Epic +2 · Anomaly +3 every **6 minutes** toward your hour cap (not above it).',
+          '**Home quota** — at **0** left, **Top up** and **Upgrade** links.',
+          '**Account cards** — lower tiers say **Downgrade** when you already sit higher; admin complimentary buttons stay disabled.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Ranked Plus checkout is live on Account',
     date: '2026-07-17',
     version: '0.18.2',

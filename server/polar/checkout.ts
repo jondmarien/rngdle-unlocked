@@ -9,6 +9,12 @@ import {
   productIdForTier,
   type PaidRankedTier,
 } from './products.js';
+import {
+  bonusRollsForSku,
+  isOverloadSku,
+  productIdForTopupSku,
+  type TopupSku,
+} from './topups.js';
 
 const log = createLogger('polar/checkout');
 
@@ -90,6 +96,50 @@ export async function createRankedCheckout(
     tier: input.tier,
     checkoutId: checkout.id,
     hasDiscount: Boolean(discountId),
+  });
+
+  return { url: checkout.url, checkoutId: checkout.id };
+}
+
+/**
+ * Create a hosted Polar checkout URL for a one-time Ranked hour top-up.
+ */
+export async function createTopupCheckout(input: {
+  userId: string;
+  email: string;
+  name: string;
+  sku: TopupSku;
+  origin: string;
+}): Promise<{ url: string; checkoutId: string }> {
+  const productId = productIdForTopupSku(input.sku);
+  const origin = input.origin.replace(/\/$/, '');
+  const polar = getPolarClient();
+
+  const checkout = await polar.checkouts.create({
+    products: [productId],
+    externalCustomerId: input.userId,
+    customerEmail: input.email,
+    customerName: input.name || undefined,
+    successUrl: `${origin}/account?checkout=topup_success&sku=${input.sku}&checkout_id={CHECKOUT_ID}`,
+    returnUrl: `${origin}/account?checkout=cancel`,
+    allowDiscountCodes: false,
+    metadata: {
+      kind: 'topup',
+      topup_sku: input.sku,
+      bonus_rolls: String(bonusRollsForSku(input.sku)),
+      is_overload: isOverloadSku(input.sku) ? 'true' : 'false',
+      app_user_id: input.userId,
+    },
+  });
+
+  if (!checkout.url) {
+    throw new Error('Polar checkout did not return a URL');
+  }
+
+  log.info('topup checkout created', {
+    userId: input.userId,
+    sku: input.sku,
+    checkoutId: checkout.id,
   });
 
   return { url: checkout.url, checkoutId: checkout.id };

@@ -12,10 +12,11 @@ if (!process.env.DATABASE_URL) {
 const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
-const title = 'New Update! v0.18.2 — Ranked Plus checkout is live';
+const title = 'New Update! v0.18.3 — Ranked Boosts, Overload & Plus regen';
 const body = [
-  'Subscribe to Ranked Plus from Account — Rare, Epic, or Anomaly — with secure Polar checkout. Optional friend codes work in-app or on Polar.',
-  'Hitting 0 Ranked rolls left shows a soft Upgrade link on Home. Public profiles show your Ranked Plus tier chip when subscribed.',
+  'Account now has this-hour Boosts (+30 / +60) and Overload (+90) — unused bonus ends at the next UTC hour.',
+  'Ranked Plus quietly refills toward your cap every six minutes (Rare +1 · Epic +2 · Anomaly +3).',
+  'At 0 Ranked left, Home offers Top up and Upgrade.',
   'Read the full player notes: https://rngdle-unlocked.chron0.tech/whats-new',
   'Open: /whats-new',
 ].join(' ');

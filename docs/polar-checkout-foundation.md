@@ -1,6 +1,6 @@
 # Polar checkout foundation
 
-Branded Ranked Plus checkout for RNGdle Unlocked. **P2 implemented** — Checkout Sessions API + Account Ranked Plus picker + friend code. Entitlements / webhooks / public CAD products ship alongside (see [`polar-monetization.md`](./polar-monetization.md)). **P3** hour-scoped top-ups remain Later.
+Branded Ranked Plus checkout for RNGdle Unlocked. **P2 + P3 implemented** — Checkout Sessions, Account Ranked Plus, friend code, hour-scoped Boost/Overload top-ups, and Ranked Plus 6‑minute refill regen. See [`polar-monetization.md`](./polar-monetization.md) and [`docs/superpowers/specs/2026-07-17-ranked-topups-design.md`](./superpowers/specs/2026-07-17-ranked-topups-design.md).
 
 ## Goals
 
@@ -93,7 +93,7 @@ Server helpers: [`server/polar/client.ts`](../server/polar/client.ts), [`product
 
 - Player disclosure: `/payments`.
 - Terms / Privacy Polar MoR sections already present.
-- Top-ups (later): Overload **no rollover** — current UTC hour only; purchase UX must show remaining hour.
+- Top-ups: Overload / Boosts **no rollover** — current UTC hour only; Account shows minutes left.
 
 ## Phased build
 
@@ -101,6 +101,6 @@ Server helpers: [`server/polar/client.ts`](../server/polar/client.ts), [`product
 | ------ | ----------------------------------------------------------------- | ----------- |
 | **P1** | Checkout Links + return URL + Account “Ranked Plus” stub cards    | Skipped     |
 | **P2** | API checkout sessions + in-app product picker + friend code field | **Shipped** |
-| **P3** | Hour-scoped top-ups (refill / Overload) with non-rollover UX      | Later       |
+| **P3** | Hour-scoped top-ups + Plus regen (6 min refill) + CTA polish      | **Shipped** |
 
-README roadmap: Account Ranked Plus / Polar checkout Sessions are shipped; top-ups stay Later.
+README: Account Ranked Plus, top-ups, and regen are shipped.

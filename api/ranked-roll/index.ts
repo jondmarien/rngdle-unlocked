@@ -6,7 +6,10 @@ import {
 } from '../../server/db/index.js';
 import { createLogger } from '../../server/logger.js';
 import { getEffectiveRankedLimit } from '../../server/polar/entitlements.js';
-import { rankedRollRateKey } from '../../server/rankedQuota.js';
+import {
+  rankedRegenMapUsed,
+  rankedRollRateKey,
+} from '../../server/rankedQuota.js';
 import { getPublicIdentity, issueRankedRoll } from '../../server/rankedRoll.js';
 import { defineHandler } from '../../server/vercel-adapter.js';
 
@@ -47,12 +50,16 @@ export default defineHandler(async (request) => {
       async () => {
         const db = createDb();
         const rankedLimit = await getEffectiveRankedLimit(db, userId);
+        const mapUsed = await rankedRegenMapUsed(db, userId);
 
         const limited = await rateCheckUtcHour(
           db,
           rankedRollRateKey(userId),
           rankedLimit,
-          { error: 'Ranked roll rate limit — try again later' },
+          {
+            error: 'Ranked roll rate limit — try again later',
+            mapUsed,
+          },
         );
         if (!limited.ok) {
           log.warn('rate limited', { userId });
