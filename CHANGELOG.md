@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.2] - 2026-07-17
+
+### Fixed
+
+- **Discord `/board` EP** — Total EP boards expose `lifetimeEP`; mapper was reading the wrong field names (everyone showed `0 EP`).
+
+### Added
+
+- **Discord Ranked quota line** — `remaining/limit left` (+ reset copy) on Ranked idle/result screens.
+- **Discord Ranked hour-cap ephemeral** — private Components V2 message with link buttons to `/plus?topup=1` and Ranked Plus upgrade (Polar stays on-site).
+- **Ops-minted guild-install grants** — `scripts/mint-discord-guild-install.mjs` signed bypass for a specific non-Rare+ user; mint script defaults away from localhost origin.
+
+### Notes
+
+- Mint production invites with `--origin=https://rngdle-unlocked.chron0.tech` (or rely on the localhost→prod default). Treat mint URLs as secrets (24h).
+
 ## [0.19.1] - 2026-07-17
 
 ### Changed

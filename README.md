@@ -8,7 +8,7 @@ Inspired by the daily number-game genre, but **unlocked**: roll as often as you 
 
 **[Live Site](https://rngdle-unlocked.chron0.tech)**
 
-[![Version](https://img.shields.io/badge/version-0.19.1-8b5cf6)](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.19.1)
+[![Version](https://img.shields.io/badge/version-0.19.2-8b5cf6)](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.19.2)
 [![React 19](https://img.shields.io/badge/UI-React_19-61dafb?logo=react&logoColor=black)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/lang-TypeScript_7-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite 8](https://img.shields.io/badge/build-Vite_8_Plus-646cff?logo=vite&logoColor=white)](https://vitejs.dev)
@@ -476,6 +476,7 @@ Version tags match [`CHANGELOG.md`](./CHANGELOG.md) / GitHub releases. Status is
 | Hour-scoped Ranked top-ups / Overload + Plus 6‑min regen                  | ✅ Shipped (`v0.18.3`)                                                      |
 | Ranked Plus at `/plus` + display name + username cooldown/hold            | ✅ Shipped (`v0.18.4`)                                                      |
 | Discord HTTP bot (`/roll`, `/board`; free play; Rare+ guild install)      | ✅ Shipped (`v0.19.1`) — see [`docs/discord-bot.md`](./docs/discord-bot.md) |
+| Discord `/board` EP fix + Ranked quota / hour-cap CTAs                    | ✅ Shipped (`v0.19.2`)                                                      |
 | Turnstile / EP velocity                                                   | 🔮 Later                                                                    |
 
 </details>

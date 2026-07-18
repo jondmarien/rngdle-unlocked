@@ -32,6 +32,26 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Discord Ranked quota + real /board scores',
+    date: '2026-07-17',
+    version: '0.19.2',
+    tags: ['Discord', 'Ranked', 'UI'],
+    content: [
+      {
+        body: 'Discord **/board** now shows real EP again, and Ranked **/roll** shows your **remaining/limit** hour quota like Home. Hit **0 left** and you get a private message with links to top up or open Ranked Plus — checkout still happens on the site.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'Clearer Ranked pacing in Discord.',
+        bullets: [
+          '**/board** — Practice / Ranked / All-Time rows show actual EP totals.',
+          '**Ranked /roll** — `172/180 left · resets in …` on the roll screen.',
+          '**Hour cap** — only you see Top up / Ranked Plus buttons (no Discord payments).',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Discord play is free — Rare+ only for servers',
     date: '2026-07-17',
     version: '0.19.1',

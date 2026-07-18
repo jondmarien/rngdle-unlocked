@@ -7,8 +7,8 @@
 | **Repo**                   | `jondmarien/rngdle-unlocked`                                                  |
 | **Live**                   | https://rngdle-unlocked.chron0.tech                                           |
 | **Branch**                 | `main` (auto-deploys Vercel)                                                  |
-| **Version**                | `0.19.1` (`package.json`; Settings uses `VITE_APP_VERSION`)                   |
-| **Latest release**         | [v0.19.1](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.19.1) |
+| **Version**                | `0.19.2` (`package.json`; Settings uses `VITE_APP_VERSION`)                   |
+| **Latest release**         | [v0.19.2](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.19.2) |
 | **Handoff commit context** | Opus audit refactor (`aa8e91e`…`fc4fa65` on `main`) + prior P0/P1 wave        |
 
 ---
@@ -267,6 +267,7 @@ node scripts/add-roll-source.mjs   # if source column missing
 - [x] **v0.18.4** — Ranked Plus storefront at `/plus`; Account display name; 7-day username cooldown + former-handle hold
 - [x] **v0.19.0** — Discord HTTP Interactions bot (`/roll`, `/board`); `rolls.source = discord`; Rare+ gate
 - [x] **v0.19.1** — Discord play free for linked users; Rare+ only for guild install (`/api/discord/install`)
+- [x] **v0.19.2** — Discord `/board` EP fix; Ranked quota line; ephemeral `/plus` CTAs at hour cap; ops install grants
 
 ### Still open for you / ops
 

@@ -12,10 +12,10 @@ if (!process.env.DATABASE_URL) {
 const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
-const title = 'New Update! v0.19.1 — Discord play is free';
+const title = 'New Update! v0.19.2 — Discord Ranked quota + real boards';
 const body = [
-  'Anyone who links Discord and claims an @username can use /roll and /board — no paid tier required to play.',
-  'Ranked Plus Rare+ is only needed if you want to add the app to a Discord server (button on /plus).',
+  'Discord /board shows real EP again. Ranked /roll now shows your remaining/limit hour quota like Home.',
+  'Hit 0 left and you get a private Discord message with Top up and Ranked Plus links — checkout stays on the site.',
   'Read the full player notes: https://rngdle-unlocked.chron0.tech/whats-new',
   'Open: /whats-new',
 ].join(' ');
