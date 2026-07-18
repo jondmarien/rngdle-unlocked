@@ -35,9 +35,11 @@ export default defineHandler(async (request) => {
   }
 
   const db = createDb();
-  const rarePlus = await userHasRarePlus(db, stateParsed.userId);
-  if (!rarePlus) {
-    return plusRedirect('discord_install=rare_required');
+  if (!stateParsed.bypassRare) {
+    const rarePlus = await userHasRarePlus(db, stateParsed.userId);
+    if (!rarePlus) {
+      return plusRedirect('discord_install=rare_required');
+    }
   }
 
   try {
@@ -45,6 +47,7 @@ export default defineHandler(async (request) => {
     log.info('guild install allowed', {
       guildId,
       userId: stateParsed.userId,
+      bypassRare: stateParsed.bypassRare,
     });
     return plusRedirect('discord_install=ok');
   } catch (err) {

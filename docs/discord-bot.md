@@ -14,6 +14,12 @@ RNGdle Unlocked Discord integration is a **Vercel serverless HTTP Interactions**
 
 Do **not** share the raw Discord OAuth authorize URL publicly — use `/api/discord/install` so Rare+ is enforced.
 
+Ops can mint a **bypass** guild-install URL for a specific free / non-admin user (24h, treat as secret):
+
+```bash
+node --env-file=.env.local scripts/mint-discord-guild-install.mjs --username=their_handle
+```
+
 ## Status
 
 | Gate       | Meaning                                                                      |
