@@ -340,3 +340,50 @@ export const arcadeRunRolls = pgTable('arcade_run_rolls', {
   digitsAwarded: integer('digits_awarded').notNull().default(0),
   rolledAt: timestamp('rolled_at').notNull().defaultNow(),
 });
+
+/**
+ * Polar subscription entitlements (Ranked hourly cap by rarity tier).
+ * tier: free | rare | epic | anomaly
+ */
+export const userEntitlements = pgTable('user_entitlements', {
+  userId: text('user_id')
+    .primaryKey()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  polarCustomerId: text('polar_customer_id'),
+  /** free | rare | epic | anomaly */
+  tier: text('tier').notNull().default('free'),
+  rankedRollsPerHour: integer('ranked_rolls_per_hour').notNull().default(90),
+  /** Polar subscription status string, or null when free */
+  subscriptionStatus: text('subscription_status'),
+  polarSubscriptionId: text('polar_subscription_id'),
+  polarProductId: text('polar_product_id'),
+  currentPeriodEnd: timestamp('current_period_end'),
+  /** Soft past_due grace anchor — null when not past_due */
+  pastDueSince: timestamp('past_due_since'),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+/** Polar webhook idempotency (Standard Webhooks webhook-id). */
+export const polarWebhookEvents = pgTable('polar_webhook_events', {
+  webhookId: text('webhook_id').primaryKey(),
+  type: text('type').notNull(),
+  processedAt: timestamp('processed_at').notNull().defaultNow(),
+});
+
+/**
+ * Hour-scoped Ranked top-up bonus (phase 2).
+ * Must filter utc_hour_start = current UTC hour — never rollover.
+ */
+export const rankedTopups = pgTable('ranked_topups', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  /** Start of the UTC calendar hour this bonus applies to */
+  utcHourStart: timestamp('utc_hour_start').notNull(),
+  bonusRolls: integer('bonus_rolls').notNull().default(0),
+  /** When true, raises effective cap (Overload SKU) for this hour only */
+  isOverload: boolean('is_overload').notNull().default(false),
+  sourceOrderId: text('source_order_id').notNull().unique(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});

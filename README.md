@@ -8,7 +8,7 @@ Inspired by the daily number-game genre, but **unlocked**: roll as often as you 
 
 **[Live Site](https://rngdle-unlocked.chron0.tech)**
 
-[![Version](https://img.shields.io/badge/version-0.17.0-8b5cf6)](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.17.0)
+[![Version](https://img.shields.io/badge/version-0.18.0-8b5cf6)](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.18.0)
 [![React 19](https://img.shields.io/badge/UI-React_19-61dafb?logo=react&logoColor=black)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/lang-TypeScript_7-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite 6](https://img.shields.io/badge/build-Vite_Plus-646cff?logo=vite&logoColor=white)](https://vitejs.dev)
@@ -198,11 +198,14 @@ Switch modes anytime (board fully resets). Badges, EP, history, and share work a
 - **Mythic / anomaly / divine** auto-open share after reveal (optional setting)
 - **Prove this roll** — optional server HMAC seal (`/api/attest`) for claims
 - **Dynamic OG** — `/api/og` PNG cards for Discord/social (SVG is not supported by Discord); bot rewrite of `/u/:user` → profile OG HTML
-- **Soft rate limits** on sync, Ranked rolls (~180/h), and public APIs
+- **Soft rate limits** on sync, Ranked rolls (**~90/h free** UTC; Rare/Epic/Anomaly paid caps via Polar), and public APIs
+- **Polar monetization foundation** — webhook entitlements, draft CAD subscription products (Rare/Epic/Anomaly); checkout goes live after Polar KYC
 - **Discord / GitHub OAuth** — wired in app; finish portal + env via [`docs/oauth-setup.md`](./docs/oauth-setup.md)
 
 ### Planned later / in progress
 
+- Polar checkout UI + account review / payouts (founder)
+- Hour-scoped Ranked top-ups / Overload (current UTC hour only; no rollover)
 - Turnstile on sign-up
 - Server-side EP velocity caps
 
@@ -405,7 +408,7 @@ The Account screen times out after a few seconds and shows the sign-in form. Che
 
 Version tags match [`CHANGELOG.md`](./CHANGELOG.md) / GitHub releases. Status is only **Shipped** / **Later** — details stay in the Area column.
 
-![Shipped roadmap timeline from v0.2.0 through v0.17.0, plus Turnstile / EP velocity marked Later](./docs/assets/roadmap-shipped.png)
+![Shipped roadmap timeline from v0.2.0 through v0.18.0, plus later items](./docs/assets/roadmap-shipped.png)
 
 <details>
 <summary>Full version → area table (click to expand)</summary>
@@ -458,6 +461,8 @@ Version tags match [`CHANGELOG.md`](./CHANGELOG.md) / GitHub releases. Status is
 | Section Mastery seal art refresh + Ranked quota pill colors               | ✅ Shipped (`v0.16.6`)         |
 | Practice Free-only board + Leaderboard All-Time tab                       | ✅ Shipped (`v0.16.7`)         |
 | All-Time Best lane chips + Ranked CTE/UNION RTTs + quota ~180/h           | ✅ Shipped (`v0.17.0`)         |
+| Polar monetization foundation + Ranked free 90/h + paid tier caps         | ✅ Shipped (`v0.18.0`)         |
+| Polar checkout live + hour-scoped Ranked top-ups                          | 🔮 Later                       |
 | Turnstile / EP velocity                                                   | 🔮 Later                       |
 
 </details>
@@ -471,6 +476,7 @@ Community Features board ideas not yet on the shipped timeline. Maturity differs
 Design docs:
 
 - [**Architecture (mermaid)**](docs/ARCHITECTURE.md)
+- [**Polar monetization**](docs/polar-monetization.md)
 - [**Refactor notes (July 2026)**](docs/refactor-notes-2026-07.md)
 - [Arcade Mode design](docs/superpowers/specs/2026-07-09-arcade-mode-design.md)
 - [Solo design](docs/superpowers/specs/2026-07-08-rngdle-unlocked-design.md) _(historical)_

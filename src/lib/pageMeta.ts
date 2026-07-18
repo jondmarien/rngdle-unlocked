@@ -31,8 +31,10 @@ export function documentTitleForRoll(): string {
   return `Shared roll · RNGdle Unlocked`;
 }
 
-export function documentTitleForLegal(page: 'terms' | 'privacy'): string {
-  return page === 'terms'
-    ? 'Terms of Service · RNGdle Unlocked'
-    : 'Privacy Policy · RNGdle Unlocked';
+export function documentTitleForLegal(
+  page: 'terms' | 'privacy' | 'payments',
+): string {
+  if (page === 'terms') return 'Terms of Service · RNGdle Unlocked';
+  if (page === 'privacy') return 'Privacy Policy · RNGdle Unlocked';
+  return 'Payments · RNGdle Unlocked';
 }

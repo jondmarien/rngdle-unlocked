@@ -208,6 +208,17 @@
       "destination": "/api/page/privacy"
     },
     {
+      "source": "/payments",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(bot|crawl|slurp|discord|twitter|facebook|slack|linkedin|telegram|whatsapp|preview|embed).*"
+        }
+      ],
+      "destination": "/api/page/payments"
+    },
+    {
       "source": "/roll",
       "has": [
         {

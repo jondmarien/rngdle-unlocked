@@ -5,7 +5,7 @@ import {
   runWithNeonRttCount,
 } from '../../server/db/index.js';
 import { createLogger } from '../../server/logger.js';
-import { LIMITS } from '../../server/rateLimit.js';
+import { getEffectiveRankedLimit } from '../../server/polar/entitlements.js';
 import { rankedRollRateKey } from '../../server/rankedQuota.js';
 import { getPublicIdentity, issueRankedRoll } from '../../server/rankedRoll.js';
 import { defineHandler } from '../../server/vercel-adapter.js';
@@ -46,11 +46,12 @@ export default defineHandler(async (request) => {
     } = await runWithNeonRttCount(
       async () => {
         const db = createDb();
+        const rankedLimit = await getEffectiveRankedLimit(db, userId);
 
         const limited = await rateCheckUtcHour(
           db,
           rankedRollRateKey(userId),
-          LIMITS.rankedRollsPerHour,
+          rankedLimit,
           { error: 'Ranked roll rate limit — try again later' },
         );
         if (!limited.ok) {

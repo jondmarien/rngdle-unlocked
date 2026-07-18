@@ -60,7 +60,7 @@ export type AppRoute =
   | { kind: 'tab'; tab: TabId; historyView?: HistoryView }
   | { kind: 'profile'; username: string }
   | { kind: 'roll'; rollId: string; username?: string }
-  | { kind: 'legal'; page: 'terms' | 'privacy' };
+  | { kind: 'legal'; page: 'terms' | 'privacy' | 'payments' };
 
 function historyViewFromSearch(search: string): HistoryView {
   const q = search.startsWith('?') ? search.slice(1) : search;
@@ -93,6 +93,9 @@ export function parsePath(pathname: string, search = ''): AppRoute {
   }
   if (parts.length === 1 && parts[0] === 'privacy') {
     return { kind: 'legal', page: 'privacy' };
+  }
+  if (parts.length === 1 && parts[0] === 'payments') {
+    return { kind: 'legal', page: 'payments' };
   }
   if (parts.length === 0) {
     return { kind: 'tab', tab: 'home' };

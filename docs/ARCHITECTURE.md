@@ -51,12 +51,12 @@ flowchart TB
 
 ## Roll modes
 
-| Mode               | RNG                | Persist                                           | Competitive / board surfaces                                                                         |
-| ------------------ | ------------------ | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| **Free play**      | Browser CSPRNG     | localStorage → sync as `source=client`            | **Leaderboard → Practice** + **All-Time** (via sync); no Ranked crowns                               |
-| **Ranked**         | Server CSPRNG      | Neon `source=ranked` first; client merges history | **Leaderboard → Ranked**, community crowns, overtakes; also bumps **All-Time**                       |
-| **Daily / Weekly** | Deterministic seed | sync as `source=challenge`                        | Practice + All-Time (public); not Ranked crowns                                                      |
-| **Arcade**         | Server CSPRNG      | `arcade_*` tables only (Digits)                   | **Leaderboard → Arcade** (best Digits run); Digits ≠ EP                                              |
+| Mode               | RNG                | Persist                                           | Competitive / board surfaces                                                   |
+| ------------------ | ------------------ | ------------------------------------------------- | ------------------------------------------------------------------------------ |
+| **Free play**      | Browser CSPRNG     | localStorage → sync as `source=client`            | **Leaderboard → Practice** + **All-Time** (via sync); no Ranked crowns         |
+| **Ranked**         | Server CSPRNG      | Neon `source=ranked` first; client merges history | **Leaderboard → Ranked**, community crowns, overtakes; also bumps **All-Time** |
+| **Daily / Weekly** | Deterministic seed | sync as `source=challenge`                        | Practice + All-Time (public); not Ranked crowns                                |
+| **Arcade**         | Server CSPRNG      | `arcade_*` tables only (Digits)                   | **Leaderboard → Arcade** (best Digits run); Digits ≠ EP                        |
 
 Mode switch fully resets the home reel / session roll (and abandons in-flight Generate). Arcade is a **separate `/arcade` screen**, not a Home `RollMode`.
 
@@ -159,7 +159,7 @@ sequenceDiagram
   H->>G: roll() ranked
   G->>RollApi: requestRankedRoll
   RollApi->>R: POST credentials
-  R->>R: apiGuards + identity + rate limit (~180/h UTC)
+  R->>R: apiGuards + identity + effective Ranked cap
   R->>R: server CSPRNG + evaluateBadges
   R->>DB: CTE insert rolls + upsert user_progress
   R->>DB: UNION ALL today/week/alltime tops
@@ -171,7 +171,26 @@ sequenceDiagram
   Note over DB: Leaderboard Ranked + highlights query source=ranked
 ```
 
-Ranked persist + crowns (v0.17+) prefer **neon-http one-shot SQL**: one CTE for `rolls` + `user_progress`, one `UNION ALL` for the three crown tops; previous-#1 fetch and system/overtake writes run only on wins. Soft gameplay cap is `RANKED_ROLLS_PER_HOUR` (**180**/UTC hour). Dev/preview can log Neon statement/RTT counts via `runWithNeonRttCount`.
+Ranked persist + crowns (v0.17+) prefer **neon-http one-shot SQL**: one CTE for `rolls` + `user_progress`, one `UNION ALL` for the three crown tops; previous-#1 fetch and system/overtake writes run only on wins. Soft free gameplay cap is `RANKED_ROLLS_PER_HOUR` (**90**/UTC hour); paid Rare/Epic/Anomaly raise the per-user limit via `user_entitlements` (Polar webhooks). Dev/preview can log Neon statement/RTT counts via `runWithNeonRttCount`.
+
+## Polar entitlements (v0.18+)
+
+```mermaid
+flowchart TD
+  polarCheckout[PolarCheckout] --> polarWebhooks[PolarWebhooks]
+  polarWebhooks --> handler["api/webhooks/polar"]
+  handler --> verify[validateEvent SDK]
+  verify --> idem[polar_webhook_events]
+  idem --> entitlements[user_entitlements]
+  entitlements --> rankedRoll["POST /api/ranked-roll"]
+  rankedRoll --> effectiveCap[tierCap plus hourTopup]
+  effectiveCap --> rateLimits[rate_limits UTC hour]
+```
+
+- Thin handler: [`api/webhooks/polar.ts`](../api/webhooks/polar.ts) → [`server/polar/webhooks.ts`](../server/polar/webhooks.ts) + [`server/polar/entitlements.ts`](../server/polar/entitlements.ts).
+- Signature: `@polar-sh/sdk` `validateEvent` with `POLAR_WEBHOOK_SECRET`; idempotent on Standard Webhooks `webhook-id`.
+- Effective limit = subscription tier cap (+ hour-scoped top-up when that ships). Top-ups never rollover past the UTC hour.
+- Product/ops detail: [`docs/polar-monetization.md`](./polar-monetization.md).
 
 ## Client data layer
 
@@ -272,26 +291,27 @@ Static SPA routes use [`server/pageOg.ts`](../server/pageOg.ts) titles/descripti
 
 ## Trust model (honest)
 
-| Claim                       | Reality                                                                               |
-| --------------------------- | ------------------------------------------------------------------------------------- |
-| Free-play randomness        | Browser CSPRNG + entropy pool — **client-authoritative**; Practice board honor system |
-| Ranked free-play randomness | **Server CSPRNG** via `/api/ranked-roll`; scores server-side; `source=ranked`         |
-| Arcade Digits / run score   | **Server-authoritative** via `/api/arcade/*`; client cannot forge Digits or best run  |
-| Challenge numbers           | Deterministic from period seed + subject id                                           |
-| Attestation seal            | Server HMAC on a **claim** — not proof of honest client RNG                           |
-| Leaderboard Ranked          | Fair competition baseline (server-issued only)                                        |
-| Leaderboard Practice        | Public Free play + challenge rolls (`source != ranked`); honor system                 |
-| Leaderboard All-Time        | Synced overall lifetime from `user_progress` (includes Ranked + journey EP)           |
-| All-Time Best Roll lanes    | Optional `source` on best entries (`client` / `ranked` / `challenge`) — UI chips      |
-| Ranked soft quota           | `RANKED_ROLLS_PER_HOUR` (**180**/UTC hour); pill uses API `limit`                     |
-| Leaderboard Arcade          | Best Digits run (`arcade_meta.best_run_score`); Digits ≠ EP; no crowns                |
-| Community crowns            | Ranked rolls only (UNION ALL tops; notifs only on wins)                               |
-| Share links                 | Only after roll row exists in Neon                                                    |
-| Runtime schema validation   | Zod at **import / sync / profile / arcade** boundaries — not blanket on every API     |
+| Claim                       | Reality                                                                                    |
+| --------------------------- | ------------------------------------------------------------------------------------------ |
+| Free-play randomness        | Browser CSPRNG + entropy pool — **client-authoritative**; Practice board honor system      |
+| Ranked free-play randomness | **Server CSPRNG** via `/api/ranked-roll`; scores server-side; `source=ranked`              |
+| Arcade Digits / run score   | **Server-authoritative** via `/api/arcade/*`; client cannot forge Digits or best run       |
+| Challenge numbers           | Deterministic from period seed + subject id                                                |
+| Attestation seal            | Server HMAC on a **claim** — not proof of honest client RNG                                |
+| Leaderboard Ranked          | Fair competition baseline (server-issued only)                                             |
+| Leaderboard Practice        | Public Free play + challenge rolls (`source != ranked`); honor system                      |
+| Leaderboard All-Time        | Synced overall lifetime from `user_progress` (includes Ranked + journey EP)                |
+| All-Time Best Roll lanes    | Optional `source` on best entries (`client` / `ranked` / `challenge`) — UI chips           |
+| Ranked soft quota           | Free **90**/UTC hour; paid Rare/Epic/Anomaly via Polar entitlements; pill uses API `limit` |
+| Leaderboard Arcade          | Best Digits run (`arcade_meta.best_run_score`); Digits ≠ EP; no crowns                     |
+| Community crowns            | Ranked rolls only (UNION ALL tops; notifs only on wins)                                    |
+| Share links                 | Only after roll row exists in Neon                                                         |
+| Runtime schema validation   | Zod at **import / sync / profile / arcade** boundaries — not blanket on every API          |
 
 ## Related docs
 
-- [README Status & roadmap](../README.md#-status--roadmap) — feature → release tag map (`v0.2.0`…`v0.17.0`)
+- [README Status & roadmap](../README.md#-status--roadmap) — feature → release tag map
+- [Polar monetization](./polar-monetization.md) — products, webhooks, quota tiers
 - [CHANGELOG](../CHANGELOG.md) — developer release notes
 - [Arcade Mode design](./superpowers/specs/2026-07-09-arcade-mode-design.md)
 - [Refactor notes (July 2026)](./refactor-notes-2026-07.md)

@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-07-17
+
+### Added
+
+- **Polar monetization foundation** — `POST /api/webhooks/polar` (signature verify + idempotent entitlement upsert), `user_entitlements` / `polar_webhook_events` / `ranked_topups` schema, `@polar-sh/sdk`, draft CAD subscription products (Rare / Epic / Anomaly).
+- **Payments legal page** — `/payments` plus Terms/Privacy sections covering Polar MoR, data shared for billing, and hour-scoped top-up non-rollover rules.
+- **Docs** — [`docs/polar-monetization.md`](docs/polar-monetization.md); ARCHITECTURE Polar flow; migration `scripts/migrate-polar-entitlements.mjs`.
+
+### Changed
+
+- **Ranked free quota** — `RANKED_ROLLS_PER_HOUR` **180 → 90**; paid tiers raise per-user effective cap (`RANKED_TIER_CAPS`: Rare 120 / Epic 150 / Anomaly 180) via entitlements.
+- Ranked roll + quota endpoints resolve limit through `getEffectiveRankedLimit`.
+
+### Notes
+
+- Polar products are **draft** until founder KYC / account review unlocks checkout. Env: `POLAR_API_KEY`, `POLAR_WEBHOOK_SECRET` (already in Vercel + local). Run migrate script on each Neon env before relying on webhooks.
+- Top-up SKUs and checkout UI are **not** in this release.
+
 ## [0.17.0] - 2026-07-15
 
 ### Added

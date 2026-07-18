@@ -32,6 +32,26 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Ranked free returns to 90/h — Polar paid tiers on the way',
+    date: '2026-07-17',
+    version: '0.18.0',
+    tags: ['Ranked', 'Payments', 'Legal'],
+    content: [
+      {
+        body: 'Free Ranked is back to about **90** rolls per UTC hour so paid rarity tiers can sit above it. Under the hood we wired Polar for optional subscriptions (Rare / Epic / Anomaly) — checkout opens after account review. New **Payments** legal page explains how purchases work.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'Foundation first — buy buttons come online when Polar checkout is live.',
+        bullets: [
+          '**Free Ranked** — soft cap about **90**/UTC hour again (Home pill still shows `N/limit left`).',
+          '**Coming paid tiers** — Rare 120 · Epic 150 · Anomaly 180 Ranked rolls/hour (CAD).',
+          '**Payments / Terms / Privacy** — how Polar handles checkout and what data we share for entitlements.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Faster Ranked rolls, bigger hourly room, clearer All-Time Best',
     date: '2026-07-15',
     version: '0.17.0',

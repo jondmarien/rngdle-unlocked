@@ -679,6 +679,12 @@ export function AboutScreen() {
           >
             Privacy Policy
           </a>
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href="/payments"
+          >
+            Payments
+          </a>
         </p>
       </section>
     </article>

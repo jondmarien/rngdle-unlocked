@@ -7,8 +7,8 @@
 | **Repo**                   | `jondmarien/rngdle-unlocked`                                                  |
 | **Live**                   | https://rngdle-unlocked.chron0.tech                                           |
 | **Branch**                 | `main` (auto-deploys Vercel)                                                  |
-| **Version**                | `0.17.0` (`package.json`; Settings uses `VITE_APP_VERSION`)                   |
-| **Latest release**         | [v0.17.0](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.17.0) |
+| **Version**                | `0.18.0` (`package.json`; Settings uses `VITE_APP_VERSION`)                   |
+| **Latest release**         | [v0.18.0](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.18.0) |
 | **Handoff commit context** | Opus audit refactor (`aa8e91e`…`fc4fa65` on `main`) + prior P0/P1 wave        |
 
 ---
@@ -260,6 +260,7 @@ node scripts/add-roll-source.mjs   # if source column missing
 - [x] **v0.16.6** — Section Mastery seals full-art refresh; Ranked quota pill yellow/orange/red by remaining
 - [x] **v0.16.7** — Practice Free-only (public non-ranked rolls); Leaderboard → All-Time for synced overall lifetime; top-left/journey stay combined
 - [x] **v0.17.0** — All-Time Best lane chips; Ranked CTE persist + UNION ALL crowns + username pass-through; rankedRollsPerHour 90→180; dev/preview Neon RTT counter
+- [x] **v0.18.0** — Polar webhook entitlements; Ranked free 90/h + Rare/Epic/Anomaly caps; `/payments` legal; draft CAD Polar products
 
 ### Still open for you / ops
 

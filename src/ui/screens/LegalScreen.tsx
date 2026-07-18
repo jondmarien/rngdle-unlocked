@@ -1,10 +1,12 @@
 import type { ReactNode } from 'react';
 
-type LegalKind = 'terms' | 'privacy';
+type LegalKind = 'terms' | 'privacy' | 'payments';
 
-const UPDATED = 'July 9, 2026';
+const UPDATED = 'July 17, 2026';
 const SITE = 'https://rngdle-unlocked.chron0.tech';
 const CONTACT = 'jon@chron0.tech';
+const POLAR_TERMS = 'https://polar.sh/legal/terms';
+const POLAR_PRIVACY = 'https://polar.sh/legal/privacy';
 
 function LegalShell({
   title,
@@ -23,6 +25,26 @@ function LegalShell({
           {title}
         </h1>
         <p className="text-xs text-(--prose-3)">Last updated: {UPDATED}</p>
+        <p className="flex flex-wrap gap-3 pt-1 text-xs">
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href="/terms"
+          >
+            Terms
+          </a>
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href="/privacy"
+          >
+            Privacy
+          </a>
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href="/payments"
+          >
+            Payments
+          </a>
+        </p>
       </header>
       {children}
       <footer className="space-y-2 border-t border-(--outline) pt-4 text-xs text-(--prose-3)">
@@ -47,6 +69,12 @@ function LegalShell({
             href="/privacy"
           >
             Privacy Policy
+          </a>
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href="/payments"
+          >
+            Payments
           </a>
           <a
             className="font-semibold text-(--accent) underline-offset-2 hover:underline"
@@ -90,7 +118,15 @@ function TermsBody() {
         </p>
         <p>
           The game works offline in your browser. Optional cloud features
-          (sign-in, sync, Ranked, social) require an account.
+          (sign-in, sync, Ranked, social) require an account. Optional paid
+          Ranked subscription tiers may be offered via Polar — see{' '}
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href="/payments"
+          >
+            Payments
+          </a>
+          .
         </p>
       </section>
 
@@ -148,7 +184,56 @@ function TermsBody() {
 
       <section className="space-y-2">
         <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
-          5. Availability
+          5. Optional paid features
+        </h2>
+        <p>
+          The core game (including Free play) remains available without
+          purchase. Optional paid features — such as higher Ranked
+          rolls-per-hour subscription tiers — are sold through{' '}
+          <strong className="text-(--prose)">Polar</strong> as Merchant of
+          Record. Polar’s{' '}
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href={POLAR_TERMS}
+            target="_blank"
+            rel="noreferrer"
+          >
+            terms
+          </a>{' '}
+          apply to the payment itself. After Polar confirms payment, we grant
+          the matching in-game entitlement.
+        </p>
+        <ul className="list-disc space-y-1 pl-5">
+          <li>
+            Paid Ranked quota is a competitive advantage on Ranked boards and
+            crowns. We do not guarantee any particular ranking or outcome.
+          </li>
+          <li>
+            Prices and tiers may change. Active subscriptions follow Polar’s
+            billing and cancellation rules until the period ends or access is
+            revoked.
+          </li>
+          <li>
+            Chargeback fraud, payment abuse, or attempts to keep paid access
+            after a refund may result in entitlement revocation and account
+            action.
+          </li>
+        </ul>
+        <p>
+          Details:{' '}
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href="/payments"
+          >
+            Payments
+          </a>
+          .
+        </p>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
+          6. Availability
         </h2>
         <p>
           The service is provided “as is,” without warranties. Features may
@@ -159,7 +244,7 @@ function TermsBody() {
 
       <section className="space-y-2">
         <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
-          6. Third-party sign-in
+          7. Third-party sign-in
         </h2>
         <p>
           Discord and GitHub are third-party services. Their terms and privacy
@@ -170,7 +255,7 @@ function TermsBody() {
 
       <section className="space-y-2">
         <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
-          7. Changes
+          8. Changes
         </h2>
         <p>
           We may update these Terms. Continued use after an update means you
@@ -195,7 +280,14 @@ function PrivacyBody() {
           when you play or sign in, and how we use it. Solo play can stay
           entirely in your browser (
           <code className="text-xs">localStorage</code>). Cloud features are
-          optional.
+          optional. Paid purchases (when offered) go through Polar — see{' '}
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href="/payments"
+          >
+            Payments
+          </a>
+          .
         </p>
       </section>
 
@@ -230,6 +322,10 @@ function PrivacyBody() {
             cookies, approximate IP for rate limiting, and standard hosting /
             analytics logs (e.g. Vercel).
           </li>
+          <li>
+            <strong className="text-(--prose)">Payments (Polar)</strong> — see
+            section 5.
+          </li>
         </ul>
       </section>
 
@@ -241,6 +337,9 @@ function PrivacyBody() {
           <li>Run the game, sync progress, and show leaderboards / profiles</li>
           <li>Authenticate you (email magic link, verification, OAuth)</li>
           <li>Moderate abuse and enforce rate limits</li>
+          <li>
+            Fulfill and revoke paid entitlements after Polar confirms payment
+          </li>
           <li>Improve reliability (error and access logs)</li>
         </ul>
         <p>
@@ -261,12 +360,61 @@ function PrivacyBody() {
           <li>Resend (transactional email: magic links, verification)</li>
           <li>Discord / GitHub (only when you choose those sign-in methods)</li>
           <li>Vercel Analytics (aggregate traffic)</li>
+          <li>
+            Polar (Merchant of Record for optional purchases — see section 5)
+          </li>
         </ul>
       </section>
 
       <section className="space-y-2">
         <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
-          5. Public information
+          5. Payments &amp; Polar
+        </h2>
+        <p>
+          When you buy an optional subscription or top-up, Polar processes the
+          payment (card data stays with Polar / its processors — we do not store
+          full card numbers). For fulfillment we may send or receive:
+        </p>
+        <ul className="list-disc space-y-1 pl-5">
+          <li>
+            Your account id as Polar{' '}
+            <code className="text-xs">external_id</code>, plus email and display
+            name if provided at checkout
+          </li>
+          <li>
+            Polar customer, subscription, product, and order identifiers; tier /
+            status / period end for entitlement sync
+          </li>
+          <li>
+            Webhook events (e.g. order paid/refunded, subscription lifecycle,
+            customer updates) so we can grant or revoke Ranked caps
+          </li>
+        </ul>
+        <p>
+          We keep entitlement and order identifiers for fraud/refund audit while
+          your account exists (or as needed to resolve disputes). Polar’s{' '}
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href={POLAR_PRIVACY}
+            target="_blank"
+            rel="noreferrer"
+          >
+            privacy policy
+          </a>{' '}
+          also applies. More detail:{' '}
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href="/payments"
+          >
+            Payments
+          </a>
+          .
+        </p>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
+          6. Public information
         </h2>
         <p>
           If you set a public @username, your profile, public rolls, and
@@ -278,7 +426,7 @@ function PrivacyBody() {
 
       <section className="space-y-2">
         <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
-          6. Retention &amp; deletion
+          7. Retention &amp; deletion
         </h2>
         <p>
           We keep account and progress data while your account exists. You can
@@ -305,7 +453,7 @@ function PrivacyBody() {
 
       <section className="space-y-2">
         <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
-          7. Children
+          8. Children
         </h2>
         <p>
           The service is not directed at children under 13. If you believe a
@@ -315,7 +463,7 @@ function PrivacyBody() {
 
       <section className="space-y-2">
         <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
-          8. Changes
+          9. Changes
         </h2>
         <p>
           We may update this Policy. The “Last updated” date will change when we
@@ -326,12 +474,171 @@ function PrivacyBody() {
   );
 }
 
-export function LegalScreen({ kind }: { kind: LegalKind }) {
+function PaymentsBody() {
   return (
-    <LegalShell
-      title={kind === 'terms' ? 'Terms of Service' : 'Privacy Policy'}
-    >
-      {kind === 'terms' ? <TermsBody /> : <PrivacyBody />}
+    <>
+      <section className="space-y-2">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
+          1. Merchant of Record
+        </h2>
+        <p>
+          Optional purchases for RNGdle Unlocked are processed by{' '}
+          <strong className="text-(--prose)">Polar</strong> (polar.sh) as{' '}
+          <strong className="text-(--prose)">Merchant of Record</strong>. Polar
+          handles checkout, taxes, invoices, and payment processing. After Polar
+          confirms a successful payment (or subscription status), RNGdle
+          Unlocked grants the matching in-game entitlement (for example a higher
+          Ranked rolls-per-hour cap).
+        </p>
+        <p>
+          Polar’s{' '}
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href={POLAR_TERMS}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Terms
+          </a>{' '}
+          and{' '}
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href={POLAR_PRIVACY}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Privacy Policy
+          </a>{' '}
+          apply to the transaction. Our{' '}
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href="/terms"
+          >
+            Terms
+          </a>{' '}
+          and{' '}
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href="/privacy"
+          >
+            Privacy Policy
+          </a>{' '}
+          cover how we use the game and fulfillment data.
+        </p>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
+          2. What you can buy
+        </h2>
+        <ul className="list-disc space-y-1.5 pl-5">
+          <li>
+            <strong className="text-(--prose)">Ranked subscriptions</strong> —
+            rarity-themed tiers (Rare / Epic / Anomaly) that raise your Ranked
+            rolls-per-hour above the free baseline (90/hour UTC). Prices are in{' '}
+            <strong className="text-(--prose)">CAD</strong>.
+          </li>
+          <li>
+            <strong className="text-(--prose)">One-time top-ups</strong> (when
+            offered) — partial refill, full refill, or Overload for the{' '}
+            <strong className="text-(--prose)">current UTC hour only</strong>.
+            Unused rolls do <strong className="text-(--prose)">not</strong> roll
+            over into the next hour.
+          </li>
+        </ul>
+        <p>
+          Free play remains unlimited offline. Paid Ranked capacity is a{' '}
+          <strong className="text-(--prose)">competitive advantage</strong> on
+          Ranked leaderboards and crowns — we disclose that clearly; we do not
+          guarantee any ranking.
+        </p>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
+          3. Subscriptions
+        </h2>
+        <p>
+          Subscriptions renew until you cancel in Polar’s customer portal (or
+          equivalent). Access follows Polar status: active (and short past-due
+          grace) keeps the paid cap; revoked / refunded returns you to the free
+          Ranked cap. We may change prices or tier definitions for new
+          purchases; existing active subs follow Polar’s rules for the current
+          period.
+        </p>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
+          4. Top-ups &amp; Overload (no rollover)
+        </h2>
+        <p>
+          If you buy a one-time Ranked top-up or Overload, it applies only until
+          the current UTC hour ends (<code className="text-xs">:00:00Z</code>
+          ). At the next UTC hour, unused bonus rolls are gone — there is no
+          wallet carry-over. Checkout and product copy will state this before
+          you pay.
+        </p>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
+          5. Refunds &amp; disputes
+        </h2>
+        <p>
+          Refunds, chargebacks, and tax invoices are handled under Polar’s
+          Merchant of Record policies. If a subscription payment is refunded or
+          Polar revokes the subscription, we revoke the paid Ranked entitlement.
+          Questions about a charge:{' '}
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href={`mailto:${CONTACT}`}
+          >
+            {CONTACT}
+          </a>{' '}
+          and/or Polar support for the payment itself.
+        </p>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-(--prose)">
+          6. Data shared for billing
+        </h2>
+        <p>
+          To link a purchase to your game account we may provide Polar your user
+          id (as <code className="text-xs">external_id</code>), email, and name
+          at checkout. We store Polar customer/subscription/order ids and tier
+          status for fulfillment — not your full card number. Details are also
+          in the{' '}
+          <a
+            className="font-semibold text-(--accent) underline-offset-2 hover:underline"
+            href="/privacy"
+          >
+            Privacy Policy
+          </a>
+          .
+        </p>
+      </section>
+    </>
+  );
+}
+
+export function LegalScreen({ kind }: { kind: LegalKind }) {
+  const title =
+    kind === 'terms'
+      ? 'Terms of Service'
+      : kind === 'privacy'
+        ? 'Privacy Policy'
+        : 'Payments';
+  return (
+    <LegalShell title={title}>
+      {kind === 'terms' ? (
+        <TermsBody />
+      ) : kind === 'privacy' ? (
+        <PrivacyBody />
+      ) : (
+        <PaymentsBody />
+      )}
     </LegalShell>
   );
 }

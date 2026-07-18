@@ -160,7 +160,7 @@ Vite resolves `.js` → `.ts` fine. Keep this pattern when adding game modules u
 - Auth: Better Auth session via `apiGuards` / `getSessionUser` (typed username/role — no `as` casts for session fields).
 - Rate limits: `server/rateLimit.ts` via `rateGuard` — soft API burst guards, **not** free-play gameplay locks.
   - There is **no** hourly free-play roll-upload cap (removed).
-  - Ranked still has `rankedRollsPerHour` (**180**/h UTC; server cost; shared `RANKED_ROLLS_PER_HOUR`).
+  - Ranked free baseline is `rankedRollsPerHour` (**90**/h UTC; shared `RANKED_ROLLS_PER_HOUR`); paid Rare/Epic/Anomaly raise the per-user cap via Polar entitlements.
 - Prefer keeping handler graphs esbuild-friendly (static imports) so `scripts/bundle-api.mjs` can emit one `.js` per entry. Dynamic `import()` of local modules is avoided for the Vercel prebundle path.
 - **Vercel deploy:** `buildCommand` is `pnpm build:vercel` — after the SPA build, `scripts/bundle-api.mjs` esbuild-bundles each `api/**/*.ts` into `api/_bundles/**` (underscore dir is ignored for function discovery). On `VERCEL=1`, each `api/**/*.ts` becomes a thin `@ts-nocheck` stub importing the matching bundle. Do not colocate `export { default } from './name.js'` next to `name.ts` (TS2303 circular alias under NodeNext). Do not delete `.ts` entry paths (Vercel already registered them). Local `vercel dev` / `bundle:api` keep real TypeScript sources; do not commit `api/_bundles/` or `api/**/*.js`.
 
@@ -245,8 +245,9 @@ Important tables: `user` (username, vanity profile fields), `user_progress`, `ro
 | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
 | `/api/auth/*`                                          | Better Auth (rewrites with `__path` for multi-segment)                                                                     |
 | `/api/sync`                                            | GET full cloud pull; POST delta (or legacy full) → compact ack; soft per-minute burst; 256KB body cap                      |
-| `/api/ranked-roll`                                     | POST Ranked free play (auth + username); response includes `quota` metadata                                                |
+| `/api/ranked-roll`                                     | POST Ranked free play (auth + username); response includes `quota` metadata; per-user effective cap from entitlements      |
 | `/api/ranked-roll/quota`                               | GET read-only Ranked remaining / reset (auth; soft burst `rankedQuotaPerMinute`)                                           |
+| `/api/webhooks/polar`                                  | POST Polar webhooks (signature + idempotency → `user_entitlements`); no session auth                                       |
 | `/api/leaderboard`                                     | `?view=total\|best` (default total); `?scope=ranked\|practice&period=all\|week`; total: `sort=`; best: `sortBy=ep\|rarity` |
 | `/api/arcade`                                          | GET meta + active run (auth)                                                                                               |
 | `/api/arcade/start\|roll\|buy\|arm\|cash-out\|abandon` | Arcade run mutations (auth + @username for start/roll)                                                                     |
@@ -316,7 +317,7 @@ These four checks require a **manual browser smoke** — automated `pnpm test` /
 - Default branch: `main` (production via Vercel).
 - Prefer small, focused commits with complete sentences in messages.
 - Do not force-push `main` unless the user explicitly requests it.
-- Version in `package.json` (currently **0.17.0**); Settings footer reads `VITE_APP_VERSION` from the build.
+- Version in `package.json` (currently **0.18.0**); Settings footer reads `VITE_APP_VERSION` from the build.
 - Feature → release map: README **Status & roadmap** (keep in sync when cutting releases).
 - Releases: annotated tags (`v0.x.y`) + `gh release create` when the user asks.
 
@@ -364,6 +365,7 @@ These four checks require a **manual browser smoke** — automated `pnpm test` /
 | Mode picker copy         | `src/ui/components/RollModePicker.tsx`                                                                              |
 | Badge catalog            | `src/game/badges/catalog.ts`                                                                                        |
 | Ranked issue             | `server/rankedRoll.ts`, `api/ranked-roll/index.ts`, quota: `api/ranked-roll/quota.ts` + `server/rankedQuota.ts`     |
+| Polar / entitlements     | `api/webhooks/polar.ts`, `server/polar/*`, `src/lib/ranked-limits.ts`, `docs/polar-monetization.md`                 |
 | Crowns / overtake        | `server/rollActivity.ts`                                                                                            |
 | Sync merge               | `server/sync.ts`, `api/sync.ts`                                                                                     |
 | Leaderboards             | `server/leaderboard.ts`, `api/leaderboard.ts`, `LeaderboardScreen.tsx` (Ranked/Practice/All-Time/Arcade)            |

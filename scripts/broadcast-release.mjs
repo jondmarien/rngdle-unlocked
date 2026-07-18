@@ -13,11 +13,11 @@ const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
 const title =
-  'New Update! v0.17.0 — Faster Ranked + ~180/h + All-Time Best lanes';
+  'New Update! v0.18.0 — Ranked free 90/h + Polar paid tiers foundation';
 const body = [
-  'Ranked Generate is leaner on the server, so settles should feel snappier.',
-  'Soft Ranked cap is now about 180 rolls per UTC hour (was ~90).',
-  'All-Time → Best Roll shows Free / Ranked / Challenge lane chips on each personal best.',
+  'Free Ranked is back to about 90 rolls per UTC hour.',
+  'Optional Rare / Epic / Anomaly Ranked subscription tiers are wired through Polar (checkout opens after account review).',
+  'New Payments page under legal explains how purchases and data sharing work.',
   'Read the full player notes: https://rngdle-unlocked.chron0.tech/whats-new',
   'Open: /whats-new',
 ].join(' ');

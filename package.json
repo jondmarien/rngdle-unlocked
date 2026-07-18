@@ -1,7 +1,7 @@
 {
   "name": "rngdle-unlocked",
   "private": true,
-  "version": "0.17.0",
+  "version": "0.18.0",
   "type": "module",
   "packageManager": "pnpm@10.34.4",
   "scripts": {
@@ -27,6 +27,7 @@
     "@fontsource-variable/syne": "^5.2.7",
     "@fontsource/jetbrains-mono": "^5.2.8",
     "@neondatabase/serverless": "^1.1.0",
+    "@polar-sh/sdk": "^0.48.1",
     "@resvg/resvg-wasm": "^2.6.2",
     "@tanstack/react-query": "^5.101.2",
     "@tanstack/react-table": "^8.21.3",

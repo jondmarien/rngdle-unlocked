@@ -16,7 +16,8 @@ export type PageOgSlug =
   | 'history'
   | 'stats'
   | 'terms'
-  | 'privacy';
+  | 'privacy'
+  | 'payments';
 
 export type PageOgMeta = {
   slug: PageOgSlug;
@@ -148,6 +149,15 @@ export const PAGE_OG: Record<PageOgSlug, PageOgMeta> = {
     cardHeadline: 'Privacy Policy',
     cardLabel: 'Data · accounts · sync',
   },
+  payments: {
+    slug: 'payments',
+    path: '/payments',
+    title: 'Payments · RNGdle Unlocked',
+    description:
+      'How optional Polar purchases work for RNGdle Unlocked — subscriptions, Ranked caps, and data shared for billing.',
+    cardHeadline: 'Payments',
+    cardLabel: 'Polar · Ranked tiers · CAD',
+  },
 };
 
 /** Path segment → slug (aliases included). */
@@ -169,6 +179,7 @@ const PATH_TO_SLUG: Record<string, PageOgSlug> = {
   stats: 'stats',
   terms: 'terms',
   privacy: 'privacy',
+  payments: 'payments',
 };
 
 export function resolvePageOgSlug(

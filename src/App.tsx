@@ -99,7 +99,7 @@ const StatsScreen = lazyScreen(
   () => import('./ui/screens/StatsScreen'),
   'StatsScreen',
 );
-const LegalScreen = lazyScreen<{ kind: 'privacy' | 'terms' }>(
+const LegalScreen = lazyScreen<{ kind: 'privacy' | 'terms' | 'payments' }>(
   () => import('./ui/screens/LegalScreen'),
   'LegalScreen',
 );
