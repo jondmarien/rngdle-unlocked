@@ -475,6 +475,7 @@ Version tags match [`CHANGELOG.md`](./CHANGELOG.md) / GitHub releases. Status is
 | Account Ranked Plus checkout (Polar Sessions + friend code)               | ✅ Shipped (`v0.18.2`) |
 | Hour-scoped Ranked top-ups / Overload + Plus 6‑min regen                  | ✅ Shipped (`v0.18.3`) |
 | Ranked Plus at `/plus` + display name + username cooldown/hold            | ✅ Shipped (`v0.18.4`) |
+| Discord HTTP bot (`/roll`, `/board`, Rare+ gate)                          | 🧪 Built — see [`docs/discord-bot.md`](./docs/discord-bot.md); public invite after Polar Rare+ webhook proven |
 | Turnstile / EP velocity                                                   | 🔮 Later               |
 
 </details>

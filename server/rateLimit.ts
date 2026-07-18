@@ -320,4 +320,6 @@ export const LIMITS = {
   arcadeLeaderboardPerMinute: 60,
   /** Polar checkout session / portal create. */
   checkoutPerMinute: 10,
+  /** Discord interactions endpoint burst per Discord snowflake. */
+  discordInteractionsPerMinute: 30,
 } as const;

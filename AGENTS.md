@@ -249,6 +249,7 @@ Important tables: `user` (username, vanity profile fields), `user_progress`, `ro
 | `/api/ranked-roll/quota`                               | GET read-only Ranked remaining / reset (auth; soft burst `rankedQuotaPerMinute`)                                           |
 | `/api/webhooks/polar`                                  | POST Polar webhooks (signature + idempotency → `user_entitlements`); no session auth                                       |
 | `/plus` (SPA)                                          | Ranked Plus storefront (tiers, friend code, Manage billing, this-hour top-ups). Account keeps identity + cosmetics.        |
+| `/api/discord/interactions`                            | Discord HTTP Interactions (Ed25519); `/roll` + `/board`; Rare+ gate; see [`docs/discord-bot.md`](./docs/discord-bot.md)    |
 | `/api/checkout`                                        | POST Ranked Plus Checkout Session (auth + `@username`; `{ tier, discountCode? }` → Polar `{ url }`)                        |
 | `/api/checkout/topup`                                  | POST Ranked hour Boost/Overload Checkout Session (auth + `@username`; `{ sku }` → Polar `{ url }`)                         |
 | `/api/checkout/portal`                                 | POST Polar customer portal (auth; requires linked Polar customer)                                                          |

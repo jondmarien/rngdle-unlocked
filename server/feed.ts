@@ -91,7 +91,9 @@ export async function feedResponse(
         ? 'ranked'
         : r.source === 'challenge'
           ? 'challenge'
-          : 'client';
+          : r.source === 'discord'
+            ? 'discord'
+            : 'client';
     return {
       id: r.id,
       shortCode: r.shortCode,

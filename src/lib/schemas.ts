@@ -101,7 +101,7 @@ export const rollResultSchema = z.object({
   percentile: z.number(),
   rolledAt: isoDateSchema,
   challengeKey: z.string().optional(),
-  source: z.enum(['client', 'ranked', 'challenge']).optional(),
+  source: z.enum(['client', 'ranked', 'challenge', 'discord']).optional(),
   attestationSeal: z.string().optional(),
 });
 
@@ -126,7 +126,7 @@ export const bestRollLeaderboardEntrySchema = z.object({
   rarity: rarityTierSchema.or(z.string()),
   rolledAt: isoDateSchema,
   /** All-Time Best Roll only — Free / Ranked / Challenge lane. */
-  source: z.enum(['client', 'ranked', 'challenge']).optional(),
+  source: z.enum(['client', 'ranked', 'challenge', 'discord']).optional(),
 });
 
 export const bestRollLeaderboardResponseSchema = z.object({

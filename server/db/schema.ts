@@ -136,6 +136,7 @@ export const rolls = pgTable('rolls', {
    * - client: local free play (synced; not ranked)
    * - ranked: server CSPRNG free play (leaderboard / community crowns)
    * - challenge: daily/weekly seed rolls
+   * - discord: Discord bot Free play (server-written; not ranked crowns)
    */
   source: text('source').notNull().default('client'),
 });

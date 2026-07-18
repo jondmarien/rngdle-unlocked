@@ -42,7 +42,7 @@ type BestRollEntry = {
   rarity: string;
   rolledAt: string;
   /** Present on All-Time Best Roll rows so the UI can show Free / Ranked / Challenge. */
-  source?: 'client' | 'ranked' | 'challenge';
+  source?: 'client' | 'ranked' | 'challenge' | 'discord';
   userId?: string;
 };
 
@@ -624,8 +624,8 @@ function publicBestEntry(e: BestRollEntry): Omit<BestRollEntry, 'userId'> {
 
 function normalizeRollSource(
   raw: string | null | undefined,
-): 'client' | 'ranked' | 'challenge' {
-  if (raw === 'ranked' || raw === 'challenge') return raw;
+): 'client' | 'ranked' | 'challenge' | 'discord' {
+  if (raw === 'ranked' || raw === 'challenge' || raw === 'discord') return raw;
   return 'client';
 }
 

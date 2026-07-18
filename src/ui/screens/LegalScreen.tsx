@@ -304,8 +304,10 @@ function PrivacyBody() {
           <li>
             <strong className="text-(--prose)">OAuth (Discord / GitHub)</strong>{' '}
             — provider account id, email (if the provider returns one), and
-            tokens needed to keep the link working. We do not post to Discord or
-            GitHub on your behalf.
+            tokens needed to keep the link working. We do not post to GitHub on
+            your behalf. If you use the optional Discord bot (slash commands),
+            roll and leaderboard messages may be posted in channels where you
+            run those commands.
           </li>
           <li>
             <strong className="text-(--prose)">Game progress</strong> — rolls,

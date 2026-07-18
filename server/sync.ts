@@ -54,7 +54,12 @@ export function syncPayloadTooLargeResponse(sizeBytes: number): Response {
 function rollSourceFromDb(
   source: string | null | undefined,
 ): RollResult['source'] {
-  if (source === 'ranked' || source === 'challenge' || source === 'client') {
+  if (
+    source === 'ranked' ||
+    source === 'challenge' ||
+    source === 'client' ||
+    source === 'discord'
+  ) {
     return source;
   }
   return undefined;
@@ -314,7 +319,11 @@ async function upsertRoll(
     rarity: values.rarity,
     percentile: values.percentile,
     badgesJson: values.badgesJson,
-    source: sql`case when ${rolls.source} = 'ranked' then 'ranked' else ${values.source} end`,
+    source: sql`case
+      when ${rolls.source} = 'ranked' then 'ranked'
+      when ${rolls.source} = 'discord' then 'discord'
+      else ${values.source}
+    end`,
   };
 
   try {
@@ -467,7 +476,7 @@ export async function saveCloudMerge(
     const shortCode =
       r.shortCode && r.shortCode.length >= 6 ? r.shortCode : null;
 
-    // Never let client sync forge "ranked" — only server ranked-roll API sets that.
+    // Never let client sync forge "ranked" or "discord" — server APIs only.
     const source =
       r.source === 'challenge' ||
       (typeof r.challengeKey === 'string' &&

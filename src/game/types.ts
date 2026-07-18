@@ -75,7 +75,7 @@ export type RollResult = {
    * How the number was produced.
    * client = local free play · ranked = server free play · challenge = daily/weekly
    */
-  source?: 'client' | 'ranked' | 'challenge';
+  source?: 'client' | 'ranked' | 'challenge' | 'discord';
   /** Server HMAC seal after POST /api/attest. */
   attestationSeal?: string;
 };
