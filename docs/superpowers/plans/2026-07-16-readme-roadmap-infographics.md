@@ -25,12 +25,12 @@ Do **not** change existing table content, wording, or status values. Do **not** 
 
 Read verbatim from `README.md` § Status & roadmap (lines 403–455).
 
-| Claim in task brief | Actual in README | Action |
-| ------------------- | ---------------- | ------ |
-| 45 shipped rows | **46** shipped rows (`✅ Shipped`) | Use **46**; treat brief count as outdated |
-| 46 total rows | **47** data rows (46 shipped + 1 Later) | Use **47** |
-| 21 distinct versions | **35** distinct version tags (`v0.2.0` … `v0.17.0` including patches) | Use **35** + Later |
-| v0.4.0 has 6 rows | **7** area rows | Use all 7 verbatim |
+| Claim in task brief  | Actual in README                                                      | Action                                    |
+| -------------------- | --------------------------------------------------------------------- | ----------------------------------------- |
+| 45 shipped rows      | **46** shipped rows (`✅ Shipped`)                                    | Use **46**; treat brief count as outdated |
+| 46 total rows        | **47** data rows (46 shipped + 1 Later)                               | Use **47**                                |
+| 21 distinct versions | **35** distinct version tags (`v0.2.0` … `v0.17.0` including patches) | Use **35** + Later                        |
+| v0.4.0 has 6 rows    | **7** area rows                                                       | Use all 7 verbatim                        |
 
 **Implication:** A single-row horizontal timeline is impossible. Even “21 nodes” was already dense; **35 + Later** forces a multi-row or vertical/era layout.
 
@@ -40,12 +40,12 @@ Read verbatim from `README.md` § Status & roadmap (lines 403–455).
 
 From the Features board screenshot (4 items, all `PLANNED` / `New Feature`):
 
-| Board title | Description (verbatim gist) | Maturity (task brief) |
-| ----------- | --------------------------- | --------------------- |
-| `add a legit RANKED system to ranked` | Tier ladder concept (Iron→Challenger) + 👀 | Idea Stage |
-| `Hard Mode` | `7-DIGIT numbers! (-1 through 9,999,999)?!` | Idea Stage |
-| `Custom Expansion Badges (Packs)` | User-created optional badge packs (CAH-style) | Idea Stage |
-| `Discord bot!!!` | Bot that streams the game for Discord servers | **Scoped — ready to build** |
+| Board title                           | Description (verbatim gist)                   | Maturity (task brief)       |
+| ------------------------------------- | --------------------------------------------- | --------------------------- |
+| `add a legit RANKED system to ranked` | Tier ladder concept (Iron→Challenger) + 👀    | Idea Stage                  |
+| `Hard Mode`                           | `7-DIGIT numbers! (-1 through 9,999,999)?!`   | Idea Stage                  |
+| `Custom Expansion Badges (Packs)`     | User-created optional badge packs (CAH-style) | Idea Stage                  |
+| `Discord bot!!!`                      | Bot that streams the game for Discord servers | **Scoped — ready to build** |
 
 **Title casing flag:** Board title is lowercase (`add a legit…`); task brief Title-cased it. Plan: use **board casing** for fidelity, or Title Case for README polish — **needs confirm** (recommendation below).
 
@@ -74,11 +74,11 @@ Fallback only if Chromium tooling is unavailable: SVG written by hand/code, then
 
 ### Part A — layout (3 options)
 
-| Option | Shape | Pros | Cons |
-| ------ | ----- | ---- | ---- |
+| Option                                        | Shape                                                                                                                                                                          | Pros                                                                                       | Cons                                                                           |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
 | **A1. Era-clustered card grid** ★ recommended | Columns/rows by era: Foundation `0.2–0.3`, Competitive `0.4.x`, Architecture `0.5`, Boards `0.6–0.7.x`, Content `0.8–0.14`, Arcade polish `0.15–0.16.x`, Latest `0.17` + Later | Fits density; GitHub-scroll friendly; each version is its own card with stacked sub-labels | Era labels are organizational chrome (not in table) — keep them visually quiet |
-| **A2. Wrapping multi-row timeline** | Horizontal ribbons of ~6–7 versions per row, stacked | Reads as a timeline | Patch spam (`0.16.0`–`0.16.7`) still cramped; tall image |
-| **A3. Single vertical ladder** | One column, version → stacked areas | Maximum legibility | Very tall; weak “wide README” feel |
+| **A2. Wrapping multi-row timeline**           | Horizontal ribbons of ~6–7 versions per row, stacked                                                                                                                           | Reads as a timeline                                                                        | Patch spam (`0.16.0`–`0.16.7`) still cramped; tall image                       |
+| **A3. Single vertical ladder**                | One column, version → stacked areas                                                                                                                                            | Maximum legibility                                                                         | Very tall; weak “wide README” feel                                             |
 
 **Recommendation: A1.** Group by version (collapse multi-area versions into one marker with stacked sub-labels). Show every version tag and every area label verbatim. Render `Turnstile / EP velocity — 🔮 Later` as a final, visually distinct node (amber/violet dashed border, crystal/🔮 icon — not teal check).
 
@@ -94,19 +94,19 @@ Reasoning: visual overview first → table remains the authoritative, searchable
 
 Two-tier structure (not four equal boxes):
 
-1. **Scoped — Ready to build** (full-width / larger panel): Discord bot only  
-2. **Idea Stage — Not yet scoped** (three equal cards below): Ranked overhaul, Hard Mode, Custom Expansion Badges  
+1. **Scoped — Ready to build** (full-width / larger panel): Discord bot only
+2. **Idea Stage — Not yet scoped** (three equal cards below): Ranked overhaul, Hard Mode, Custom Expansion Badges
 
 No version numbers, ship dates, or timelines.
 
 **Title recommendations:**
 
-| Source | Infographic / README title |
-| ------ | -------------------------- |
+| Source                                | Infographic / README title                                                                                                                                                  |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `add a legit RANKED system to ranked` | **Ranked system overhaul** subtitle + keep board phrase as quote, **or** keep board title Title-Cased: `Add a legit RANKED system to ranked` — prefer Title Case for README |
-| `Hard Mode` | `Hard Mode` |
-| `Custom Expansion Badges (Packs)` | `Custom Expansion Badges (Packs)` |
-| `Discord bot!!!` | `Discord bot` (drop `!!!`) |
+| `Hard Mode`                           | `Hard Mode`                                                                                                                                                                 |
+| `Custom Expansion Badges (Packs)`     | `Custom Expansion Badges (Packs)`                                                                                                                                           |
+| `Discord bot!!!`                      | `Discord bot` (drop `!!!`)                                                                                                                                                  |
 
 Short supporting lines stay faithful to board descriptions without inventing scope.
 
@@ -146,16 +146,17 @@ Version tags match [`CHANGELOG.md`](./CHANGELOG.md) / GitHub releases. Status is
 
 ![Shipped roadmap timeline from v0.2.0 through v0.17.0, plus Turnstile / EP velocity marked Later](./docs/assets/roadmap-shipped.png)
 
-| Area                                                                      | Status                         |
-| ------------------------------------------------------------------------- | ------------------------------ |
-| Solo unlimited playground                                                 | ✅ Shipped (`v0.2.0`)          |
+| Area                      | Status                |
+| ------------------------- | --------------------- |
+| Solo unlimited playground | ✅ Shipped (`v0.2.0`) |
+
 … (table unchanged) …
 ```
 
 ### Part B — new subsection after the table
 
 ```markdown
-| Turnstile / EP velocity                                                   | 🔮 Later                       |
+| Turnstile / EP velocity | 🔮 Later |
 
 ## 🔮 What's next
 

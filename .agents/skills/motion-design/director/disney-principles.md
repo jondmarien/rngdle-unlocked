@@ -22,10 +22,10 @@
 
 ## 4. Straight Ahead vs. Pose to Pose
 
-| Approach | Feel | Best For |
-|----------|------|----------|
-| Straight Ahead | Fluid, spontaneous | Particles, ambient, generative art |
-| Pose to Pose | Planned, controlled | UI transitions, state changes |
+| Approach       | Feel                | Best For                           |
+| -------------- | ------------------- | ---------------------------------- |
+| Straight Ahead | Fluid, spontaneous  | Particles, ambient, generative art |
+| Pose to Pose   | Planned, controlled | UI transitions, state changes      |
 
 ## 5. Follow Through and Overlapping Action
 
@@ -35,12 +35,12 @@
 
 ## 6. Slow In and Slow Out
 
-| Context | Easing | Why |
-|---------|--------|-----|
-| Entrance | ease-out | Arrives smoothly |
-| Exit | ease-in | Departs quickly |
-| On-screen | ease-in-out | Smooth journey |
-| Ambient loop | sine ease-in-out | Seamless |
+| Context      | Easing           | Why              |
+| ------------ | ---------------- | ---------------- |
+| Entrance     | ease-out         | Arrives smoothly |
+| Exit         | ease-in          | Departs quickly  |
+| On-screen    | ease-in-out      | Smooth journey   |
+| Ambient loop | sine ease-in-out | Seamless         |
 
 **NEVER** linear for spatial movement. Linear only for: rotation, progress bars, timers.
 
@@ -58,24 +58,24 @@
 
 ## 9. Timing
 
-| Weight/Mood | Duration |
-|-------------|----------|
-| Heavy (modals, pages) | 400-800ms |
+| Weight/Mood               | Duration  |
+| ------------------------- | --------- |
+| Heavy (modals, pages)     | 400-800ms |
 | Light (tooltips, toggles) | 100-250ms |
-| Sad/serious | 600ms+ |
-| Happy/light | 200-400ms |
-| Urgent | 100-200ms |
+| Sad/serious               | 600ms+    |
+| Happy/light               | 200-400ms |
+| Urgent                    | 100-200ms |
 
 Enter-exit asymmetry: entrances 30-50% longer than exits.
 
 ## 10. Exaggeration
 
 | Personality | Exaggeration |
-|-------------|-------------|
-| Playful | 15-25% |
-| Energetic | 20-30% |
-| Corporate | 0-5% |
-| Premium | 0% |
+| ----------- | ------------ |
+| Playful     | 15-25%       |
+| Energetic   | 20-30%       |
+| Corporate   | 0-5%         |
+| Premium     | 0%           |
 
 - Scale overshoot: 10-30% beyond target; rotation: ±5-15°
 
@@ -93,10 +93,10 @@ Enter-exit asymmetry: entrances 30-50% longer than exits.
 
 ## Combining Principles
 
-| Recipe | Principles Used |
-|--------|----------------|
-| Button press | Anticipation + Squash/Stretch + Follow-Through + Secondary + Timing |
-| Card entrance | Anticipation + Arcs + Slow In/Out + Follow-Through + Staging |
-| Success celebration | Exaggeration + Secondary + Timing + Squash/Stretch + Appeal |
-| Error shake | Timing + Slow In/Out + Staging (no exaggeration) |
-| Loading spinner | Timing + Slow In/Out + Appeal |
+| Recipe              | Principles Used                                                     |
+| ------------------- | ------------------------------------------------------------------- |
+| Button press        | Anticipation + Squash/Stretch + Follow-Through + Secondary + Timing |
+| Card entrance       | Anticipation + Arcs + Slow In/Out + Follow-Through + Staging        |
+| Success celebration | Exaggeration + Secondary + Timing + Squash/Stretch + Appeal         |
+| Error shake         | Timing + Slow In/Out + Staging (no exaggeration)                    |
+| Loading spinner     | Timing + Slow In/Out + Appeal                                       |

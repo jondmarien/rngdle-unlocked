@@ -22,19 +22,18 @@ real, complete, and compatible with the rest of the toolchain.
 ### 1. Violation count: 0 in production code
 
 A sweep of `api/`, `server/`, and `src/game/` for relative imports missing `.js` extensions
-found **34 hits, all inside `src/game/**/*.test.ts`** (18 test files). Test files never
+found **34 hits, all inside `src/game/**/\*.test.ts`** (18 test files). Test files never
 deploy and are type-checked by the bundler-mode app config (`tsconfig.app.json`), where
-extensionless imports are correct. Every shipped `.ts` file in the graph uses explicit
-`.js` extensions — consistent with the prior audit's "0 violations" claim.
+extensionless imports are correct. Every shipped `.ts`file in the graph uses explicit`.js` extensions — consistent with the prior audit's "0 violations" claim.
 
 ### 2. Config landscape
 
-| Config | Resolution | Governs |
-| --- | --- | --- |
+| Config                 | Resolution                                        | Governs                                                                                                                                                                           |
+| ---------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `tsconfig.json` (root) | `module: NodeNext` / `moduleResolution: nodenext` | `api/**` + `server/**` (+ transitively imported `src/game` files). Root placement is deliberate: Vercel typechecks `/api` against the root config and ignores project references. |
-| `tsconfig.server.json` | extends root | `pnpm typecheck`'s server pass |
-| `tsconfig.app.json` | `bundler` | `src/**` (Vite app, including game tests) |
-| `tsconfig.node.json` | `nodenext` | `vite.config.ts` only |
+| `tsconfig.server.json` | extends root                                      | `pnpm typecheck`'s server pass                                                                                                                                                    |
+| `tsconfig.app.json`    | `bundler`                                         | `src/**` (Vite app, including game tests)                                                                                                                                         |
+| `tsconfig.node.json`   | `nodenext`                                        | `vite.config.ts` only                                                                                                                                                             |
 
 `pnpm typecheck` runs all three and currently exits 0.
 

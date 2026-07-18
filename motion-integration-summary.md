@@ -6,13 +6,13 @@ Shipped on `main` as separate phase commits (2026-07-14), then cut as **v0.16.2*
 
 Overnight FR batch claims were **independently re-read** before trusting “Done”:
 
-| Surface | Confirmed in code |
-| ------- | ----------------- |
-| `motion@^12.42.2` | [`package.json`](package.json) |
-| Toasts | [`ToastViewport.tsx`](src/ui/feedback/ToastViewport.tsx) — `AnimatePresence`, slide/fade/scale, `layout`, `useReducedMotion` |
-| Confirm / Prompt | [`ConfirmDialogHost.tsx`](src/ui/feedback/ConfirmDialogHost.tsx), [`PromptDialogHost.tsx`](src/ui/feedback/PromptDialogHost.tsx) — same pattern + Portal `keepMounted` |
-| Home unlock → lightbox | [`HomeScreen.tsx`](src/ui/screens/HomeScreen.tsx) `layoutId={`home-badge-…`}` |
-| History Highlights fade | [`HistoryScreen.tsx`](src/ui/screens/HistoryScreen.tsx) `motion.div` + opacity |
+| Surface                 | Confirmed in code                                                                                                                                                      |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `motion@^12.42.2`       | [`package.json`](package.json)                                                                                                                                         |
+| Toasts                  | [`ToastViewport.tsx`](src/ui/feedback/ToastViewport.tsx) — `AnimatePresence`, slide/fade/scale, `layout`, `useReducedMotion`                                           |
+| Confirm / Prompt        | [`ConfirmDialogHost.tsx`](src/ui/feedback/ConfirmDialogHost.tsx), [`PromptDialogHost.tsx`](src/ui/feedback/PromptDialogHost.tsx) — same pattern + Portal `keepMounted` |
+| Home unlock → lightbox  | [`HomeScreen.tsx`](src/ui/screens/HomeScreen.tsx) `layoutId={`home-badge-…`}`                                                                                          |
+| History Highlights fade | [`HistoryScreen.tsx`](src/ui/screens/HistoryScreen.tsx) `motion.div` + opacity                                                                                         |
 
 Provisional FR claims matched real code for Phases 1–2/partial-4; remaining gaps were conventions, shop gestures, Arcade Run/Meta, Collection layout.
 
@@ -61,23 +61,23 @@ Provisional FR claims matched real code for Phases 1–2/partial-4; remaining ga
 
 Motion was **already in the client main graph** from v0.16.1 (toasts/dialogs/lightbox).
 
-| Build checkpoint | Main `index-*.js` | gzip |
-| ---------------- | ----------------- | ---- |
-| Pre Phase 1 (Motion already present) | **184 123** B | ~**55.14** KB |
-| After Phase 1 PoC | **184 447** B | ~**55.27** KB |
-| After Phases 2–4 | **185 786** B | ~**55.55** KB |
+| Build checkpoint                     | Main `index-*.js` | gzip          |
+| ------------------------------------ | ----------------- | ------------- |
+| Pre Phase 1 (Motion already present) | **184 123** B     | ~**55.14** KB |
+| After Phase 1 PoC                    | **184 447** B     | ~**55.27** KB |
+| After Phases 2–4                     | **185 786** B     | ~**55.55** KB |
 
 **Delta this pass (new Motion call sites + tokens/primitives):** about **+1.6 KB** raw / **+0.4 KB** gzip on the main index chunk. No separate `vendor-motion` chunk — Motion tree-shakes into the app graph (`motion/react` imports only). Clean pre-`motion` package baseline was not available in this environment (dep landed with overnight FR batch).
 
 ## LottieFiles skill usage
 
-| Decision | Skill input | Applied as |
-| -------- | ----------- | ---------- |
-| House personality | Corporate archetype + duration tables | Corporate-quick 150/200/300ms, `[0.2,0,0,1]` |
-| Enter vs exit | Exit = 65–75% of enter; exit ease-in | Toast/dialog exit ~0.7× enter |
-| Shop press | Interactive feedback &lt;150ms; same easing family | `MOTION_MS.press = 120`, no spring overshoot |
-| Reduced motion | Opacity/instant alternatives | `useReducedMotion` on every new surface |
-| Layout chrome | Keep UI transitions short | Arcade/Collection ≤200ms |
+| Decision          | Skill input                                        | Applied as                                   |
+| ----------------- | -------------------------------------------------- | -------------------------------------------- |
+| House personality | Corporate archetype + duration tables              | Corporate-quick 150/200/300ms, `[0.2,0,0,1]` |
+| Enter vs exit     | Exit = 65–75% of enter; exit ease-in               | Toast/dialog exit ~0.7× enter                |
+| Shop press        | Interactive feedback &lt;150ms; same easing family | `MOTION_MS.press = 120`, no spring overshoot |
+| Reduced motion    | Opacity/instant alternatives                       | `useReducedMotion` on every new surface      |
+| Layout chrome     | Keep UI transitions short                          | Arcade/Collection ≤200ms                     |
 
 Skill path: `.agents/skills/motion-design` (reference for future agents via AGENTS.md).
 

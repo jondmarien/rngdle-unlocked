@@ -1,6 +1,7 @@
 # Quality Checklist
 
 ## Visual Quality
+
 - [ ] Elements >40px for motion, >100px for detail
 - [ ] Readable at full speed without slow-motion
 - [ ] Clear primary, secondary, ambient layers
@@ -10,6 +11,7 @@
 - [ ] 1/3 rule (density): max 1/3 elements active simultaneously
 
 ## Technical Quality
+
 - [ ] No linear easing on spatial movement
 - [ ] Duration matches element type table
 - [ ] Ease-out entrances, ease-in exits
@@ -20,6 +22,7 @@
 - [ ] Follow-through: child elements offset 50-150ms
 
 ## Emotional Quality
+
 - [ ] Target emotion identified before properties
 - [ ] Personality archetype matches brand
 - [ ] Setup → action → resolution structure
@@ -28,6 +31,7 @@
 - [ ] Appropriate on 100th viewing
 
 ## Performance Quality
+
 - [ ] Primary motion uses transform + opacity
 - [ ] <20 animated elements per viewport
 - [ ] No layout-triggering properties animated
@@ -35,6 +39,7 @@
 - [ ] Maintains 60fps (30fps acceptable for ambient)
 
 ## Accessibility Quality
+
 - [ ] prefers-reduced-motion alternative provided
 - [ ] No vestibular triggers without alternative
 - [ ] Same interaction = same animation
@@ -44,6 +49,7 @@
 ## Severity Tiers
 
 ### CRITICAL
+
 - Linear easing on spatial movement
 - Opacity-only for important states
 - Exceeds 1/3 screen rule
@@ -52,6 +58,7 @@
 - Layout property animation causing jank
 
 ### HIGH
+
 - Missing secondary layer
 - Duration mismatch with element type
 - Wrong directional easing
@@ -60,6 +67,7 @@
 - Missing reduced-motion alternative
 
 ### MEDIUM
+
 - Missing ambient layer
 - No anticipation phase
 - Overshoot mismatch
