@@ -12,10 +12,10 @@ if (!process.env.DATABASE_URL) {
 const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
-const title = 'New Update! v0.18.4 — Ranked Plus at /plus';
+const title = 'New Update! v0.19.0 — Roll from Discord';
 const body = [
-  'Ranked Plus subscriptions, Manage billing, and this-hour Boosts now live on /plus — Account stays for sign-in and your look.',
-  'Set a display name separately from your unique @username. Username changes are once every 7 days, and your old handle is reserved for that week.',
+  'Link Discord on Account, keep your @username, and hold Ranked Plus Rare+ — then use /roll and /board in Discord.',
+  'Free Discord rolls land on Practice / All-Time; Ranked still uses your hour quota. Daily and Weekly work the same as on the site.',
   'Read the full player notes: https://rngdle-unlocked.chron0.tech/whats-new',
   'Open: /whats-new',
 ].join(' ');

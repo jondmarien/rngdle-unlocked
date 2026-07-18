@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-07-17
+
+### Added
+
+- **Discord HTTP Interactions bot** — `POST /api/discord/interactions` (Ed25519 verify, Components V2 `/roll` + `/board`); Free / Ranked / Daily / Weekly; Rare+ entitlement gate; 8s roll cooldown + 30/min burst.
+- **`rolls.source = 'discord'`** for Discord Free rolls (Practice/All-Time; not Ranked crowns). Sync conflict preserve includes `discord` alongside `ranked`.
+- Ops: [`docs/discord-bot.md`](docs/discord-bot.md), `scripts/register-discord-commands.mjs`, `scripts/check-polar-entitlements.mjs`.
+
+### Notes
+
+- Set `DISCORD_PUBLIC_KEY` on Vercel; Interactions Endpoint URL → `/api/discord/interactions`. Public invite only after a non-admin Rare+ Polar entitlement is proven (`check-polar-entitlements.mjs`).
+
 ## [0.18.4] - 2026-07-17
 
 ### Added

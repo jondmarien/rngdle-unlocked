@@ -25,7 +25,7 @@ Instructions for AI coding agents and humans working in this repository.
 
 - Free play stays unlimited and offline-capable.
 - Ranked requires **signed-in user + public `@username`**.
-- Client sync **must never** write `rolls.source = 'ranked'` (server only). On conflict, preserve `ranked`.
+- Client sync **must never** write `rolls.source = 'ranked'` or `'discord'` (server only). On conflict, preserve `ranked` and `discord`.
 - Absolute Ceiling `1_000_000` has a uniform chance in range plus an independent **1-in-100M** jackpot (client Free + server Ranked).
 - Arcade lives on `/arcade` (not `RollModePicker`); Digits never convert to EP; Arcade does not write `rolls`.
 - Top-left HUD + journey/lifetime seals use **combined** lifetime rolls/EP (all modes).
@@ -137,7 +137,7 @@ Never claim “proof of honest client RNG” for Free play. Attestation (`/api/a
 
 ### 5.2 `rolls.source`
 
-Values: `client` | `ranked` | `challenge` (default `client`).
+Values: `client` | `ranked` | `challenge` | `discord` (default `client`).
 
 - Competitive surfaces (leaderboard Ranked, community highlights, system crowns, overtake notifs) filter **`source = ranked`**.
 - Sync upserts from the client force non-ranked sources and must not demote existing ranked rows.
@@ -322,7 +322,7 @@ These four checks require a **manual browser smoke** — automated `pnpm test` /
 - Default branch: `main` (production via Vercel).
 - Prefer small, focused commits with complete sentences in messages.
 - Do not force-push `main` unless the user explicitly requests it.
-- Version in `package.json` (currently **0.18.4**); Settings footer reads `VITE_APP_VERSION` from the build.
+- Version in `package.json` (currently **0.19.0**); Settings footer reads `VITE_APP_VERSION` from the build.
 - Feature → release map: README **Status & roadmap** (keep in sync when cutting releases).
 - Releases: annotated tags (`v0.x.y`) + `gh release create` when the user asks.
 

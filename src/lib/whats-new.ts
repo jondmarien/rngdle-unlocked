@@ -32,6 +32,27 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Roll from Discord — /roll and /board',
+    date: '2026-07-17',
+    version: '0.19.0',
+    tags: ['Discord', 'Ranked', 'Social'],
+    content: [
+      {
+        body: 'Link Discord on Account, keep a public @username, and hold Ranked Plus **Rare+** — then use **/roll** and **/board** in Discord without leaving the channel.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'Same modes as the site, paced for chat.',
+        bullets: [
+          '**/roll** — Free, Ranked, Daily, and Weekly with the same trust rules as the web app.',
+          '**/board** — Ranked, Practice, and All-Time pages you can flip through in Discord.',
+          '**Free Discord rolls** land on Practice / All-Time (not Ranked crowns). Ranked still uses your hour quota.',
+          'Invite is gated on real Ranked Plus — dogfood for Rare+ players first; wider invite when Polar entitlements are proven.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Ranked Plus moves to /plus — plus display names',
     date: '2026-07-17',
     version: '0.18.4',
