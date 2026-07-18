@@ -25,8 +25,11 @@ function arg(name) {
 
 const username = arg('username')?.trim().toLowerCase().replace(/^@/, '');
 const userIdArg = arg('user-id')?.trim();
+const originArg = arg('origin')?.trim();
 if (!username && !userIdArg) {
-  console.error('Usage: --username=<handle>  or  --user-id=<id>');
+  console.error(
+    'Usage: --username=<handle>  or  --user-id=<id>  [--origin=https://rngdle-unlocked.chron0.tech]',
+  );
   process.exit(1);
 }
 
@@ -36,11 +39,22 @@ const secret =
   process.env.BETTER_AUTH_SECRET ||
   process.env.ATTEST_SECRET ||
   'dev-only-discord-install-secret';
+/** Prefer --origin; avoid minting localhost when .env.local points at Vite. */
 const origin = (
-  process.env.BETTER_AUTH_URL ||
+  originArg ||
+  process.env.DISCORD_INSTALL_ORIGIN ||
+  (process.env.BETTER_AUTH_URL?.includes('localhost')
+    ? 'https://rngdle-unlocked.chron0.tech'
+    : process.env.BETTER_AUTH_URL) ||
   process.env.VITE_APP_URL ||
   'https://rngdle-unlocked.chron0.tech'
 ).replace(/\/$/, '');
+if (/localhost|127\.0\.0\.1/.test(origin)) {
+  console.warn(
+    'warn: redirect_uri is localhost — Discord portal must allow it, and the API must be running there.\n' +
+      'For production invites use: --origin=https://rngdle-unlocked.chron0.tech',
+  );
+}
 
 if (!databaseUrl) {
   console.error('DATABASE_URL required');
