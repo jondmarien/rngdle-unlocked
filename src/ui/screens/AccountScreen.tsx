@@ -1,5 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { authClient, useSession } from '../../lib/auth-client';
+import {
+  createCheckout,
+  openBillingPortal,
+  type PaidRankedTier,
+} from '../../lib/checkout-api';
 import { createLogger, withTimeout } from '../../lib/logger';
 import { fetchMe, patchMe, type LinkedAccount } from '../../lib/me-api';
 import {
@@ -25,6 +30,10 @@ import {
   type ProfileAccent,
 } from '../../lib/profile-theme';
 import type { RankedTier } from '../../lib/ranked-limits';
+import {
+  RANKED_PLUS_CATALOG,
+  tierChipClass,
+} from '../../lib/ranked-plus-catalog';
 import { useIsAdmin } from '../../lib/useIsAdmin';
 import { useCloudSync } from '../../state/GameProvider';
 import { ProfileAvatar } from '../components/ProfileAvatar';
@@ -68,6 +77,13 @@ export function AccountScreen({
   const [profileAvatar, setProfileAvatar] = useState('');
   const [profileFrame, setProfileFrame] = useState<ProfileFrameId>('none');
   const [rankedTier, setRankedTier] = useState<RankedTier>('free');
+  const [hasPolarBilling, setHasPolarBilling] = useState(false);
+  const [friendCode, setFriendCode] = useState('');
+  const [checkoutBusy, setCheckoutBusy] = useState(false);
+  const [highlightTier, setHighlightTier] = useState<PaidRankedTier | null>(
+    null,
+  );
+  const rankedPlusRef = useRef<HTMLDivElement>(null);
   const [profileShowCodex, setProfileShowCodex] = useState(true);
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -103,6 +119,78 @@ export function AccountScreen({
     window.history.replaceState(null, '', next);
   }, []);
 
+  // Ranked Plus deep links: ?upgrade= · ?checkout=success|cancel
+  useEffect(() => {
+    if (typeof window === 'undefined' || !session?.user) return;
+    const params = new URLSearchParams(window.location.search);
+    const upgrade = params.get('upgrade');
+    const checkout = params.get('checkout');
+    let dirty = false;
+
+    if (upgrade === 'rare' || upgrade === 'epic' || upgrade === 'anomaly') {
+      setHighlightTier(upgrade);
+      rankedPlusRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+      params.delete('upgrade');
+      dirty = true;
+    }
+
+    if (checkout === 'cancel') {
+      setMsg('Checkout cancelled — no charge. You can try again anytime.');
+      params.delete('checkout');
+      params.delete('tier');
+      params.delete('checkout_id');
+      dirty = true;
+    }
+
+    if (checkout === 'success') {
+      const wantTier = params.get('tier');
+      setMsg('Payment received — unlocking Ranked Plus…');
+      let tries = 0;
+      const poll = window.setInterval(() => {
+        tries += 1;
+        void fetchMe()
+          .then((data) => {
+            if (!data.user) return;
+            const tier = (data.user.rankedTier ?? 'free') as RankedTier;
+            setRankedTier(tier);
+            setHasPolarBilling(Boolean(data.user.hasPolarBilling));
+            if (
+              tier !== 'free' &&
+              (!wantTier || tier === wantTier || tries >= 8)
+            ) {
+              window.clearInterval(poll);
+              setMsg(
+                `Ranked Plus · ${tier} is active. Frames and emblems are unlocked — save your look below.`,
+              );
+              if (normalizeProfileFrame(data.user.profileFrame) === 'none') {
+                setProfileFrame(defaultFrameForTier(tier));
+              }
+            }
+          })
+          .catch(() => {});
+        if (tries >= 12) {
+          window.clearInterval(poll);
+          setMsg(
+            'Payment received. If Ranked Plus is not active yet, wait a moment and refresh — webhooks can lag a few seconds.',
+          );
+        }
+      }, 1200);
+      params.delete('checkout');
+      params.delete('tier');
+      params.delete('checkout_id');
+      dirty = true;
+      return () => window.clearInterval(poll);
+    }
+
+    if (dirty) {
+      const next = `${window.location.pathname}${params.toString() ? `?${params}` : ''}${window.location.hash}`;
+      window.history.replaceState(null, '', next);
+    }
+  }, [session?.user?.id]);
+
   useEffect(() => {
     log.debug('session state', {
       isPending,
@@ -128,6 +216,7 @@ export function AccountScreen({
         setProfileAvatar(normalizeProfileAvatar(data.user.profileAvatar));
         const tier = (data.user.rankedTier ?? 'free') as RankedTier;
         setRankedTier(tier);
+        setHasPolarBilling(Boolean(data.user.hasPolarBilling));
         let frame = normalizeProfileFrame(data.user.profileFrame);
         if (frame === 'none' && tier !== 'free') {
           frame = defaultFrameForTier(tier);
@@ -468,6 +557,37 @@ export function AccountScreen({
     }
   };
 
+  const startCheckout = async (tier: PaidRankedTier) => {
+    if (!username.trim()) {
+      setMsg('Claim a public @username before Ranked Plus checkout.');
+      return;
+    }
+    setCheckoutBusy(true);
+    setMsg('Continuing to secure checkout…');
+    try {
+      const { url } = await createCheckout({
+        tier,
+        discountCode: friendCode.trim() || undefined,
+      });
+      window.location.href = url;
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : 'Checkout failed');
+      setCheckoutBusy(false);
+    }
+  };
+
+  const startPortal = async () => {
+    setCheckoutBusy(true);
+    setMsg(null);
+    try {
+      const { url } = await openBillingPortal();
+      window.location.href = url;
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : 'Portal unavailable');
+      setCheckoutBusy(false);
+    }
+  };
+
   if (sessionLoading) {
     return <p className="text-sm text-(--prose-3)">Loading session…</p>;
   }
@@ -766,6 +886,106 @@ export function AccountScreen({
             </button>
           </div>
 
+          <div
+            ref={rankedPlusRef}
+            className="space-y-3 rounded-lg border border-(--outline) bg-(--surface) p-4"
+          >
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <h2 className="text-base font-bold text-(--prose)">
+                  Ranked Plus
+                </h2>
+                <p className="text-sm text-(--prose-2)">
+                  Raise your Ranked hour cap and unlock frames + emblems.
+                  Checkout is handled securely by Polar.
+                </p>
+              </div>
+              <span
+                className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold capitalize ${tierChipClass(rankedTier)}`}
+              >
+                {rankedTier === 'free'
+                  ? 'Free · 90/h'
+                  : `Ranked Plus · ${rankedTier}`}
+              </span>
+            </div>
+            {isAdmin && rankedTier !== 'free' && !hasPolarBilling && (
+              <p className="text-xs text-(--prose-3)">
+                Admin complimentary access — full Anomaly cosmetics and quota
+                without a Polar purchase. Manage billing appears after a real
+                subscription.
+              </p>
+            )}
+            <div className="grid gap-2 sm:grid-cols-3">
+              {RANKED_PLUS_CATALOG.map((card) => {
+                const current = rankedTier === card.tier;
+                const highlighted = highlightTier === card.tier;
+                return (
+                  <div
+                    key={card.tier}
+                    className={`flex flex-col rounded-lg border-2 bg-(--bg) p-3 ${card.borderClass} ${
+                      highlighted ? 'ring-2 ring-(--accent)/50' : ''
+                    }`}
+                  >
+                    <p className="font-display text-lg font-bold text-(--prose)">
+                      {card.label}
+                    </p>
+                    <p className="font-mono text-sm tabular-nums text-(--prose-2)">
+                      {card.rollsPerHour}/h · {card.priceCad}/mo
+                    </p>
+                    <p className="mt-1 flex-1 text-xs text-(--prose-3)">
+                      {card.cosmetics}
+                    </p>
+                    <button
+                      type="button"
+                      disabled={checkoutBusy || current}
+                      className="mt-3 border-2 border-(--accent) bg-(--accent) px-2 py-1.5 text-xs font-bold uppercase text-(--bg) disabled:opacity-50"
+                      onClick={() => void startCheckout(card.tier)}
+                    >
+                      {current
+                        ? 'Current'
+                        : rankedTier === 'free'
+                          ? 'Subscribe'
+                          : 'Upgrade'}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-semibold text-(--prose-2)">
+                Friend code (optional)
+              </label>
+              <input
+                value={friendCode}
+                onChange={(e) => setFriendCode(e.target.value.slice(0, 64))}
+                placeholder="Discount code"
+                className="w-full border border-(--outline) bg-(--bg) px-3 py-2 font-mono text-sm"
+                autoComplete="off"
+              />
+              <p className="mt-1 text-xs text-(--prose-3)">
+                You can also enter a code on Polar&apos;s checkout page.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3 text-xs text-(--prose-3)">
+              {hasPolarBilling && (
+                <button
+                  type="button"
+                  disabled={checkoutBusy}
+                  className="font-semibold text-(--accent) underline-offset-2 hover:underline disabled:opacity-50"
+                  onClick={() => void startPortal()}
+                >
+                  Manage billing
+                </button>
+              )}
+              <a className="underline" href="/payments">
+                Payments
+              </a>
+              <a className="underline" href="/terms">
+                Terms
+              </a>
+            </div>
+          </div>
+
           <div className="space-y-3 rounded-lg border border-(--outline) bg-(--surface) p-4">
             <div>
               <h2 className="text-base font-bold text-(--prose)">
@@ -777,7 +997,7 @@ export function AccountScreen({
                 username.
               </p>
             </div>
-            <div className="flex items-center gap-3 rounded-lg border border-(--outline) bg-(--bg) p-3">
+            <div className="flex items-center gap-3 overflow-visible rounded-lg border border-(--outline) bg-(--bg) p-3 pt-4">
               <ProfileAvatar
                 username={username || session?.user?.name}
                 image={session?.user?.image}
@@ -799,30 +1019,30 @@ export function AccountScreen({
                 Profile frame
               </p>
               <p className="mb-2 text-xs text-(--prose-3)">
-                Swipe for Ranked Plus rims. Locked frames stay dim until you
+                Swipe for Ranked Plus frames. Locked frames stay dim until you
                 subscribe.
               </p>
-              <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1">
+              <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto overflow-y-visible py-2">
                 {framesForPicker().map((fr) => {
                   const unlocked = isFrameUnlocked(fr.id, rankedTier);
                   const selected = profileFrame === fr.id;
                   const cell = (
                     <div
-                      className={`relative flex h-16 w-16 shrink-0 snap-start flex-col items-center justify-center rounded-xl border-2 p-1 ${
+                      className={`relative flex h-[4.5rem] w-16 shrink-0 snap-start flex-col items-center justify-start gap-1 rounded-xl border-2 px-1 pt-2 pb-1 ${
                         selected
-                          ? 'border-(--prose) ring-2 ring-(--accent)/50'
+                          ? 'border-(--prose) bg-(--surface-raised)'
                           : 'border-(--outline)'
-                      } ${fr.ringClass}`}
+                      }`}
                     >
                       <span
-                        className={`size-8 rounded-full border border-(--outline) bg-(--surface) ${
+                        className={`size-8 shrink-0 rounded-full border border-(--outline) bg-(--surface) ${fr.ringClass} ${
                           unlocked
                             ? ''
                             : 'grayscale brightness-75 contrast-90 blur-[0.5px]'
                         }`}
                         aria-hidden
                       />
-                      <span className="mt-0.5 max-w-full truncate text-[9px] font-semibold text-(--prose-2)">
+                      <span className="max-w-full truncate text-[9px] font-semibold text-(--prose-2)">
                         {fr.label}
                       </span>
                       {!unlocked && (

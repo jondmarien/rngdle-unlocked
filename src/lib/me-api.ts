@@ -18,6 +18,8 @@ export type MeUser = {
   profileFrame?: string;
   profileShowCodex?: boolean;
   rankedTier?: 'free' | 'rare' | 'epic' | 'anomaly';
+  /** True when Polar customer/subscription is linked (Manage billing). */
+  hasPolarBilling?: boolean;
 };
 
 export type MePayload = {

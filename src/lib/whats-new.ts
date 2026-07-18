@@ -32,6 +32,27 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Ranked Plus checkout is live on Account',
+    date: '2026-07-17',
+    version: '0.18.2',
+    tags: ['Ranked', 'Payments', 'Account'],
+    content: [
+      {
+        body: 'You can subscribe to **Ranked Plus** from Account — Rare, Epic, or Anomaly — with secure Polar checkout. Friend codes work in-app or on Polar. After pay, we unlock your higher Ranked hour cap plus frames and emblems.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'Buy where you customize your look.',
+        bullets: [
+          '**Account → Ranked Plus** — three tiers with rolls/hour and CAD prices; optional friend code; Manage billing when subscribed.',
+          '**Home quota** — when you hit **0** left, a soft **Upgrade** link jumps to Account.',
+          '**Public profiles** — subscribers show a **Ranked Plus · tier** chip on `/u` (separate from flair).',
+          '**Locked cosmetics** — unlock tips now point at Account upgrade (Payments stays for legal info).',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Ranked Plus frames & emblems — tease the tiers',
     date: '2026-07-17',
     version: '0.18.1',

@@ -68,18 +68,39 @@ export function RankedQuotaPill() {
   const resetLabel =
     quota.resetsInSec != null ? formatRankedResetsIn(quota.resetsInSec) : null;
 
+  const upgradeHref =
+    remaining === 0
+      ? quota.limit < 120
+        ? '/account?upgrade=rare'
+        : quota.limit < 150
+          ? '/account?upgrade=epic'
+          : quota.limit < 180
+            ? '/account?upgrade=anomaly'
+            : null
+      : null;
+
   return (
     <span
-      className={`max-w-full truncate rounded-md border px-2.5 py-1 ${tone}`}
+      className={`inline-flex max-w-full flex-wrap items-center gap-1.5 rounded-md border px-2.5 py-1 ${tone}`}
       title={
         resetLabel
           ? `${remaining}/${quota.limit} Ranked rolls left · ${resetLabel}`
           : `${remaining}/${quota.limit} Ranked rolls left this hour`
       }
     >
-      {remaining}/{quota.limit} left
-      {resetLabel ? (
-        <span className="ml-1.5 opacity-80">· {resetLabel}</span>
+      <span className="truncate">
+        {remaining}/{quota.limit} left
+        {resetLabel ? (
+          <span className="ml-1.5 opacity-80">· {resetLabel}</span>
+        ) : null}
+      </span>
+      {upgradeHref ? (
+        <a
+          href={upgradeHref}
+          className="shrink-0 font-semibold text-(--accent) underline-offset-2 hover:underline"
+        >
+          Upgrade
+        </a>
       ) : null}
     </span>
   );

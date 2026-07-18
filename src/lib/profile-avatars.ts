@@ -183,15 +183,16 @@ export function tierProfileAvatars(): ProfileAvatarDef[] {
   );
 }
 
+/** Tier-colored border for Ranked Plus emblem tiles (no default/white edge). */
 export function tipRingClassForTier(tier: RankedTier): string {
   if (tier === 'rare') {
-    return 'ring-2 ring-[color-mix(in_srgb,var(--rare)_70%,transparent)]';
+    return 'border-2 border-[color-mix(in_srgb,var(--rare)_75%,transparent)]';
   }
   if (tier === 'epic') {
-    return 'ring-2 ring-[color-mix(in_srgb,var(--epic)_70%,transparent)]';
+    return 'border-2 border-[color-mix(in_srgb,var(--epic)_75%,transparent)]';
   }
   if (tier === 'anomaly') {
-    return 'ring-2 ring-[color-mix(in_srgb,var(--anomaly)_70%,transparent)]';
+    return 'border-2 border-[color-mix(in_srgb,var(--anomaly)_75%,transparent)]';
   }
-  return 'ring-2 ring-(--outline)';
+  return 'border-2 border-(--outline)';
 }

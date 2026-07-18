@@ -248,6 +248,8 @@ Important tables: `user` (username, vanity profile fields), `user_progress`, `ro
 | `/api/ranked-roll`                                     | POST Ranked free play (auth + username); response includes `quota` metadata; per-user effective cap from entitlements      |
 | `/api/ranked-roll/quota`                               | GET read-only Ranked remaining / reset (auth; soft burst `rankedQuotaPerMinute`)                                           |
 | `/api/webhooks/polar`                                  | POST Polar webhooks (signature + idempotency → `user_entitlements`); no session auth                                       |
+| `/api/checkout`                                        | POST Ranked Plus Checkout Session (auth + `@username`; `{ tier, discountCode? }` → Polar `{ url }`)                        |
+| `/api/checkout/portal`                                 | POST Polar customer portal (auth; requires linked Polar customer)                                                          |
 | `/api/leaderboard`                                     | `?view=total\|best` (default total); `?scope=ranked\|practice&period=all\|week`; total: `sort=`; best: `sortBy=ep\|rarity` |
 | `/api/arcade`                                          | GET meta + active run (auth)                                                                                               |
 | `/api/arcade/start\|roll\|buy\|arm\|cash-out\|abandon` | Arcade run mutations (auth + @username for start/roll)                                                                     |
@@ -317,7 +319,7 @@ These four checks require a **manual browser smoke** — automated `pnpm test` /
 - Default branch: `main` (production via Vercel).
 - Prefer small, focused commits with complete sentences in messages.
 - Do not force-push `main` unless the user explicitly requests it.
-- Version in `package.json` (currently **0.18.1**); Settings footer reads `VITE_APP_VERSION` from the build.
+- Version in `package.json` (currently **0.18.2**); Settings footer reads `VITE_APP_VERSION` from the build.
 - Feature → release map: README **Status & roadmap** (keep in sync when cutting releases).
 - Releases: annotated tags (`v0.x.y`) + `gh release create` when the user asks.
 

@@ -8,7 +8,7 @@ Inspired by the daily number-game genre, but **unlocked**: roll as often as you 
 
 **[Live Site](https://rngdle-unlocked.chron0.tech)**
 
-[![Version](https://img.shields.io/badge/version-0.18.1-8b5cf6)](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.18.1)
+[![Version](https://img.shields.io/badge/version-0.18.2-8b5cf6)](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.18.2)
 [![React 19](https://img.shields.io/badge/UI-React_19-61dafb?logo=react&logoColor=black)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/lang-TypeScript_7-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite 8](https://img.shields.io/badge/build-Vite_8_Plus-646cff?logo=vite&logoColor=white)](https://vitejs.dev)
@@ -205,12 +205,12 @@ Switch modes anytime (board fully resets). Badges, EP, history, and share work a
 - **Dynamic OG** — `/api/og` PNG cards for Discord/social (SVG is not supported by Discord); bot rewrite of `/u/:user` → profile OG HTML
 - **Soft rate limits** on sync, Ranked rolls (**~90/h free** UTC; Rare 120 / Epic 150 / Anomaly 180 via Polar entitlements), and public APIs
 - **Polar monetization** — public CAD Ranked Plus products (Rare/Epic/Anomaly), webhook entitlements, org KYC/payouts approved; see [`docs/polar-monetization.md`](./docs/polar-monetization.md)
-- **Legal** — `/terms`, `/privacy`, `/payments` (Polar MoR disclosure)
+- **Account Ranked Plus checkout** — Checkout Sessions + product cards + friend code + Manage portal; see [`docs/polar-checkout-foundation.md`](./docs/polar-checkout-foundation.md)
+- **Legal** — `/terms`, `/privacy`, `/payments` (Polar MoR disclosure — not a buy page)
 - **Discord / GitHub OAuth** — wired in app; finish portal + env via [`docs/oauth-setup.md`](./docs/oauth-setup.md)
 
 ### Planned later / in progress
 
-- Polar checkout UI (branded foundation: [`docs/polar-checkout-foundation.md`](./docs/polar-checkout-foundation.md))
 - Hour-scoped Ranked top-ups / Overload (current UTC hour only; no rollover)
 - Turnstile on sign-up
 - Server-side EP velocity caps
@@ -221,11 +221,11 @@ Switch modes anytime (board fully resets). Badges, EP, history, and share work a
 rngdle-unlocked/
 ├── api/                 ⚡ Thin Vercel handlers (Node adapter → Web Request)
 │   ├── auth.ts · me.ts · sync.ts · health.ts · ranked-roll/ (index + quota)
-│   ├── webhooks/polar.ts · leaderboard.ts · arcade/* · feed.ts · profile/ · og.ts · …
+│   ├── webhooks/polar.ts · checkout/ · leaderboard.ts · arcade/* · feed.ts · profile/ · og.ts · …
 │   └── admin/* · reports.ts · follow.ts · notifications.ts · …
 ├── server/              🧠 Shared API logic
 │   ├── apiGuards · auth · db/schema · sync · rankedRoll · arcade · rollActivity
-│   ├── polar/ (webhooks · entitlements) · leaderboard · profile · feed · ogSvg
+│   ├── polar/ (client · products · checkout · webhooks · entitlements) · leaderboard · profile · feed · ogSvg
 │   ├── rateLimit · vercel-adapter · ogHtml · …
 ├── src/
 │   ├── game/            Pure TS engine (rng, badges, secrets, challenge, arcade/)
@@ -473,7 +473,8 @@ Version tags match [`CHANGELOG.md`](./CHANGELOG.md) / GitHub releases. Status is
 | All-Time Best lane chips + Ranked CTE/UNION RTTs + quota ~180/h           | ✅ Shipped (`v0.17.0`) |
 | Polar monetization foundation + Ranked free 90/h + paid tier caps         | ✅ Shipped (`v0.18.0`) |
 | Profile frames + Ranked Plus tier emblems (cumulative 4/8/12)             | ✅ Shipped (`v0.18.1`) |
-| Polar checkout UI (see polar-checkout-foundation.md) + Ranked top-ups     | 🔮 Later               |
+| Account Ranked Plus checkout (Polar Sessions + friend code)               | ✅ Shipped (`v0.18.2`) |
+| Hour-scoped Ranked top-ups / Overload                                     | 🔮 Later               |
 | Turnstile / EP velocity                                                   | 🔮 Later               |
 
 </details>

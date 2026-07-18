@@ -74,11 +74,16 @@ export function UnlockTipPopover({
         <p className="font-semibold text-(--prose)">{title}</p>
         <p className="mt-1 text-(--prose-2)">{how}</p>
         <p className="mt-1.5 text-xs text-(--prose-3)">
-          Details on{' '}
+          <a
+            className="font-semibold text-(--accent) underline"
+            href={`/account?upgrade=${minTier === 'free' ? 'rare' : minTier}`}
+          >
+            Upgrade on Account
+          </a>
+          {' · '}
           <a className="underline" href="/payments">
             Payments
           </a>
-          .
         </p>
       </div>
     </span>

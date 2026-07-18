@@ -12,11 +12,10 @@ if (!process.env.DATABASE_URL) {
 const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
-const title = 'New Update! v0.18.1 — Ranked Plus frames & emblems';
+const title = 'New Update! v0.18.2 — Ranked Plus checkout is live';
 const body = [
-  'Account now has subscription profile frames and twelve new Ranked Plus emblems (unlock 4, then 8, then 12 as you climb tiers).',
-  'Locked art stays visible but washed out — hover for which tier unlocks it.',
-  'Polar Rare / Epic / Anomaly products are public; branded checkout UI is next.',
+  'Subscribe to Ranked Plus from Account — Rare, Epic, or Anomaly — with secure Polar checkout. Optional friend codes work in-app or on Polar.',
+  'Hitting 0 Ranked rolls left shows a soft Upgrade link on Home. Public profiles show your Ranked Plus tier chip when subscribed.',
   'Read the full player notes: https://rngdle-unlocked.chron0.tech/whats-new',
   'Open: /whats-new',
 ].join(' ');

@@ -14,7 +14,10 @@ import { createDb } from '../server/db/index.js';
 import { user } from '../server/db/schema.js';
 import { getLinkedSocialAccounts } from '../server/linkedAccounts.js';
 import { createLogger } from '../server/logger.js';
-import { getEffectiveRankedTier } from '../server/polar/entitlements.js';
+import {
+  getEffectiveRankedTier,
+  getEntitlementRow,
+} from '../server/polar/entitlements.js';
 import { LIMITS } from '../server/rateLimit.js';
 import {
   getSettingsSyncEnabled,
@@ -72,6 +75,10 @@ export default defineHandler(async (request) => {
         session.user.id,
       );
       const rankedTier = await getEffectiveRankedTier(db, session.user.id);
+      const entitlement = await getEntitlementRow(db, session.user.id);
+      const hasPolarBilling = Boolean(
+        entitlement?.polarCustomerId || entitlement?.polarSubscriptionId,
+      );
       let profileAvatar = row?.profileAvatar ?? '';
       let profileFrame = normalizeProfileFrame(row?.profileFrame);
       if (profileAvatar && !isAvatarUnlocked(profileAvatar, rankedTier)) {
@@ -91,6 +98,7 @@ export default defineHandler(async (request) => {
           profileFrame,
           profileShowCodex: row?.profileShowCodex ?? true,
           rankedTier,
+          hasPolarBilling,
         },
         settingsSyncEnabled,
         linkedAccounts,

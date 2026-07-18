@@ -2,7 +2,7 @@
 
 RNGdle Unlocked uses [Polar](https://polar.sh) as Merchant of Record for optional Ranked subscription tiers (and later hour-scoped top-ups).
 
-Player-facing disclosure: [`/payments`](https://rngdle-unlocked.chron0.tech/payments). Architecture diagram: [`ARCHITECTURE.md`](./ARCHITECTURE.md) (Polar entitlements section). Checkout UI design (not built yet): [`polar-checkout-foundation.md`](./polar-checkout-foundation.md).
+Player-facing disclosure: [`/payments`](https://rngdle-unlocked.chron0.tech/payments) (MoR legal page — not a storefront). Architecture diagram: [`ARCHITECTURE.md`](./ARCHITECTURE.md) (Polar entitlements section). Checkout storefront (Account Ranked Plus, P2 shipped): [`polar-checkout-foundation.md`](./polar-checkout-foundation.md).
 
 ## Org status
 
@@ -10,10 +10,11 @@ Player-facing disclosure: [`/payments`](https://rngdle-unlocked.chron0.tech/paym
 
 ## Env vars (names only)
 
-| Variable               | Where           | Purpose                             |
-| ---------------------- | --------------- | ----------------------------------- |
-| `POLAR_API_KEY`        | server / Vercel | Outbound Polar API (checkout later) |
-| `POLAR_WEBHOOK_SECRET` | server / Vercel | Verify inbound webhook signatures   |
+| Variable                                    | Where           | Purpose                                |
+| ------------------------------------------- | --------------- | -------------------------------------- |
+| `POLAR_API_KEY`                             | server / Vercel | Outbound Polar API (checkout + portal) |
+| `POLAR_WEBHOOK_SECRET`                      | server / Vercel | Verify inbound webhook signatures      |
+| `POLAR_PRODUCT_RARE` / `_EPIC` / `_ANOMALY` | optional        | Override public product UUIDs          |
 
 Never expose these to the Vite client. Documented in `.env.example` without values.
 
@@ -44,11 +45,21 @@ Product metadata (required for webhook mapping):
 - `tier`: `rare` | `epic` | `anomaly`
 - `ranked_rolls_per_hour`: `120` | `150` | `180`
 
-Checkout must set Polar customer `external_id` = Better Auth `user.id`.
+Checkout sets Polar customer `external_id` = Better Auth `user.id` via Checkout Sessions (`externalCustomerId`).
+
+## Checkout (Account Ranked Plus)
+
+| Endpoint                    | Role                                                           |
+| --------------------------- | -------------------------------------------------------------- |
+| `POST /api/checkout`        | Auth + `@username`; body `{ tier, discountCode? }` → `{ url }` |
+| `POST /api/checkout/portal` | Auth; Polar customer portal → `{ url }`                        |
+| Client                      | [`src/lib/checkout-api.ts`](../src/lib/checkout-api.ts)        |
+
+Flow: Account product cards → create session → Polar hosted checkout → `/account?checkout=success` polls `GET /api/me` → webhook unlocks entitlements. Friend codes: in-app field and/or Polar `allowDiscountCodes`.
 
 ## Cosmetics (entitlement-gated)
 
-- Profile frames: [`src/lib/profile-frames.ts`](../src/lib/profile-frames.ts) — Rare / Epic / Anomaly rims (`user.profile_frame`)
+- Profile frames: [`src/lib/profile-frames.ts`](../src/lib/profile-frames.ts) — Rare / Epic / Anomaly frames (`user.profile_frame`)
 - Tier emblems: 12 seals under `public/avatars/tier/` — cumulative unlock **4 / 8 / 12** ([`src/lib/profile-avatars.ts`](../src/lib/profile-avatars.ts))
 - Server rejects locked `profileAvatar` / `profileFrame` on `PATCH /api/me`
 
@@ -82,6 +93,7 @@ When approved: one-time products for partial refill / full refill / Overload. Al
 3. ~~Submit account for Polar review~~ done (`status: active`)
 4. ~~Flip draft products to public~~ done
 5. Re-enable webhook endpoint if Polar auto-disabled after failed deliveries
-6. Build branded checkout (see [`polar-checkout-foundation.md`](./polar-checkout-foundation.md))
+6. ~~Build branded checkout~~ done (Account Ranked Plus / Checkout Sessions — P2)
+7. Hour-scoped top-ups / Overload (P3 — Later)
 
 Stay on Polar **Starter** fees until volume justifies Pro.

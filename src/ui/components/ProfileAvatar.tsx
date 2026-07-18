@@ -11,6 +11,7 @@ const SIZE: Record<Size, string> = {
 
 /**
  * Public profile / Account preview avatar with optional subscription frame chrome.
+ * Outer wrap stays overflow-visible so frame rings/glow are not clipped.
  */
 export function ProfileAvatar({
   username,
@@ -36,22 +37,24 @@ export function ProfileAvatar({
   const chrome =
     frame === 'none'
       ? `border-2 border-(--outline) ring-2 ${accentRingClass ?? 'ring-(--outline)'}`
-      : `border-2 border-(--outline) ${frameStyles(frame)}`;
+      : `border-2 border-transparent ${frameStyles(frame)}`;
 
   return (
     <div
-      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-(--surface) font-bold ${SIZE[size]} ${chrome} ${className}`}
+      className={`flex shrink-0 items-center justify-center overflow-visible rounded-full bg-(--surface) font-bold ${SIZE[size]} ${chrome} ${className}`}
       aria-hidden
     >
-      {src ? (
-        <img
-          src={src}
-          alt=""
-          className="h-full w-full rounded-full object-cover"
-        />
-      ) : (
-        initial
-      )}
+      <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full">
+        {src ? (
+          <img
+            src={src}
+            alt=""
+            className="h-full w-full rounded-full object-cover"
+          />
+        ) : (
+          initial
+        )}
+      </div>
     </div>
   );
 }

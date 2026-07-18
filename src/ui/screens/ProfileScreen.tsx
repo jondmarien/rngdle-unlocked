@@ -27,6 +27,7 @@ import {
 } from '../../lib/notifications-api';
 import { fetchProfile } from '../../lib/profile-api';
 import { accentStyles, normalizeAccent } from '../../lib/profile-theme';
+import { tierChipClass } from '../../lib/ranked-plus-catalog';
 import { EPPill } from '../components/EPPill';
 import { ProfileAvatar } from '../components/ProfileAvatar';
 import {
@@ -343,20 +344,22 @@ export function ProfileScreen({
         </button>
       )}
 
-      {/* Hero banner */}
+      {/* Hero banner — overflow visible so Ranked Plus frame rings aren’t clipped */}
       <section
-        className={`relative overflow-hidden rounded-xl border border-(--outline) bg-linear-to-br ${theme.banner} p-5 sm:p-6`}
+        className={`relative overflow-visible rounded-xl border border-(--outline) bg-linear-to-br ${theme.banner} p-5 pt-6 sm:p-6 sm:pt-7`}
       >
         <div className="relative flex flex-wrap items-start justify-between gap-4">
           <div className="flex min-w-0 items-start gap-4">
-            <ProfileAvatar
-              username={profile.username}
-              image={profile.image}
-              avatarId={profile.profileAvatar}
-              frameId={profile.profileFrame}
-              accentRingClass={theme.ring}
-              size="md"
-            />
+            <div className="overflow-visible pt-1">
+              <ProfileAvatar
+                username={profile.username}
+                image={profile.image}
+                avatarId={profile.profileAvatar}
+                frameId={profile.profileFrame}
+                accentRingClass={theme.ring}
+                size="md"
+              />
+            </div>
             <div className="min-w-0">
               <p className="text-sm font-semibold text-(--prose-2)">
                 @{profile.username}
@@ -371,33 +374,50 @@ export function ProfileScreen({
                   {profile.profileFlair}
                 </p>
               )}
-              {(profile.progressProvenance === 'cloud_sync' ||
+              {(profile.rankedTier === 'rare' ||
+                profile.rankedTier === 'epic' ||
+                profile.rankedTier === 'anomaly' ||
+                profile.progressProvenance === 'cloud_sync' ||
                 profile.progressProvenance === 'cloned_local' ||
                 profile.progressProvenance === 'local_progress') && (
                 <p className="mt-2 flex flex-wrap gap-1.5">
-                  <span
-                    className={`inline-block rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${
-                      profile.progressProvenance === 'cloned_local'
-                        ? 'border-amber-500/50 bg-amber-500/15 text-amber-800 dark:text-amber-200'
-                        : profile.progressProvenance === 'cloud_sync'
-                          ? 'border-teal-500/40 bg-teal-500/10 text-teal-800 dark:text-teal-200'
-                          : 'border-(--outline) bg-(--surface) text-(--prose-2)'
-                    }`}
-                    title={
-                      profile.progressProvenance === 'cloned_local'
-                        ? 'Best roll id points at another account’s roll — likely copied localStorage progress'
-                        : profile.progressProvenance === 'cloud_sync'
-                          ? 'Best roll is owned by this account in the cloud'
-                          : 'Progress present without a cloud-owned best roll'
-                    }
-                  >
-                    {profile.progressProvenanceLabel ??
-                      (profile.progressProvenance === 'cloned_local'
-                        ? 'Cloned local progress'
-                        : profile.progressProvenance === 'cloud_sync'
-                          ? 'Cloud sync'
-                          : 'Local progress')}
-                  </span>
+                  {(profile.rankedTier === 'rare' ||
+                    profile.rankedTier === 'epic' ||
+                    profile.rankedTier === 'anomaly') && (
+                    <span
+                      className={`inline-block rounded-full border px-2.5 py-0.5 text-[11px] font-semibold capitalize tracking-wide ${tierChipClass(profile.rankedTier)}`}
+                      title="Ranked Plus subscription tier"
+                    >
+                      Ranked Plus · {profile.rankedTier}
+                    </span>
+                  )}
+                  {(profile.progressProvenance === 'cloud_sync' ||
+                    profile.progressProvenance === 'cloned_local' ||
+                    profile.progressProvenance === 'local_progress') && (
+                    <span
+                      className={`inline-block rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${
+                        profile.progressProvenance === 'cloned_local'
+                          ? 'border-amber-500/50 bg-amber-500/15 text-amber-800 dark:text-amber-200'
+                          : profile.progressProvenance === 'cloud_sync'
+                            ? 'border-teal-500/40 bg-teal-500/10 text-teal-800 dark:text-teal-200'
+                            : 'border-(--outline) bg-(--surface) text-(--prose-2)'
+                      }`}
+                      title={
+                        profile.progressProvenance === 'cloned_local'
+                          ? 'Best roll id points at another account’s roll — likely copied localStorage progress'
+                          : profile.progressProvenance === 'cloud_sync'
+                            ? 'Best roll is owned by this account in the cloud'
+                            : 'Progress present without a cloud-owned best roll'
+                      }
+                    >
+                      {profile.progressProvenanceLabel ??
+                        (profile.progressProvenance === 'cloned_local'
+                          ? 'Cloned local progress'
+                          : profile.progressProvenance === 'cloud_sync'
+                            ? 'Cloud sync'
+                            : 'Local progress')}
+                    </span>
+                  )}
                 </p>
               )}
               {profile.profileBio && (

@@ -43,7 +43,7 @@ export const PROFILE_FRAMES: readonly ProfileFrameDef[] = [
   },
   {
     id: 'sub-rare',
-    label: 'Rare rim',
+    label: 'Rare',
     family: 'subscription',
     minTier: 'rare',
     ringClass:
@@ -53,7 +53,7 @@ export const PROFILE_FRAMES: readonly ProfileFrameDef[] = [
   },
   {
     id: 'sub-epic',
-    label: 'Epic rim',
+    label: 'Epic',
     family: 'subscription',
     minTier: 'epic',
     ringClass:
@@ -63,7 +63,7 @@ export const PROFILE_FRAMES: readonly ProfileFrameDef[] = [
   },
   {
     id: 'sub-anomaly',
-    label: 'Anomaly rim',
+    label: 'Anomaly',
     family: 'subscription',
     minTier: 'anomaly',
     ringClass:

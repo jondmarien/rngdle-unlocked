@@ -295,4 +295,6 @@ export const LIMITS = {
   arcadeMutatePerMinute: 40,
   /** Arcade leaderboard GET. */
   arcadeLeaderboardPerMinute: 60,
+  /** Polar checkout session / portal create. */
+  checkoutPerMinute: 10,
 } as const;

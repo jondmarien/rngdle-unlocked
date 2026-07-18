@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.2] - 2026-07-17
+
+### Added
+
+- **Account Ranked Plus checkout (Polar P2)** — `POST /api/checkout` Checkout Sessions + `POST /api/checkout/portal`; client [`src/lib/checkout-api.ts`](src/lib/checkout-api.ts); Account product cards (Rare/Epic/Anomaly), friend code, success poll on `/api/me`, Manage billing when Polar-linked.
+- **Home quota Upgrade CTA** — `RankedQuotaPill` links to `/account?upgrade=…` when remaining is `0`.
+- **Public profile Ranked Plus chip** — `/u` hero shows entitlement tier (`rare` / `epic` / `anomaly`) distinct from flair / Cloud Sync.
+- Shared Polar helpers — [`server/polar/client.ts`](server/polar/client.ts), [`products.ts`](server/polar/products.ts), [`checkout.ts`](server/polar/checkout.ts); optional `POLAR_PRODUCT_*` env overrides.
+
+### Changed
+
+- Unlock tips → `/account?upgrade={minTier}` (Payments remains for legal).
+- [`docs/polar-checkout-foundation.md`](docs/polar-checkout-foundation.md) marked **P2 implemented**; README / polar-monetization / AGENTS API surface updated.
+- Profile frame labels drop “rim”; Account helper copy says “frames”.
+
+### Fixed
+
+- Ranked Plus emblem tiles no longer show a default/white border halo.
+- Profile frame rings no longer clipped in Account picker or `/u` hero (`overflow-visible` + chrome on inner preview).
+
+### Notes
+
+- No new schema — entitlements / frames migrations from `v0.18.x` still apply.
+- Hour-scoped Ranked top-ups / Overload remain Later (P3).
+
 ## [0.18.1] - 2026-07-17
 
 ### Added
@@ -15,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Ranked Plus emblems** — 12 tier seals under `public/avatars/tier/` (cumulative 4 / 8 / 12); locked cells use Codex-style grayscale + Prove-roll Popover unlock tips.
 - **Admin complimentary Anomaly** — `getEffectiveRankedTier` grants highest tier to `role=admin` / `ADMIN_USER_IDS` (quota + cosmetics, no Polar purchase).
 - **Friend discount ops script** — `scripts/create-friend-discounts.mjs` (100% forever codes via SDK; codes never committed).
-- **Checkout foundation doc** — [`docs/polar-checkout-foundation.md`](docs/polar-checkout-foundation.md) (branded checkout design; UI still Later).
+- **Checkout foundation doc** — [`docs/polar-checkout-foundation.md`](docs/polar-checkout-foundation.md) (branded checkout design; storefront shipped in `0.18.2`).
 
 ### Changed
 
@@ -31,7 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Notes
 
 - Run `node --env-file=.env.local scripts/migrate-profile-frame.mjs` on each Neon env after deploy.
-- Checkout storefront UI and hour-scoped top-ups remain Later.
+- Hour-scoped top-ups remain Later (checkout storefront: see `0.18.2`).
 
 ## [0.18.0] - 2026-07-17
 
