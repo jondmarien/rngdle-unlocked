@@ -91,7 +91,7 @@ node --env-file=.env.local scripts/register-discord-commands.mjs
 
 - **30/min** interactions per Discord snowflake (burst)
 - **8s** between successful rolls (channel pacing)
-- Ranked still uses server **UTC hour** quota
+- Ranked still uses server **UTC hour** quota — Discord shows `remaining/limit left` like Home; at **0 left**, an **ephemeral** message (only the clicker) links to `/plus?topup=1` and Ranked Plus upgrade (Polar checkout stays on-site; no Discord payments).
 
 ## Privacy
 

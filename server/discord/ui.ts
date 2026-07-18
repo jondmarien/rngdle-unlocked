@@ -2,6 +2,7 @@
  * Discord Components V2 builders for Ranked Plus bot roll / board screens.
  */
 import type { RollResult } from '../../src/game/types.js';
+import type { RankedQuotaDetails } from '../rankedQuota.js';
 import { SITE_ORIGIN } from './identity.js';
 
 export const IS_COMPONENTS_V2 = 1 << 15;
@@ -96,18 +97,52 @@ function modeLabel(mode: DiscordMode): string {
   }
 }
 
+function formatResetsIn(resetsInSec: number): string {
+  if (resetsInSec < 60) return `resets in ${resetsInSec}s`;
+  const minutes = Math.ceil(resetsInSec / 60);
+  if (minutes < 60) return `resets in ${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  const rem = minutes % 60;
+  return rem === 0 ? `resets in ${hours}h` : `resets in ${hours}h ${rem}m`;
+}
+
+/** Home-style Ranked pill copy: `172/180 left · resets in 24m`. */
+export function formatDiscordRankedQuota(quota: RankedQuotaDetails): string {
+  const base = `**${quota.remaining}/${quota.limit} left**`;
+  if (quota.resetsInSec != null) {
+    return `${base} · ${formatResetsIn(quota.resetsInSec)}`;
+  }
+  return `${base} this UTC hour`;
+}
+
+function linkButton(label: string, url: string) {
+  return {
+    type: 2,
+    style: 5,
+    label: label.slice(0, 80),
+    url: url.slice(0, 512),
+  };
+}
+
 export function idleRollScreen(opts: {
   mode: DiscordMode;
   username: string;
   tierLabel: string;
+  rankedQuotaLine?: string | null;
 }): { flags: number; components: unknown[] } {
+  const headerBits = [
+    `## RNGdle Unlocked`,
+    `**@${opts.username}** · ${opts.tierLabel}`,
+    `Mode: **${modeLabel(opts.mode)}**`,
+  ];
+  if (opts.mode === 'ranked' && opts.rankedQuotaLine) {
+    headerBits.push(opts.rankedQuotaLine);
+  }
   return {
     flags: IS_COMPONENTS_V2,
     components: [
       container(0x5865f2, [
-        text(
-          `## RNGdle Unlocked\n**@${opts.username}** · ${opts.tierLabel}\nMode: **${modeLabel(opts.mode)}**`,
-        ),
+        text(headerBits.join('\n')),
         text(
           '_Press **Roll** to generate. Session buttons expire after ~15 minutes._',
         ),
@@ -156,6 +191,7 @@ export function resultScreen(opts: {
   username: string;
   roll: RollResult;
   note?: string;
+  rankedQuotaLine?: string | null;
 }): { flags: number; components: unknown[] } {
   const badges =
     opts.roll.badges
@@ -166,10 +202,17 @@ export function resultScreen(opts: {
     opts.roll.shortCode != null
       ? `${SITE_ORIGIN}/s/${encodeURIComponent(opts.username)}/${encodeURIComponent(opts.roll.shortCode)}`
       : null;
+  const meta = [
+    `**@${opts.username}**`,
+    modeLabel(opts.mode),
+    `**${opts.roll.rarity}**`,
+    `**${opts.roll.totalEP.toLocaleString('en-US')} EP**`,
+  ];
+  if (opts.mode === 'ranked' && opts.rankedQuotaLine) {
+    meta.push(opts.rankedQuotaLine);
+  }
   const children: unknown[] = [
-    text(
-      `## ${opts.roll.number.toLocaleString('en-US')}\n**@${opts.username}** · ${modeLabel(opts.mode)} · **${opts.roll.rarity}** · **${opts.roll.totalEP.toLocaleString('en-US')} EP**`,
-    ),
+    text(`## ${opts.roll.number.toLocaleString('en-US')}\n${meta.join(' · ')}`),
     text(`Badges: ${badges}`),
   ];
   if (opts.note) children.push(text(`_${opts.note}_`));
@@ -267,6 +310,48 @@ export function ephemeralText(content: string) {
     data: {
       content: content.slice(0, 2000),
       flags: 64, // EPHEMERAL
+    },
+  };
+}
+
+/**
+ * Ephemeral Ranked hour-cap CTA — only the clicker sees it.
+ * Links to /plus for subscription upgrade and hour top-ups (Polar checkout on site).
+ */
+export function ephemeralRankedCap(opts: {
+  quota: RankedQuotaDetails;
+  retryAfterSec: number;
+  username: string;
+}) {
+  const reset =
+    opts.quota.resetsInSec != null
+      ? formatResetsIn(opts.quota.resetsInSec)
+      : `try again in ~${Math.max(1, opts.retryAfterSec)}s`;
+  const upgradeUrl =
+    opts.quota.limit < 120
+      ? `${SITE_ORIGIN}/plus?upgrade=rare`
+      : opts.quota.limit < 150
+        ? `${SITE_ORIGIN}/plus?upgrade=epic`
+        : opts.quota.limit < 180
+          ? `${SITE_ORIGIN}/plus?upgrade=anomaly`
+          : `${SITE_ORIGIN}/plus`;
+  const topupUrl = `${SITE_ORIGIN}/plus?topup=1`;
+  return {
+    type: 4,
+    data: {
+      flags: 64 | IS_COMPONENTS_V2,
+      components: [
+        container(0xf59e0b, [
+          text(
+            `## Ranked hour cap\n**@${opts.username}** — **${opts.quota.remaining}/${opts.quota.limit} left** · ${reset}\n\nCheckout stays on the site (Polar). Open **Ranked Plus** to subscribe / upgrade, or buy a **this-hour Boost / Overload**.`,
+          ),
+          separator(),
+          actionRow([
+            linkButton('Top up this hour', topupUrl),
+            linkButton('Open Ranked Plus', upgradeUrl),
+          ]),
+        ]),
+      ],
     },
   };
 }

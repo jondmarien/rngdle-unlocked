@@ -5,7 +5,12 @@ import type { Db } from '../db/index.js';
 import { createLogger } from '../logger.js';
 import { leaderboardResponse } from '../leaderboard.js';
 import { getEffectiveRankedLimit } from '../polar/entitlements.js';
-import { rankedRegenMapUsed, rankedRollRateKey } from '../rankedQuota.js';
+import {
+  getRankedRollQuota,
+  rankedRegenMapUsed,
+  rankedRollRateKey,
+  type RankedQuotaDetails,
+} from '../rankedQuota.js';
 import { checkRateLimitUtcHour, isRateLimited } from '../rateLimit.js';
 import { getPublicIdentity, issueRankedRoll } from '../rankedRoll.js';
 import { checkDiscordRollCooldown } from './cooldown.js';
@@ -21,7 +26,9 @@ import {
 import { issueDiscordChallengeRoll, issueDiscordRoll } from './rolls.js';
 import {
   boardScreen,
+  ephemeralRankedCap,
   ephemeralText,
+  formatDiscordRankedQuota,
   idleRollScreen,
   messageResponse,
   resultScreen,
@@ -32,6 +39,28 @@ import {
 const log = createLogger('discord-router');
 
 const PAGE_SIZE = 10;
+
+class RankedHourCapError extends Error {
+  readonly quota: RankedQuotaDetails;
+  readonly retryAfterSec: number;
+
+  constructor(quota: RankedQuotaDetails, retryAfterSec: number) {
+    super('ranked_hour_cap');
+    this.name = 'RankedHourCapError';
+    this.quota = quota;
+    this.retryAfterSec = retryAfterSec;
+  }
+}
+
+async function rankedQuotaLineFor(
+  db: Db,
+  userId: string,
+  mode: DiscordMode,
+): Promise<string | null> {
+  if (mode !== 'ranked') return null;
+  const quota = await getRankedRollQuota(db, userId);
+  return formatDiscordRankedQuota(quota);
+}
 
 type Interaction = {
   id: string;
@@ -141,9 +170,8 @@ async function runRoll(
       { mapUsed },
     );
     if (isRateLimited(limited)) {
-      throw new Error(
-        `Ranked hour cap — try again in ~${limited.retryAfterSec}s (${limited.quota.remaining}/${limited.quota.limit} left).`,
-      );
+      const quota = await getRankedRollQuota(db, user.userId);
+      throw new RankedHourCapError(quota, limited.retryAfterSec);
     }
     const identity = await getPublicIdentity(db, user.userId);
     if (!identity) throw new Error('Username required for Ranked.');
@@ -238,6 +266,7 @@ export async function handleDiscordInteraction(
         mode: 'free',
         username: gated.user.username!,
         tierLabel: tierLabel(gated.user),
+        rankedQuotaLine: null,
       });
       return messageResponse(screen);
     }
@@ -267,11 +296,13 @@ export async function handleDiscordInteraction(
 
     if (customId === 'mode') {
       const mode = parseMode(interaction.data?.values?.[0]);
+      const rankedQuotaLine = await rankedQuotaLineFor(db, user.userId, mode);
       return updateMessageResponse(
         idleRollScreen({
           mode,
           username: user.username!,
           tierLabel: tierLabel(user),
+          rankedQuotaLine,
         }),
       );
     }
@@ -282,6 +313,7 @@ export async function handleDiscordInteraction(
           mode: 'free',
           username: user.username!,
           tierLabel: tierLabel(user),
+          rankedQuotaLine: null,
         }),
       );
     }
@@ -354,15 +386,24 @@ async function handleRollClick(
   // kill a fire-and-forget after ack. Skip the deferred Rolling… edit for reliability.
   try {
     const { roll, note } = await runRoll(db, user, mode);
+    const rankedQuotaLine = await rankedQuotaLineFor(db, user.userId, mode);
     return updateMessageResponse(
       resultScreen({
         mode,
         username: user.username!,
         roll,
         note,
+        rankedQuotaLine,
       }),
     );
   } catch (err) {
+    if (err instanceof RankedHourCapError) {
+      return ephemeralRankedCap({
+        quota: err.quota,
+        retryAfterSec: err.retryAfterSec,
+        username: user.username!,
+      });
+    }
     const msg = err instanceof Error ? err.message : String(err);
     log.error('roll failed', { err: msg });
     return ephemeralText(`${msg.slice(0, 500)}\n\nRun \`/roll\` again.`);
