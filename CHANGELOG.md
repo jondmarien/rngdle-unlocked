@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.4] - 2026-07-17
+
+### Added
+
+- **Ranked Plus storefront at `/plus`** — subscriptions, friend code, Manage billing, and this-hour top-ups moved off Account; nav **Plus** tab; Polar checkout success/cancel return to `/plus`.
+- **Account display name** — editable `user.name` via `PATCH /api/me` (duplicates allowed; 2–48 chars).
+- **Username change cooldown + anti-snipe hold** — one `@username` change per 7 days; previous handle reserved in `username_holds` for 7 days; uniqueness checks live handles + active holds. Admin username edits bypass cooldown.
+
+### Changed
+
+- Account keeps a slim Ranked Plus status card linking to `/plus`; Home pill / unlock tips deep-link to `/plus`.
+- Old `/account?upgrade|topup|checkout=…` redirects to `/plus` with the same query.
+
+### Notes
+
+- Run additive migration after deploy: `node --env-file=.env.local scripts/migrate-username-holds.mjs` (`username_changed_at` + `username_holds`).
+
 ## [0.18.3] - 2026-07-17
 
 ### Added

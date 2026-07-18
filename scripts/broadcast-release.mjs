@@ -12,11 +12,10 @@ if (!process.env.DATABASE_URL) {
 const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
-const title = 'New Update! v0.18.3 — Ranked Boosts, Overload & Plus regen';
+const title = 'New Update! v0.18.4 — Ranked Plus at /plus';
 const body = [
-  'Account now has this-hour Boosts (+30 / +60) and Overload (+90) — unused bonus ends at the next UTC hour.',
-  'Ranked Plus quietly refills toward your cap every six minutes (Rare +1 · Epic +2 · Anomaly +3).',
-  'At 0 Ranked left, Home offers Top up and Upgrade.',
+  'Ranked Plus subscriptions, Manage billing, and this-hour Boosts now live on /plus — Account stays for sign-in and your look.',
+  'Set a display name separately from your unique @username. Username changes are once every 7 days, and your old handle is reserved for that week.',
   'Read the full player notes: https://rngdle-unlocked.chron0.tech/whats-new',
   'Open: /whats-new',
 ].join(' ');

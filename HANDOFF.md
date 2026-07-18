@@ -7,8 +7,8 @@
 | **Repo**                   | `jondmarien/rngdle-unlocked`                                                  |
 | **Live**                   | https://rngdle-unlocked.chron0.tech                                           |
 | **Branch**                 | `main` (auto-deploys Vercel)                                                  |
-| **Version**                | `0.18.3` (`package.json`; Settings uses `VITE_APP_VERSION`)                   |
-| **Latest release**         | [v0.18.3](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.18.3) |
+| **Version**                | `0.18.4` (`package.json`; Settings uses `VITE_APP_VERSION`)                   |
+| **Latest release**         | [v0.18.4](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.18.4) |
 | **Handoff commit context** | Opus audit refactor (`aa8e91e`…`fc4fa65` on `main`) + prior P0/P1 wave        |
 
 ---
@@ -264,6 +264,7 @@ node scripts/add-roll-source.mjs   # if source column missing
 - [x] **v0.18.1** — Profile frames + Ranked Plus emblems (4/8/12); Polar products public; admin complimentary Anomaly; What's New bold fix
 - [x] **v0.18.2** — Account Ranked Plus Polar Checkout Sessions + friend code; Home quota Upgrade CTA; `/u` tier chip; cosmetics polish
 - [x] **v0.18.3** — Hour Boost/Overload top-ups; Ranked Plus 6‑min regen; Downgrade CTAs + admin disable
+- [x] **v0.18.4** — Ranked Plus storefront at `/plus`; Account display name; 7-day username cooldown + former-handle hold
 
 ### Still open for you / ops
 

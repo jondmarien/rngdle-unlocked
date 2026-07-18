@@ -8,7 +8,7 @@ Inspired by the daily number-game genre, but **unlocked**: roll as often as you 
 
 **[Live Site](https://rngdle-unlocked.chron0.tech)**
 
-[![Version](https://img.shields.io/badge/version-0.18.3-8b5cf6)](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.18.3)
+[![Version](https://img.shields.io/badge/version-0.18.4-8b5cf6)](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.18.4)
 [![React 19](https://img.shields.io/badge/UI-React_19-61dafb?logo=react&logoColor=black)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/lang-TypeScript_7-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite 8](https://img.shields.io/badge/build-Vite_8_Plus-646cff?logo=vite&logoColor=white)](https://vitejs.dev)
@@ -474,6 +474,7 @@ Version tags match [`CHANGELOG.md`](./CHANGELOG.md) / GitHub releases. Status is
 | Profile frames + Ranked Plus tier emblems (cumulative 4/8/12)             | ✅ Shipped (`v0.18.1`) |
 | Account Ranked Plus checkout (Polar Sessions + friend code)               | ✅ Shipped (`v0.18.2`) |
 | Hour-scoped Ranked top-ups / Overload + Plus 6‑min regen                  | ✅ Shipped (`v0.18.3`) |
+| Ranked Plus at `/plus` + display name + username cooldown/hold            | ✅ Shipped (`v0.18.4`) |
 | Turnstile / EP velocity                                                   | 🔮 Later               |
 
 </details>

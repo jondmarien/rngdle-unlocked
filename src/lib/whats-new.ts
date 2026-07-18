@@ -32,22 +32,43 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Ranked Plus moves to /plus — plus display names',
+    date: '2026-07-17',
+    version: '0.18.4',
+    tags: ['Ranked', 'Account', 'Payments'],
+    content: [
+      {
+        body: 'Subscriptions, Manage billing, and this-hour Boosts now live on **Ranked Plus** (`/plus`) so Account stays focused on sign-in and your public look. You can also set a **display name** separately from your unique @username.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'Cleaner Account, clearer Plus storefront.',
+        bullets: [
+          '**Plus** in the nav — Rare / Epic / Anomaly, friend codes, and hour top-ups in one place.',
+          '**Home at 0 left** — Top up picker stays on the Roll page; Upgrade / Open on Plus deep-link to `/plus`.',
+          '**Display name** on Account — can match other players; @username stays unique for `/u/…`.',
+          '**Username changes** — once every **7 days**; your old handle is reserved for that week so nobody can snipe it.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Ranked hour Boosts, Overload, and Plus regen',
     date: '2026-07-17',
     version: '0.18.3',
     tags: ['Ranked', 'Payments', 'Account'],
     content: [
       {
-        body: 'When you burn through Ranked rolls, you can buy a **this-hour Boost** or **Overload** from Account — unused bonus dies at the next UTC hour. Ranked Plus also quietly **refills** toward your cap every six minutes.',
+        body: 'When you burn through Ranked rolls, you can buy a **this-hour Boost** or **Overload** — unused bonus dies at the next UTC hour. Ranked Plus also quietly **refills** toward your cap every six minutes. (Storefront now lives on **/plus** as of v0.18.4.)',
       },
       {
         heading: 'What you will notice',
         body: 'More ways to keep rolling this hour.',
         bullets: [
-          '**This hour — top-ups** on Account: Boost +30 / +60 and Overload +90 (current UTC hour only, no rollover).',
+          '**This hour — top-ups**: Boost +30 / +60 and Overload +90 (current UTC hour only, no rollover).',
           '**Plus regen** — Rare +1 · Epic +2 · Anomaly +3 every **6 minutes** toward your hour cap (not above it).',
           '**Home quota** — at **0** left, **Top up** and **Upgrade** links.',
-          '**Account cards** — lower tiers say **Downgrade** when you already sit higher; admin complimentary buttons stay disabled.',
+          '**Tier cards** — lower tiers say **Downgrade** when you already sit higher; admin complimentary buttons stay disabled.',
         ],
       },
     ],
