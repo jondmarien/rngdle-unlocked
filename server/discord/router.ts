@@ -192,9 +192,9 @@ async function fetchBoardPage(
     entries?: Array<{
       rank: number;
       username: string | null;
-      totalEp?: number;
-      lifetimeEp?: number;
-      rolls?: number;
+      /** Public Total EP boards use camelCase `lifetimeEP` (see leaderboard-api). */
+      lifetimeEP?: number;
+      lifetimeRollCount?: number;
     }>;
   };
   const entries = json.entries ?? [];
@@ -203,7 +203,7 @@ async function fetchBoardPage(
     safePage * PAGE_SIZE + PAGE_SIZE,
   );
   const lines = slice.map((e) => {
-    const ep = e.totalEp ?? e.lifetimeEp ?? 0;
+    const ep = Number(e.lifetimeEP ?? 0);
     const handle = e.username ? `@${e.username}` : 'player';
     return `**#${e.rank}** ${handle} · ${ep.toLocaleString('en-US')} EP`;
   });
