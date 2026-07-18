@@ -12,12 +12,11 @@ if (!process.env.DATABASE_URL) {
 const sql = neon(process.env.DATABASE_URL);
 
 const id = randomUUID();
-const title =
-  'New Update! v0.18.0 — Ranked free 90/h + Polar paid tiers foundation';
+const title = 'New Update! v0.18.1 — Ranked Plus frames & emblems';
 const body = [
-  'Free Ranked is back to about 90 rolls per UTC hour.',
-  'Optional Rare / Epic / Anomaly Ranked subscription tiers are wired through Polar (checkout opens after account review).',
-  'New Payments page under legal explains how purchases and data sharing work.',
+  'Account now has subscription profile frames and twelve new Ranked Plus emblems (unlock 4, then 8, then 12 as you climb tiers).',
+  'Locked art stays visible but washed out — hover for which tier unlocks it.',
+  'Polar Rare / Epic / Anomaly products are public; branded checkout UI is next.',
   'Read the full player notes: https://rngdle-unlocked.chron0.tech/whats-new',
   'Open: /whats-new',
 ].join(' ');

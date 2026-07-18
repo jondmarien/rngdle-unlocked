@@ -32,6 +32,26 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Ranked Plus frames & emblems — tease the tiers',
+    date: '2026-07-17',
+    version: '0.18.1',
+    tags: ['Profile', 'Ranked', 'Payments'],
+    content: [
+      {
+        body: 'Account → Public profile look now has **subscription frames** and twelve new **Ranked Plus emblems**. Locked art stays collectible but washed out — hover to see which tier unlocks it. Polar products are public; branded checkout UI is next.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'Cosmetics first — buy flow still landing.',
+        bullets: [
+          '**Frames** — Rare / Epic / Anomaly rims around your avatar on `/u` profiles.',
+          '**Emblems** — unlock **4 / 8 / 12** seals as you climb Ranked Plus tiers (higher includes lower).',
+          '**Locked previews** — Codex-style grayscale + tip on how to unlock (links to Payments).',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Ranked free returns to 90/h — Polar paid tiers on the way',
     date: '2026-07-17',
     version: '0.18.0',

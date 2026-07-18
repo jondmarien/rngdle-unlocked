@@ -13,20 +13,17 @@ function formatDate(dateStr: string): string {
   });
 }
 
-function renderBullet(bullet: string, idx: number) {
-  const parts = bullet.split(/(\*\*[^*]+\*\*)/g);
-  return (
-    <li key={idx} className="mt-1.5 text-pretty">
-      {parts.map((part, i) =>
-        part.startsWith('**') && part.endsWith('**') ? (
-          <strong key={i} className="font-semibold text-(--prose)">
-            {part.slice(2, -2)}
-          </strong>
-        ) : (
-          <span key={i}>{part}</span>
-        ),
-      )}
-    </li>
+/** Shared `**bold**` inline markdown for body + bullets. */
+function renderInlineMarkdown(text: string) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) =>
+    part.startsWith('**') && part.endsWith('**') ? (
+      <strong key={i} className="font-semibold text-(--prose)">
+        {part.slice(2, -2)}
+      </strong>
+    ) : (
+      <span key={i}>{part}</span>
+    ),
   );
 }
 
@@ -39,11 +36,15 @@ function SectionBlock({ section }: { section: WhatsNewSection }) {
         </h3>
       )}
       <p className="text-pretty text-sm leading-relaxed text-(--prose-2)">
-        {section.body}
+        {renderInlineMarkdown(section.body)}
       </p>
       {section.bullets && section.bullets.length > 0 && (
         <ul className="mt-2 list-disc space-y-0.5 pl-5 text-sm leading-relaxed text-(--prose-2) marker:text-(--accent)">
-          {section.bullets.map((b, i) => renderBullet(b, i))}
+          {section.bullets.map((b, i) => (
+            <li key={i} className="mt-1.5 text-pretty">
+              {renderInlineMarkdown(b)}
+            </li>
+          ))}
         </ul>
       )}
     </div>

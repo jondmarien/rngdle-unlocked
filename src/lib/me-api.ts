@@ -15,7 +15,9 @@ export type MeUser = {
   profileBio?: string;
   profileFlair?: string;
   profileAvatar?: string;
+  profileFrame?: string;
   profileShowCodex?: boolean;
+  rankedTier?: 'free' | 'rare' | 'epic' | 'anomaly';
 };
 
 export type MePayload = {
@@ -30,6 +32,7 @@ export type MePatch = {
   profileBio?: string;
   profileFlair?: string;
   profileAvatar?: string;
+  profileFrame?: string;
   profileShowCodex?: boolean;
   settingsSyncEnabled?: boolean;
 };

@@ -1,9 +1,16 @@
-/** Custom Grok Imagine profile emblems (public/avatars) — same seal style as secrets/journey. */
+/**
+ * Custom Grok Imagine profile emblems (public/avatars) — same seal style as secrets/journey.
+ * Tier-gated seals live under public/avatars/tier/ and unlock cumulatively with Ranked Plus.
+ */
+
+import { tierMeetsMin, type RankedTier } from './ranked-limits.js';
 
 export type ProfileAvatarDef = {
   id: string;
   label: string;
   src: string;
+  /** Omit / `free` = always unlocked. */
+  minTier?: RankedTier;
 };
 
 export const PROFILE_AVATARS: readonly ProfileAvatarDef[] = [
@@ -43,6 +50,81 @@ export const PROFILE_AVATARS: readonly ProfileAvatarDef[] = [
     src: '/avatars/amber-reliquary.jpg',
   },
   { id: 'violet-orb', label: 'Violet Orb', src: '/avatars/violet-orb.jpg' },
+  // Ranked Plus — Rare (4)
+  {
+    id: 'tier-rare-01',
+    label: 'Sapphire Die',
+    src: '/avatars/tier/rare-01.jpg',
+    minTier: 'rare',
+  },
+  {
+    id: 'tier-rare-02',
+    label: 'Prime Plate',
+    src: '/avatars/tier/rare-02.jpg',
+    minTier: 'rare',
+  },
+  {
+    id: 'tier-rare-03',
+    label: 'Azure Gaze',
+    src: '/avatars/tier/rare-03.jpg',
+    minTier: 'rare',
+  },
+  {
+    id: 'tier-rare-04',
+    label: 'Sapphire Coin',
+    src: '/avatars/tier/rare-04.jpg',
+    minTier: 'rare',
+  },
+  // Ranked Plus — Epic (+4 = 8 cumulative)
+  {
+    id: 'tier-epic-01',
+    label: 'Twin Violet Dice',
+    src: '/avatars/tier/epic-01.jpg',
+    minTier: 'epic',
+  },
+  {
+    id: 'tier-epic-02',
+    label: 'Mythic Plume',
+    src: '/avatars/tier/epic-02.jpg',
+    minTier: 'epic',
+  },
+  {
+    id: 'tier-epic-03',
+    label: 'Violet Lattice',
+    src: '/avatars/tier/epic-03.jpg',
+    minTier: 'epic',
+  },
+  {
+    id: 'tier-epic-04',
+    label: 'Cosmic Spiral+',
+    src: '/avatars/tier/epic-04.jpg',
+    minTier: 'epic',
+  },
+  // Ranked Plus — Anomaly (+4 = 12 cumulative)
+  {
+    id: 'tier-anomaly-01',
+    label: 'Fracture Die',
+    src: '/avatars/tier/anomaly-01.jpg',
+    minTier: 'anomaly',
+  },
+  {
+    id: 'tier-anomaly-02',
+    label: 'Burning Gaze',
+    src: '/avatars/tier/anomaly-02.jpg',
+    minTier: 'anomaly',
+  },
+  {
+    id: 'tier-anomaly-03',
+    label: 'Molten Rune',
+    src: '/avatars/tier/anomaly-03.jpg',
+    minTier: 'anomaly',
+  },
+  {
+    id: 'tier-anomaly-04',
+    label: 'Crack Coin',
+    src: '/avatars/tier/anomaly-04.jpg',
+    minTier: 'anomaly',
+  },
 ] as const;
 
 const BY_ID = new Map(PROFILE_AVATARS.map((a) => [a.id, a]));
@@ -62,4 +144,54 @@ export function profileAvatarSrc(id: string | null | undefined): string | null {
   const n = normalizeProfileAvatar(id);
   if (!n) return null;
   return BY_ID.get(n)?.src ?? null;
+}
+
+export function getProfileAvatar(
+  id: string | null | undefined,
+): ProfileAvatarDef | null {
+  const n = normalizeProfileAvatar(id);
+  if (!n) return null;
+  return BY_ID.get(n) ?? null;
+}
+
+export function avatarMinTier(id: string | null | undefined): RankedTier {
+  const av = getProfileAvatar(id);
+  return av?.minTier ?? 'free';
+}
+
+export function isAvatarUnlocked(
+  id: string | null | undefined,
+  userTier: RankedTier,
+): boolean {
+  const n = normalizeProfileAvatar(id);
+  if (!n) return true; // "none" always ok
+  return tierMeetsMin(userTier, avatarMinTier(n));
+}
+
+export function avatarsUnlockedForTier(tier: RankedTier): ProfileAvatarDef[] {
+  return PROFILE_AVATARS.filter((a) => tierMeetsMin(tier, a.minTier ?? 'free'));
+}
+
+export function freeProfileAvatars(): ProfileAvatarDef[] {
+  return PROFILE_AVATARS.filter((a) => !a.minTier || a.minTier === 'free');
+}
+
+export function tierProfileAvatars(): ProfileAvatarDef[] {
+  return PROFILE_AVATARS.filter(
+    (a) =>
+      a.minTier === 'rare' || a.minTier === 'epic' || a.minTier === 'anomaly',
+  );
+}
+
+export function tipRingClassForTier(tier: RankedTier): string {
+  if (tier === 'rare') {
+    return 'ring-2 ring-[color-mix(in_srgb,var(--rare)_70%,transparent)]';
+  }
+  if (tier === 'epic') {
+    return 'ring-2 ring-[color-mix(in_srgb,var(--epic)_70%,transparent)]';
+  }
+  if (tier === 'anomaly') {
+    return 'ring-2 ring-[color-mix(in_srgb,var(--anomaly)_70%,transparent)]';
+  }
+  return 'ring-2 ring-(--outline)';
 }

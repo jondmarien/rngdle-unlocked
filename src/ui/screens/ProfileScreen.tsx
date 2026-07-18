@@ -26,9 +26,9 @@ import {
   unfollowUser,
 } from '../../lib/notifications-api';
 import { fetchProfile } from '../../lib/profile-api';
-import { profileAvatarSrc } from '../../lib/profile-avatars';
 import { accentStyles, normalizeAccent } from '../../lib/profile-theme';
 import { EPPill } from '../components/EPPill';
+import { ProfileAvatar } from '../components/ProfileAvatar';
 import {
   BadgeArtLightbox,
   type BadgeArtLightboxItem,
@@ -322,9 +322,6 @@ export function ProfileScreen({
 
   const accent = normalizeAccent(profile.profileAccent);
   const theme = accentStyles(accent);
-  const initial = (profile.username?.[0] ?? '?').toUpperCase();
-  const avatarSrc =
-    profileAvatarSrc(profile.profileAvatar) ?? profile.image ?? null;
   const best = profile.stats?.bestRoll;
   // Only completed secret section seals (API already filters; keep unlocked-only here)
   const unlockedSecrets = (profile.secrets ?? []).filter(
@@ -352,20 +349,14 @@ export function ProfileScreen({
       >
         <div className="relative flex flex-wrap items-start justify-between gap-4">
           <div className="flex min-w-0 items-start gap-4">
-            <div
-              className={`flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-(--outline) bg-(--surface) text-2xl font-bold ring-2 ${theme.ring}`}
-              aria-hidden
-            >
-              {avatarSrc ? (
-                <img
-                  src={avatarSrc}
-                  alt=""
-                  className="h-full w-full rounded-full object-cover"
-                />
-              ) : (
-                initial
-              )}
-            </div>
+            <ProfileAvatar
+              username={profile.username}
+              image={profile.image}
+              avatarId={profile.profileAvatar}
+              frameId={profile.profileFrame}
+              accentRingClass={theme.ring}
+              size="md"
+            />
             <div className="min-w-0">
               <p className="text-sm font-semibold text-(--prose-2)">
                 @{profile.username}

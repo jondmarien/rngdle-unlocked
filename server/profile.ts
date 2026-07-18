@@ -1,8 +1,10 @@
 import { and, count, desc, eq } from 'drizzle-orm';
+import { normalizeProfileFrame } from '../src/lib/profile-frames.js';
 import type { Db } from './db/index.js';
 import { rolls, user, userProgress } from './db/schema.js';
 import { requestUrl } from './http.js';
 import { createLogger } from './logger.js';
+import { getEffectiveRankedTier } from './polar/entitlements.js';
 import { classifyProgressProvenance } from './progressProvenance.js';
 import {
   earnedSecretSeals,
@@ -39,6 +41,7 @@ export async function profileResponse(
       profileBio: user.profileBio,
       profileFlair: user.profileFlair,
       profileAvatar: user.profileAvatar,
+      profileFrame: user.profileFrame,
       profileShowCodex: user.profileShowCodex,
     })
     .from(user)
@@ -145,6 +148,8 @@ export async function profileResponse(
     provenance: provenance.provenance,
   });
 
+  const rankedTier = await getEffectiveRankedTier(db, u.id);
+
   return Response.json({
     profile: {
       username: u.username,
@@ -155,6 +160,8 @@ export async function profileResponse(
       profileBio: u.profileBio || '',
       profileFlair: u.profileFlair || '',
       profileAvatar: u.profileAvatar || '',
+      profileFrame: normalizeProfileFrame(u.profileFrame),
+      rankedTier,
       profileShowCodex: showCodex,
       lifetimeEP: progress?.lifetimeEp ?? 0,
       lifetimeRollCount: progress?.lifetimeRollCount ?? 0,

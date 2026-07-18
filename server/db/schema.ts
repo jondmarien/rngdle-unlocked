@@ -27,6 +27,8 @@ export const user = pgTable('user', {
   profileFlair: text('profile_flair').notNull().default(''),
   /** Preset avatar id from catalog (empty = letter / OAuth image) */
   profileAvatar: text('profile_avatar').notNull().default(''),
+  /** Profile frame id from catalog (`none` | sub-* | reserved ranked-*) */
+  profileFrame: text('profile_frame').notNull().default('none'),
   /** When true, public /u profile shows unlocked codex badges */
   profileShowCodex: boolean('profile_show_codex').notNull().default(true),
   /** Better Auth admin plugin — never accept from client signup (`input: false`) */

@@ -5,14 +5,16 @@
 
 import { and, eq } from 'drizzle-orm';
 import {
+  HIGHEST_RANKED_TIER,
   RANKED_ROLLS_PER_HOUR,
   RANKED_TIER_CAPS,
   isRankedTier,
   type RankedTier,
   rankedCapForTier,
 } from '../../src/lib/ranked-limits.js';
+import { isAdminRole } from '../admin.js';
 import type { Db } from '../db/index.js';
-import { rankedTopups, userEntitlements } from '../db/schema.js';
+import { rankedTopups, user, userEntitlements } from '../db/schema.js';
 import { createLogger } from '../logger.js';
 import { startOfUtcHourMs } from '../rateLimit.js';
 
@@ -91,6 +93,38 @@ export async function getEntitlementRow(
 }
 
 /**
+ * Effective paid Ranked tier after status / past_due grace (ignores top-ups).
+ * Admins (`role=admin` or `ADMIN_USER_IDS`) always receive the highest tier
+ * (Anomaly) so cosmetics + Ranked hour cap match a full Ranked Plus sub.
+ */
+export async function getEffectiveRankedTier(
+  db: Db,
+  userId: string,
+): Promise<RankedTier> {
+  const [adminRow] = await db
+    .select({ role: user.role })
+    .from(user)
+    .where(eq(user.id, userId))
+    .limit(1);
+  if (adminRow && isAdminRole(adminRow.role, userId)) {
+    return HIGHEST_RANKED_TIER;
+  }
+
+  const row = await getEntitlementRow(db, userId);
+  if (!row) return 'free';
+  const status = row.subscriptionStatus;
+  if (status === 'past_due' && row.pastDueSince) {
+    const elapsed = Date.now() - row.pastDueSince.getTime();
+    if (elapsed > PAST_DUE_GRACE_MS) return 'free';
+    return row.tier !== 'free' ? row.tier : 'free';
+  }
+  if (statusGrantsPaidAccess(status) && row.tier !== 'free') {
+    return row.tier;
+  }
+  return 'free';
+}
+
+/**
  * Resolve Ranked hourly limit for a user (tier only; top-ups phase 2).
  * Applies past_due grace: after PAST_DUE_GRACE_MS, treat as free.
  */
@@ -98,24 +132,8 @@ export async function getEffectiveRankedLimit(
   db: Db,
   userId: string,
 ): Promise<number> {
-  const row = await getEntitlementRow(db, userId);
-  let tierCap = RANKED_ROLLS_PER_HOUR;
-  if (row) {
-    const status = row.subscriptionStatus;
-    if (status === 'past_due' && row.pastDueSince) {
-      const elapsed = Date.now() - row.pastDueSince.getTime();
-      if (elapsed > PAST_DUE_GRACE_MS) {
-        tierCap = RANKED_ROLLS_PER_HOUR;
-      } else {
-        tierCap = row.rankedRollsPerHour || rankedCapForTier(row.tier);
-      }
-    } else if (statusGrantsPaidAccess(status) && row.tier !== 'free') {
-      tierCap = row.rankedRollsPerHour || rankedCapForTier(row.tier);
-    } else {
-      tierCap = RANKED_ROLLS_PER_HOUR;
-    }
-  }
-
+  const tier = await getEffectiveRankedTier(db, userId);
+  const tierCap = rankedCapForTier(tier);
   const topupBonus = await topupBonusForCurrentUtcHour(db, userId);
   return tierCap + topupBonus;
 }

@@ -1,10 +1,20 @@
 import { eq } from 'drizzle-orm';
+import {
+  isAvatarUnlocked,
+  isProfileAvatarId,
+  normalizeProfileAvatar,
+} from '../src/lib/profile-avatars.js';
+import {
+  isFrameUnlocked,
+  normalizeProfileFrame,
+} from '../src/lib/profile-frames.js';
 import { rateGuard, readJson, requireUser } from '../server/apiGuards.js';
 import { createAuth } from '../server/auth.js';
 import { createDb } from '../server/db/index.js';
 import { user } from '../server/db/schema.js';
 import { getLinkedSocialAccounts } from '../server/linkedAccounts.js';
 import { createLogger } from '../server/logger.js';
+import { getEffectiveRankedTier } from '../server/polar/entitlements.js';
 import { LIMITS } from '../server/rateLimit.js';
 import {
   getSettingsSyncEnabled,
@@ -25,28 +35,13 @@ const ACCENTS = new Set([
   'mono',
 ]);
 
-/** Keep in sync with src/lib/profile-avatars.ts */
-const AVATARS = new Set([
-  'dice-oracle',
-  'void-eye',
-  'mythic-flame',
-  'anomaly-crystal',
-  'prime-sigil',
-  'star-hex',
-  'neon-rune',
-  'midnight-coin',
-  'cosmic-spiral',
-  'emerald-lattice',
-  'amber-reliquary',
-  'violet-orb',
-]);
-
 const VANITY_SELECT = {
   username: user.username,
   profileAccent: user.profileAccent,
   profileBio: user.profileBio,
   profileFlair: user.profileFlair,
   profileAvatar: user.profileAvatar,
+  profileFrame: user.profileFrame,
   profileShowCodex: user.profileShowCodex,
 } as const;
 
@@ -76,6 +71,15 @@ export default defineHandler(async (request) => {
         db,
         session.user.id,
       );
+      const rankedTier = await getEffectiveRankedTier(db, session.user.id);
+      let profileAvatar = row?.profileAvatar ?? '';
+      let profileFrame = normalizeProfileFrame(row?.profileFrame);
+      if (profileAvatar && !isAvatarUnlocked(profileAvatar, rankedTier)) {
+        profileAvatar = '';
+      }
+      if (!isFrameUnlocked(profileFrame, rankedTier)) {
+        profileFrame = 'none';
+      }
       return Response.json({
         user: {
           ...session.user,
@@ -83,8 +87,10 @@ export default defineHandler(async (request) => {
           profileAccent: row?.profileAccent ?? 'teal',
           profileBio: row?.profileBio ?? '',
           profileFlair: row?.profileFlair ?? '',
-          profileAvatar: row?.profileAvatar ?? '',
+          profileAvatar,
+          profileFrame,
           profileShowCodex: row?.profileShowCodex ?? true,
+          rankedTier,
         },
         settingsSyncEnabled,
         linkedAccounts,
@@ -119,11 +125,13 @@ export default defineHandler(async (request) => {
       profileBio?: string;
       profileFlair?: string;
       profileAvatar?: string;
+      profileFrame?: string;
       profileShowCodex?: boolean;
       settingsSyncEnabled?: boolean;
     }>(request);
     if (!parsed.ok) return parsed.response;
     const body = parsed.body;
+    const rankedTier = await getEffectiveRankedTier(db, me.id);
 
     let settingsSyncEnabledOut: boolean | undefined;
     if (body.settingsSyncEnabled !== undefined) {
@@ -140,6 +148,7 @@ export default defineHandler(async (request) => {
       profileBio?: string;
       profileFlair?: string;
       profileAvatar?: string;
+      profileFrame?: string;
       profileShowCodex?: boolean;
       updatedAt: Date;
     } = { updatedAt: new Date() };
@@ -190,14 +199,37 @@ export default defineHandler(async (request) => {
     }
 
     if (body.profileAvatar !== undefined) {
-      const a = body.profileAvatar.trim().toLowerCase();
-      if (a !== '' && !AVATARS.has(a)) {
+      const a = normalizeProfileAvatar(body.profileAvatar);
+      if (a !== '' && !isProfileAvatarId(a)) {
         return Response.json(
           { error: 'Invalid profile picture selection.' },
           { status: 400 },
         );
       }
+      if (a !== '' && !isAvatarUnlocked(a, rankedTier)) {
+        return Response.json(
+          {
+            error:
+              'That profile picture requires a Ranked Plus subscription at that tier or higher.',
+          },
+          { status: 403 },
+        );
+      }
       patch.profileAvatar = a;
+    }
+
+    if (body.profileFrame !== undefined) {
+      const f = normalizeProfileFrame(body.profileFrame);
+      if (!isFrameUnlocked(f, rankedTier)) {
+        return Response.json(
+          {
+            error:
+              'That profile frame requires a Ranked Plus subscription at that tier or higher.',
+          },
+          { status: 403 },
+        );
+      }
+      patch.profileFrame = f;
     }
 
     if (body.profileShowCodex !== undefined) {
@@ -210,6 +242,7 @@ export default defineHandler(async (request) => {
       patch.profileBio === undefined &&
       patch.profileFlair === undefined &&
       patch.profileAvatar === undefined &&
+      patch.profileFrame === undefined &&
       patch.profileShowCodex === undefined &&
       settingsSyncEnabledOut === undefined
     ) {
@@ -222,6 +255,7 @@ export default defineHandler(async (request) => {
       patch.profileBio !== undefined ||
       patch.profileFlair !== undefined ||
       patch.profileAvatar !== undefined ||
+      patch.profileFrame !== undefined ||
       patch.profileShowCodex !== undefined;
 
     if (hasVanityPatch) {
@@ -251,7 +285,9 @@ export default defineHandler(async (request) => {
       profileBio: row?.profileBio ?? '',
       profileFlair: row?.profileFlair ?? '',
       profileAvatar: row?.profileAvatar ?? '',
+      profileFrame: normalizeProfileFrame(row?.profileFrame),
       profileShowCodex: row?.profileShowCodex ?? true,
+      rankedTier,
       settingsSyncEnabled,
     });
   }

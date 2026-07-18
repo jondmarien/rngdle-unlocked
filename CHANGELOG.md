@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.1] - 2026-07-17
+
+### Added
+
+- **Profile frames** — `user.profile_frame` + [`src/lib/profile-frames.ts`](src/lib/profile-frames.ts); Account swipe picker; `ProfileAvatar` on public profiles; Rare/Epic/Anomaly rims gated by entitlement.
+- **Ranked Plus emblems** — 12 tier seals under `public/avatars/tier/` (cumulative 4 / 8 / 12); locked cells use Codex-style grayscale + Prove-roll Popover unlock tips.
+- **Admin complimentary Anomaly** — `getEffectiveRankedTier` grants highest tier to `role=admin` / `ADMIN_USER_IDS` (quota + cosmetics, no Polar purchase).
+- **Friend discount ops script** — `scripts/create-friend-discounts.mjs` (100% forever codes via SDK; codes never committed).
+- **Checkout foundation doc** — [`docs/polar-checkout-foundation.md`](docs/polar-checkout-foundation.md) (branded checkout design; UI still Later).
+
+### Changed
+
+- Polar Rare / Epic / Anomaly products flipped **public** (org KYC/payouts approved).
+- `GET/PATCH /api/me` + public profile expose `profileFrame` / `rankedTier`; PATCH rejects locked avatar/frame ids.
+- What's New body text now renders `**bold**` (shared inline markdown with bullets).
+- README / polar-monetization docs synced (Vite 8, Polar paths, legal routes, entitlements tables).
+
+### Fixed
+
+- What's New section bodies showing literal `**90**` / `**Payments**` markers.
+
+### Notes
+
+- Run `node --env-file=.env.local scripts/migrate-profile-frame.mjs` on each Neon env after deploy.
+- Checkout storefront UI and hour-scoped top-ups remain Later.
+
 ## [0.18.0] - 2026-07-17
 
 ### Added

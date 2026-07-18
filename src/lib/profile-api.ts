@@ -63,6 +63,8 @@ export const profileSchema = z.object({
   profileBio: z.string().optional(),
   profileFlair: z.string().optional(),
   profileAvatar: z.string().optional(),
+  profileFrame: z.string().optional(),
+  rankedTier: z.enum(['free', 'rare', 'epic', 'anomaly']).optional(),
   /** When false, owner hid public codex (default true). */
   profileShowCodex: z.boolean().optional(),
   lifetimeEP: z.number(),

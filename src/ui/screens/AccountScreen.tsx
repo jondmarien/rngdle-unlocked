@@ -3,17 +3,32 @@ import { authClient, useSession } from '../../lib/auth-client';
 import { createLogger, withTimeout } from '../../lib/logger';
 import { fetchMe, patchMe, type LinkedAccount } from '../../lib/me-api';
 import {
-  PROFILE_AVATARS,
+  freeProfileAvatars,
+  getProfileAvatar,
+  isAvatarUnlocked,
   normalizeProfileAvatar,
+  tierProfileAvatars,
+  tipRingClassForTier,
 } from '../../lib/profile-avatars';
+import {
+  defaultFrameForTier,
+  framesForPicker,
+  getProfileFrame,
+  isFrameUnlocked,
+  normalizeProfileFrame,
+  type ProfileFrameId,
+} from '../../lib/profile-frames';
 import {
   PROFILE_ACCENTS,
   accentStyles,
   normalizeAccent,
   type ProfileAccent,
 } from '../../lib/profile-theme';
+import type { RankedTier } from '../../lib/ranked-limits';
 import { useIsAdmin } from '../../lib/useIsAdmin';
 import { useCloudSync } from '../../state/GameProvider';
+import { ProfileAvatar } from '../components/ProfileAvatar';
+import { UnlockTipPopover } from '../components/UnlockTipPopover';
 import { useFeedback } from '../feedback';
 
 const log = createLogger('account');
@@ -51,6 +66,8 @@ export function AccountScreen({
   const [profileBio, setProfileBio] = useState('');
   const [profileFlair, setProfileFlair] = useState('');
   const [profileAvatar, setProfileAvatar] = useState('');
+  const [profileFrame, setProfileFrame] = useState<ProfileFrameId>('none');
+  const [rankedTier, setRankedTier] = useState<RankedTier>('free');
   const [profileShowCodex, setProfileShowCodex] = useState(true);
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -109,6 +126,13 @@ export function AccountScreen({
         setProfileBio(data.user.profileBio ?? '');
         setProfileFlair(data.user.profileFlair ?? '');
         setProfileAvatar(normalizeProfileAvatar(data.user.profileAvatar));
+        const tier = (data.user.rankedTier ?? 'free') as RankedTier;
+        setRankedTier(tier);
+        let frame = normalizeProfileFrame(data.user.profileFrame);
+        if (frame === 'none' && tier !== 'free') {
+          frame = defaultFrameForTier(tier);
+        }
+        setProfileFrame(frame);
         setProfileShowCodex(data.user.profileShowCodex !== false);
         setLinkedAccounts(data.linkedAccounts ?? []);
         setSettingsSyncEnabledFlag(Boolean(data.settingsSyncEnabled));
@@ -432,6 +456,7 @@ export function AccountScreen({
         profileBio,
         profileFlair,
         profileAvatar,
+        profileFrame,
         profileShowCodex,
       });
       window.dispatchEvent(new Event('rngdle:me-updated'));
@@ -747,10 +772,89 @@ export function AccountScreen({
                 Public profile look
               </h2>
               <p className="text-sm text-(--prose-2)">
-                Picture, accent, flair, and bio on{' '}
+                Picture, frame, accent, flair, and bio on{' '}
                 <code className="text-xs">/u/yourname</code>. Requires a
                 username.
               </p>
+            </div>
+            <div className="flex items-center gap-3 rounded-lg border border-(--outline) bg-(--bg) p-3">
+              <ProfileAvatar
+                username={username || session?.user?.name}
+                image={session?.user?.image}
+                avatarId={profileAvatar}
+                frameId={profileFrame}
+                accentRingClass={accentStyles(profileAccent).ring}
+                size="md"
+              />
+              <div className="min-w-0 text-sm text-(--prose-2)">
+                <p className="font-semibold text-(--prose)">Preview</p>
+                <p className="text-xs text-(--prose-3)">
+                  Frame: {getProfileFrame(profileFrame).label}
+                  {rankedTier !== 'free' ? ` · Ranked Plus ${rankedTier}` : ''}
+                </p>
+              </div>
+            </div>
+            <div>
+              <p className="mb-1.5 text-sm font-semibold text-(--prose-2)">
+                Profile frame
+              </p>
+              <p className="mb-2 text-xs text-(--prose-3)">
+                Swipe for Ranked Plus rims. Locked frames stay dim until you
+                subscribe.
+              </p>
+              <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1">
+                {framesForPicker().map((fr) => {
+                  const unlocked = isFrameUnlocked(fr.id, rankedTier);
+                  const selected = profileFrame === fr.id;
+                  const cell = (
+                    <div
+                      className={`relative flex h-16 w-16 shrink-0 snap-start flex-col items-center justify-center rounded-xl border-2 p-1 ${
+                        selected
+                          ? 'border-(--prose) ring-2 ring-(--accent)/50'
+                          : 'border-(--outline)'
+                      } ${fr.ringClass}`}
+                    >
+                      <span
+                        className={`size-8 rounded-full border border-(--outline) bg-(--surface) ${
+                          unlocked
+                            ? ''
+                            : 'grayscale brightness-75 contrast-90 blur-[0.5px]'
+                        }`}
+                        aria-hidden
+                      />
+                      <span className="mt-0.5 max-w-full truncate text-[9px] font-semibold text-(--prose-2)">
+                        {fr.label}
+                      </span>
+                      {!unlocked && (
+                        <span
+                          className={`absolute top-1 right-1 size-1.5 rounded-full ${fr.tipColorClass}`}
+                          aria-hidden
+                        />
+                      )}
+                    </div>
+                  );
+                  if (!unlocked) {
+                    return (
+                      <div key={fr.id} className="relative shrink-0">
+                        <UnlockTipPopover minTier={fr.minTier} kind="frame">
+                          {cell}
+                        </UnlockTipPopover>
+                      </div>
+                    );
+                  }
+                  return (
+                    <button
+                      key={fr.id}
+                      type="button"
+                      onClick={() => setProfileFrame(fr.id)}
+                      title={fr.label}
+                      className="relative shrink-0"
+                    >
+                      {cell}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
             <div>
               <p className="mb-1.5 text-sm font-semibold text-(--prose-2)">
@@ -758,7 +862,7 @@ export function AccountScreen({
               </p>
               <p className="mb-2 text-xs text-(--prose-3)">
                 Pick a custom emblem, or None for initial / linked account
-                photo.
+                photo. Ranked Plus seals unlock cumulatively (4 / 8 / 12).
               </p>
               <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
                 <button
@@ -776,7 +880,7 @@ export function AccountScreen({
                   </span>
                   <span className="mt-0.5 text-[10px]">None</span>
                 </button>
-                {PROFILE_AVATARS.map((av) => {
+                {freeProfileAvatars().map((av) => {
                   const selected = profileAvatar === av.id;
                   return (
                     <button
@@ -799,12 +903,62 @@ export function AccountScreen({
                   );
                 })}
               </div>
+              <p className="mt-3 mb-1.5 text-sm font-semibold text-(--prose-2)">
+                Ranked Plus emblems
+              </p>
+              <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
+                {tierProfileAvatars().map((av) => {
+                  const minTier = av.minTier ?? 'free';
+                  const unlocked = isAvatarUnlocked(av.id, rankedTier);
+                  const selected = profileAvatar === av.id;
+                  const img = (
+                    <div
+                      className={`relative aspect-square overflow-hidden rounded-xl border-2 p-0.5 ${
+                        selected
+                          ? 'border-(--prose) ring-2 ring-(--accent)/50'
+                          : tipRingClassForTier(minTier)
+                      }`}
+                    >
+                      <img
+                        src={av.src}
+                        alt={unlocked ? av.label : `${av.label} (locked)`}
+                        className={`h-full w-full rounded-[0.6rem] object-cover ${
+                          unlocked
+                            ? ''
+                            : 'grayscale brightness-[0.65] contrast-90 blur-[0.6px] saturate-0'
+                        }`}
+                      />
+                    </div>
+                  );
+                  if (!unlocked) {
+                    return (
+                      <UnlockTipPopover
+                        key={av.id}
+                        minTier={minTier}
+                        kind="avatar"
+                      >
+                        {img}
+                      </UnlockTipPopover>
+                    );
+                  }
+                  return (
+                    <button
+                      key={av.id}
+                      type="button"
+                      onClick={() => setProfileAvatar(av.id)}
+                      title={av.label}
+                      className="p-0"
+                    >
+                      {img}
+                    </button>
+                  );
+                })}
+              </div>
               {profileAvatar !== '' && (
                 <p className="mt-1.5 text-xs text-(--prose-2)">
                   Selected:{' '}
                   <span className="font-semibold">
-                    {PROFILE_AVATARS.find((a) => a.id === profileAvatar)
-                      ?.label ?? profileAvatar}
+                    {getProfileAvatar(profileAvatar)?.label ?? profileAvatar}
                   </span>
                 </p>
               )}

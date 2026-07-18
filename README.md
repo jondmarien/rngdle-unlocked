@@ -8,12 +8,14 @@ Inspired by the daily number-game genre, but **unlocked**: roll as often as you 
 
 **[Live Site](https://rngdle-unlocked.chron0.tech)**
 
-[![Version](https://img.shields.io/badge/version-0.18.0-8b5cf6)](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.18.0)
+[![Version](https://img.shields.io/badge/version-0.18.1-8b5cf6)](https://github.com/jondmarien/rngdle-unlocked/releases/tag/v0.18.1)
 [![React 19](https://img.shields.io/badge/UI-React_19-61dafb?logo=react&logoColor=black)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/lang-TypeScript_7-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Vite 6](https://img.shields.io/badge/build-Vite_Plus-646cff?logo=vite&logoColor=white)](https://vitejs.dev)
+[![Vite 8](https://img.shields.io/badge/build-Vite_8_Plus-646cff?logo=vite&logoColor=white)](https://vitejs.dev)
 [![TanStack Query](https://img.shields.io/badge/data-TanStack_Query-FF4154?logo=reactquery&logoColor=white)](https://tanstack.com/query)
 [![Zod](https://img.shields.io/badge/schema-Zod-3E67B1)](https://zod.dev)
+[![Motion](https://img.shields.io/badge/motion-Motion-f97316)](https://motion.dev)
+[![Polar](https://img.shields.io/badge/payments-Polar-0062ff)](https://polar.sh)
 [![pnpm 10](https://img.shields.io/badge/pkg-pnpm_10-f69220?logo=pnpm&logoColor=white)](https://pnpm.io)
 [![Vercel](https://img.shields.io/badge/deploy-Vercel-000000?logo=vercel&logoColor=white)](https://vercel.com)
 [![Neon](https://img.shields.io/badge/db-Neon_Postgres-00E599?logo=postgresql&logoColor=white)](https://neon.tech)
@@ -131,6 +133,9 @@ pnpm db:push
 node scripts/migrate-feature-wave.mjs
 # Arcade Digits tables (additive; safe to re-run):
 node --env-file=.env.local scripts/migrate-arcade.mjs
+# Polar entitlements + profile frames (additive):
+node --env-file=.env.local scripts/migrate-polar-entitlements.mjs
+node --env-file=.env.local scripts/migrate-profile-frame.mjs
 ```
 
 3. Run SPA + APIs together (recommended for local social):
@@ -192,19 +197,20 @@ Switch modes anytime (board fully resets). Badges, EP, history, and share work a
 - **Follows + Feed** — Board (+), Find search, or profile; **all public rarities** (All / Ranked / Free play toggles)
 - **In-app notifications** — Activity (follows, unlocks, **overtaken** on Ranked crowns); System (broadcasts + Ranked crown notices); same-roll crown periods grouped into one card
 - **System messages** — developer broadcasts (`POST /api/system-messages` + admin session / `api/admin/broadcast`); auto crowns for Ranked day/week/all-time EP #1
-- **Profiles** — `/u/:username` with accent, flair, bio, **preset emblem avatars**, secret seals, recent rolls + Follow
+- **Profiles** — `/u/:username` with accent, flair, bio, **preset + Ranked Plus emblem avatars**, **subscription profile frames**, secret seals, recent rolls + Follow
 - **Vanity share URLs** — `/s/:username/:shortCode`
 - **Share gates** — no public link until cloud confirms
 - **Mythic / anomaly / divine** auto-open share after reveal (optional setting)
 - **Prove this roll** — optional server HMAC seal (`/api/attest`) for claims
 - **Dynamic OG** — `/api/og` PNG cards for Discord/social (SVG is not supported by Discord); bot rewrite of `/u/:user` → profile OG HTML
-- **Soft rate limits** on sync, Ranked rolls (**~90/h free** UTC; Rare/Epic/Anomaly paid caps via Polar), and public APIs
-- **Polar monetization foundation** — webhook entitlements, draft CAD subscription products (Rare/Epic/Anomaly); checkout goes live after Polar KYC
+- **Soft rate limits** on sync, Ranked rolls (**~90/h free** UTC; Rare 120 / Epic 150 / Anomaly 180 via Polar entitlements), and public APIs
+- **Polar monetization** — public CAD Ranked Plus products (Rare/Epic/Anomaly), webhook entitlements, org KYC/payouts approved; see [`docs/polar-monetization.md`](./docs/polar-monetization.md)
+- **Legal** — `/terms`, `/privacy`, `/payments` (Polar MoR disclosure)
 - **Discord / GitHub OAuth** — wired in app; finish portal + env via [`docs/oauth-setup.md`](./docs/oauth-setup.md)
 
 ### Planned later / in progress
 
-- Polar checkout UI + account review / payouts (founder)
+- Polar checkout UI (branded foundation: [`docs/polar-checkout-foundation.md`](./docs/polar-checkout-foundation.md))
 - Hour-scoped Ranked top-ups / Overload (current UTC hour only; no rollover)
 - Turnstile on sign-up
 - Server-side EP velocity caps
@@ -215,53 +221,55 @@ Switch modes anytime (board fully resets). Badges, EP, history, and share work a
 rngdle-unlocked/
 ├── api/                 ⚡ Thin Vercel handlers (Node adapter → Web Request)
 │   ├── auth.ts · me.ts · sync.ts · health.ts · ranked-roll/ (index + quota)
-│   ├── leaderboard.ts · arcade/* · feed.ts · profile/[username].ts · og.ts · …
+│   ├── webhooks/polar.ts · leaderboard.ts · arcade/* · feed.ts · profile/ · og.ts · …
 │   └── admin/* · reports.ts · follow.ts · notifications.ts · …
 ├── server/              🧠 Shared API logic
 │   ├── apiGuards · auth · db/schema · sync · rankedRoll · arcade · rollActivity
-│   ├── leaderboard · arcadeLeaderboard · profile · feed · ogSvg · notifications
+│   ├── polar/ (webhooks · entitlements) · leaderboard · profile · feed · ogSvg
 │   ├── rateLimit · vercel-adapter · ogHtml · …
 ├── src/
 │   ├── game/            Pure TS engine (rng, badges, secrets, challenge, arcade/)
 │   ├── state/           GameProvider (contexts) + useSync + settings + localStorage
-│   ├── lib/             *-api.ts wrappers (incl. arcade-api), schemas.ts, auth, routes
+│   ├── lib/             *-api.ts, schemas, profile-avatars/frames, ranked-limits, routes
 │   └── ui/              Screens + reel / cascade (+ ArcadeScreen)
-├── public/              Avatars, rarity/family icons, secret art, PWA
-├── docs/                ARCHITECTURE.md + refactor notes + historical specs
-├── scripts/             migrate-arcade, migrate-feature-wave, check-db, TS7 API patch
-└── vercel.json          SPA + bot OG rewrites for /s, /u, /arcade, …
+├── public/              Avatars (+ tier/), rarity/family icons, secret art, PWA
+├── docs/                ARCHITECTURE · polar-monetization · polar-checkout-foundation · …
+├── scripts/             migrate-arcade, migrate-polar-entitlements, migrate-profile-frame, …
+└── vercel.json          SPA + bot OG rewrites for /s, /u, /arcade, /payments, …
 ```
 
-| Area                     | Role                                              | Stack                                    |
-| ------------------------ | ------------------------------------------------- | ---------------------------------------- |
-| **`src/game/`**          | Pure game rules — testable without React          | TypeScript                               |
-| **`src/ui/` + `state/`** | SPA experience + persistence                      | React 19 · Tailwind v4 · TanStack Query  |
-| **`src/lib/*-api.ts`**   | Mandatory client API wrappers (no raw UI `fetch`) | fetch + Zod at trust boundaries          |
-| **`api/` + `server/`**   | Social backend on Vercel                          | Better Auth · Drizzle · Neon · apiGuards |
-| **`docs/`**              | Living architecture + historical specs/plans      | Markdown                                 |
+| Area                     | Role                                              | Stack                                            |
+| ------------------------ | ------------------------------------------------- | ------------------------------------------------ |
+| **`src/game/`**          | Pure game rules — testable without React          | TypeScript                                       |
+| **`src/ui/` + `state/`** | SPA experience + persistence                      | React 19 · Tailwind v4 · TanStack Query · Motion |
+| **`src/lib/*-api.ts`**   | Mandatory client API wrappers (no raw UI `fetch`) | fetch + Zod at trust boundaries                  |
+| **`api/` + `server/`**   | Social backend on Vercel                          | Better Auth · Drizzle · Neon · Polar · apiGuards |
+| **`docs/`**              | Living architecture + historical specs/plans      | Markdown                                         |
 
 ## 🗺️ Routes (SPA)
 
-| Path                       | Screen                                                                               |
-| -------------------------- | ------------------------------------------------------------------------------------ |
-| `/`                        | Roll (Free / Ranked / Daily / Weekly)                                                |
-| `/history`                 | Roll log + Highlights (former Showcase: bests & streaks)                             |
-| `/history?view=highlights` | Deep link to History → Highlights                                                    |
-| `/collection`              | Badge **codex** (encyclopedia, unlock times, **New** 5‑min tab)                      |
-| `/stats`                   | Rarity histogram, EP/hour, calendar                                                  |
-| `/leaderboard`             | **Ranked** · **Practice** · **All-Time** · **Arcade** · Feed · **Find** (mode-first) |
-| `/arcade`                  | Arcade Digits runs (shop, cash out / bust) — sign-in + `@username`                   |
-| `/features`                | Feature requests (sign-in) — tags, edit, optional screenshot, upvote, status         |
-| `/notifications`           | Alerts (Activity + System)                                                           |
-| `/account`                 | Auth, username, profile look (avatar/accent/flair/bio), push/pull                    |
-| `/about`                   | How to play, social, fairness                                                        |
-| `/settings`                | Theme, effects, tips, export/import                                                  |
-| `/u/:username`             | Public profile (+ follow)                                                            |
-| `/s/:user/:code`           | Vanity public roll (SPA)                                                             |
-| `/r/:id`                   | Legacy public roll path                                                              |
+| Path                                | Screen                                                                               |
+| ----------------------------------- | ------------------------------------------------------------------------------------ |
+| `/`                                 | Roll (Free / Ranked / Daily / Weekly)                                                |
+| `/history`                          | Roll log + Highlights (former Showcase: bests & streaks)                             |
+| `/history?view=highlights`          | Deep link to History → Highlights                                                    |
+| `/collection`                       | Badge **codex** (encyclopedia, unlock times, **New** 5‑min tab)                      |
+| `/stats`                            | Rarity histogram, EP/hour, calendar                                                  |
+| `/leaderboard`                      | **Ranked** · **Practice** · **All-Time** · **Arcade** · Feed · **Find** (mode-first) |
+| `/arcade`                           | Arcade Digits runs (shop, cash out / bust) — sign-in + `@username`                   |
+| `/features`                         | Feature requests (sign-in) — tags, edit, optional screenshot, upvote, status         |
+| `/notifications`                    | Alerts (Activity + System)                                                           |
+| `/account`                          | Auth, username, profile look (avatar/frame/accent/flair/bio), push/pull              |
+| `/about`                            | How to play, social, fairness                                                        |
+| `/settings`                         | Theme, effects, tips, export/import                                                  |
+| `/whats-new`                        | Player-facing release highlights                                                     |
+| `/terms` · `/privacy` · `/payments` | Legal (incl. Polar MoR / payments disclosure)                                        |
+| `/u/:username`                      | Public profile (+ follow)                                                            |
+| `/s/:user/:code`                    | Vanity public roll (SPA)                                                             |
+| `/r/:id`                            | Legacy public roll path                                                              |
 
 **API (serverless):**  
-`/api/auth/*`, `/api/me`, `/api/sync`, `/api/ranked-roll` (+ `/quota`), `/api/leaderboard?view=total|best&scope=ranked|practice`, `/api/arcade` (+ `/start` `/roll` `/buy` `/arm` `/cash-out` `/abandon` `/leaderboard`), `/api/feature-requests`, `/api/feature-requests/:id/vote`, `/api/admin/feature-requests`, `/api/highlights`, `/api/follow`, `/api/feed`, `/api/users/search`, `/api/notifications`, `/api/system-messages`, `/api/admin/*`, `/api/reports`, `/api/challenge`, `/api/attest`, `/api/og`, `/api/profile/:user`, `/api/u/:user`, `/api/rolls/:id`, `/api/share/:id`, `/api/health`.
+`/api/auth/*`, `/api/me`, `/api/sync`, `/api/ranked-roll` (+ `/quota`), `/api/webhooks/polar`, `/api/leaderboard?view=total|best&scope=ranked|practice`, `/api/arcade` (+ `/start` `/roll` `/buy` `/arm` `/cash-out` `/abandon` `/leaderboard`), `/api/feature-requests`, `/api/feature-requests/:id/vote`, `/api/admin/feature-requests`, `/api/highlights`, `/api/follow`, `/api/feed`, `/api/users/search`, `/api/notifications`, `/api/system-messages`, `/api/admin/*`, `/api/reports`, `/api/challenge`, `/api/attest`, `/api/og`, `/api/profile/:user`, `/api/u/:user`, `/api/rolls/:id`, `/api/share/:id`, `/api/health`.
 
 Bot user-agents: `/s/:user/:code` → `/api/share/:code`; `/u/:username` → `/api/u/:username`; `/arcade` → `/api/page/arcade` for OG HTML + image.
 
@@ -275,9 +283,9 @@ Bot user-agents: `/s/:user/:code` → `/api/share/:code`; `/u/:username` → `/a
   - `pnpm db:push`, **or**
   - `node scripts/migrate-feature-wave.mjs` (additive: `short_code`, attestation columns, `follows` — avoids truncate prompts)
 
-Tables include: `user` (incl. vanity: accent, bio, flair, avatar), `session`, `account`, `verification`, `user_progress`, `rolls`, `arcade_meta`, `arcade_runs`, `arcade_run_rolls`, `follows`, `notifications`, `system_messages`, `system_message_reads`, `rate_limits`.
+Tables include: `user` (vanity: accent, bio, flair, avatar, **profile_frame**), `session`, `account`, `verification`, `user_progress`, `rolls`, `arcade_meta`, `arcade_runs`, `arcade_run_rolls`, `follows`, `notifications`, `system_messages`, `system_message_reads`, `rate_limits`, `user_entitlements`, `polar_webhook_events`, `ranked_topups` (top-up stub).
 
-Arcade tables: `node --env-file=.env.local scripts/migrate-arcade.mjs`
+Arcade: `node --env-file=.env.local scripts/migrate-arcade.mjs` · Polar: `migrate-polar-entitlements.mjs` · Frames: `migrate-profile-frame.mjs`
 
 ### 2. Better Auth env
 
@@ -342,14 +350,16 @@ Server logs use the same `[rngdle:…]` prefixes in Vercel function logs.
 
 See [`.env.example`](./.env.example). Never commit `.env` / `.env.local`.
 
-| Name                 | Required for              | Notes                                                   |
-| -------------------- | ------------------------- | ------------------------------------------------------- |
-| `DATABASE_URL`       | Social APIs               | Neon; must match the project you inspect in the console |
-| `BETTER_AUTH_SECRET` | Auth + attest seals       | Required in production                                  |
-| `BETTER_AUTH_URL`    | Auth cookies / CSRF       | Production site origin                                  |
-| `VITE_APP_URL`       | Trusted origins           | Usually same as `BETTER_AUTH_URL`                       |
-| `LOG_LEVEL`          | Server logs               | Optional (`debug` / `info`)                             |
-| `ADMIN_SECRET`       | System message broadcasts | Optional; required for `POST /api/system-messages`      |
+| Name                   | Required for                     | Notes                                                   |
+| ---------------------- | -------------------------------- | ------------------------------------------------------- |
+| `DATABASE_URL`         | Social APIs                      | Neon; must match the project you inspect in the console |
+| `BETTER_AUTH_SECRET`   | Auth + attest seals              | Required in production                                  |
+| `BETTER_AUTH_URL`      | Auth cookies / CSRF              | Production site origin                                  |
+| `VITE_APP_URL`         | Trusted origins                  | Usually same as `BETTER_AUTH_URL`                       |
+| `POLAR_API_KEY`        | Polar API (ops / later checkout) | Server only; never expose to Vite                       |
+| `POLAR_WEBHOOK_SECRET` | `POST /api/webhooks/polar`       | Signature verify                                        |
+| `LOG_LEVEL`            | Server logs                      | Optional (`debug` / `info`)                             |
+| `ADMIN_SECRET`         | System message broadcasts        | Optional; bootstrap / scripts only                      |
 
 ## 🏗️ Architecture notes
 
@@ -413,57 +423,58 @@ Version tags match [`CHANGELOG.md`](./CHANGELOG.md) / GitHub releases. Status is
 <details>
 <summary>Full version → area table (click to expand)</summary>
 
-| Area                                                                      | Status                         |
-| ------------------------------------------------------------------------- | ------------------------------ |
-| Solo unlimited playground                                                 | ✅ Shipped (`v0.2.0`)          |
-| Badges / EP / journey / secrets                                           | ✅ Shipped (`v0.2.0`)          |
-| Accounts + email auth + `@username` + cloud sync                          | ✅ Shipped (`v0.2.0`)          |
-| Auto sync + vanity share/OG + follows/feed + Daily/Weekly + attestation   | ✅ Shipped (`v0.3.0`)          |
-| Reel / cascade / EP count-up UX                                           | ✅ Shipped (`v0.4.0`)          |
-| Server Ranked free play (`/api/ranked-roll`)                              | ✅ Shipped (`v0.4.0`)          |
-| Dual EP boards (Ranked + Practice) + follows + feed                       | ✅ Shipped (`v0.4.0`)          |
-| Community today/week/all-time crowns (Ranked) + overtake notifs           | ✅ Shipped (`v0.4.0`)          |
-| Profiles (vanity + avatars) + Activity unlocks                            | ✅ Shipped (`v0.4.0`)          |
-| Codex unlock times + 5‑min New tab                                        | ✅ Shipped (`v0.4.0`)          |
-| Custom fonts + rarity/family icon art                                     | ✅ Shipped (`v0.4.0`)          |
-| OAuth (Discord/GitHub) wiring                                             | ✅ Shipped (`v0.4.1`)          |
-| Email verification + magic link (Resend)                                  | ✅ Shipped (`v0.4.1`)          |
-| Admin panel (role-gated)                                                  | ✅ Shipped (`v0.4.1`)          |
-| Cloned-progress profile pills + sync integrity gate                       | ✅ Shipped (`v0.4.1`)          |
-| Architecture refactor (NodeNext, apiGuards, lib wrappers, Zod, useSync)   | ✅ Shipped (`v0.5.0`)          |
-| Best Roll board (EP / rarity) + Features tab                              | ✅ Shipped (`v0.6.0`)          |
-| Arcade Mode (Digits runs) + mode-first Board tabs                         | ✅ Shipped (`v0.7.0`)          |
-| Alerts hierarchy + crown grouping; Features status sections               | ✅ Shipped (`v0.7.1`)          |
-| Ranked quota indicator (remaining + window reset)                         | ✅ Shipped (`v0.7.2`)          |
-| Journey badge artwork (Collection + Profile section)                      | ✅ Shipped (`v0.7.3`)          |
-| Codex search (spoiler-safe badge filter)                                  | ✅ Shipped (`v0.7.4`)          |
-| Gap remediation (onboarding, Retry, a11y, shared roll rows, admin/trust)  | ✅ Shipped (`v0.8.0`)          |
-| Checklist detection + challenge reset countdown + sync integrity          | ✅ Shipped (`v0.8.1`)          |
-| Divine rarity + poker hand fixes + badge equation proofs                  | ✅ Shipped (`v0.9.0`)          |
-| Bases family, cat/Ultimeme, streak secrets, The Worst, equation proofs v3 | ✅ Shipped (`v0.10.0`)         |
-| Profile journey collapse + Secret badges; streak unlock art fix           | ✅ Shipped (`v0.10.1`)         |
-| Friends board filter + `/friends` tab                                     | ✅ Shipped (`v0.10.2`)         |
-| Delta cloud sync + OG PNG fix + sync quota stopgap                        | ✅ Shipped (`v0.11.0`)         |
-| Share seals toggle + Features tags/edit/screenshots + UI polish           | ✅ Shipped (`v0.11.1`)         |
-| Lifetime EP badges + abbreviate large numbers setting                     | ✅ Shipped (`v0.12.0`)         |
-| Ranked all-time Home crown tile + Ranked · crown labels                   | ✅ Shipped (`v0.12.1`)         |
-| Collapsible How to roll (compact mode switch when collapsed)              | ✅ Shipped (`v0.12.2`)         |
-| Years family + site accent + Arcade ×N + sync/View As backlog             | ✅ Shipped (`v0.13.0`)         |
-| Atomic Registry (118 elements) + Atomic Seal                              | ✅ Shipped (`v0.14.0`)         |
-| Site-wide accent coverage + Prove roll tip placement                      | ✅ Shipped (`v0.14.1`)         |
-| Arcade juice (Digits tween, rarity punch, shop/SFX, Cash Out weight)      | ✅ Shipped (`v0.15.0`)         |
-| Arcade Deadline + Idle Digits + trash soft-fail                           | ✅ Shipped (`v0.16.0`)         |
-| Base UI dialogs/toasts + Home unlock lightbox + History Highlights        | ✅ Shipped (`v0.16.1`)         |
-| Motion polish + embossed profile avatars + motion-design skill            | ✅ Shipped (`v0.16.2`)         |
-| Route entrance animation + Codex filter chip polish                       | ✅ Shipped (`v0.16.3`)         |
-| Cold lazy-tab settle + Codex chip grid + Latest Runs portal               | ✅ Shipped (`v0.16.4`)         |
-| Mobile vibration + UTC resets + optional Settings cloud sync              | ✅ Shipped (`v0.16.5`)         |
-| Section Mastery seal art refresh + Ranked quota pill colors               | ✅ Shipped (`v0.16.6`)         |
-| Practice Free-only board + Leaderboard All-Time tab                       | ✅ Shipped (`v0.16.7`)         |
-| All-Time Best lane chips + Ranked CTE/UNION RTTs + quota ~180/h           | ✅ Shipped (`v0.17.0`)         |
-| Polar monetization foundation + Ranked free 90/h + paid tier caps         | ✅ Shipped (`v0.18.0`)         |
-| Polar checkout live + hour-scoped Ranked top-ups                          | 🔮 Later                       |
-| Turnstile / EP velocity                                                   | 🔮 Later                       |
+| Area                                                                      | Status                 |
+| ------------------------------------------------------------------------- | ---------------------- |
+| Solo unlimited playground                                                 | ✅ Shipped (`v0.2.0`)  |
+| Badges / EP / journey / secrets                                           | ✅ Shipped (`v0.2.0`)  |
+| Accounts + email auth + `@username` + cloud sync                          | ✅ Shipped (`v0.2.0`)  |
+| Auto sync + vanity share/OG + follows/feed + Daily/Weekly + attestation   | ✅ Shipped (`v0.3.0`)  |
+| Reel / cascade / EP count-up UX                                           | ✅ Shipped (`v0.4.0`)  |
+| Server Ranked free play (`/api/ranked-roll`)                              | ✅ Shipped (`v0.4.0`)  |
+| Dual EP boards (Ranked + Practice) + follows + feed                       | ✅ Shipped (`v0.4.0`)  |
+| Community today/week/all-time crowns (Ranked) + overtake notifs           | ✅ Shipped (`v0.4.0`)  |
+| Profiles (vanity + avatars) + Activity unlocks                            | ✅ Shipped (`v0.4.0`)  |
+| Codex unlock times + 5‑min New tab                                        | ✅ Shipped (`v0.4.0`)  |
+| Custom fonts + rarity/family icon art                                     | ✅ Shipped (`v0.4.0`)  |
+| OAuth (Discord/GitHub) wiring                                             | ✅ Shipped (`v0.4.1`)  |
+| Email verification + magic link (Resend)                                  | ✅ Shipped (`v0.4.1`)  |
+| Admin panel (role-gated)                                                  | ✅ Shipped (`v0.4.1`)  |
+| Cloned-progress profile pills + sync integrity gate                       | ✅ Shipped (`v0.4.1`)  |
+| Architecture refactor (NodeNext, apiGuards, lib wrappers, Zod, useSync)   | ✅ Shipped (`v0.5.0`)  |
+| Best Roll board (EP / rarity) + Features tab                              | ✅ Shipped (`v0.6.0`)  |
+| Arcade Mode (Digits runs) + mode-first Board tabs                         | ✅ Shipped (`v0.7.0`)  |
+| Alerts hierarchy + crown grouping; Features status sections               | ✅ Shipped (`v0.7.1`)  |
+| Ranked quota indicator (remaining + window reset)                         | ✅ Shipped (`v0.7.2`)  |
+| Journey badge artwork (Collection + Profile section)                      | ✅ Shipped (`v0.7.3`)  |
+| Codex search (spoiler-safe badge filter)                                  | ✅ Shipped (`v0.7.4`)  |
+| Gap remediation (onboarding, Retry, a11y, shared roll rows, admin/trust)  | ✅ Shipped (`v0.8.0`)  |
+| Checklist detection + challenge reset countdown + sync integrity          | ✅ Shipped (`v0.8.1`)  |
+| Divine rarity + poker hand fixes + badge equation proofs                  | ✅ Shipped (`v0.9.0`)  |
+| Bases family, cat/Ultimeme, streak secrets, The Worst, equation proofs v3 | ✅ Shipped (`v0.10.0`) |
+| Profile journey collapse + Secret badges; streak unlock art fix           | ✅ Shipped (`v0.10.1`) |
+| Friends board filter + `/friends` tab                                     | ✅ Shipped (`v0.10.2`) |
+| Delta cloud sync + OG PNG fix + sync quota stopgap                        | ✅ Shipped (`v0.11.0`) |
+| Share seals toggle + Features tags/edit/screenshots + UI polish           | ✅ Shipped (`v0.11.1`) |
+| Lifetime EP badges + abbreviate large numbers setting                     | ✅ Shipped (`v0.12.0`) |
+| Ranked all-time Home crown tile + Ranked · crown labels                   | ✅ Shipped (`v0.12.1`) |
+| Collapsible How to roll (compact mode switch when collapsed)              | ✅ Shipped (`v0.12.2`) |
+| Years family + site accent + Arcade ×N + sync/View As backlog             | ✅ Shipped (`v0.13.0`) |
+| Atomic Registry (118 elements) + Atomic Seal                              | ✅ Shipped (`v0.14.0`) |
+| Site-wide accent coverage + Prove roll tip placement                      | ✅ Shipped (`v0.14.1`) |
+| Arcade juice (Digits tween, rarity punch, shop/SFX, Cash Out weight)      | ✅ Shipped (`v0.15.0`) |
+| Arcade Deadline + Idle Digits + trash soft-fail                           | ✅ Shipped (`v0.16.0`) |
+| Base UI dialogs/toasts + Home unlock lightbox + History Highlights        | ✅ Shipped (`v0.16.1`) |
+| Motion polish + embossed profile avatars + motion-design skill            | ✅ Shipped (`v0.16.2`) |
+| Route entrance animation + Codex filter chip polish                       | ✅ Shipped (`v0.16.3`) |
+| Cold lazy-tab settle + Codex chip grid + Latest Runs portal               | ✅ Shipped (`v0.16.4`) |
+| Mobile vibration + UTC resets + optional Settings cloud sync              | ✅ Shipped (`v0.16.5`) |
+| Section Mastery seal art refresh + Ranked quota pill colors               | ✅ Shipped (`v0.16.6`) |
+| Practice Free-only board + Leaderboard All-Time tab                       | ✅ Shipped (`v0.16.7`) |
+| All-Time Best lane chips + Ranked CTE/UNION RTTs + quota ~180/h           | ✅ Shipped (`v0.17.0`) |
+| Polar monetization foundation + Ranked free 90/h + paid tier caps         | ✅ Shipped (`v0.18.0`) |
+| Profile frames + Ranked Plus tier emblems (cumulative 4/8/12)             | ✅ Shipped (`v0.18.1`) |
+| Polar checkout UI (see polar-checkout-foundation.md) + Ranked top-ups     | 🔮 Later               |
+| Turnstile / EP velocity                                                   | 🔮 Later               |
 
 </details>
 
@@ -477,6 +488,7 @@ Design docs:
 
 - [**Architecture (mermaid)**](docs/ARCHITECTURE.md)
 - [**Polar monetization**](docs/polar-monetization.md)
+- [**Polar checkout foundation**](docs/polar-checkout-foundation.md)
 - [**Refactor notes (July 2026)**](docs/refactor-notes-2026-07.md)
 - [Arcade Mode design](docs/superpowers/specs/2026-07-09-arcade-mode-design.md)
 - [Solo design](docs/superpowers/specs/2026-07-08-rngdle-unlocked-design.md) _(historical)_

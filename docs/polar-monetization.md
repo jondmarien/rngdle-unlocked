@@ -2,7 +2,11 @@
 
 RNGdle Unlocked uses [Polar](https://polar.sh) as Merchant of Record for optional Ranked subscription tiers (and later hour-scoped top-ups).
 
-Player-facing disclosure: [`/payments`](https://rngdle-unlocked.chron0.tech/payments). Architecture diagram: [`ARCHITECTURE.md`](./ARCHITECTURE.md) (Polar entitlements section).
+Player-facing disclosure: [`/payments`](https://rngdle-unlocked.chron0.tech/payments). Architecture diagram: [`ARCHITECTURE.md`](./ARCHITECTURE.md) (Polar entitlements section). Checkout UI design (not built yet): [`polar-checkout-foundation.md`](./polar-checkout-foundation.md).
+
+## Org status
+
+**Chron0's Tech** Polar org is **active**: account review / identity / payouts approved. Capabilities `checkout_payments`, `subscription_renewals`, `payouts`, and `refunds` are enabled. Subscription products are **public**.
 
 ## Env vars (names only)
 
@@ -24,16 +28,14 @@ Never expose these to the Vite client. Documented in `.env.example` without valu
 
 Key events: `order.paid`, `order.refunded`, `subscription.created|active|updated|canceled|revoked|past_due`, `customer.created|updated`. Extra subscribed events are ignored safely.
 
-Until the handler returns 2xx, Polar may retry/fail deliveries — expected pre-deploy.
-
 ## Ranked quota tiers
 
-| Tier    | Rolls / UTC hour | Polar product (draft) | CAD / month |
-| ------- | ---------------- | --------------------- | ----------- |
-| Free    | 90               | —                     | —           |
-| Rare    | 120              | RNGdle Rare           | CA$4.99     |
-| Epic    | 150              | RNGdle Epic           | CA$9.99     |
-| Anomaly | 180              | RNGdle Anomaly        | CA$14.99    |
+| Tier    | Rolls / UTC hour | Polar product (public) | CAD / month |
+| ------- | ---------------- | ---------------------- | ----------- |
+| Free    | 90               | —                      | —           |
+| Rare    | 120              | RNGdle Rare            | CA$4.99     |
+| Epic    | 150              | RNGdle Epic            | CA$9.99     |
+| Anomaly | 180              | RNGdle Anomaly         | CA$14.99    |
 
 Constants: [`src/lib/ranked-limits.ts`](../src/lib/ranked-limits.ts) (`RANKED_ROLLS_PER_HOUR`, `RANKED_TIER_CAPS`).
 
@@ -44,22 +46,42 @@ Product metadata (required for webhook mapping):
 
 Checkout must set Polar customer `external_id` = Better Auth `user.id`.
 
+## Cosmetics (entitlement-gated)
+
+- Profile frames: [`src/lib/profile-frames.ts`](../src/lib/profile-frames.ts) — Rare / Epic / Anomaly rims (`user.profile_frame`)
+- Tier emblems: 12 seals under `public/avatars/tier/` — cumulative unlock **4 / 8 / 12** ([`src/lib/profile-avatars.ts`](../src/lib/profile-avatars.ts))
+- Server rejects locked `profileAvatar` / `profileFrame` on `PATCH /api/me`
+
+## Admin complimentary tier
+
+`getEffectiveRankedTier` grants **Anomaly** (highest tier) to users with `role=admin` or ids in `ADMIN_USER_IDS`. No Polar subscription row required — Ranked hour cap + cosmetics unlock as if subscribed. Polar checkout is still available if an admin wants a real customer record.
+
+## Friend discounts
+
+Ops can mint **100% forever** percentage discounts scoped to the three subscription products via `scripts/create-friend-discounts.mjs` (`POLAR_API_KEY`). Codes are printed to stdout only — **never commit codes** to the repo.
+
 ## Schema / migration
 
-Additive script: `node --env-file=.env.local scripts/migrate-polar-entitlements.mjs`
+Additive scripts:
 
-Tables: `user_entitlements`, `polar_webhook_events`, `ranked_topups` (phase 2 stub).
+```bash
+node --env-file=.env.local scripts/migrate-polar-entitlements.mjs
+node --env-file=.env.local scripts/migrate-profile-frame.mjs
+```
+
+Tables: `user_entitlements`, `polar_webhook_events`, `ranked_topups` (phase 2 stub). Column: `user.profile_frame`.
 
 ## Top-ups (not created yet)
 
 When approved: one-time products for partial refill / full refill / Overload. All bonuses are keyed by `utc_hour_start` and **do not rollover**. Purchase UI must show UTC hour remaining + explicit non-rollover copy (especially Overload).
 
-## Founder checklist (not automated)
+## Founder checklist
 
-1. Polar identity verification / KYC
-2. Connect payout / bank
-3. Submit account for Polar review (one-way)
-4. Flip draft products to public when `checkout_payments` is enabled
+1. ~~Polar identity verification / KYC~~ done
+2. ~~Connect payout / bank~~ done
+3. ~~Submit account for Polar review~~ done (`status: active`)
+4. ~~Flip draft products to public~~ done
 5. Re-enable webhook endpoint if Polar auto-disabled after failed deliveries
+6. Build branded checkout (see [`polar-checkout-foundation.md`](./polar-checkout-foundation.md))
 
 Stay on Polar **Starter** fees until volume justifies Pro.
