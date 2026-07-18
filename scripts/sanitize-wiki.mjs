@@ -3,7 +3,8 @@
  *
  * - Undoes classic double-UTF-8 mojibake (Â·, â€", etc.)
  * - Replaces arrows / middots / dashes that break Mermaid on GitHub
- * - Optionally refreshes pages copied from docs/*.md
+ * - Strips pipes from Mermaid node labels (pipes are edge-label syntax)
+ * - Refreshes pages copied from docs/*.md
  *
  * Usage: node scripts/sanitize-wiki.mjs
  */
@@ -32,7 +33,8 @@ function toWikiSafe(text) {
     .replace(/\u2192/g, '->')
     .replace(/\u2190/g, '<-')
     .replace(/\u21d2/g, '=>')
-    .replace(/\s*\u00b7\s*/g, ' | ')
+    // Use " / " not " | " — pipes inside Mermaid node labels [..] break GitHub's parser.
+    .replace(/\s*\u00b7\s*/g, ' / ')
     .replace(/\s*\u2014\s*/g, ' - ')
     .replace(/\u2013/g, '-')
     .replace(/\u2011/g, '-')
@@ -45,6 +47,38 @@ function toWikiSafe(text) {
     .replace(/[\u2018\u2019]/g, "'")
     .replace(/\u00a0/g, ' ')
     .replace(/\u2022/g, '-');
+}
+
+/**
+ * Inside ```mermaid fences:
+ * - Keep edge labels `-->|text|`
+ * - Convert other `|` separators to ` / ` (node labels, message text)
+ * - Quote decision nodes that contain `#`
+ */
+function fixMermaidSyntax(text) {
+  return text.replace(/```mermaid\n([\s\S]*?)```/g, (_m, body) => {
+    const edges = [];
+    let fixed = body.replace(/-->\|[^|\n]+\|/g, (match) => {
+      edges.push(match);
+      return `__MERMAID_EDGE_${edges.length - 1}__`;
+    });
+
+    fixed = fixed.replace(/\s*\|\s*/g, ' / ');
+
+    fixed = fixed.replace(/__MERMAID_EDGE_(\d+)__/g, (_mm, i) => edges[Number(i)]);
+
+    // `#` in unquoted {} / [] labels breaks GitHub Mermaid — quote those labels.
+    fixed = fixed.replace(
+      /(\b\w+)\{([^}"\n]*#[^}\n]*)\}/g,
+      (_mm, id, inner) => `${id}{"${inner.replace(/"/g, "'")}"}`,
+    );
+    fixed = fixed.replace(
+      /(\b\w+)\[([^\]"\n]*#[^\]\n]*)\]/g,
+      (_mm, id, inner) => `${id}["${inner.replace(/"/g, "'")}"]`,
+    );
+
+    return '```mermaid\n' + fixed + '```';
+  });
 }
 
 function rewriteWikiLinks(body) {
@@ -121,23 +155,25 @@ for (const [srcRel, dest] of copies) {
   console.log('refreshed', dest);
 }
 
-let fixed = 0;
+let fixedCount = 0;
 for (const file of fs.readdirSync(wikiDir).filter((f) => f.endsWith('.md'))) {
   const p = path.join(wikiDir, file);
   const before = fs.readFileSync(p, 'utf8');
   let text = undoDoubleUtf8(before);
   text = toWikiSafe(text);
+  text = fixMermaidSyntax(text);
   if (text !== before) {
     fs.writeFileSync(p, text, 'utf8');
-    fixed++;
+    fixedCount++;
     console.log('sanitized', file);
   } else {
     console.log('ok', file);
   }
 }
 
-const arch = fs.readFileSync(path.join(wikiDir, 'Architecture.md'));
-const i = arch.indexOf(Buffer.from('Scramble'));
-console.log('verify:', arch.slice(i, i + 40).toString('utf8'));
-console.log('hex:', arch.slice(i, i + 30).toString('hex'));
-console.log('done, sanitized', fixed, 'files');
+const arch = fs.readFileSync(path.join(wikiDir, 'Architecture.md'), 'utf8');
+const badge = arch.includes('Local[Codex / NEW filter / NEW ribbon]');
+const edgeOk = arch.includes('Diff -->|yes| Act');
+const scramble = arch.includes('Scramble reel / ??? EP');
+console.log('checks:', { badge, edgeOk, scramble });
+console.log('done, sanitized', fixedCount, 'files');

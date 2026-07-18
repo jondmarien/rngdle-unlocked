@@ -111,7 +111,7 @@ sequenceDiagram
 
 **Isolation:** Arcade reuses `serverRollNumber` + `evaluateBadges` for flavor (EP shown on the roll card is Arcade-only display). It never inserts into `rolls`, never mutates `user_progress`, and never affects Ranked crowns or Practice EP boards.
 
-**Schema:** `arcade_meta` (unlocked upgrades, best Digits, lifetime cashed) | `arcade_runs` (one active run per user) | `arcade_run_rolls` (audit trail). Migration: `scripts/migrate-arcade.mjs`.
+**Schema:** `arcade_meta` (unlocked upgrades, best Digits, lifetime cashed) / `arcade_runs` (one active run per user) / `arcade_run_rolls` (audit trail). Migration: `scripts/migrate-arcade.mjs`.
 
 ## Free play lifecycle
 
@@ -126,13 +126,13 @@ sequenceDiagram
   participant C as /api/sync
 
   U->>H: Generate Free play
-  H->>H: Scramble reel | ??? EP
+  H->>H: Scramble reel / ??? EP
   H->>G: roll() free
   G->>E: client CSPRNG + evaluate
-  E-->>G: number | badges | EP | rarity
+  E-->>G: number / badges / EP / rarity
   G->>S: history + collection + stats
   G-->>H: lastRoll source=client
-  H->>H: Lock | cascade | count EP
+  H->>H: Lock / cascade / count EP
   opt signed in
     G->>Sync: enqueueAutoSync
     Sync->>C: POST mode=delta pending rolls
@@ -215,7 +215,7 @@ flowchart LR
   Ranked[Ranked API rolls] --> RankedBoard[Leaderboard Ranked]
   Ranked --> AllTime
   Ranked --> Crowns[Community crowns + overtakes]
-  Free -.->|does not| Crowns
+  Free -.-> / does not / Crowns
   RankedBoard --> TotalEP[Total EP view]
   RankedBoard --> BestRoll[Best Roll view]
   Practice --> TotalEP
@@ -246,12 +246,12 @@ Signed-in **Features** tab (`/features`): `feature_requests` + `feature_request_
 ```mermaid
 flowchart LR
   Roll[Roll badges] --> Merge[mergeCollection + firstEarnedAt]
-  Merge --> Local[Codex | NEW filter | NEW ribbon]
+  Merge --> Local[Codex / NEW filter / NEW ribbon]
   Merge --> Sync[POST /api/sync]
   Sync --> Diff{new badge ids?}
   Diff -->|yes| Act[Activity inbox]
   Diff -->|secret mastery| Sec[secret_mastery notif]
-  RankedIns[Ranked insert] --> Crown{ranked #1 today/week/alltime?}
+  RankedIns[Ranked insert] --> Crown{"ranked #1 today/week/alltime?"}
   Crown -->|yes| Sys[System crown broadcast]
   Crown -->|overtook other| Over[Activity overtaken]
 ```
@@ -266,11 +266,11 @@ flowchart TB
   Share -->|waitForCloudPublish| API["GET /api/rolls/:key"]
   API --> Vanity["/s/:user/:code"]
   Vanity -->|human| SPA[SPA PublicRoll]
-  Vanity -->|bot UA| HTML["/api/share | OG HTML"]
+  Vanity -->|bot UA| HTML["/api/share / OG HTML"]
   HTML --> Img["/api/og PNG"]
-  Profile["/u/:user"] -->|bot UA| UHTML["/api/u | profile OG"]
+  Profile["/u/:user"] -->|bot UA| UHTML["/api/u / profile OG"]
   UHTML --> Img
-  Pages["/ | /leaderboard | /arcade | /features | /about | ..."] -->|bot UA| PageHTML["/api/page/:slug"]
+  Pages["home, leaderboard, arcade, features, about, ..."] -->|bot UA| PageHTML["/api/page/:slug"]
   PageHTML --> PageImg["/api/og?type=page PNG"]
 ```
 

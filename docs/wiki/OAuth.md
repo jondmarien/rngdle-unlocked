@@ -6,7 +6,7 @@ OAuth **code is already shipped** on `main`. Remaining work is **portal + env ve
 
 **Live origin:** `https://rngdle-unlocked.chron0.tech`  
 **Auth base path:** `/api/auth`  
-**Callbacks:** `/api/auth/callback/discord` | `/api/auth/callback/github`  
+**Callbacks:** `/api/auth/callback/discord` / `/api/auth/callback/github`  
 **Legal (paste into Discord / GitHub app settings):**
 
 | Field            | URL                                           |

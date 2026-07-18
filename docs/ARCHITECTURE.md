@@ -126,18 +126,18 @@ sequenceDiagram
   participant C as /api/sync
 
   U->>H: Generate Free play
-  H->>H: Scramble reel · ??? EP
+  H->>H: Scramble reel / ??? EP
   H->>G: roll() free
   G->>E: client CSPRNG + evaluate
-  E-->>G: number · badges · EP · rarity
+  E-->>G: number / badges / EP / rarity
   G->>S: history + collection + stats
   G-->>H: lastRoll source=client
-  H->>H: Lock · cascade · count EP
+  H->>H: Lock / cascade / count EP
   opt signed in
     G->>Sync: enqueueAutoSync
     Sync->>C: POST mode=delta pending rolls
     C-->>Sync: compact ack ok + counts
-    Note over C: unlock notifs only — no Ranked crowns
+    Note over C: unlock notifs only - no Ranked crowns
   end
 ```
 
@@ -246,12 +246,12 @@ Signed-in **Features** tab (`/features`): `feature_requests` + `feature_request_
 ```mermaid
 flowchart LR
   Roll[Roll badges] --> Merge[mergeCollection + firstEarnedAt]
-  Merge --> Local[Codex · NEW filter · NEW ribbon]
+  Merge --> Local[Codex / NEW filter / NEW ribbon]
   Merge --> Sync[POST /api/sync]
   Sync --> Diff{new badge ids?}
   Diff -->|yes| Act[Activity inbox]
   Diff -->|secret mastery| Sec[secret_mastery notif]
-  RankedIns[Ranked insert] --> Crown{ranked #1 today/week/alltime?}
+  RankedIns[Ranked insert] --> Crown{"ranked #1 today/week/alltime?"}
   Crown -->|yes| Sys[System crown broadcast]
   Crown -->|overtook other| Over[Activity overtaken]
 ```
@@ -266,11 +266,11 @@ flowchart TB
   Share -->|waitForCloudPublish| API["GET /api/rolls/:key"]
   API --> Vanity["/s/:user/:code"]
   Vanity -->|human| SPA[SPA PublicRoll]
-  Vanity -->|bot UA| HTML["/api/share · OG HTML"]
+  Vanity -->|bot UA| HTML["/api/share / OG HTML"]
   HTML --> Img["/api/og PNG"]
-  Profile["/u/:user"] -->|bot UA| UHTML["/api/u · profile OG"]
+  Profile["/u/:user"] -->|bot UA| UHTML["/api/u / profile OG"]
   UHTML --> Img
-  Pages["/ · /leaderboard · /arcade · /features · /about · …"] -->|bot UA| PageHTML["/api/page/:slug"]
+  Pages["home, leaderboard, arcade, features, about, ..."] -->|bot UA| PageHTML["/api/page/:slug"]
   PageHTML --> PageImg["/api/og?type=page PNG"]
 ```
 

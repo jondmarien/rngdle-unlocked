@@ -4,7 +4,7 @@ Internal architecture pass for **readability and expandability**. No intentional
 
 **Commits:** `aa8e91e`...`fc4fa65` (11 commits).  
 **Canonical handoff:** [`HANDOFF.md`](../HANDOFF.md) §1b.  
-**Audit trail:** [`opus-report.md`](https://github.com/jondmarien/rngdle-unlocked/blob/main/docs/opus-report.md) §§A-G (historical findings) | §H (landed status).
+**Audit trail:** [`opus-report.md`](https://github.com/jondmarien/rngdle-unlocked/blob/main/docs/opus-report.md) §§A-G (historical findings) / §H (landed status).
 
 ---
 
