@@ -32,13 +32,33 @@ export function entryHighlightLines(entry: WhatsNewEntry): string[] {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    title: 'Discord play is free — Rare+ only for servers',
+    date: '2026-07-17',
+    version: '0.19.1',
+    tags: ['Discord', 'Ranked', 'Social'],
+    content: [
+      {
+        body: 'Anyone who links Discord and claims an @username can use **/roll** and **/board**. Ranked Plus **Rare+** is only required if you want to **add the app to a Discord server**.',
+      },
+      {
+        heading: 'What you will notice',
+        body: 'Personal play stays free; community servers stay Plus.',
+        bullets: [
+          '**Play free** — user / personal install after Account → Link Discord.',
+          '**Add to a server** — Rare+ button on **/plus** (gated OAuth; not a public Discord invite link).',
+          'Ranked in Discord still uses your normal hour quota; Free Discord rolls stay off the Ranked crowns board.',
+        ],
+      },
+    ],
+  },
+  {
     title: 'Roll from Discord — /roll and /board',
     date: '2026-07-17',
     version: '0.19.0',
     tags: ['Discord', 'Ranked', 'Social'],
     content: [
       {
-        body: 'Link Discord on Account, keep a public @username, and hold Ranked Plus **Rare+** — then use **/roll** and **/board** in Discord without leaving the channel.',
+        body: 'Link Discord on Account and claim a public @username — then use **/roll** and **/board** in Discord without leaving the channel. (As of v0.19.1, play is free; Rare+ is only for adding the app to a server.)',
       },
       {
         heading: 'What you will notice',
@@ -47,7 +67,6 @@ export const WHATS_NEW: WhatsNewEntry[] = [
           '**/roll** — Free, Ranked, Daily, and Weekly with the same trust rules as the web app.',
           '**/board** — Ranked, Practice, and All-Time pages you can flip through in Discord.',
           '**Free Discord rolls** land on Practice / All-Time (not Ranked crowns). Ranked still uses your hour quota.',
-          'Invite is gated on real Ranked Plus — dogfood for Rare+ players first; wider invite when Polar entitlements are proven.',
         ],
       },
     ],

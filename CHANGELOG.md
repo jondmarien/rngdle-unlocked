@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.1] - 2026-07-17
+
+### Changed
+
+- **Discord access model** — play (`/roll`, `/board`) is free for linked Discord + `@username` (user-install / DMs). Ranked Plus **Rare+** is required only to **add the app to a Discord server** via `/api/discord/install` + `discord_guild_installs` allowlist.
+
+### Added
+
+- `GET /api/discord/install` + `/api/discord/install/callback`; Plus screen **Add to Discord server**; migration `scripts/migrate-discord-guild-installs.mjs`.
+
+### Notes
+
+- Register Discord OAuth redirect URI: `/api/discord/install/callback`. Enable User Install in the Discord Developer Portal. Do not share the raw Discord authorize URL.
+
 ## [0.19.0] - 2026-07-17
 
 ### Added
