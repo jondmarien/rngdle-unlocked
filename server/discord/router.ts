@@ -10,6 +10,10 @@ import { checkRateLimitUtcHour, isRateLimited } from '../rateLimit.js';
 import { getPublicIdentity, issueRankedRoll } from '../rankedRoll.js';
 import { checkDiscordRollCooldown } from './cooldown.js';
 import {
+  isGuildInstallAllowed,
+  isGuildInstallContext,
+} from './guildInstall.js';
+import {
   resolveDiscordUser,
   SITE_ORIGIN,
   type DiscordLinkedUser,
@@ -34,6 +38,8 @@ type Interaction = {
   token: string;
   type: number;
   application_id: string;
+  guild_id?: string;
+  authorizing_integration_owners?: Record<string, string>;
   data?: {
     name?: string;
     custom_id?: string;
@@ -63,6 +69,7 @@ function parseMode(raw: string | undefined): DiscordMode {
 async function gateUser(
   db: Db,
   snowflake: string,
+  interaction: Interaction,
 ): Promise<
   | { ok: true; user: DiscordLinkedUser }
   | { ok: false; response: Record<string, unknown> }
@@ -76,14 +83,6 @@ async function gateUser(
       ),
     };
   }
-  if (!linked.hasRarePlus) {
-    return {
-      ok: false,
-      response: ephemeralText(
-        `Ranked Plus (**Rare** or higher) is required for the Discord bot.\nUpgrade: ${SITE_ORIGIN}/plus`,
-      ),
-    };
-  }
   if (!linked.username) {
     return {
       ok: false,
@@ -92,6 +91,29 @@ async function gateUser(
       ),
     };
   }
+
+  // Anyone linked can play (user-install / DMs). Guild installs need Rare+ allowlist.
+  if (isGuildInstallContext(interaction)) {
+    const guildId = interaction.guild_id?.trim();
+    if (!guildId) {
+      return {
+        ok: false,
+        response: ephemeralText(
+          `This server is not authorized for guild install.\nRare+ members can add the app from ${SITE_ORIGIN}/plus`,
+        ),
+      };
+    }
+    const allowed = await isGuildInstallAllowed(db, guildId);
+    if (!allowed) {
+      return {
+        ok: false,
+        response: ephemeralText(
+          `Playing here needs a Ranked Plus (**Rare+**) member to add the app to this server.\nAdd from: ${SITE_ORIGIN}/api/discord/install\n(Or use a personal / user install — play stays free.)`,
+        ),
+      };
+    }
+  }
+
   return { ok: true, user: linked };
 }
 
@@ -210,7 +232,7 @@ export async function handleDiscordInteraction(
   if (interaction.type === 2) {
     const name = interaction.data?.name;
     if (name === 'roll') {
-      const gated = await gateUser(db, snowflake);
+      const gated = await gateUser(db, snowflake, interaction);
       if (!gated.ok) return gated.response;
       const screen = idleRollScreen({
         mode: 'free',
@@ -220,7 +242,7 @@ export async function handleDiscordInteraction(
       return messageResponse(screen);
     }
     if (name === 'board') {
-      const gated = await gateUser(db, snowflake);
+      const gated = await gateUser(db, snowflake, interaction);
       if (!gated.ok) return gated.response;
       const { lines, hasPrev, hasNext } = await fetchBoardPage(db, 'ranked', 0);
       return messageResponse(
@@ -239,7 +261,7 @@ export async function handleDiscordInteraction(
   // MESSAGE_COMPONENT
   if (interaction.type === 3) {
     const customId = interaction.data?.custom_id ?? '';
-    const gated = await gateUser(db, snowflake);
+    const gated = await gateUser(db, snowflake, interaction);
     if (!gated.ok) return gated.response;
     const user = gated.user;
 

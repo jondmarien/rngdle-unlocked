@@ -241,36 +241,38 @@ Important tables: `user` (username, vanity profile fields), `user_progress`, `ro
 
 ## 7. API surface (agents)
 
-| Endpoint                                               | Notes                                                                                                                      |
-| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
-| `/api/auth/*`                                          | Better Auth (rewrites with `__path` for multi-segment)                                                                     |
-| `/api/sync`                                            | GET full cloud pull; POST delta (or legacy full) → compact ack; soft per-minute burst; 256KB body cap                      |
-| `/api/ranked-roll`                                     | POST Ranked free play (auth + username); response includes `quota` metadata; per-user effective cap from entitlements      |
-| `/api/ranked-roll/quota`                               | GET read-only Ranked remaining / reset (auth; soft burst `rankedQuotaPerMinute`)                                           |
-| `/api/webhooks/polar`                                  | POST Polar webhooks (signature + idempotency → `user_entitlements`); no session auth                                       |
-| `/plus` (SPA)                                          | Ranked Plus storefront (tiers, friend code, Manage billing, this-hour top-ups). Account keeps identity + cosmetics.        |
-| `/api/discord/interactions`                            | Discord HTTP Interactions (Ed25519); `/roll` + `/board`; Rare+ gate; see [`docs/discord-bot.md`](./docs/discord-bot.md)    |
-| `/api/checkout`                                        | POST Ranked Plus Checkout Session (auth + `@username`; `{ tier, discountCode? }` → Polar `{ url }`)                        |
-| `/api/checkout/topup`                                  | POST Ranked hour Boost/Overload Checkout Session (auth + `@username`; `{ sku }` → Polar `{ url }`)                         |
-| `/api/checkout/portal`                                 | POST Polar customer portal (auth; requires linked Polar customer)                                                          |
-| `/api/leaderboard`                                     | `?view=total\|best` (default total); `?scope=ranked\|practice&period=all\|week`; total: `sort=`; best: `sortBy=ep\|rarity` |
-| `/api/arcade`                                          | GET meta + active run (auth)                                                                                               |
-| `/api/arcade/start\|roll\|buy\|arm\|cash-out\|abandon` | Arcade run mutations (auth + @username for start/roll)                                                                     |
-| `/api/arcade/leaderboard`                              | Best Digits run score (optional auth for `me`)                                                                             |
-| `/api/feature-requests`                                | GET list / POST submit (signed-in); vote via `/api/feature-requests/:id/vote`                                              |
-| `/api/admin/feature-requests`                          | PATCH status (`requireAdmin` + audit)                                                                                      |
-| `/api/highlights`                                      | Community bests — **Ranked only**                                                                                          |
-| `/api/feed`                                            | `?source=all\|ranked\|practice` — self + following                                                                         |
-| `/api/follow`                                          | Follow graph                                                                                                               |
-| `/api/notifications`                                   | Activity + system inbox                                                                                                    |
-| `/api/system-messages`                                 | GET list; POST **admin session** (role=admin). Still live alongside `api/admin/broadcast.ts` — redundant POST not removed. |
-| `/api/admin/*`                                         | Admin: broadcast, stats, users search/wipe/ban, reports                                                                    |
-| `/api/reports`                                         | Signed-in users file abuse / username reports                                                                              |
-| `/api/challenge`                                       | Period seeds metadata                                                                                                      |
-| `/api/attest`                                          | Optional HMAC seal on claim                                                                                                |
-| `/api/og`, `/api/share/*`, `/api/u/*`, `/api/page/*`   | OG / share / profile / static-page HTML for bots                                                                           |
-| `/api/rolls/:id`                                       | Public roll lookup for share gate                                                                                          |
-| `/api/health`                                          | Liveness + env presence                                                                                                    |
+| Endpoint                                               | Notes                                                                                                                                                    |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/api/auth/*`                                          | Better Auth (rewrites with `__path` for multi-segment)                                                                                                   |
+| `/api/sync`                                            | GET full cloud pull; POST delta (or legacy full) → compact ack; soft per-minute burst; 256KB body cap                                                    |
+| `/api/ranked-roll`                                     | POST Ranked free play (auth + username); response includes `quota` metadata; per-user effective cap from entitlements                                    |
+| `/api/ranked-roll/quota`                               | GET read-only Ranked remaining / reset (auth; soft burst `rankedQuotaPerMinute`)                                                                         |
+| `/api/webhooks/polar`                                  | POST Polar webhooks (signature + idempotency → `user_entitlements`); no session auth                                                                     |
+| `/plus` (SPA)                                          | Ranked Plus storefront (tiers, friend code, Manage billing, this-hour top-ups). Account keeps identity + cosmetics.                                      |
+| `/api/discord/interactions`                            | Discord HTTP Interactions (Ed25519); `/roll` + `/board`; play free (linked); guild install allowlist; see [`docs/discord-bot.md`](./docs/discord-bot.md) |
+| `/api/discord/install`                                 | GET Rare+ → Discord OAuth to add app to a guild                                                                                                          |
+| `/api/discord/install/callback`                        | OAuth redirect; upserts `discord_guild_installs`                                                                                                         |
+| `/api/checkout`                                        | POST Ranked Plus Checkout Session (auth + `@username`; `{ tier, discountCode? }` → Polar `{ url }`)                                                      |
+| `/api/checkout/topup`                                  | POST Ranked hour Boost/Overload Checkout Session (auth + `@username`; `{ sku }` → Polar `{ url }`)                                                       |
+| `/api/checkout/portal`                                 | POST Polar customer portal (auth; requires linked Polar customer)                                                                                        |
+| `/api/leaderboard`                                     | `?view=total\|best` (default total); `?scope=ranked\|practice&period=all\|week`; total: `sort=`; best: `sortBy=ep\|rarity`                               |
+| `/api/arcade`                                          | GET meta + active run (auth)                                                                                                                             |
+| `/api/arcade/start\|roll\|buy\|arm\|cash-out\|abandon` | Arcade run mutations (auth + @username for start/roll)                                                                                                   |
+| `/api/arcade/leaderboard`                              | Best Digits run score (optional auth for `me`)                                                                                                           |
+| `/api/feature-requests`                                | GET list / POST submit (signed-in); vote via `/api/feature-requests/:id/vote`                                                                            |
+| `/api/admin/feature-requests`                          | PATCH status (`requireAdmin` + audit)                                                                                                                    |
+| `/api/highlights`                                      | Community bests — **Ranked only**                                                                                                                        |
+| `/api/feed`                                            | `?source=all\|ranked\|practice` — self + following                                                                                                       |
+| `/api/follow`                                          | Follow graph                                                                                                                                             |
+| `/api/notifications`                                   | Activity + system inbox                                                                                                                                  |
+| `/api/system-messages`                                 | GET list; POST **admin session** (role=admin). Still live alongside `api/admin/broadcast.ts` — redundant POST not removed.                               |
+| `/api/admin/*`                                         | Admin: broadcast, stats, users search/wipe/ban, reports                                                                                                  |
+| `/api/reports`                                         | Signed-in users file abuse / username reports                                                                                                            |
+| `/api/challenge`                                       | Period seeds metadata                                                                                                                                    |
+| `/api/attest`                                          | Optional HMAC seal on claim                                                                                                                              |
+| `/api/og`, `/api/share/*`, `/api/u/*`, `/api/page/*`   | OG / share / profile / static-page HTML for bots                                                                                                         |
+| `/api/rolls/:id`                                       | Public roll lookup for share gate                                                                                                                        |
+| `/api/health`                                          | Liveness + env presence                                                                                                                                  |
 
 SPA routes: History API in `src/lib/routes.ts`; Vercel rewrites non-`/api` to `index.html`. Bot UA rewrites for `/s/:user/:code` and `/u/:username`.
 

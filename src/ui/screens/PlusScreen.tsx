@@ -191,6 +191,26 @@ export function PlusScreen() {
       return () => window.clearInterval(poll);
     }
 
+    const discordInstall = params.get('discord_install');
+    if (discordInstall) {
+      const messages: Record<string, string> = {
+        ok: 'Discord server authorized — /roll and /board work in that guild.',
+        rare_required:
+          'Ranked Plus Rare+ is required to add the Discord app to a server. Playing stays free after you link Discord on Account.',
+        signin: 'Sign in, then try Add to Discord server again.',
+        missing_guild:
+          'Discord did not return a server. Pick a guild in the Discord prompt, or use a personal / user install to play for free.',
+        denied: 'Discord install was cancelled.',
+        bad_state: 'Install link expired — try Add to Discord server again.',
+        config_error:
+          'Discord install is not configured yet. Try again after deploy, or check DISCORD_CLIENT_ID.',
+        error: 'Could not save that Discord server. Try again in a moment.',
+      };
+      setMsg(messages[discordInstall] ?? 'Discord install finished.');
+      params.delete('discord_install');
+      dirty = true;
+    }
+
     if (dirty) {
       const next = `${window.location.pathname}${params.toString() ? `?${params}` : ''}${window.location.hash}`;
       window.history.replaceState(null, '', next);
@@ -429,6 +449,49 @@ export function PlusScreen() {
             Account
           </a>
         </div>
+      </div>
+
+      <div className="space-y-3 rounded-lg border border-(--outline) bg-(--surface) p-4">
+        <div>
+          <h2 className="text-base font-bold text-(--prose)">Discord</h2>
+          <p className="text-sm text-(--prose-2)">
+            Anyone can play with{' '}
+            <strong className="text-(--prose)">/roll</strong> and{' '}
+            <strong className="text-(--prose)">/board</strong> after linking
+            Discord on Account (personal / user install). Adding the app to a{' '}
+            <strong className="text-(--prose)">server</strong> needs Ranked Plus
+            Rare+.
+          </p>
+        </div>
+        {rankedTier === 'free' ? (
+          <p className="text-xs text-(--prose-3)">
+            Subscribe to Rare or higher above, then use{' '}
+            <strong className="text-(--prose)">Add to Discord server</strong>.
+          </p>
+        ) : (
+          <a
+            href="/api/discord/install"
+            className="inline-flex border-2 border-(--accent) bg-(--accent) px-3 py-1.5 text-xs font-bold uppercase text-(--bg)"
+          >
+            Add to Discord server
+          </a>
+        )}
+        <p className="text-xs text-(--prose-3)">
+          Link Discord on{' '}
+          <a className="underline" href="/account">
+            Account
+          </a>{' '}
+          first. See{' '}
+          <a
+            className="underline"
+            href="https://github.com/jondmarien/rngdle-unlocked/blob/main/docs/discord-bot.md"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Discord bot docs
+          </a>
+          .
+        </p>
       </div>
 
       <div

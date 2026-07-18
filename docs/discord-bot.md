@@ -2,17 +2,36 @@
 
 RNGdle Unlocked Discord integration is a **Vercel serverless HTTP Interactions** app — no Gateway, no always-on host.
 
+## Access model
+
+| Action                          | Who                                                            |
+| ------------------------------- | -------------------------------------------------------------- |
+| **Play** (`/roll`, `/board`)    | Any player with Discord linked + public `@username` (free)     |
+| **Add app to a Discord server** | Ranked Plus **Rare+** via gated OAuth (`/api/discord/install`) |
+
+- **User install / DMs / personal use** — free play; no guild allowlist row.
+- **Guild install** — Rare+ member starts install from `/plus` → Discord guild picker → we store `guild_id` in `discord_guild_installs`. Interactions authorized via guild install require that allowlist.
+
+Do **not** share the raw Discord OAuth authorize URL publicly — use `/api/discord/install` so Rare+ is enforced.
+
 ## Status
 
-| Gate              | Meaning                                                                                                                           |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| **Build**         | Code lives in `api/discord/interactions.ts` + `server/discord/*`                                                                  |
-| **Public invite** | Only after a **non-admin** Rare+ row exists in `user_entitlements` (Polar webhook). Admins can dogfood via complimentary Anomaly. |
+| Gate       | Meaning                                                                      |
+| ---------- | ---------------------------------------------------------------------------- |
+| **Build**  | Code lives in `api/discord/*` + `server/discord/*`                           |
+| **Play**   | Open to linked accounts (user-install).                                      |
+| **Guilds** | Rare+ install path + allowlist. Dogfood with complimentary admin Anomaly OK. |
 
-Ops check:
+Ops check (Polar Rare+ rows):
 
 ```bash
 node --env-file=.env.local scripts/check-polar-entitlements.mjs
+```
+
+Guild allowlist migration:
+
+```bash
+node --env-file=.env.local scripts/migrate-discord-guild-installs.mjs
 ```
 
 ## Env
@@ -24,26 +43,28 @@ node --env-file=.env.local scripts/check-polar-entitlements.mjs
 | `DISCORD_CLIENT_SECRET` | Optional — register commands via client credentials      |
 | `DISCORD_BOT_TOKEN`     | Optional — register commands via Bot token               |
 
-Same Discord **Application** as Account OAuth. Enable a Bot user only if you prefer Bot-token command registration; guild invite can stay **`applications.commands` only**.
+Same Discord **Application** as Account OAuth.
+
+Also register this **Redirect URI** on the Discord app (OAuth2):
+
+`https://rngdle-unlocked.chron0.tech/api/discord/install/callback`
+
+(and local `vercel dev` origin if you test installs locally).
 
 ## Setup
 
 1. Developer Portal → Application → **Interactions Endpoint URL**:
    `https://rngdle-unlocked.chron0.tech/api/discord/interactions`
 2. Copy **Public Key** → `DISCORD_PUBLIC_KEY` (Vercel + `.env.local`)
-3. Register commands:
+3. Enable **User Install** (Installation → User Install) so free players can add the app for themselves without a guild.
+4. Register commands:
 
 ```bash
 node --env-file=.env.local scripts/register-discord-commands.mjs
 ```
 
-4. Invite (commands only — no `bot` scope):
-
-```
-https://discord.com/api/oauth2/authorize?client_id=YOUR_APP_ID&scope=applications.commands
-```
-
-5. Players: Account → **Link Discord** + `@username` + Ranked Plus **Rare+** (`/plus`).
+5. Run `migrate-discord-guild-installs.mjs` once.
+6. Players: Account → **Link Discord** + `@username` → play. Rare+ → `/plus` → **Add to Discord server**.
 
 ## Commands
 

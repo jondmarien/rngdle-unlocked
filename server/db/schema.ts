@@ -385,6 +385,19 @@ export const polarWebhookEvents = pgTable('polar_webhook_events', {
 });
 
 /**
+ * Discord guilds authorized to host the app (guild install).
+ * Play via user-install / DMs does not require a row here.
+ * Guild installs are gated to Ranked Plus Rare+ via `/api/discord/install`.
+ */
+export const discordGuildInstalls = pgTable('discord_guild_installs', {
+  guildId: text('guild_id').primaryKey(),
+  installedByUserId: text('installed_by_user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+/**
  * Hour-scoped Ranked top-up bonus (phase 2).
  * Must filter utc_hour_start = current UTC hour — never rollover.
  */

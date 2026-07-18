@@ -50,7 +50,7 @@ const commands = [
   {
     name: 'roll',
     description:
-      'Open the RNGdle Unlocked roll screen (Ranked Plus Rare+ required)',
+      'Open the RNGdle Unlocked roll screen (link Discord + @username)',
     type: 1,
   },
   {
@@ -80,7 +80,8 @@ console.log(
   '\nSet Interactions Endpoint URL to:\n  https://rngdle-unlocked.chron0.tech/api/discord/interactions',
 );
 console.log(
-  '\nInvite (applications.commands only):\n  https://discord.com/api/oauth2/authorize?client_id=' +
-    appId +
-    '&scope=applications.commands',
+  '\nGuild install (Rare+ gated — do not share raw Discord OAuth):\n  https://rngdle-unlocked.chron0.tech/api/discord/install',
+);
+console.log(
+  '\nRedirect URI to register in Discord OAuth2:\n  https://rngdle-unlocked.chron0.tech/api/discord/install/callback',
 );

@@ -322,4 +322,6 @@ export const LIMITS = {
   checkoutPerMinute: 10,
   /** Discord interactions endpoint burst per Discord snowflake. */
   discordInteractionsPerMinute: 30,
+  /** Rare+ Discord guild-install OAuth start. */
+  discordInstallPerMinute: 10,
 } as const;
