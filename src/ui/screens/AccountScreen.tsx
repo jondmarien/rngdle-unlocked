@@ -57,9 +57,6 @@ export function AccountScreen({
   } = useCloudSync();
   const { confirmAsync } = useFeedback();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
-  const [emailAuthTab, setEmailAuthTab] = useState<'magic' | 'password'>(
-    'magic',
-  );
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -101,8 +98,10 @@ export function AccountScreen({
     const nicer =
       oauthError === "email_doesn't_match" ||
       oauthError === 'email_doesnt_match'
-        ? 'Could not link that provider — its email did not match your account email. Try again after the latest deploy (different emails are now allowed for Discord/GitHub).'
-        : `Sign-in / link failed: ${oauthError.replace(/_/g, ' ')}`;
+        ? 'Could not link that provider — its email did not match your account email. Different emails are allowed for Discord/GitHub linking; try again, or sign in with the original method first.'
+        : oauthError === 'account_not_linked'
+          ? 'That Discord/GitHub account could not be linked to an existing email signup. Try Continue with Discord/GitHub again after the latest fix, or sign in with email + password first and use Link on Account.'
+          : `Sign-in / link failed: ${oauthError.replace(/_/g, ' ')}`;
     setMsg(nicer);
     params.delete('error');
     const next = `${window.location.pathname}${params.toString() ? `?${params}` : ''}${window.location.hash}`;
@@ -189,43 +188,6 @@ export function AccountScreen({
 
   const sessionLoading = isPending && !error && !waitTimedOut;
 
-  const onMagicLink = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setBusy(true);
-    setMsg(null);
-    setStatus(null);
-    log.info('magic-link:start', {
-      email: email.replace(/(.{2}).+(@.+)/, '$1***$2'),
-    });
-    try {
-      setStatus('Sending magic link…');
-      const res = await withTimeout(
-        authClient.signIn.magicLink({
-          email,
-          name: name || email.split('@')[0] || 'Player',
-          callbackURL: '/account',
-          newUserCallbackURL: '/account',
-        }),
-        AUTH_TIMEOUT_MS,
-        'signIn.magicLink',
-      );
-      if (res.error) {
-        throw new Error(res.error.message ?? 'Could not send magic link');
-      }
-      setMsg(
-        'Check your inbox for a sign-in link (expires in ~10 minutes). Fake addresses will never get the email.',
-      );
-      setStatus(null);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Magic link failed';
-      log.error('magic-link:fail', { message });
-      setMsg(message);
-      setStatus(null);
-    } finally {
-      setBusy(false);
-    }
-  };
-
   const onAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
@@ -260,10 +222,9 @@ export function AccountScreen({
         }
         setStatus(null);
         setMsg(
-          'Account created — check your email for a verification link before signing in. Discord/GitHub skip this step.',
+          'Account created — you can sign in with that email and password.',
         );
         setMode('signin');
-        setEmailAuthTab('magic');
         return;
       }
 
@@ -280,11 +241,9 @@ export function AccountScreen({
       });
       if (res.error) {
         const raw = res.error.message ?? 'Sign in failed';
-        const nicer = /verif/i.test(raw)
-          ? 'Email not verified yet — check your inbox for the verification link (or use a magic link).'
-          : /user not found/i.test(raw) ||
-              /invalid email or password/i.test(raw)
-            ? 'No account for that email (or wrong password). Prefer Discord/GitHub, or request a magic link.'
+        const nicer =
+          /user not found/i.test(raw) || /invalid email or password/i.test(raw)
+            ? 'No account for that email (or wrong password). Prefer Discord/GitHub, or sign up with email + password.'
             : raw;
         throw new Error(nicer);
       }
@@ -562,8 +521,8 @@ export function AccountScreen({
               Continue with GitHub
             </button>
             <p className="text-[11px] text-(--prose-3)">
-              Recommended. Email below requires a real inbox (magic link or
-              verification).
+              Recommended. Email + password below works without inbox
+              verification.
             </p>
           </div>
           <details className="rounded-lg border border-(--outline) bg-(--surface) p-3">
@@ -577,10 +536,7 @@ export function AccountScreen({
                   className={
                     mode === 'signin' ? 'underline' : 'text-(--prose-3)'
                   }
-                  onClick={() => {
-                    setMode('signin');
-                    setEmailAuthTab('magic');
-                  }}
+                  onClick={() => setMode('signin')}
                 >
                   Sign in
                 </button>
@@ -595,115 +551,58 @@ export function AccountScreen({
                 </button>
               </div>
 
-              {mode === 'signin' && (
-                <div className="flex gap-2 text-[11px] font-semibold">
-                  <button
-                    type="button"
-                    className={
-                      emailAuthTab === 'magic'
-                        ? 'underline'
-                        : 'text-(--prose-3)'
-                    }
-                    onClick={() => setEmailAuthTab('magic')}
-                  >
-                    Magic link
-                  </button>
-                  <button
-                    type="button"
-                    className={
-                      emailAuthTab === 'password'
-                        ? 'underline'
-                        : 'text-(--prose-3)'
-                    }
-                    onClick={() => setEmailAuthTab('password')}
-                  >
-                    Password
-                  </button>
-                </div>
-              )}
-
-              {mode === 'signin' && emailAuthTab === 'magic' ? (
-                <form
-                  onSubmit={onMagicLink}
-                  className="space-y-3"
-                  autoComplete="on"
+              <form onSubmit={onAuth} className="space-y-3" autoComplete="on">
+                {mode === 'signup' && (
+                  <input
+                    className="w-full border border-(--outline) bg-(--bg) px-3 py-2 text-sm"
+                    placeholder="Display name"
+                    name="name"
+                    autoComplete="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                )}
+                <input
+                  type="email"
+                  name="email"
+                  required
+                  autoComplete="email"
+                  className="w-full border border-(--outline) bg-(--bg) px-3 py-2 text-sm"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+                <input
+                  type="password"
+                  name="password"
+                  required
+                  minLength={8}
+                  autoComplete={
+                    mode === 'signup' ? 'new-password' : 'current-password'
+                  }
+                  className="w-full border border-(--outline) bg-(--bg) px-3 py-2 text-sm"
+                  placeholder="Password (8+)"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <button
+                  type="submit"
+                  disabled={busy}
+                  className="border-2 border-(--accent) bg-(--accent) px-4 py-2 text-xs font-bold uppercase text-(--bg) disabled:opacity-50"
                 >
-                  <input
-                    type="email"
-                    name="email"
-                    required
-                    autoComplete="email"
-                    className="w-full border border-(--outline) bg-(--bg) px-3 py-2 text-sm"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                  <button
-                    type="submit"
-                    disabled={busy}
-                    className="border-2 border-(--accent) bg-(--accent) px-4 py-2 text-xs font-bold uppercase text-(--bg) disabled:opacity-50"
-                  >
-                    {busy ? (status ?? 'Working…') : 'Email me a sign-in link'}
-                  </button>
+                  {busy
+                    ? (status ?? 'Working…')
+                    : mode === 'signup'
+                      ? 'Create account'
+                      : 'Sign in with password'}
+                </button>
+                {mode === 'signup' && (
                   <p className="text-[11px] text-(--prose-3)">
-                    Works for new and existing accounts. You must be able to
-                    open the inbox.
+                    No email verification — any address works. Prefer Discord or
+                    GitHub when you can.
                   </p>
-                </form>
-              ) : (
-                <form onSubmit={onAuth} className="space-y-3" autoComplete="on">
-                  {mode === 'signup' && (
-                    <input
-                      className="w-full border border-(--outline) bg-(--bg) px-3 py-2 text-sm"
-                      placeholder="Display name"
-                      name="name"
-                      autoComplete="name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                    />
-                  )}
-                  <input
-                    type="email"
-                    name="email"
-                    required
-                    autoComplete="email"
-                    className="w-full border border-(--outline) bg-(--bg) px-3 py-2 text-sm"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                  <input
-                    type="password"
-                    name="password"
-                    required
-                    minLength={8}
-                    autoComplete={
-                      mode === 'signup' ? 'new-password' : 'current-password'
-                    }
-                    className="w-full border border-(--outline) bg-(--bg) px-3 py-2 text-sm"
-                    placeholder="Password (8+)"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                  <button
-                    type="submit"
-                    disabled={busy}
-                    className="border-2 border-(--accent) bg-(--accent) px-4 py-2 text-xs font-bold uppercase text-(--bg) disabled:opacity-50"
-                  >
-                    {busy
-                      ? (status ?? 'Working…')
-                      : mode === 'signup'
-                        ? 'Create account'
-                        : 'Sign in with password'}
-                  </button>
-                  {mode === 'signup' && (
-                    <p className="text-[11px] text-(--prose-3)">
-                      New email accounts must verify via the link we send.
-                      Spoofed domains (e.g. fake @chron0.tech) will not work.
-                    </p>
-                  )}
-                </form>
-              )}
+                )}
+              </form>
               {status && busy && (
                 <p className="text-xs text-(--prose-3)">{status}</p>
               )}

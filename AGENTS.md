@@ -115,7 +115,7 @@ See [`.env.example`](./.env.example). Typical vars:
 | `BETTER_AUTH_URL`                             | Site origin (production must match real domain)                                                    |
 | `VITE_APP_URL`                                | Client trusted origin                                                                              |
 | `EXTRA_TRUSTED_ORIGINS`                       | Optional comma-separated extra Better Auth origins (prod + beta chron0.tech already hardcoded)     |
-| `RESEND_API_KEY`                              | Outbound mail (magic link + email verification) — see [`docs/email-auth.md`](./docs/email-auth.md) |
+| `RESEND_API_KEY`                              | Outbound mail (account deletion confirmation) — see [`docs/email-auth.md`](./docs/email-auth.md) |
 | `EMAIL_FROM`                                  | Optional; default `RNGdle Unlocked <noreply@outreach.chron0.tech>`                                 |
 | `ADMIN_SECRET`                                | Optional; bootstrap only (`scripts/promote-admin.mjs`) — not for browser admin                     |
 | `ADMIN_USER_IDS`                              | Optional; comma-separated user ids treated as admin                                                |
@@ -192,9 +192,11 @@ Do not claim blanket Zod on every POST/query — only these trust boundaries are
 ### 5.5b Auth identity
 
 - Prefer Discord/GitHub OAuth for new accounts.
-- Email/password: `requireEmailVerification` + Resend from `outreach.chron0.tech`.
-- Magic link plugin for passwordless email sign-in (inbox ownership).
-- Grandfather existing users: `node --env-file=.env.local scripts/grandfather-email-verified.mjs`.
+- Email/password: enabled with **no** inbox verification (`requireEmailVerification: false`); any email works.
+- Magic link is **disabled** (Resend was unreliable).
+- OAuth account linking uses `requireLocalEmailVerified: false` so Discord is not blocked by leftover unverified email rows (`account_not_linked`).
+- Optional grandfather for old unverified rows: `node --env-file=.env.local scripts/grandfather-email-verified.mjs`.
+- Resend remains for account-deletion confirmation only.
 
 ### 5.5c Progress provenance (profiles)
 

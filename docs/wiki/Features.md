@@ -19,18 +19,18 @@ Product surface overview. Trust / board placement details live in [[Game-Modes-a
 
 ## Roll modes
 
-| Mode | Number source | Leaderboard / crowns |
-| ---- | ------------- | -------------------- |
-| **Free play** | Browser CSPRNG | Practice + All-Time via sync. No crowns. |
-| **Ranked** | Server CSPRNG (`POST /api/ranked-roll`) | Ranked board + today/week/all-time crowns. Needs `@username`. |
-| **Daily / Weekly** | Deterministic period seed + subject id | Challenge flavor; Practice + All-Time. No Ranked crowns. |
-| **Arcade** | Server CSPRNG inside Digits run loop | Arcade board (best Digits). Separate tab `/arcade` - Digits != EP. |
+| Mode               | Number source                           | Leaderboard / crowns                                               |
+| ------------------ | --------------------------------------- | ------------------------------------------------------------------ |
+| **Free play**      | Browser CSPRNG                          | Practice + All-Time via sync. No crowns.                           |
+| **Ranked**         | Server CSPRNG (`POST /api/ranked-roll`) | Ranked board + today/week/all-time crowns. Needs `@username`.      |
+| **Daily / Weekly** | Deterministic period seed + subject id  | Challenge flavor; Practice + All-Time. No Ranked crowns.           |
+| **Arcade**         | Server CSPRNG inside Digits run loop    | Arcade board (best Digits). Separate tab `/arcade` - Digits != EP. |
 
 Absolute Ceiling jackpot (1 in 100M) exists on Free and Ranked. See [[Game-Modes-and-Trust]].
 
 ## Social & competitive (optional)
 
-- **Auth** - email + password, magic link (Resend), Discord / GitHub OAuth - [[Email-Auth]], [[OAuth]]
+- **Auth** - email + password (no verification), Discord / GitHub OAuth - [[Email-Auth]], [[OAuth]]
 - **Public `@username`**, profiles (accent, flair, bio, avatars, Ranked Plus frames)
 - **Auto cloud sync** on Free / challenges when signed in (merge-safe; cannot forge `source=ranked`)
 - **EP boards** - Ranked | Practice | All-Time; Total EP or Best Roll (by EP / rarity)

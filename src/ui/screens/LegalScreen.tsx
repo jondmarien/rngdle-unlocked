@@ -136,7 +136,7 @@ function TermsBody() {
         </h2>
         <p>You may create or link an account via:</p>
         <ul className="list-disc space-y-1 pl-5">
-          <li>Email (magic link and/or password with email verification)</li>
+          <li>Email + password (no inbox verification required)</li>
           <li>Discord OAuth</li>
           <li>GitHub OAuth</li>
         </ul>
@@ -339,7 +339,7 @@ function PrivacyBody() {
         </h2>
         <ul className="list-disc space-y-1 pl-5">
           <li>Run the game, sync progress, and show leaderboards / profiles</li>
-          <li>Authenticate you (email magic link, verification, OAuth)</li>
+          <li>Authenticate you (email + password, OAuth)</li>
           <li>Moderate abuse and enforce rate limits</li>
           <li>
             Fulfill and revoke paid entitlements after Polar confirms payment
@@ -361,7 +361,7 @@ function PrivacyBody() {
         <ul className="list-disc space-y-1 pl-5">
           <li>Vercel (app hosting)</li>
           <li>Neon (Postgres database)</li>
-          <li>Resend (transactional email: magic links, verification)</li>
+          <li>Resend (transactional email: account deletion confirmation)</li>
           <li>Discord / GitHub (only when you choose those sign-in methods)</li>
           <li>Vercel Analytics (aggregate traffic)</li>
           <li>

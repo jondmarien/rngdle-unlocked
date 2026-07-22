@@ -25,7 +25,7 @@ Not affiliated with [rngdle.com](https://www.rngdle.com/).
 ## Integrations
 
 - [[OAuth]] - Discord / GitHub
-- [[Email-Auth]] - Resend magic link + verification
+- [[Email-Auth]] - email + password (no verification); Resend for account deletion
 - [[Discord-Bot]] - `/roll` and `/board` HTTP interactions
 - [[Polar-Monetization]] - Ranked Plus entitlements
 - [[Ranked-Plus-Checkout]] - Polar Sessions / top-ups

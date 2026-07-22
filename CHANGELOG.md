@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Discord OAuth `account_not_linked`** — Continue with Discord bounced back to `/account` when a prior email/magic-link attempt left an unverified local user with the same address. Account linking now allows unverified local emails (`requireLocalEmailVerified: false`).
+
+### Changed
+
+- **Email auth** — magic link removed; email verification no longer required. Email + password works with any address; Resend is only used for account-deletion confirmation.
+
 ## [0.19.2] - 2026-07-17
 
 ### Fixed

@@ -634,8 +634,8 @@ export function AboutScreen() {
             password in plaintext.
           </li>
           <li>
-            <strong className="text-(--prose)">Magic links</strong> expire after
-            10 minutes; email signup also requires verification.
+            <strong className="text-(--prose)">Email + password</strong> works
+            without inbox verification (OAuth preferred).
           </li>
           <li>
             <strong className="text-(--prose)">Soft API rate limits</strong>{' '}

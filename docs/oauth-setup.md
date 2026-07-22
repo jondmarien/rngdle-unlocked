@@ -162,7 +162,8 @@ Open the printed URL (usually `http://localhost:3000`) → **Account** → Conti
 
 - Linking is **enabled** for trusted providers (`discord`, `github`).
 - `allowDifferentEmails: true` — Discord/GitHub emails often differ from the account email; without this, link redirects back to `/account` with `error=email_doesn't_match`.
-- If someone already has email/password and later signs in with Discord/GitHub using the **same verified email**, Better Auth should attach the social account to that user instead of creating a duplicate.
+- `requireLocalEmailVerified: false` — without this, Discord/GitHub sign-in against an existing unverified email user redirects to `/account?error=account_not_linked`.
+- If someone already has email/password and later signs in with Discord/GitHub using the **same email**, Better Auth should attach the social account to that user instead of creating a duplicate.
 - Signed-in users can also **Link Discord / Link GitHub** from Account.
 - **Ranked** still requires a public `@username` after OAuth — set it on Account before Ranked Generate.
 
@@ -187,14 +188,15 @@ Then sign out/in and open `/admin` (or Account → Admin panel).
 
 ## 6. Common failures
 
-| Symptom                                  | Likely cause                                                 | Fix                                                        |
-| ---------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------- |
-| `redirect_uri` mismatch                  | Callback URL not exact (http vs https, port, trailing slash) | Match portal redirects to table above                      |
-| Works locally, fails on prod             | Vercel missing env or `BETTER_AUTH_URL` still localhost      | Set Production env; redeploy                               |
-| GitHub `email_not_found`                 | Private email / GitHub App missing Email Read-only           | OAuth App + `user:email`, or fix GitHub App permission     |
-| Cookies / session missing after redirect | Mixed origins (SPA on 5173, API on 3000) without proxy       | Use `npx vercel dev` single origin                         |
-| Discord null email                       | Phone-only Discord account                                   | Need code fallback; contact maintainer                     |
-| Buttons missing in UI                    | OAuth env empty so providers not registered                  | Finish this guide; redeploy after setting Client ID/Secret |
+| Symptom                                  | Likely cause                                                 | Fix                                                                       |
+| ---------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| `redirect_uri` mismatch                  | Callback URL not exact (http vs https, port, trailing slash) | Match portal redirects to table above                                     |
+| Works locally, fails on prod             | Vercel missing env or `BETTER_AUTH_URL` still localhost      | Set Production env; redeploy                                              |
+| GitHub `email_not_found`                 | Private email / GitHub App missing Email Read-only           | OAuth App + `user:email`, or fix GitHub App permission                    |
+| Cookies / session missing after redirect | Mixed origins (SPA on 5173, API on 3000) without proxy       | Use `npx vercel dev` single origin                                        |
+| Discord null email                       | Phone-only Discord account                                   | Need code fallback; contact maintainer                                    |
+| `/account?error=account_not_linked`      | Existing local user with same email was unverified           | `requireLocalEmailVerified: false` (shipped); optional grandfather script |
+| Buttons missing in UI                    | OAuth env empty so providers not registered                  | Finish this guide; redeploy after setting Client ID/Secret                |
 
 ---
 

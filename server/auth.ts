@@ -1,6 +1,6 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from '@better-auth/drizzle-adapter';
-import { admin, magicLink } from 'better-auth/plugins';
+import { admin } from 'better-auth/plugins';
 import { createDb, schema } from './db/index.js';
 import { sendEmail } from './email.js';
 
@@ -77,26 +77,8 @@ export function createAuth() {
     emailAndPassword: {
       enabled: true,
       minPasswordLength: 8,
-      requireEmailVerification: true,
-    },
-    emailVerification: {
-      sendOnSignUp: true,
-      sendOnSignIn: true,
-      autoSignInAfterVerification: true,
-      sendVerificationEmail: async ({
-        user,
-        url,
-      }: {
-        user: { email: string };
-        url: string;
-      }) => {
-        void sendEmail({
-          to: user.email,
-          subject: 'Verify your RNGdle Unlocked email',
-          text: `Verify your email for RNGdle Unlocked:\n\n${url}\n\nIf you did not create an account, ignore this message.`,
-          html: `<p>Verify your email for <strong>RNGdle Unlocked</strong>.</p><p><a href="${url}">Click here to verify</a></p><p>If you did not create an account, ignore this message.</p>`,
-        });
-      },
+      // Magic link + Resend verification were unreliable; any email + password works.
+      requireEmailVerification: false,
     },
     ...(Object.keys(social).length > 0
       ? {
@@ -108,10 +90,27 @@ export function createAuth() {
               // Discord/GitHub emails often differ from the credential email
               // (e.g. jon@chron0.tech vs Discord's registered address).
               allowDifferentEmails: true,
+              // Default true blocked Discord when a prior email/magic-link attempt
+              // created an unverified local user with the same address
+              // → redirect /account?error=account_not_linked.
+              requireLocalEmailVerified: false,
             },
           },
         }
       : {}),
+    // Treat email as usable immediately (no inbox verification gate).
+    databaseHooks: {
+      user: {
+        create: {
+          before: async (user) => ({
+            data: {
+              ...user,
+              emailVerified: true,
+            },
+          }),
+        },
+      },
+    },
     user: {
       additionalFields: {
         username: {
@@ -145,23 +144,6 @@ export function createAuth() {
       },
     },
     plugins: [
-      magicLink({
-        expiresIn: 60 * 10,
-        sendMagicLink: async ({
-          email,
-          url,
-        }: {
-          email: string;
-          url: string;
-        }) => {
-          void sendEmail({
-            to: email,
-            subject: 'Your RNGdle Unlocked sign-in link',
-            text: `Sign in to RNGdle Unlocked:\n\n${url}\n\nThis link expires in 10 minutes. If you did not request it, ignore this message.`,
-            html: `<p>Sign in to <strong>RNGdle Unlocked</strong>.</p><p><a href="${url}">Click here to sign in</a></p><p>This link expires in 10 minutes. If you did not request it, ignore this message.</p>`,
-          });
-        },
-      }),
       admin({
         defaultRole: 'user',
         adminRoles: ['admin'],
