@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
-    "@better-auth/drizzle-adapter": "1.6.23",
+    "@better-auth/drizzle-adapter": "1.7.7",
     "@fontsource-variable/outfit": "^5.2.8",
     "@fontsource-variable/syne": "^5.2.7",
     "@fontsource/jetbrains-mono": "^5.2.8",
